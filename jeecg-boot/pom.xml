@@ -67,8 +67,8 @@
         <module>jeecg-boot-module-demo</module>
         <module>jeecg-boot-module-system</module>
 	    <module>jeecg-boot-module-flowable</module>
-		<!--需要微服务，请打开
         <module>jeecg-boot-starter</module>
+		<!--需要微服务，请打开
         <module>jeecg-cloud-module</module>-->
     </modules>
 
