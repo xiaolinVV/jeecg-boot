@@ -34,7 +34,7 @@
 		<ojdbc6.version>11.2.0.3</ojdbc6.version>
 		<sqljdbc4.version>4.0</sqljdbc4.version>
 		<mysql-connector-java.version>8.0.27</mysql-connector-java.version>
-		<hutool.version>5.3.8</hutool.version>
+		<hutool.version>5.8.3</hutool.version>
 		<redisson.version>3.16.1</redisson.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 		<guava.version>29.0-jre</guava.version>
@@ -260,12 +260,7 @@
 			<!-- hutool工具类-->
 			<dependency>
 				<groupId>cn.hutool</groupId>
-				<artifactId>hutool-core</artifactId>
-				<version>${hutool.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>cn.hutool</groupId>
-				<artifactId>hutool-crypto</artifactId>
+				<artifactId>hutool-all</artifactId>
 				<version>${hutool.version}</version>
 			</dependency>
 
@@ -295,7 +290,7 @@
 				<version>${justauth-spring-boot-starter.version}</version>
 				<exclusions>
 					<exclusion>
-						<artifactId>hutool-core</artifactId>
+						<artifactId>hutool-all</artifactId>
 						<groupId>cn.hutool</groupId>
 					</exclusion>
 					<exclusion>

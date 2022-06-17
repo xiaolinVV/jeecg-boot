@@ -29,11 +29,7 @@
         <!--加载hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-crypto</artifactId>
+            <artifactId>hutool-all</artifactId>
         </dependency>
         <!--加载beanutils-->
         <dependency>
