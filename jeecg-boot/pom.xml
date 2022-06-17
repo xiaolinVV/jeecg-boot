@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jeecgframework.boot</groupId>
@@ -65,7 +66,11 @@
         <module>jeecg-boot-base</module>
         <module>jeecg-boot-module-demo</module>
         <module>jeecg-boot-module-system</module>
-	</modules>
+	    <module>jeecg-boot-module-org.jeecg.modules.flowable</module>
+		<!--需要微服务，请打开
+        <module>jeecg-boot-starter</module>
+        <module>jeecg-cloud-module</module>-->
+    </modules>
 
 	<distributionManagement>
 	  	<repository>
@@ -419,7 +424,7 @@
                 <!--Nacos配置中心地址-->
                 <config.server-addr>jeecg-boot-nacos:8848</config.server-addr>
                 <!--Nacos配置中心命名空间,用于支持多环境.这里必须使用ID，不能使用名称,默认为空-->
-                <config.namespace></config.namespace>
+                <config.namespace/>
 				<!--Nacos用户名-->
 				<config.username>nacos</config.username>
 				<!--Nacos密码-->
@@ -441,7 +446,7 @@
                 <!--Nacos配置中心地址-->
                 <config.server-addr>jeecg-boot-nacos:8848</config.server-addr>
                 <!--Nacos配置中心命名空间,用于支持多环境.这里必须使用ID，不能使用名称,默认为空-->
-                <config.namespace></config.namespace>
+                <config.namespace/>
 				<!--Nacos用户名-->
 				<config.username>nacos</config.username>
 				<!--Nacos密码-->
@@ -463,7 +468,7 @@
                 <!--Nacos配置中心地址-->
                 <config.server-addr>jeecg-boot-nacos:8848</config.server-addr>
                 <!--Nacos配置中心命名空间,用于支持多环境.这里必须使用ID，不能使用名称,默认为空-->
-                <config.namespace></config.namespace>
+                <config.namespace/>
 				<!--Nacos用户名-->
 				<config.username>nacos</config.username>
 				<!--Nacos密码-->

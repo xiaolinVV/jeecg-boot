@@ -47,6 +47,10 @@ import '@/assets/less/JAreaLinkage.less'
 import VueAreaLinkage from 'vue-area-linkage'
 import '@/components/jeecg/JVxeTable/install'
 import '@/components/JVxeCells/install'
+// ElementUI 放置最前，Antd放置于后
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+Vue.use(ElementUI);
 //表单验证
 import { rules } from '@/utils/rules'
 Vue.prototype.rules = rules

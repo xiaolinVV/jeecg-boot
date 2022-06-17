@@ -138,7 +138,7 @@ spring:
         master:
           url: jdbc:mysql://127.0.0.1:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
-          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           # 多数据源配置
           #multi-datasource1:
@@ -329,3 +329,11 @@ third-app:
       # appSecret
       client-secret: ??
       agent-id: ??
+# flowable config #
+flowable:
+  process:
+    definition-cache-limit: -1
+  database-schema-update: true
+  activity-font-name: 宋体
+  label-font-name: 宋体
+  annotation-font-name: 宋体
