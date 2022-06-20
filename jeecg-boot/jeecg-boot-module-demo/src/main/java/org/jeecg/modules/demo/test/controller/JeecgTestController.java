@@ -9,6 +9,7 @@ import cn.hutool.json.JSONUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.jeecg.boot.starter.lock.annotation.JRepeat;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.LimitSubmit;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,9 +37,17 @@ public class JeecgTestController {
         return Result.OK("请求成功，orderId：".concat(orderId));
     }
 
+    @ApiOperation(value = "测试限制重复提交注解（分布式锁）", notes = "测试限制重复提交注解（分布式锁）")
+//    @LimitSubmit(key = "testLimit:%s:#orderId", limit = 10, needAllWait = true)
+    @JRepeat(lockKey = "#orderId",lockTime = 10)
+    @GetMapping(value = "/testLimit1")
+    public Result<String> testLimit1(@RequestParam(name = "orderId", defaultValue = "order1123123") String orderId) {
+        return Result.OK("请求成功，orderId：".concat(orderId));
+    }
+
     public static void main(String[] args) {
         ThreadUtil.concurrencyTest(30, () -> {
-            String urlStr = "http://127.0.0.1:8080/jeecg-boot/test/testLimit";
+            String urlStr = "http://127.0.0.1:8080/jeecg-boot/test/testLimit1";
             String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTU0NzgxMzAsInVzZXJuYW1lIjoiYWRtaW4ifQ.YcWTJ8qWw95EhUrsWhPGzLpaPeyoG23qdkwWViIL04A";
             String result = HttpRequest
                     .get(urlStr)

@@ -61,12 +61,6 @@
 			<version>${jeecgboot.version}</version>
 		</dependency>
 
-		<!-- 引入分布式锁依赖 -->
-		<dependency>
-			<groupId>org.jeecgframework.boot</groupId>
-			<artifactId>jeecg-boot-starter-lock</artifactId>
-		</dependency>
-
 	</dependencies>
 
 	<build>
