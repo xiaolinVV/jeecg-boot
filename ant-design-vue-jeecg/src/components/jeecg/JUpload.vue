@@ -23,6 +23,8 @@
       :returnUrl="returnUrl"
       :listType="complistType"
       @preview="handlePreview"
+      @download="handleDownload"
+      :showUploadList="{ showRemoveIcon: true, showDownloadIcon: true }"
       :class="{'uploadty-disabled':disabled}">
       <template>
         <div v-if="isImageComp">
@@ -320,9 +322,21 @@
         if(this.fileType === FILE_TYPE_IMG){
           this.previewImage = file.url || file.thumbUrl;
           this.previewVisible = true;
-        }else{
+        }else if (file.url) {
           location.href=file.url
+          /**
+           * 使用 kkfileview 实现文件预览
+          let Base64 = require('js-base64').Base64;
+          let onlinePreviewDomainURL = window._CONFIG['onlinePreviewDomainURL'] + '?url='
+          let url = onlinePreviewDomainURL+encodeURIComponent(Base64.encode(file.url))
+          window.open(url, '_blank')
+           **/
+          // ==== 使用 kkfileview 实现文件预览
         }
+      },
+      // 文件下载
+      handleDownload (file) {
+        location.href=file.url
       },
       handleCancel(){
         this.previewVisible = false;
@@ -394,7 +408,7 @@
           this.moveDisplay = 'none';
         });
       }
-    
+
       let picList = document.getElementById(this.containerId)?document.getElementById(this.containerId).getElementsByClassName('ant-upload-list-picture-card'):[];
       if(picList && picList.length>0){
         picList[0].addEventListener('mouseover',(ev)=>{
