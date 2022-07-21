@@ -1,6 +1,6 @@
 package org.jeecg.modules.flowable.config;
 
-import com.sun.prism.paint.Color;
+//import com.sun.prism.paint.Color;
 import org.flowable.bpmn.model.AssociationDirection;
 import org.flowable.image.impl.DefaultProcessDiagramCanvas;
 
