@@ -16,6 +16,12 @@
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-boot-base-core</artifactId>
         </dependency>
+        <!--流程模块-->
+        <dependency>
+            <groupId>org.jeecgframework.boot</groupId>
+            <artifactId>jeecg-boot-module-flowable</artifactId>
+            <version>${jeecgboot.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
