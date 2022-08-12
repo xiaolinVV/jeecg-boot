@@ -33,7 +33,7 @@
 		<ojdbc6.version>11.2.0.3</ojdbc6.version>
 		<sqljdbc4.version>4.0</sqljdbc4.version>
 		<mysql-connector-java.version>8.0.27</mysql-connector-java.version>
-		<hutool.version>5.8.5</hutool.version>
+		<hutool.version>5.3.8</hutool.version>
 		<redisson.version>3.16.1</redisson.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 		<guava.version>29.0-jre</guava.version>
@@ -65,9 +65,9 @@
 	</properties>
 
 	<modules>
-        <module>jeecg-boot-base</module>
-        <module>jeecg-boot-module-demo</module>
-        <module>jeecg-boot-module-system</module>
+        <module>jeecg-boot-base-core</module>
+        <module>jeecg-module-demo</module>
+        <module>jeecg-module-system</module>
 		<module>jeecg-boot-module-flowable</module>
 	</modules>
 
@@ -147,7 +147,7 @@
 			<!-- system 模块-->
 			<dependency>
 				<groupId>org.jeecgframework.boot</groupId>
-				<artifactId>jeecg-boot-module-system</artifactId>
+				<artifactId>jeecg-system-biz</artifactId>
 				<version>${jeecgboot.version}</version>
 			</dependency>
 
@@ -432,7 +432,7 @@
 			</properties>
 			<modules>
 				<!-- 微服务模块-->
-				<module>jeecg-cloud-module</module>
+				<module>jeecg-server-cloud</module>
 			</modules>
 		</profile>
     </profiles>

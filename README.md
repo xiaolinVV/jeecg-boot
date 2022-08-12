@@ -7,18 +7,13 @@
 JEECG BOOT 低代码开发平台（前后端分离版本）
 ===============
 
-当前最新版本： 3.4.0（发布日期：2022-08-06） 
-
-
-> **重大升级说明**
->  - 升级[Spring Cloud Alibaba 2021.0.1.0](https://github.com/alibaba/spring-cloud-alibaba/blob/2021.x/spring-cloud-alibaba-docs/src/main/asciidoc-zh/sca-upgrade-guide.adoc)，使用 spring.config.import 方式引入nacos配置
->  - 拆分jeecg-boot-starter出来，使用独立项目维护 [jeecg-boot-starter项目新地址](https://gitee.com/jeecg/jeecg-boot-starter)
+当前最新版本： 3.4.1（发布日期：2022-08-12） 
 
 
 [![AUR](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/zhangdaiscott/jeecg-boot/blob/master/LICENSE)
 [![](https://img.shields.io/badge/Author-北京国炬软件-orange.svg)](http://www.jeecg.com)
 [![](https://img.shields.io/badge/Blog-官方博客-blue.svg)](https://my.oschina.net/jeecg)
-[![](https://img.shields.io/badge/version-3.4.0-brightgreen.svg)](https://github.com/zhangdaiscott/jeecg-boot)
+[![](https://img.shields.io/badge/version-3.4.1-brightgreen.svg)](https://github.com/zhangdaiscott/jeecg-boot)
 [![GitHub stars](https://img.shields.io/github/stars/zhangdaiscott/jeecg-boot.svg?style=social&label=Stars)](https://github.com/zhangdaiscott/jeecg-boot)
 [![GitHub forks](https://img.shields.io/github/forks/zhangdaiscott/jeecg-boot.svg?style=social&label=Fork)](https://github.com/zhangdaiscott/jeecg-boot)
 
@@ -54,7 +49,7 @@ JeecgBoot 提供了一系列`低代码模块`，实现在线开发`真正的零�
 | `jeecg-boot`    | SpringBoot后台源码（支持微服务）        |
 | `ant-design-vue-jeecg`  |Vue2版前端源码     |
 | `jeecgboot-vue3` | Vue3+Ts版前端源码 |
-| `jeecg-boot-starter` | stater依赖项目单独维护，[源码地址](https://gitee.com/jeecg/jeecg-boot-starter) |
+| `jeecg-boot-starter` | stater依赖项目单独维护 [下载地址](https://gitee.com/jeecg/jeecg-boot-starter) |
 
 
 适用项目
@@ -74,17 +69,50 @@ Jeecg-Boot低代码开发平台，可以应用在任何J2EE项目的开发中，
 
 - 新手指南： [快速入门](http://www.jeecg.com/doc/quickstart)  |  [视频教程](https://space.bilibili.com/454617261/channel/series) |   [常见问题 ](http://www.jeecg.com/doc/qa)  |   [技术支持](http://jeecg.com/doc/help) |  [1分钟体验低代码](https://my.oschina.net/jeecg/blog/3083313)
 
-- 微服务开发：  [单体升级为微服务](http://doc.jeecg.com/3040735)
+- 微服务开发：  [单体升级为微服务](http://doc.jeecg.com/3043471)
 
 - QQ交流群 ： ⑥730954414、VUE3群683903138、⑤860162132(满)、④774126647(满)、③816531124(满)、②769925425(满)、①284271917(满)
 > ` 提醒：【QQ群是自助服务群，建议给帮助您解决问题的同学发送指定红包，表示感谢！】 `
 
 
+
+
+后台目录结构
+-----------------------------------
+```
+项目结构
+├─jeecg-boot-parent（父POM： 项目依赖、modules组织）
+│  ├─jeecg-boot-base-core（共通模块： 工具类、config、权限、查询过滤器、注解等）
+│  ├─jeecg-module-demo    示例代码
+│  ├─jeecg-module-system  System系统管理目录
+│  │  ├─jeecg-system-biz   System系统管理权限等功能，作为单体启动项目(8080)
+│  │  ├─jeecg-system-api   System系统管理模块对外api
+│  │  │  ├─jeecg-system-cloud-api   System模块对外提供的微服务接口
+│  │  │  ├─jeecg-system-local-api   System模块对外提供的单体接口
+│  ├─jeecg-server-cloud           --微服务模块
+     ├─jeecg-cloud-gateway       --微服务网关模块(9999)
+     ├─jeecg-cloud-nacos       --Nacos服务模块(8848)
+     ├─jeecg-system-cloud-start  --System微服务启动项目(7001)
+     ├─jeecg-demo-cloud-start    --Demo微服务启动项目(7002)
+     ├─jeecg-visual
+        ├─jeecg-cloud-monitor       --微服务监控模块 (9111)
+        ├─jeecg-cloud-xxljob        --微服务xxljob定时任务服务端 (9080)
+        ├─jeecg-cloud-sentinel     --sentinel服务端 (9000)
+        ├─jeecg-cloud-test           -- 微服务测试示例（各种例子）
+           ├─jeecg-cloud-test-more         -- 微服务测试示例（feign、熔断降级、xxljob、分布式锁）
+           ├─jeecg-cloud-test-rabbitmq     -- 微服务测试示例（rabbitmq）
+           ├─jeecg-cloud-test-seata          -- 微服务测试示例（seata分布式事务）
+           ├─jeecg-cloud-test-shardingsphere    -- 微服务测试示例（分库分表）
+```
+
 Docker启动项目
 -----------------------------------
-- [Docker镜像单体启动项目](http://doc.jeecg.com/2043889)
-- [Docker镜像微服务启动项目](http://doc.jeecg.com/3040737)
-- [jeecgboot-vue3 Docker启动](http://vue3.jeecg.com/3028878)
+- [Docker启动单体后台](http://doc.jeecg.com/2043889)
+- [Docker启动微服务后台](http://doc.jeecg.com/3043472)
+- [Docker启动Vue3前端](http://vue3.jeecg.com/3028878)
+- [Docker启动Vue2前端](http://doc.jeecg.com/3043612)
+
+
 
 为什么选择JEECG-BOOT?
 -----------------------------------
@@ -172,19 +200,9 @@ Docker启动项目
 
 
 #### 前端
- 
- > 此处是Vue2的技术栈介绍，[Vue3版技术栈看这里](https://github.com/jeecgboot/jeecgboot-vue3)
 
-- [Vue 2.6.10](https://cn.vuejs.org/),[Vuex](https://vuex.vuejs.org/zh/),[Vue Router](https://router.vuejs.org/zh/)
-- [Axios](https://github.com/axios/axios)
-- [ant-design-vue](https://vuecomponent.github.io/ant-design-vue/docs/vue/introduce-cn/)
-- [webpack](https://www.webpackjs.com/),[yarn](https://yarnpkg.com/zh-Hans/)
-- [vue-cropper](https://github.com/xyxiao001/vue-cropper) - 头像裁剪组件
-- [@antv/g2](https://antv.alipay.com/zh-cn/index.html) - Alipay AntV 数据可视化图表
-- [Viser-vue](https://viserjs.github.io/docs.html#/viser/guide/installation)  - antv/g2 封装实现
-- eslint，[@vue/cli 3.2.1](https://cli.vuejs.org/zh/guide)
-- vue-print-nb-jeecg - 打印
-
+- Vue2版本：`Vue2.6+@vue/cli+AntDesignVue+Viser-vue+Vuex等`  [详细查看](https://github.com/jeecgboot/ant-design-vue-jeecg)
+- Vue3版本：`Vue3.0+TypeScript+Vite+AntDesignVue+pinia+echarts等新方案` [详细查看](https://github.com/jeecgboot/jeecgboot-vue3)
 
 #### 支持库
 
@@ -218,7 +236,7 @@ Docker启动项目
 
 8、服务监控 SpringBootAdmin√
 
-9、链路跟踪 Skywalking   [参考文档](https://www.kancloud.cn/zhangdaiscott/jeecgcloud/1771670)
+9、链路跟踪 Skywalking   [参考文档](http://doc.jeecg.com/2350293)
 
 10、消息中间件 RabbitMQ  √
 
