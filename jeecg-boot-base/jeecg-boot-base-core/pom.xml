@@ -15,6 +15,22 @@
 		<dependency>
 			<groupId>org.jeecgframework.boot</groupId>
 			<artifactId>jeecg-boot-common</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>hutool-core</artifactId>
+					<groupId>cn.hutool</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>hutool-crypto</artifactId>
+					<groupId>cn.hutool</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!--加载hutool-->
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-all</artifactId>
+			<version>5.8.5</version>
 		</dependency>
 		<!--集成springmvc框架并实现自动配置 -->
 		<dependency>
