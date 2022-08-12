@@ -10,6 +10,7 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.config.TenantContext;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.system.util.JwtUtil;
 import org.jeecg.common.system.vo.LoginUser;
@@ -17,7 +18,6 @@ import org.jeecg.common.util.RedisUtil;
 import org.jeecg.common.util.SpringContextUtils;
 import org.jeecg.common.util.TokenUtils;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.config.mybatis.TenantContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -69,13 +69,13 @@ public class ShiroRealm extends AuthorizingRealm {
 
         // 设置用户拥有的角色集合，比如“admin,test”
         Set<String> roleSet = commonApi.queryUserRoles(username);
-        System.out.println(roleSet.toString());
+        //System.out.println(roleSet.toString());
         info.setRoles(roleSet);
 
         // 设置用户拥有的权限集合，比如“sys:role:add,sys:user:add”
         Set<String> permissionSet = commonApi.queryUserAuths(username);
         info.addStringPermissions(permissionSet);
-        System.out.println(permissionSet);
+        //System.out.println(permissionSet);
         log.info("===============Shiro权限认证成功==============");
         return info;
     }
@@ -123,7 +123,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
         // 查询用户信息
         log.debug("———校验token是否有效————checkUserTokenIsEffect——————— "+ token);
-        LoginUser loginUser = TokenUtils.getLoginUser(username,commonApi,redisUtil);
+        LoginUser loginUser = TokenUtils.getLoginUser(username, commonApi, redisUtil);
         //LoginUser loginUser = commonApi.getUserByName(username);
         if (loginUser == null) {
             throw new AuthenticationException("用户不存在!");

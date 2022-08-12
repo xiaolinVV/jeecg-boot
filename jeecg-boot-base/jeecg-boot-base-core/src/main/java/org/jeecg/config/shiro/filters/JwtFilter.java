@@ -3,10 +3,10 @@ package org.jeecg.config.shiro.filters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
+import org.jeecg.common.config.TenantContext;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.system.util.JwtUtil;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.config.mybatis.TenantContext;
 import org.jeecg.config.shiro.JwtToken;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -106,5 +106,19 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         //update-end-author:taoyan date:20200708 for:多租户用到
 
         return super.preHandle(request, response);
+    }
+
+    /**
+     * JwtFilter中ThreadLocal需要及时清除 #3634
+     *
+     * @param request
+     * @param response
+     * @param exception
+     * @throws Exception
+     */
+    @Override
+    public void afterCompletion(ServletRequest request, ServletResponse response, Exception exception) throws Exception {
+        //log.info("------清空线程中多租户的ID={}------",TenantContext.getTenant());
+        TenantContext.clear();
     }
 }

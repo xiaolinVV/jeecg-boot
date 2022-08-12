@@ -136,9 +136,9 @@ spring:
         connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
       datasource:
         master:
-          url: jdbc:mysql://220.250.40.44:14000/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://127.0.0.1:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
-          password: Qqz::BuYV4*5
+          password: root
           driver-class-name: com.mysql.cj.jdbc.Driver
           # 多数据源配置
           #multi-datasource1:
@@ -183,11 +183,17 @@ jeecg:
   safeMode: false
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
+  # 签名拦截接口
+  signUrls: /sys/dict/getDictItems/*,/sys/dict/loadDict/*,/sys/dict/loadDictOrderByValue/*,/sys/dict/loadDictItem/*,/sys/dict/loadTreeData,/sys/api/queryTableDictItemsByCode,/sys/api/queryFilterTableDictInfo,/sys/api/queryTableDictByKeys,/sys/api/translateDictFromTable,/sys/api/translateDictFromTableByKeys
   # 本地：local\Minio：minio\阿里云：alioss
   uploadType: local
+  # 前端访问地址
+  domainUrl:
+    pc: http://localhost:3100
+    app: http://localhost:8051
   path:
     #文件上传根目录 设置
-    upload: /Users/zhangshaolin/Downloads/upFiles
+    upload: /opt/upFiles
     #webapp文件路径
     webapp: /opt/webapp
   shiro:
@@ -329,11 +335,3 @@ third-app:
       # appSecret
       client-secret: ??
       agent-id: ??
-# flowable config #
-flowable:
-  process:
-    definition-cache-limit: -1
-  database-schema-update: true
-  activity-font-name: 宋体
-  label-font-name: 宋体
-  annotation-font-name: 宋体

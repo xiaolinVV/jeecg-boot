@@ -60,6 +60,12 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 		return sysPermissionMapper.queryListByParentId(parentId);
 	}
 
+	@Override
+	public void switchVue3Menu() {
+		sysPermissionMapper.backupVue2Menu();
+		sysPermissionMapper.changeVue3Menu();
+	}
+	
 	/**
 	  * 真实删除
 	 */
@@ -200,7 +206,8 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 			
 			//如果当前菜单的父菜单变了，则需要修改新父菜单和老父菜单的，叶子节点状态
 			String pid = sysPermission.getParentId();
-			if((oConvertUtils.isNotEmpty(pid) && !pid.equals(p.getParentId())) || oConvertUtils.isEmpty(pid)&&oConvertUtils.isNotEmpty(p.getParentId())) {
+            boolean flag = (oConvertUtils.isNotEmpty(pid) && !pid.equals(p.getParentId())) || oConvertUtils.isEmpty(pid)&&oConvertUtils.isNotEmpty(p.getParentId());
+            if (flag) {
 				//a.设置新的父菜单不为叶子节点
 				this.sysPermissionMapper.setMenuLeaf(pid, 0);
 				//b.判断老的菜单下是否还有其他子菜单，没有的话则设置为叶子节点

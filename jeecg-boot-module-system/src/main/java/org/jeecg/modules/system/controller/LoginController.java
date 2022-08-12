@@ -12,12 +12,14 @@ import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CacheConstant;
 import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.constant.SymbolConstant;
 import org.jeecg.common.system.util.JwtUtil;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.*;
 import org.jeecg.common.util.encryption.EncryptedString;
 import org.jeecg.modules.base.service.BaseCommonService;
 import org.jeecg.modules.system.entity.SysDepart;
+import org.jeecg.modules.system.entity.SysRoleIndex;
 import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.SysLoginModel;
@@ -26,6 +28,7 @@ import org.jeecg.modules.system.service.impl.SysBaseApiImpl;
 import org.jeecg.modules.system.util.RandImageUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -45,6 +48,8 @@ public class LoginController {
 	@Autowired
 	private ISysUserService sysUserService;
 	@Autowired
+	private ISysPermissionService sysPermissionService;
+	@Autowired
 	private SysBaseApiImpl sysBaseApi;
 	@Autowired
 	private ISysLogService logService;
@@ -58,6 +63,8 @@ public class LoginController {
     private ISysDictService sysDictService;
 	@Resource
 	private BaseCommonService baseCommonService;
+
+	private final String BASE_CHECK_CODES = "qwertyuiplkjhgfdsazxcvbnmQWERTYUPLKJHGFDSAZXCVBNM1234567890";
 
 	@ApiOperation("登录接口")
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -83,6 +90,8 @@ public class LoginController {
 		if(checkCode==null || !checkCode.toString().equals(lowerCaseCaptcha)) {
             log.warn("验证码错误，key= {} , Ui checkCode= {}, Redis checkCode = {}", sysLoginModel.getCheckKey(), lowerCaseCaptcha, checkCode);
 			result.error500("验证码错误");
+			// 改成特殊的code 便于前端判断
+			result.setCode(HttpStatus.PRECONDITION_FAILED.value());
 			return result;
 		}
 		//update-end-author:taoyan date:20190828 for:校验验证码
@@ -97,7 +106,7 @@ public class LoginController {
 		if(!result.isSuccess()) {
 			return result;
 		}
-		
+
 		//2. 校验用户名或密码是否正确
 		String userpassword = PasswordUtil.encrypt(username, password, sysUser.getSalt());
 		String syspassword = sysUser.getPassword();
@@ -130,6 +139,21 @@ public class LoginController {
 			// 根据用户名查询用户信息
 			SysUser sysUser = sysUserService.getUserByName(username);
 			JSONObject obj=new JSONObject();
+
+			//update-begin---author:scott ---date:2022-06-20  for：vue3前端，支持自定义首页-----------
+			String version = request.getHeader(CommonConstant.VERSION);
+			//update-begin---author:liusq ---date:2022-06-29  for：接口返回值修改，同步修改这里的判断逻辑-----------
+			SysRoleIndex roleIndex = sysUserService.getDynamicIndexByUserRole(username, version);
+			if (oConvertUtils.isNotEmpty(version) && roleIndex != null && oConvertUtils.isNotEmpty(roleIndex.getUrl())) {
+				String homePath = roleIndex.getUrl();
+				if (!homePath.startsWith(SymbolConstant.SINGLE_SLASH)) {
+					homePath = SymbolConstant.SINGLE_SLASH + homePath;
+				}
+				sysUser.setHomePath(homePath);
+			}
+			//update-begin---author:liusq ---date:2022-06-29  for：接口返回值修改，同步修改这里的判断逻辑-----------
+			//update-end---author:scott ---date::2022-06-20  for：vue3前端，支持自定义首页--------------
+			
 			obj.put("userInfo",sysUser);
 			obj.put("sysAllDictItems", sysDictService.queryAllDictItems());
 			result.setResult(obj);
@@ -294,7 +318,8 @@ public class LoginController {
 				result = sysUserService.checkUserIsEffective(sysUser);
 				if(!result.isSuccess()) {
 					String message = result.getMessage();
-					if("该用户不存在，请注册".equals(message)){
+					String userNotExist="该用户不存在，请注册";
+					if(userNotExist.equals(message)){
 						result.error500("该用户不存在或未绑定手机号");
 					}
 					return result;
@@ -375,10 +400,38 @@ public class LoginController {
 	 * @return
 	 */
 	private Result<JSONObject> userInfo(SysUser sysUser, Result<JSONObject> result) {
-		String syspassword = sysUser.getPassword();
 		String username = sysUser.getUsername();
+		String syspassword = sysUser.getPassword();
 		// 获取用户部门信息
-		JSONObject obj = new JSONObject();
+		JSONObject obj = new JSONObject(new LinkedHashMap<>());
+		
+		// 生成token
+		String token = JwtUtil.sign(username, syspassword);
+		// 设置token缓存有效时间
+		redisUtil.set(CommonConstant.PREFIX_USER_TOKEN + token, token);
+		redisUtil.expire(CommonConstant.PREFIX_USER_TOKEN + token, JwtUtil.EXPIRE_TIME * 2 / 1000);
+		obj.put("token", token);
+
+		// update-begin--Author:sunjianlei Date:20210802 for：获取用户租户信息
+		String tenantIds = sysUser.getRelTenantIds();
+		if (oConvertUtils.isNotEmpty(tenantIds)) {
+			List<Integer> tenantIdList = new ArrayList<>();
+			for(String id: tenantIds.split(SymbolConstant.COMMA)){
+				tenantIdList.add(Integer.valueOf(id));
+			}
+			// 该方法仅查询有效的租户，如果返回0个就说明所有的租户均无效。
+			List<SysTenant> tenantList = sysTenantService.queryEffectiveTenant(tenantIdList);
+			if (tenantList.size() == 0) {
+				result.error500("与该用户关联的租户均已被冻结，无法登录！");
+				return result;
+			} else {
+				obj.put("tenantList", tenantList);
+			}
+		}
+		// update-end--Author:sunjianlei Date:20210802 for：获取用户租户信息
+		
+		obj.put("userInfo", sysUser);
+		
 		List<SysDepart> departs = sysDepartService.queryUserDeparts(sysUser.getId());
 		obj.put("departs", departs);
 		if (departs == null || departs.size() == 0) {
@@ -396,30 +449,6 @@ public class LoginController {
 			// update-end--Author:wangshuai Date:20200805 for：如果用戶为选择部门，数据库为存在上一次登录部门，则取一条存进去
 			obj.put("multi_depart", 2);
 		}
-		// update-begin--Author:sunjianlei Date:20210802 for：获取用户租户信息
-		String tenantIds = sysUser.getRelTenantIds();
-		if (oConvertUtils.isNotEmpty(tenantIds)) {
-			List<Integer> tenantIdList = new ArrayList<>();
-			for(String id: tenantIds.split(",")){
-				tenantIdList.add(Integer.valueOf(id));
-			}
-			// 该方法仅查询有效的租户，如果返回0个就说明所有的租户均无效。
-			List<SysTenant> tenantList = sysTenantService.queryEffectiveTenant(tenantIdList);
-			if (tenantList.size() == 0) {
-				result.error500("与该用户关联的租户均已被冻结，无法登录！");
-				return result;
-			} else {
-				obj.put("tenantList", tenantList);
-			}
-		}
-		// update-end--Author:sunjianlei Date:20210802 for：获取用户租户信息
-		// 生成token
-		String token = JwtUtil.sign(username, syspassword);
-		// 设置token缓存有效时间
-		redisUtil.set(CommonConstant.PREFIX_USER_TOKEN + token, token);
-		redisUtil.expire(CommonConstant.PREFIX_USER_TOKEN + token, JwtUtil.EXPIRE_TIME * 2 / 1000);
-		obj.put("token", token);
-		obj.put("userInfo", sysUser);
 		obj.put("sysAllDictItems", sysDictService.queryAllDictItems());
 		result.setResult(obj);
 		result.success("登录成功");
@@ -451,7 +480,6 @@ public class LoginController {
 		Result<String> res = new Result<String>();
 		try {
 			//生成验证码
-			final String BASE_CHECK_CODES = "qwertyuiplkjhgfdsazxcvbnmQWERTYUPLKJHGFDSAZXCVBNM1234567890";
 			String code = RandomUtil.randomString(BASE_CHECK_CODES,4);
 
 			//存到redis中
@@ -468,6 +496,17 @@ public class LoginController {
 			res.error500("获取验证码出错"+e.getMessage());
 			e.printStackTrace();
 		}
+		return res;
+	}
+
+
+	/**
+	 * 切换菜单表为vue3的表
+	 */
+	@GetMapping(value = "/switchVue3Menu")
+	public Result<String> switchVue3Menu(HttpServletResponse response) {
+		Result<String> res = new Result<String>();
+		sysPermissionService.switchVue3Menu();
 		return res;
 	}
 	
@@ -553,9 +592,9 @@ public class LoginController {
 		return Result.ok();
 	}
 	/**
-	 * 登录二维码
+	 * 获取登录二维码
 	 */
-	@ApiOperation(value = "登录二维码", notes = "登录二维码")
+	@ApiOperation(value = "获取登录二维码", notes = "获取登录二维码")
 	@GetMapping("/getLoginQrcode")
 	public Result<?>  getLoginQrcode() {
 		String qrcodeId = CommonConstant.LOGIN_QRCODE_PRE+IdWorker.getIdStr();
@@ -586,7 +625,7 @@ public class LoginController {
 	/**
 	 * 获取用户扫码后保存的token
 	 */
-	@ApiOperation(value = "获取用户扫码后保存的token", notes = "获取用户扫码后保存的token")
+	@ApiOperation(value = "获取用户扫码后Token", notes = "获取用户扫码后Token")
 	@GetMapping("/getQrcodeToken")
 	public Result getQrcodeToken(@RequestParam String qrcodeId) {
 		Object token = redisUtil.get(CommonConstant.LOGIN_QRCODE_TOKEN + qrcodeId);

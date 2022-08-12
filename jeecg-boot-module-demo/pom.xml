@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jeecg-boot-parent</artifactId>
         <groupId>org.jeecgframework.boot</groupId>
-        <version>3.2.0</version>
+        <version>3.4.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,34 +16,6 @@
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-boot-base-core</artifactId>
         </dependency>
-        <!--流程模块-->
-        <dependency>
-            <groupId>org.jeecgframework.boot</groupId>
-            <artifactId>jeecg-boot-module-flowable</artifactId>
-            <version>${jeecgboot.version}</version>
-        </dependency>
-        <!-- 引入分布式锁依赖 -->
-        <dependency>
-            <groupId>org.jeecgframework.boot</groupId>
-            <artifactId>jeecg-boot-starter-lock</artifactId>
-        </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>SpringCloud</id>
-            <!-- 引入微服务启动 Starter依赖 -->
-            <dependencies>
-                <dependency>
-                    <groupId>org.jeecgframework.boot</groupId>
-                    <artifactId>jeecg-boot-starter-cloud</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.jeecgframework.boot</groupId>
-                    <artifactId>jeecg-boot-starter-job</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 
 </project>

@@ -45,11 +45,9 @@ import java.util.List;
 @Configuration
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
-    @Value("${jeecg.path.upload}")
-    private String upLoadPath;
-    @Value("${jeecg.path.webapp}")
-    private String webAppPath;
-    @Value("${spring.resource.static-locations}")
+    @Autowired
+    JeecgBaseConfig jeecgBaseConfig;
+    @Value("${spring.resource.static-locations:}")
     private String staticLocations;
 
     @Autowired(required = false)
@@ -62,8 +60,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 //update-begin-author:taoyan date:20211116 for: jeecg.path.webapp配置无效 #3126
-                .addResourceLocations("file:" + upLoadPath + "//")
-                .addResourceLocations("file:" + webAppPath + "//")
+                .addResourceLocations("file:" + jeecgBaseConfig.getPath().getUpload() + "//")
+                .addResourceLocations("file:" + jeecgBaseConfig.getPath().getWebapp() + "//")
                 //update-end-author:taoyan date:20211116 for: jeecg.path.webapp配置无效 #3126
                 .addResourceLocations(staticLocations.split(","));
     }
@@ -144,5 +142,14 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     InitializingBean forcePrometheusPostProcessor(BeanPostProcessor meterRegistryPostProcessor) {
         return () -> meterRegistryPostProcessor.postProcessAfterInitialization(prometheusMeterRegistry, "");
     }
+
+//    /**
+//     * 注册拦截器【拦截器拦截参数，自动切换数据源——后期实现多租户切换数据源功能】
+//     * @param registry
+//     */
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(new DynamicDatasourceInterceptor()).addPathPatterns("/test/dynamic/**");
+//    }
 
 }
