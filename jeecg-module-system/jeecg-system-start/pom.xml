@@ -17,12 +17,24 @@
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-system-biz</artifactId>
             <version>${jeecgboot.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>lombok</artifactId>
+                    <groupId>org.projectlombok</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- DEMO 示例模块 -->
         <dependency>
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-module-demo</artifactId>
             <version>${jeecgboot.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>lombok</artifactId>
+                    <groupId>org.projectlombok</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
