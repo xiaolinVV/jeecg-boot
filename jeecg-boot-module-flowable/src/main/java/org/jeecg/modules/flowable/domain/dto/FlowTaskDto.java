@@ -105,4 +105,11 @@ public class FlowTaskDto implements Serializable {
     /**流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常*/
     @ApiModelProperty(value = "流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常")
     private String actStatus;
+
+    /**当前的节点可以处理的用户名，为username的集合json字符串*/
+    @ApiModelProperty(value = "当前的节点可以处理的用户名")
+    private String todoUsers;
+    /**处理过的人,为username的集合json字符串*/
+    @ApiModelProperty(value = "处理过的人")
+    private String doneUsers;
 }
