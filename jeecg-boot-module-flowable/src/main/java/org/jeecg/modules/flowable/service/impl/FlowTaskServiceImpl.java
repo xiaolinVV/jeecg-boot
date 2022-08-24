@@ -952,6 +952,14 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             flowTask.setStartUserId(startUser.getUsername());
             flowTask.setStartUserName(startUser.getRealname());
             flowTask.setStartDeptName(CollUtil.join(departNamesByUsername,"，"));
+
+            //流程业务信息
+            FlowMyBusiness flowMyBusiness = flowMyBusinessService.getByProcessInstanceId(task.getProcessInstanceId());
+            if (flowMyBusiness != null) {
+                flowTask.setTitle(flowMyBusiness.getTitle());
+                flowTask.setActStatus(flowMyBusiness.getActStatus());
+                flowTask.setDataId(flowMyBusiness.getDataId());
+            }
             flowList.add(flowTask);
         }
 

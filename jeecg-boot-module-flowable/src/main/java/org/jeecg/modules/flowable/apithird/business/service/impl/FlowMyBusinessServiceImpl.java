@@ -24,4 +24,13 @@ public class FlowMyBusinessServiceImpl extends ServiceImpl<FlowMyBusinessMapper,
         FlowMyBusiness business = this.getOne(flowMyBusinessLambdaQueryWrapper);
         return business;
     }
+
+
+    public FlowMyBusiness getByProcessInstanceId(String processInstanceId){
+        LambdaQueryWrapper<FlowMyBusiness> flowMyBusinessLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        flowMyBusinessLambdaQueryWrapper.eq(FlowMyBusiness::getProcessInstanceId,processInstanceId);
+        //如果保存数据前未调用必调的FlowCommonService.initActBusiness方法，就会有问题
+        FlowMyBusiness business = this.getOne(flowMyBusinessLambdaQueryWrapper);
+        return business;
+    }
 }

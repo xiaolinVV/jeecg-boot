@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.jeecg.common.aspect.annotation.Dict;
+import org.jeecgframework.poi.excel.annotation.Excel;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -94,4 +95,14 @@ public class FlowTaskDto implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date finishTime;
 
+    /**流程业务简要描述*/
+    @ApiModelProperty(value = "流程业务简要描述")
+    private String title;
+    /**业务表id，理论唯一*/
+    @ApiModelProperty(value = "业务表id，理论唯一")
+    private String dataId;
+
+    /**流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常*/
+    @ApiModelProperty(value = "流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常")
+    private String actStatus;
 }
