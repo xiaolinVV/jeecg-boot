@@ -961,6 +961,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 flowTask.setDataId(flowMyBusiness.getDataId());
                 flowTask.setTodoUsers(flowMyBusiness.getTodoUsers());
                 flowTask.setDoneUsers(flowMyBusiness.getDoneUsers());
+                flowTask.setJimuReportId(flowMyBusiness.getJimuReportId());
             }
             flowList.add(flowTask);
         }

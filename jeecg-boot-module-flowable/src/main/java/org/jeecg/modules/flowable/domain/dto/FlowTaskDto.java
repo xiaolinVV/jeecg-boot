@@ -112,4 +112,8 @@ public class FlowTaskDto implements Serializable {
     /**处理过的人,为username的集合json字符串*/
     @ApiModelProperty(value = "处理过的人")
     private String doneUsers;
+
+    /**积木报表ID, 可查看当前审批单挂载的单据报表页面*/
+    @ApiModelProperty(value = "积木报表ID, 可查看当前审批单挂载的单据报表页面")
+    private String jimuReportId;
 }
