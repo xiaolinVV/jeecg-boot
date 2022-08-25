@@ -96,6 +96,10 @@ public class FlowMyBusinessDto implements Serializable {
 	@Excel(name = "当前任务节点的优先级 流程定义的时候所填", width = 15)
     @ApiModelProperty(value = "当前任务节点的优先级 流程定义的时候所填")
     private String priority;
+    /**积木报表ID, 可查看当前审批单挂载的单据报表页面*/
+    @Excel(name = "积木报表ID, 可查看当前审批单挂载的单据报表页面", width = 15)
+    @ApiModelProperty(value = "积木报表ID, 可查看当前审批单挂载的单据报表页面")
+    private String jimuReportId;
 	/**流程变量*/
 	@TableField(exist = false)
     private Map<String,Object> values;
