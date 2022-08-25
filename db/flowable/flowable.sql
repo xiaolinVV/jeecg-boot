@@ -11,9 +11,9 @@ CREATE TABLE `flow_my_business` (
                                     `create_time` datetime DEFAULT NULL COMMENT '创建时间',
                                     `update_by` varchar(32) COLLATE utf8_general_ci DEFAULT NULL COMMENT '修改人',
                                     `update_time` datetime DEFAULT NULL COMMENT '修改时间',
-                                    `process_definition_key` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程定义key 一个key会有多个版本的id',
-                                    `process_definition_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程定义id 一个流程定义唯一',
-                                    `process_instance_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程业务实例id 一个流程业务唯一，本表中也唯一',
+                                    `process_definition_key` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程定义key 一个key会有多个版本的id',
+                                    `process_definition_id` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程定义id 一个流程定义唯一',
+                                    `process_instance_id` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程业务实例id 一个流程业务唯一，本表中也唯一',
                                     `title` varchar(500) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程业务简要描述',
                                     `data_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '业务表id，理论唯一',
                                     `service_impl_name` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '业务类名，用来获取spring容器里的服务对象',
@@ -25,6 +25,7 @@ CREATE TABLE `flow_my_business` (
                                     `todo_users` varchar(1000) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前的节点可以处理的用户名',
                                     `done_users` varchar(1000) COLLATE utf8_general_ci DEFAULT NULL COMMENT '处理过的人',
                                     `priority` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前任务节点的优先级 流程定义的时候所填',
+                                    `jimu_report_id` varchar(64) COLLATE utf8_general_ci DEFAULT NULL COMMENT '积木报表ID, 可查看当前审批单挂载的单据报表页面',
                                     PRIMARY KEY (`id`) /*T![clustered_index] NONCLUSTERED */,
                                     UNIQUE KEY `dataid` (`data_id`) COMMENT '业务数据Id索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='流程业务扩展表';
