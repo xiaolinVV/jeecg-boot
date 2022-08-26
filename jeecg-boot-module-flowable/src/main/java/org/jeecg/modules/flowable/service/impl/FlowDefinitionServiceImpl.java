@@ -320,7 +320,7 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
                         taskService.addCandidateUser(task2One.getId(),newUser);
                     }
                 }
-                business.setTodoUsers(JSON.toJSONString(beforeParamsCandidateUsernames));
+                collect_username = beforeParamsCandidateUsernames;
             }
 
             business.setProcessDefinitionId(procDefId)
