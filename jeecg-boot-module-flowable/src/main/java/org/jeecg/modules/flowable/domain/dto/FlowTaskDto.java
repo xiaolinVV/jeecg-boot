@@ -49,6 +49,7 @@ public class FlowTaskDto implements Serializable {
     private String startUserName;
 
     @ApiModelProperty("流程类型")
+    @Dict(dicCode = "bpm_process_type")
     private String category;
 
     @ApiModelProperty("流程变量信息")
