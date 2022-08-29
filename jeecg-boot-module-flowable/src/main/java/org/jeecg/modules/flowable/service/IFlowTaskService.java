@@ -103,7 +103,7 @@ public interface IFlowTaskService {
 
 
     /**
-     * 代办任务列表
+     * 待办任务列表，包括本人就是处理人的或者还是候选人状态的任务
      *
      * @param pageNum  当前页码
      * @param pageSize 每页条数

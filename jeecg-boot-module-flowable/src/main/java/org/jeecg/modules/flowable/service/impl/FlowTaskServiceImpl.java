@@ -908,7 +908,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
     }
 
     /**
-     * 代办任务列表
+     * 待办任务列表，包括本人就是处理人的或者还是候选人状态的任务
      *
      * @param pageNum  当前页码
      * @param pageSize 每页条数
@@ -918,11 +918,9 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
     public Result todoList(Integer pageNum, Integer pageSize) {
         Page<FlowTaskDto> page = new Page<>();
         String username = iFlowThirdService.getLoginUser().getUsername();
-        TaskQuery taskQuery = taskService.createTaskQuery()
-                .active()
-                .includeProcessVariables()
-                .taskAssignee(username)
-                .orderByTaskCreateTime().desc();
+        TaskQuery taskQuery = taskService.createTaskQuery();
+        taskQuery.or().taskCandidateUser(username).taskAssignee(username).endOr();
+        taskQuery.active().includeProcessVariables().orderByTaskCreateTime().desc();
         page.setTotal(taskQuery.count());
         List<Task> taskList = taskQuery.listPage((pageNum - 1)*pageSize, pageSize);
         List<FlowTaskDto> flowList = new ArrayList<>();
