@@ -1,5 +1,6 @@
 package org.jeecg.modules.flowable.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -49,9 +50,9 @@ public class FlowDefinitionController {
 
     @GetMapping(value = "/list")
     @ApiOperation(value = "流程定义列表", response = FlowProcDefDto.class)
-    public Result list(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNum,
-                           @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize,
-                       FlowProcDefDto flowProcDefDto
+    public Result<Page<FlowProcDefDto>> list(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNum,
+                                             @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize,
+                                             FlowProcDefDto flowProcDefDto
     ) {
         return Result.OK(flowDefinitionService.list(pageNum, pageSize,flowProcDefDto));
     }
@@ -222,20 +223,20 @@ public class FlowDefinitionController {
 
     @ApiOperation(value = "指定流程办理人员列表")
     @GetMapping("/userList")
-    public Result userList(SysUser user) {
+    public Result<List<SysUser>> userList(SysUser user) {
         List<SysUser> list = iFlowThirdService.getAllUser();
         return Result.OK(list);
     }
 
     @ApiOperation(value = "指定流程办理组列表")
     @GetMapping("/roleList")
-    public Result roleList(SysRole role) {
+    public Result<List<SysRole>> roleList(SysRole role) {
         List<SysRole> list = iFlowThirdService.getAllRole();
         return Result.OK(list);
     }
     @ApiOperation(value = "指定流程办理组列表")
     @GetMapping("/categoryList")
-    public Result categoryList(SysCategory category) {
+    public Result<List<SysCategory>> categoryList(SysCategory category) {
         List<SysCategory> list = iFlowThirdService.getAllCategory();
         return Result.OK(list);
     }

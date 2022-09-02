@@ -654,7 +654,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
     }
 
     @Override
-    public Result findReturnTaskListByDataId(FlowTaskVo flowTaskVo) {
+    public Result<List<UserTask>> findReturnTaskListByDataId(FlowTaskVo flowTaskVo) {
         FlowMyBusiness business = flowMyBusinessService.getByDataId(flowTaskVo.getDataId());
         flowTaskVo.setTaskId(business.getTaskId());
         return findReturnTaskList(flowTaskVo);
@@ -666,7 +666,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result findReturnTaskList(FlowTaskVo flowTaskVo) {
+    public Result<List<UserTask>> findReturnTaskList(FlowTaskVo flowTaskVo) {
         // 当前任务 task
         Task task = taskService.createTaskQuery().taskId(flowTaskVo.getTaskId()).singleResult();
         // 获取流程定义信息
@@ -764,7 +764,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result myProcess(Integer pageNum, Integer pageSize) {
+    public Result<Page<FlowTaskDto>> myProcess(Integer pageNum, Integer pageSize) {
         Page<FlowTaskDto> page = new Page<>();
         String username = iFlowThirdService.getLoginUser().getUsername();
         HistoricProcessInstanceQuery historicProcessInstanceQuery = historyService.createHistoricProcessInstanceQuery()
@@ -915,7 +915,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result todoList(Integer pageNum, Integer pageSize) {
+    public Result<Page<FlowTaskDto>> todoList(Integer pageNum, Integer pageSize) {
         Page<FlowTaskDto> page = new Page<>();
         String username = iFlowThirdService.getLoginUser().getUsername();
         TaskQuery taskQuery = taskService.createTaskQuery();
@@ -978,7 +978,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result finishedList(Integer pageNum, Integer pageSize) {
+    public Result<Page<FlowTaskDto>> finishedList(Integer pageNum, Integer pageSize) {
         Page<FlowTaskDto> page = new Page<>();
         String username = iFlowThirdService.getLoginUser().getUsername();
         HistoricTaskInstanceQuery taskInstanceQuery = historyService.createHistoricTaskInstanceQuery()
@@ -1327,7 +1327,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result getNextFlowNode(FlowTaskVo flowTaskVo) {
+    public Result<FlowNextDto> getNextFlowNode(FlowTaskVo flowTaskVo) {
         // todo 似乎逻辑未写完，待检查
         FlowNextDto flowNextDto = this.getNextFlowNode(flowTaskVo.getTaskId(), flowTaskVo.getValues());
         if (flowNextDto==null) {

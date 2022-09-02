@@ -1,7 +1,11 @@
 package org.jeecg.modules.flowable.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.flowable.bpmn.model.UserTask;
 import org.flowable.task.api.Task;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.flowable.domain.dto.FlowNextDto;
+import org.jeecg.modules.flowable.domain.dto.FlowTaskDto;
 import org.jeecg.modules.flowable.domain.dto.FlowViewerDto;
 import org.jeecg.modules.flowable.domain.vo.FlowTaskVo;
 
@@ -40,8 +44,8 @@ public interface IFlowTaskService {
      * @param flowTaskVo
      * @return
      */
-    Result findReturnTaskList(FlowTaskVo flowTaskVo);
-    Result findReturnTaskListByDataId(FlowTaskVo flowTaskVo);
+    Result<List<UserTask>> findReturnTaskList(FlowTaskVo flowTaskVo);
+    Result<List<UserTask>> findReturnTaskListByDataId(FlowTaskVo flowTaskVo);
 
     /**
      * 删除任务
@@ -85,7 +89,7 @@ public interface IFlowTaskService {
      * @param pageSize
      * @return
      */
-    Result myProcess(Integer pageNum, Integer pageSize);
+    Result<Page<FlowTaskDto>> myProcess(Integer pageNum, Integer pageSize);
 
     /**
      * 取消申请
@@ -109,7 +113,7 @@ public interface IFlowTaskService {
      * @param pageSize 每页条数
      * @return
      */
-    Result todoList(Integer pageNum, Integer pageSize);
+    Result<Page<FlowTaskDto>> todoList(Integer pageNum, Integer pageSize);
 
 
     /**
@@ -119,7 +123,7 @@ public interface IFlowTaskService {
      * @param pageSize 每页条数
      * @return
      */
-    Result finishedList(Integer pageNum, Integer pageSize);
+    Result<Page<FlowTaskDto>> finishedList(Integer pageNum, Integer pageSize);
 
     /**
      * 流程历史流转记录
@@ -163,7 +167,7 @@ public interface IFlowTaskService {
      * @param flowTaskVo 任务
      * @return
      */
-    Result getNextFlowNode(FlowTaskVo flowTaskVo);
+    Result<FlowNextDto> getNextFlowNode(FlowTaskVo flowTaskVo);
 
 
 

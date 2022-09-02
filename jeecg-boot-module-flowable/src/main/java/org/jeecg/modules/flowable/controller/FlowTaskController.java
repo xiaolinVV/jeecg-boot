@@ -1,11 +1,15 @@
 package org.jeecg.modules.flowable.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
+import org.flowable.bpmn.model.UserTask;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.flowable.domain.dto.FlowNextDto;
 import org.jeecg.modules.flowable.domain.dto.FlowTaskDto;
+import org.jeecg.modules.flowable.domain.dto.FlowViewerDto;
 import org.jeecg.modules.flowable.domain.vo.FlowTaskVo;
 import org.jeecg.modules.flowable.service.IFlowTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * <p>工作流任务管理<p>
@@ -33,7 +38,7 @@ public class FlowTaskController {
 
     @ApiOperation(value = "我发起的流程", response = FlowTaskDto.class)
     @GetMapping(value = "/myProcess")
-    public Result myProcess(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
+    public Result<Page<FlowTaskDto>> myProcess(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
                                 @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize) {
         return flowTaskService.myProcess(pageNo, pageSize);
     }
@@ -52,14 +57,14 @@ public class FlowTaskController {
 
     @ApiOperation(value = "获取待办列表", response = FlowTaskDto.class)
     @GetMapping(value = "/todoList")
-    public Result todoList(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
-                               @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize) {
+    public Result<Page<FlowTaskDto>> todoList(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
+                                              @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize) {
         return flowTaskService.todoList(pageNo, pageSize);
     }
 
     @ApiOperation(value = "获取已办任务", response = FlowTaskDto.class)
     @GetMapping(value = "/finishedList")
-    public Result finishedList(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
+    public Result<Page<FlowTaskDto>> finishedList(@ApiParam(value = "当前页码", required = true) @RequestParam Integer pageNo,
                                    @ApiParam(value = "每页条数", required = true) @RequestParam Integer pageSize) {
         return flowTaskService.finishedList(pageNo, pageSize);
     }
@@ -116,12 +121,12 @@ public class FlowTaskController {
 
     @ApiOperation(value = "获取所有可回退的节点")
     @PostMapping(value = "/returnList")
-    public Result findReturnTaskList(@RequestBody FlowTaskVo flowTaskVo) {
+    public Result<List<UserTask>> findReturnTaskList(@RequestBody FlowTaskVo flowTaskVo) {
         return flowTaskService.findReturnTaskList(flowTaskVo);
     }
     @ApiOperation(value = "获取所有可回退的节点")
     @PostMapping(value = "/findReturnTaskListByDataId")
-    public Result findReturnTaskListByDataId(@RequestBody FlowTaskVo flowTaskVo) {
+    public Result<List<UserTask>> findReturnTaskListByDataId(@RequestBody FlowTaskVo flowTaskVo) {
         return flowTaskService.findReturnTaskListByDataId(flowTaskVo);
     }
 
@@ -162,7 +167,7 @@ public class FlowTaskController {
 
     @ApiOperation(value = "获取下一节点")
     @PostMapping(value = "/nextFlowNode")
-    public Result getNextFlowNode(@RequestBody FlowTaskVo flowTaskVo) {
+    public Result<FlowNextDto> getNextFlowNode(@RequestBody FlowTaskVo flowTaskVo) {
         return flowTaskService.getNextFlowNode(flowTaskVo);
     }
 
@@ -204,7 +209,7 @@ public class FlowTaskController {
      * @param procInsId 任务ID
      */
     @RequestMapping("/flowViewer/{procInsId}")
-    public Result getFlowViewer(@PathVariable("procInsId") String procInsId) {
+    public Result<List<FlowViewerDto>> getFlowViewer(@PathVariable("procInsId") String procInsId) {
         return Result.OK(flowTaskService.getFlowViewer(procInsId));
     }
     /**
@@ -213,7 +218,7 @@ public class FlowTaskController {
      * @param dataId 任务数据ID
      */
     @RequestMapping("/flowViewerByDataId/{dataId}")
-    public Result getFlowViewerByDataId(@PathVariable("dataId") String dataId) {
+    public Result<List<FlowViewerDto>> getFlowViewerByDataId(@PathVariable("dataId") String dataId) {
         return Result.OK(flowTaskService.getFlowViewerByDataId(dataId));
     }
 }
