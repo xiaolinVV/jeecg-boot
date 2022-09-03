@@ -52,7 +52,7 @@ public class FlowCommonService {
             flowMyBusiness = business;
         } else {
             flowMyBusiness.setId(IdUtil.fastSimpleUUID());
-            flowMyBusiness.setActStatus(ActStatus.waitStart.getValue()); // 新增业务数据关联时默认为 "待启动" 状态
+            flowMyBusiness.setBpmStatus(ActStatus.waitStart.getValue()); // 新增业务数据关联时默认为 "待启动" 状态
         }
         if (processDefinitionId==null){
             // 以便更新流程

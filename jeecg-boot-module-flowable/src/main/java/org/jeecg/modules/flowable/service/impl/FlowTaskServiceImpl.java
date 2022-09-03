@@ -152,7 +152,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
 
         if (task2!=null && task.getTaskDefinitionKey().equals(task2.getTaskDefinitionKey())){
         //    * 当前节点是会签节点，没有走完
-            business.setActStatus(ActStatus.doing.getValue())
+            business.setBpmStatus(ActStatus.doing.getValue())
                     .setTaskId(task2.getId())
                     .setDoneUsers(doneUserList.toJSONString())
             ;
@@ -197,7 +197,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                     //    前端传入候选人
                     collect_username = candidateUsers;
                 }
-                business.setActStatus(ActStatus.doing.getValue())
+                business.setBpmStatus(ActStatus.doing.getValue())
                         .setTaskId(task2.getId())
                         .setTaskNameId(nextTask.getId())
                         .setTaskName(nextTask.getName())
@@ -229,7 +229,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
 
             } else {
                 //    **没有下一个节点，流程已经结束了
-                business.setActStatus(ActStatus.pass.getValue())
+                business.setBpmStatus(ActStatus.pass.getValue())
                         .setDoneUsers(doneUserList.toJSONString())
                         .setTodoUsers("")
                         .setTaskId("")
@@ -407,7 +407,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             if (!doneUserList.contains(loginUser.getUsername())){
                 doneUserList.add(loginUser.getUsername());
             }
-            business.setActStatus(ActStatus.reject.getValue())
+            business.setBpmStatus(ActStatus.reject.getValue())
                     .setTaskId(task2.getId())
                     .setTaskNameId(task2.getTaskDefinitionKey())
                     .setTaskName(task2.getName())
@@ -586,7 +586,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 //**跳转到目标节点
             List<Task> task2List = taskService.createTaskQuery().processInstanceId(business.getProcessInstanceId()).active().list();
             Task targetTask = task2List.get(0);
-                business.setActStatus(ActStatus.reject.getValue())
+                business.setBpmStatus(ActStatus.reject.getValue())
                         .setTaskId(targetTask.getId())
                         .setTaskNameId(targetTask.getTaskDefinitionKey())
                         .setTaskName(targetTask.getName())
@@ -956,7 +956,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             FlowMyBusiness flowMyBusiness = flowMyBusinessService.getByProcessInstanceId(task.getProcessInstanceId());
             if (flowMyBusiness != null) {
                 flowTask.setTitle(flowMyBusiness.getTitle());
-                flowTask.setActStatus(flowMyBusiness.getActStatus());
+                flowTask.setBpmStatus(flowMyBusiness.getBpmStatus());
                 flowTask.setDataId(flowMyBusiness.getDataId());
                 flowTask.setTodoUsers(flowMyBusiness.getTodoUsers());
                 flowTask.setDoneUsers(flowMyBusiness.getDoneUsers());
@@ -1026,7 +1026,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             FlowMyBusiness flowMyBusiness = flowMyBusinessService.getByProcessInstanceId(histTask.getProcessInstanceId());
             if (flowMyBusiness != null) {
                 flowTask.setTitle(flowMyBusiness.getTitle());
-                flowTask.setActStatus(flowMyBusiness.getActStatus());
+                flowTask.setBpmStatus(flowMyBusiness.getBpmStatus());
                 flowTask.setDataId(flowMyBusiness.getDataId());
                 flowTask.setTodoUsers(flowMyBusiness.getTodoUsers());
                 flowTask.setDoneUsers(flowMyBusiness.getDoneUsers());

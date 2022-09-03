@@ -122,7 +122,7 @@ public class FlowInstanceServiceImpl extends FlowServiceFactory implements IFlow
             doneUserList.add(sysUser.getUsername());
         }
             business
-                    .setActStatus(ActStatus.recall.getValue())
+                    .setBpmStatus(ActStatus.recall.getValue())
                     .setTaskId("")
                     .setTaskName("已撤回")
                     .setPriority("")

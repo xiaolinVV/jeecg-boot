@@ -325,7 +325,7 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
 
             business.setProcessDefinitionId(procDefId)
                     .setProcessInstanceId(processInstance.getProcessInstanceId())
-                    .setActStatus(ActStatus.start.getValue())
+                    .setBpmStatus(ActStatus.start.getValue())
                     .setProposer(sysUser.getUsername())
                     .setTaskId(task2.getId())
                     .setTaskName(nextTask.getName())
@@ -338,7 +338,7 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
         //    **没有下一个节点，流程已经结束了
             business.setProcessDefinitionId(procDefId)
                     .setProcessInstanceId(processInstance.getProcessInstanceId())
-                    .setActStatus(ActStatus.pass.getValue())
+                    .setBpmStatus(ActStatus.pass.getValue())
                     .setProposer(sysUser.getUsername())
                     .setDoneUsers(doneUserList.toJSONString())
             ;

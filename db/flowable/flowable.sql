@@ -18,7 +18,7 @@ CREATE TABLE `flow_my_business` (
                                     `data_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '业务表id，理论唯一',
                                     `service_impl_name` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '业务类名，用来获取spring容器里的服务对象',
                                     `proposer` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '申请人',
-                                    `act_status` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常',
+                                    `bpm_status` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常',
                                     `task_id` varchar(1000) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前的节点定义上的Id,',
                                     `task_name` varchar(1000) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前的节点',
                                     `task_name_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前的节点实例上的Id',

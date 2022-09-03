@@ -40,7 +40,7 @@ public class TestDemoServiceImpl extends ServiceImpl<TestDemoMapper, TestDemo> i
         //流程操作后做些什么
         business.getTaskNameId();//接下来审批的节点
         business.getValues();//前端传进来的参数
-        business.getActStatus();//流程状态 ActStatus.java
+        business.getBpmStatus();//流程状态 ActStatus.java
         //....其他
 
     }
