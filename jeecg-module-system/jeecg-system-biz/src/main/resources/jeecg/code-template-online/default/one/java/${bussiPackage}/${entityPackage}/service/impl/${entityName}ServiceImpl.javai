@@ -7,13 +7,102 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+<#assign bpm_flag=false>
+<#list originalColumns as po>
+<#if po.fieldDbName=='bpm_status'>
+  <#assign bpm_flag=true>
+</#if>
+</#list>
+
+<#if bpm_flag>
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
+import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
+import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+</#if>
+
 /**
  * @Description: ${tableVo.ftlDescription}
  * @Author: jeecg-boot
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-@Service
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service {
+@Service("${entityName?uncap_first}Service")
+public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service, <#if bpm_flag> FlowCallBackServiceI </#if> {
 
+    <#if bpm_flag>
+    @Autowired
+    FlowCommonService flowCommonService;
+
+    /**
+     * 关联流程
+     * @param dataId 业务id
+     */
+    @Override
+    public void relationAct(String dataId) {
+        flowCommonService.initActBusiness("请假流程",dataId,"${entityName?uncap_first}Service","process_1zwelvy5",null,null);
+    }
+
+    @Override
+    public <E extends IPage<${entityName}>> E page(E page, Wrapper<${entityName}> queryWrapper) {
+        IPage<${entityName}> pageList = super.page(page, queryWrapper);
+        List<${entityName}> records = pageList.getRecords();
+        if (CollUtil.isNotEmpty(records)) {
+            List<String> ids = records.stream().map(${entityName}::getId).collect(Collectors.toList());
+            Map<String, FlowMyBusiness> flowMyBusinessMap = flowCommonService.getMapByDataIds(ids);
+            for (${entityName} record : records) {
+                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(record.getId());
+                if (ObjectUtil.isNotNull(flowMyBusiness)) {
+                    BeanUtil.copyProperties(flowMyBusiness,record,"id","createBy","createTime","updateBy","updateTime");
+                }
+            }
+        }
+        return page;
+    }
+
+    @Override
+    public boolean save(${entityName} entity) {
+        /**新增数据，初始化流程关联信息**/
+        entity.setId(IdUtil.fastSimpleUUID());
+        this.relationAct(entity.getId());
+        return super.save(entity);
+    }
+
+    @Override
+    public boolean removeById(Serializable id) {
+        /**删除数据，移除流程关联信息**/
+        flowCommonService.delActBusiness(id.toString());
+        return super.removeById(id);
+    }
+
+    @Override
+    public void afterFlowHandle(FlowMyBusiness business) {
+
+    }
+
+    @Override
+    public Object getBusinessDataById(String dataId) {
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> flowValuesOfTask(String taskNameId, Map<String, Object> values) {
+        return null;
+    }
+
+    @Override
+    public List<String> flowCandidateUsernamesOfTask(String taskNameId, Map<String, Object> values) {
+        return null;
+    }
+    </#if>
 }

@@ -77,6 +77,21 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 		IPage<${entityName}> pageList = ${entityName?uncap_first}Service.page(page, queryWrapper);
 		return Result.OK(pageList);
 	}
+
+	<#if bpm_flag>
+    /**
+     *  关联流程
+     * @param request
+     * @param response
+     * @return
+     */
+    @GetMapping(value = "/relationAct")
+    public Result<?> relationAct(HttpServletRequest request, HttpServletResponse response) {
+         String dataId = request.getParameter("dataId");
+         ${entityName?uncap_first}Service.relationAct(dataId);
+         return Result.OK();
+    }
+    </#if>
 	
 	/**
 	 *   添加
@@ -90,7 +105,7 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 	@PostMapping(value = "/add")
 	public Result<String> add(@RequestBody ${entityName} ${entityName?uncap_first}) {
 	    <#if bpm_flag>
-        ${entityName?uncap_first}.setBpmStatus("1");
+        ${entityName?uncap_first}.setBpmStatus("0");
 	    </#if>
 		${entityName?uncap_first}Service.save(${entityName?uncap_first});
 		return Result.OK("添加成功！");

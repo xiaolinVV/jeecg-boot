@@ -198,7 +198,7 @@
                 <a @click="handleDetail(record)">详情</a>
               </a-menu-item>
               <#if bpm_flag>
-              <a-menu-item v-if="record.bpmStatus === '1'">
+              <a-menu-item v-if="record.bpmStatus === '0'">
                 <a @click="startProcess(record)">发起流程</a>
               </a-menu-item>
               </#if>
@@ -323,12 +323,8 @@
           deleteBatch: "/${entityPackage}/${entityName?uncap_first}/deleteBatch",
           exportXlsUrl: "/${entityPackage}/${entityName?uncap_first}/exportXls",
           importExcelUrl: "${entityPackage}/${entityName?uncap_first}/importExcel",
-          <#if bpm_flag>startProcess: '/act/process/extActProcess/startMutilProcess'</#if>
+          <#if bpm_flag>startProcess: '/flowable/definition/startByDataId/'</#if>
         },
-        <#if bpm_flag>
-        //代码生成后需手动设置流程编码
-        flowCode: 'dev_${tableName}_001',
-        </#if>
         dictOptions:{},
         <#if list_need_pca>
         pcaData:'',
@@ -377,13 +373,8 @@
           title:'提示',
           content:'确认提交流程吗?',
           onOk:()=>{
-            let params = {
-              flowCode: this.flowCode,
-              id: record.id,
-              formUrl: '${entityPackage}/modules/${entityName}Form',
-              formUrlMobile: ''
-            }
-            postAction(this.url.startProcess, params).then(res=>{
+            let params = Object.assign({dataId: record.id}, record);
+            postAction(this.url.startProcess + record.id, params).then(res=>{
               if(res.success){
                 this.$message.success(res.message);
                 this.loadData();
