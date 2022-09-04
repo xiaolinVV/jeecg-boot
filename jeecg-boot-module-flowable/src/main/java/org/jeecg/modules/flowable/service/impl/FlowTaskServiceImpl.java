@@ -919,8 +919,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
         Page<FlowTaskDto> page = new Page<>();
         String username = iFlowThirdService.getLoginUser().getUsername();
         TaskQuery taskQuery = taskService.createTaskQuery();
-        taskQuery.or().taskCandidateUser(username).taskAssignee(username).endOr();
-        taskQuery.active().includeProcessVariables().orderByTaskCreateTime().desc();
+        taskQuery.taskCandidateOrAssigned(username).orderByTaskCreateTime().desc();
         page.setTotal(taskQuery.count());
         List<Task> taskList = taskQuery.listPage((pageNum - 1)*pageSize, pageSize);
         List<FlowTaskDto> flowList = new ArrayList<>();
