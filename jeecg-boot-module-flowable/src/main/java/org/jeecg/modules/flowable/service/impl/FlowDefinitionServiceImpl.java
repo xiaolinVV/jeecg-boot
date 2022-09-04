@@ -1,6 +1,7 @@
 package org.jeecg.modules.flowable.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -307,6 +308,11 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
             String serviceImplName = business.getServiceImplName();
             FlowCallBackServiceI flowCallBackService = (FlowCallBackServiceI) SpringContextUtils.getBean(serviceImplName);
             List<String> beforeParamsCandidateUsernames = flowCallBackService.flowCandidateUsernamesOfTask(task2.getTaskDefinitionKey(), variables);
+
+            //前端传入候选人列表 覆盖
+            List<String> candidateUsers = StrUtil.split(Convert.toStr(variables.get("candidateUsers")), StrUtil.C_COMMA);
+            beforeParamsCandidateUsernames =  CollUtil.isNotEmpty(candidateUsers) ? candidateUsers : beforeParamsCandidateUsernames;
+
             if (CollUtil.isNotEmpty(beforeParamsCandidateUsernames)){
                 // 删除后重写
                 for (Task task2One : task2List) {
