@@ -50,7 +50,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
      */
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("请假流程",dataId,"${entityName?uncap_first}Service","process_1zwelvy5",null,null);
+        flowCommonService.initActBusiness("",dataId,"${entityName?uncap_first}Service","",null,null);
     }
 
     @Override
@@ -71,11 +71,11 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     }
 
     @Override
-    public boolean save(${entityName} entity) {
+    public boolean save(${entityName} ${entityName?uncap_first}) {
         /**新增数据，初始化流程关联信息**/
-        entity.setId(IdUtil.fastSimpleUUID());
-        this.relationAct(entity.getId());
-        return super.save(entity);
+        ${entityName?uncap_first}.setId(IdUtil.fastSimpleUUID());
+        this.relationAct(${entityName?uncap_first}.getId());
+        return super.save(${entityName?uncap_first});
     }
 
     @Override
