@@ -31,6 +31,7 @@ import org.flowable.identitylink.api.history.HistoricIdentityLink;
 import org.flowable.image.ProcessDiagramGenerator;
 import org.flowable.task.api.DelegationState;
 import org.flowable.task.api.Task;
+import org.flowable.task.api.TaskInfo;
 import org.flowable.task.api.TaskQuery;
 import org.flowable.task.api.history.HistoricTaskInstance;
 import org.flowable.task.api.history.HistoricTaskInstanceQuery;
@@ -923,6 +924,14 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
         page.setTotal(taskQuery.count());
         List<Task> taskList = taskQuery.listPage((pageNum - 1)*pageSize, pageSize);
         List<FlowTaskDto> flowList = new ArrayList<>();
+
+        //流程业务信息
+        List<String> processInstanceIds = taskList.stream().map(TaskInfo::getProcessInstanceId).collect(Collectors.toList());
+        Map<String, FlowMyBusiness> flowMyBusinessMap = MapUtil.empty();
+        if (CollUtil.isNotEmpty(processInstanceIds)) {
+            flowMyBusinessMap = flowMyBusinessService.getByProcessInstanceIds(processInstanceIds);
+        }
+
         for (Task task : taskList) {
             FlowTaskDto flowTask = new FlowTaskDto();
             // 当前流程信息
@@ -952,7 +961,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             flowTask.setStartDeptName(CollUtil.join(departNamesByUsername,"，"));
 
             //流程业务信息
-            FlowMyBusiness flowMyBusiness = flowMyBusinessService.getByProcessInstanceId(task.getProcessInstanceId());
+            FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(task.getProcessInstanceId());
             if (flowMyBusiness != null) {
                 flowTask.setTitle(flowMyBusiness.getTitle());
                 flowTask.setBpmStatus(flowMyBusiness.getBpmStatus());
@@ -988,6 +997,13 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 .desc();
         List<HistoricTaskInstance> historicTaskInstanceList = taskInstanceQuery.listPage((pageNum - 1)*pageSize, pageSize);
         List<FlowTaskDto> hisTaskList = Lists.newArrayList();
+
+        //流程业务信息
+        List<String> processInstanceIds = historicTaskInstanceList.stream().map(HistoricTaskInstance::getProcessInstanceId).collect(Collectors.toList());
+        Map<String, FlowMyBusiness> flowMyBusinessMap = MapUtil.empty();
+        if (CollUtil.isNotEmpty(processInstanceIds)) {
+            flowMyBusinessMap = flowMyBusinessService.getByProcessInstanceIds(processInstanceIds);
+        }
         for (HistoricTaskInstance histTask : historicTaskInstanceList) {
             FlowTaskDto flowTask = new FlowTaskDto();
             // 当前流程信息
@@ -1022,7 +1038,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             flowTask.setStartDeptName(CollUtil.join(departNamesByUsername,"，"));
 
             //流程业务信息
-            FlowMyBusiness flowMyBusiness = flowMyBusinessService.getByProcessInstanceId(histTask.getProcessInstanceId());
+            FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(histTask.getProcessInstanceId());
             if (flowMyBusiness != null) {
                 flowTask.setTitle(flowMyBusiness.getTitle());
                 flowTask.setBpmStatus(flowMyBusiness.getBpmStatus());
