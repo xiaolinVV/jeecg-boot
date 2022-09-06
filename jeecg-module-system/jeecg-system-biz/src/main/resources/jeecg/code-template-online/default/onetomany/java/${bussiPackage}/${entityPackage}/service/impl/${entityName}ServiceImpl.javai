@@ -164,5 +164,31 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 			${entityName?uncap_first}Mapper.deleteById(id);
 		}
 	}
+
+	<#if bpm_flag>
+    @Override
+    public void afterFlowHandle(FlowMyBusiness business) {
+        //**流程处理完成后的回调,将其中关键信息存入业务表，即可单表业务操作,否则需要关联flow_my_business表获取流程信息<br/>**/
+        ${entityName} ${entityName?uncap_first} = getById(business.getDataId());
+        ${entityName?uncap_first}.setBpmStatus(business.getBpmStatus());
+        updateById(${entityName?uncap_first});
+    }
+
+    @Override
+    public Object getBusinessDataById(String dataId) {
+        return getById(dataId);
+    }
+
+    @Override
+    public Map<String, Object> flowValuesOfTask(String taskNameId, Map<String, Object> values) {
+        return null;
+    }
+
+    @Override
+    public List<String> flowCandidateUsernamesOfTask(String taskNameId, Map<String, Object> values) {
+        return null;
+    }
+	</#if>
+
 	
 }

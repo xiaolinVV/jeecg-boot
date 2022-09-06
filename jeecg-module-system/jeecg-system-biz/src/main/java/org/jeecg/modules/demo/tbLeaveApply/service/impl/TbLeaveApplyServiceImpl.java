@@ -83,7 +83,7 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
 
     @Override
     public Object getBusinessDataById(String dataId) {
-        return null;
+        return getById(dataId);
     }
 
     @Override
