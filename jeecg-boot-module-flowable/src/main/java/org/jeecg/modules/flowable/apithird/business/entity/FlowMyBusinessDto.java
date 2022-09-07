@@ -101,6 +101,11 @@ public class FlowMyBusinessDto implements Serializable {
     @Excel(name = "积木报表ID, 可查看当前审批单挂载的单据报表页面", width = 15)
     @ApiModelProperty(value = "积木报表ID, 可查看当前审批单挂载的单据报表页面")
     private String jimuReportId;
+    /**PC表单组件地址*/
+    @TableField(exist = false)
+    @Excel(name = "PC表单组件地址", width = 15)
+    @ApiModelProperty(value = "PC表单组件地址")
+    private String pcFormUrl;
 	/**流程变量*/
 	@TableField(exist = false)
     private Map<String,Object> values;
