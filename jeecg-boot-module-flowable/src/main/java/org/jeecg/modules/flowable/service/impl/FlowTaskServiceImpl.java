@@ -969,6 +969,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 flowTask.setTodoUsers(flowMyBusiness.getTodoUsers());
                 flowTask.setDoneUsers(flowMyBusiness.getDoneUsers());
                 flowTask.setJimuReportId(flowMyBusiness.getJimuReportId());
+                flowTask.setPcFormUrl(flowMyBusiness.getPcFormUrl());
             }
             flowList.add(flowTask);
         }
@@ -1046,6 +1047,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 flowTask.setTodoUsers(flowMyBusiness.getTodoUsers());
                 flowTask.setDoneUsers(flowMyBusiness.getDoneUsers());
                 flowTask.setJimuReportId(flowMyBusiness.getJimuReportId());
+                flowTask.setPcFormUrl(flowMyBusiness.getPcFormUrl());
             }
 
             hisTaskList.add(flowTask);

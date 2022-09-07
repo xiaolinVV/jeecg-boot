@@ -117,4 +117,8 @@ public class FlowTaskDto implements Serializable {
     /**积木报表ID, 可查看当前审批单挂载的单据报表页面*/
     @ApiModelProperty(value = "积木报表ID, 可查看当前审批单挂载的单据报表页面")
     private String jimuReportId;
+
+    /**PC表单组件地址*/
+    @ApiModelProperty(value = "PC表单组件地址")
+    private String pcFormUrl;
 }

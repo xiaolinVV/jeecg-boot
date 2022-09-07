@@ -41,7 +41,7 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
      */
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("请假流程",dataId,"tbLeaveApplyService","process_jjarbu5x",null,null);
+        flowCommonService.initActBusiness("请假流程",dataId,"tbLeaveApplyService","process_jjarbu5x",null,null,null);
     }
 
     @Override

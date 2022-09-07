@@ -69,7 +69,7 @@ public class TestDemoServiceImpl extends ServiceImpl<TestDemoMapper, TestDemo> i
     }
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("测试流程：dataId"+dataId,dataId,"testDemoService","test-demo",null,null);
+        flowCommonService.initActBusiness("测试流程：dataId"+dataId,dataId,"testDemoService","test-demo",null,null,null);
     }
     @Override
     public boolean save(TestDemo testDemo) {
