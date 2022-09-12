@@ -1,10 +1,10 @@
 
 
-![JEECG](https://jeecgos.oss-cn-beijing.aliyuncs.com/files/site/jeecgfengm.png "JeecgBoot低代码开发平台")
+![JEECG](https://jeecgos.oss-cn-beijing.aliyuncs.com/files/logov3.png "JeecgBoot低代码开发平台")
 
 
 
-JEECG BOOT 低代码开发平台（前后端分离版本）
+JEECG BOOT 低代码开发平台
 ===============
 
 当前最新版本： 3.4.1（发布日期：2022-08-12） 
@@ -51,6 +51,10 @@ JeecgBoot 提供了一系列`低代码模块`，实现在线开发`真正的零�
 | `jeecgboot-vue3` | Vue3+Ts版前端源码 |
 | `jeecg-boot-starter` | stater依赖项目单独维护 [下载地址](https://gitee.com/jeecg/jeecg-boot-starter) |
 
+
+
+##### Star走势图
+![](https://jeecgos.oss-cn-beijing.aliyuncs.com/files/star20220907.png)
 
 适用项目
 -----------------------------------
@@ -115,7 +119,7 @@ Docker启动项目
 
 
 
-为什么选择JEECG-BOOT?
+为什么选择JeecgBoot?
 -----------------------------------
 * 1.采用最新主流前后分离框架（Springboot+Mybatis+antd），容易上手; 代码生成器依赖性低,灵活的扩展能力，可快速实现二次开发;
 * 2.支持微服务SpringCloud Alibaba(Nacos、Gateway、Sentinel、Skywalking)，提供切换机制支持单体和微服务自由切换
