@@ -5,7 +5,6 @@ import org.jeecg.modules.demo.tbLeaveApply.entity.TbLeaveApply;
 import org.jeecg.modules.demo.tbLeaveApply.mapper.TbLeaveApplyMapper;
 import org.jeecg.modules.demo.tbLeaveApply.service.ITbLeaveApplyService;
 import org.jeecg.modules.extFlow.flowMyBusinessConfig.entity.FlowMyBusinessConfig;
-import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,6 +19,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
 import java.util.List;
@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 /**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-09-04
+ * @Date:   2022-09-14
  * @Version: V1.0
  */
 @Service("tbLeaveApplyService")
-public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbLeaveApply> implements ITbLeaveApplyService,  FlowCallBackServiceI  {
+public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbLeaveApply> implements ITbLeaveApplyService , FlowCallBackServiceI  {
 
     @Autowired
     FlowCommonService flowCommonService;
@@ -49,7 +49,7 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
     public void relationAct(String dataId) {
         String tableName = SqlHelper.table(TbLeaveApply.class).getTableName();
         FlowMyBusinessConfig flowMyBusinessConfig = flowMyBusinessConfigService.getFlowMyBusinessConfigByTableName(tableName);
-        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId,"tbLeaveApplyService",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
+        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId, "tbLeaveApplyService",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
     }
 
     @Override
@@ -86,7 +86,10 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
 
     @Override
     public void afterFlowHandle(FlowMyBusiness business) {
-
+        //**流程处理完成后的回调,将其中关键信息存入业务表，即可单表业务操作,否则需要关联flow_my_business表获取流程信息<br/>**/
+        TbLeaveApply tbLeaveApply = getById(business.getDataId());
+        tbLeaveApply.setBpmStatus(business.getBpmStatus());
+        updateById(tbLeaveApply);
     }
 
     @Override
