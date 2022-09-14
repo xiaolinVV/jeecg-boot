@@ -75,5 +75,6 @@ public class TbLeaveApply implements Serializable {
 	/**审批状态*/
 	@Excel(name = "审批状态", width = 15)
     @ApiModelProperty(value = "审批状态")
+    @Dict(dicCode = "act_status")
     private java.lang.String bpmStatus;
 }
