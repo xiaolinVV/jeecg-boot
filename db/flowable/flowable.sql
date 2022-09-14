@@ -40,6 +40,11 @@ INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `descrip
 INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1533795927621857281', '1533795346018693121', '审批通过', '5', '', 6, 1, 'admin', '2022-06-06 21:00:20', NULL, NULL);
 INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1533795981191507969', '1533795346018693121', '审批异常', '6', '', 7, 1, 'admin', '2022-06-06 21:00:33', NULL, NULL);
 
+-- 字典
+INSERT INTO `sys_dict`(`id`, `dict_name`, `dict_code`, `description`, `del_flag`, `create_by`, `create_time`, `update_by`, `update_time`, `type`) VALUES ('1569944741751529474', '流程是否退回', 'actIsReturn', '', 0, 'admin', '2022-09-14 15:02:49', NULL, NULL, 0);
+INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1569944780246851585', '1569944741751529474', '审批通过', '0', '默认审批通过，不退回', 1, 1, 'admin', '2022-09-14 15:02:58', 'admin', '2022-09-14 15:03:14');
+INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1569944924614795266', '1569944741751529474', '审批退回', '1', '', 2, 1, 'admin', '2022-09-14 15:03:33', NULL, NULL);
+
 
 -- 流程菜单
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1534453758712836097', '1534453116317429762', '我发起流程', '/flowable/myProcess/MyProcessList', 'flowable/myProcess/MyProcessList', NULL, NULL, 1, NULL, '1', 3, 0, NULL, 1, 1, 0, 0, 0, NULL, 'admin', '2022-06-08 16:34:20', 'admin', '2022-06-08 17:13:39', 0, 0, '1', 0);
