@@ -34,6 +34,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
 import java.util.Map;
 import java.util.stream.Collectors;
 </#if>
@@ -60,13 +61,18 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     @Autowired
     FlowCommonService flowCommonService;
 
+    @Autowired
+    IFlowMyBusinessConfigService flowMyBusinessConfigService;
+
     /**
      * 关联流程
      * @param dataId 业务id
      */
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("请假流程",dataId,"${entityName?uncap_first}Service","process_1zwelvy5",null,null);
+        String tableName = SqlHelper.table(${entityName}.class).getTableName();
+        FlowMyBusinessConfig flowMyBusinessConfig = flowMyBusinessConfigService.getFlowMyBusinessConfigByTableName(tableName);
+        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId, "${entityName?uncap_first}Service",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
     }
 
     @Override
