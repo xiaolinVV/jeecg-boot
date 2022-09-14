@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @Version: V1.0
  */
 @Service("${entityName?uncap_first}Service")
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service, <#if bpm_flag> FlowCallBackServiceI </#if> {
+public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service <#if bpm_flag>, FlowCallBackServiceI </#if> {
 
     <#if bpm_flag>
     @Autowired
