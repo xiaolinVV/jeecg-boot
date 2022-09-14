@@ -1,8 +1,11 @@
 package org.jeecg.modules.demo.tbLeaveApply.service.impl;
 
+import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import org.jeecg.modules.demo.tbLeaveApply.entity.TbLeaveApply;
 import org.jeecg.modules.demo.tbLeaveApply.mapper.TbLeaveApplyMapper;
 import org.jeecg.modules.demo.tbLeaveApply.service.ITbLeaveApplyService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.entity.FlowMyBusinessConfig;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,13 +38,18 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
     @Autowired
     FlowCommonService flowCommonService;
 
+    @Autowired
+    IFlowMyBusinessConfigService flowMyBusinessConfigService;
+
     /**
      * 关联流程
      * @param dataId 业务id
      */
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("请假流程",dataId,"tbLeaveApplyService","process_jjarbu5x",null,null,null);
+        String tableName = SqlHelper.table(TbLeaveApply.class).getTableName();
+        FlowMyBusinessConfig flowMyBusinessConfig = flowMyBusinessConfigService.getFlowMyBusinessConfigByTableName(tableName);
+        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId,"tbLeaveApplyService",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
     }
 
     @Override
