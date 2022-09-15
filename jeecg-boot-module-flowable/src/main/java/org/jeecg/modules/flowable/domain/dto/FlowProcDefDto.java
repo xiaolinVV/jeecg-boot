@@ -49,7 +49,7 @@ public class FlowProcDefDto implements Serializable {
     private int isLastVersion;
 
     @ApiModelProperty("部署时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     private Date deploymentTime;
 
 
