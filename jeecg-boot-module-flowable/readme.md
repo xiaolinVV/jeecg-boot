@@ -63,7 +63,7 @@ flowable:
 ### 1.2、执行 flowable 数据库脚本
 
 ```xml
-db/flowable/flowable_act.sql
+db/flowable/flowable_act-mysql5.7.sql
 db/flowable/flowable.sql
 ```
 
