@@ -11,6 +11,7 @@ import org.jeecg.modules.flowable.domain.vo.FlowTaskVo;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  */
@@ -131,7 +132,14 @@ public interface IFlowTaskService {
      * @param procInsId 流程实例Id
      * @return
      */
-    Result flowRecord(String dataId);
+    Map<String, Object> flowRecord(String dataId);
+
+    /**
+     * 查看积木报表单据
+     * @param dataId 关联表单ID
+     * @return
+     */
+    Map<String, Object> jimuReportData(String dataId);
 
     /**
      * 根据任务ID查询挂载的表单信息

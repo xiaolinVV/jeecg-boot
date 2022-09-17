@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>工作流任务管理<p>
@@ -73,7 +74,13 @@ public class FlowTaskController {
     @ApiOperation(value = "流程历史流转记录", response = FlowTaskDto.class)
     @GetMapping(value = "/flowRecord")
     public Result flowRecord(String dataId) {
-        return flowTaskService.flowRecord(dataId);
+        return Result.OK(flowTaskService.flowRecord(dataId));
+    }
+
+    @ApiOperation(value = "查看积木报表单据", response = FlowTaskDto.class)
+    @GetMapping(value = "/jimuReportData")
+    public Map<String,Object> getJimuReportData(String dataId) {
+        return flowTaskService.jimuReportData(dataId);
     }
 
     @ApiOperation(value = "获取流程变量", response = FlowTaskDto.class)
