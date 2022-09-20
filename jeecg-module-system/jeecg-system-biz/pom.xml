@@ -62,13 +62,6 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/src/main/resources/lib/MobileIMSDKServer.jar</systemPath>
 		</dependency>
-		<dependency>
-			<groupId>com.mobileIMSDK</groupId>
-			<artifactId>rabbitmq-client</artifactId>
-			<version>6.2</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/lib/rabbitmq-client.jar</systemPath>
-		</dependency>
 		<!--	MobileIMSDKServer end	-->
 
 	</dependencies>

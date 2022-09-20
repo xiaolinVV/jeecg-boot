@@ -74,4 +74,12 @@
 		<appender-ref ref="FILE_HTML" />
 	</root>
 
+	<!-- 测试环境+开发环境. 多个使用逗号隔开. -->
+	<springProfile name="test,dev">
+		<!--mobileimsdk 服务端开启 debug 级别日志-->
+		<logger name="net.x52im.mobileimsdk.server" level="DEBUG" additivity="false">
+			<appender-ref ref="STDOUT"/>
+		</logger>
+	</springProfile>
+
 </configuration>

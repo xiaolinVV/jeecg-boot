@@ -31,6 +31,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- 作用:项目打成jar，同时把本地jar包也引入进去 -->
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
                 </configuration>
