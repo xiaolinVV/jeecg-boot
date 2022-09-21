@@ -37,10 +37,6 @@ public class TomcatFactoryConfig {
                 SecurityConstraint constraint = new SecurityConstraint();
                 SecurityCollection collection = new SecurityCollection();
                 //http方法
-                collection.addMethod("PUT");
-                collection.addMethod("DELETE");
-                collection.addMethod("HEAD");
-                collection.addMethod("OPTIONS");
                 collection.addMethod("TRACE");
                 //url匹配表达式
                 collection.addPattern("/*");
