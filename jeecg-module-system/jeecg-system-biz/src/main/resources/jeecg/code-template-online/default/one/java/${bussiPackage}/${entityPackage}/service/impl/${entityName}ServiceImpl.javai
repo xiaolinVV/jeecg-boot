@@ -24,6 +24,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
 import java.util.List;
@@ -38,11 +39,14 @@ import java.util.stream.Collectors;
  * @Version: V1.0
  */
 @Service("${entityName?uncap_first}Service")
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service, <#if bpm_flag> FlowCallBackServiceI </#if> {
+public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service <#if bpm_flag>, FlowCallBackServiceI </#if> {
 
     <#if bpm_flag>
     @Autowired
     FlowCommonService flowCommonService;
+
+    @Autowired
+    IFlowMyBusinessConfigService flowMyBusinessConfigService;
 
     /**
      * 关联流程
@@ -50,7 +54,9 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
      */
     @Override
     public void relationAct(String dataId) {
-        flowCommonService.initActBusiness("",dataId,"${entityName?uncap_first}Service","",null,null);
+        String tableName = SqlHelper.table(${entityName}.class).getTableName();
+        FlowMyBusinessConfig flowMyBusinessConfig = flowMyBusinessConfigService.getFlowMyBusinessConfigByTableName(tableName);
+        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId, "${entityName?uncap_first}Service",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
     }
 
     @Override

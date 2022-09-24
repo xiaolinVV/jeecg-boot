@@ -40,6 +40,14 @@ INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `descrip
 INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1533795927621857281', '1533795346018693121', '审批通过', '5', '', 6, 1, 'admin', '2022-06-06 21:00:20', NULL, NULL);
 INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1533795981191507969', '1533795346018693121', '审批异常', '6', '', 7, 1, 'admin', '2022-06-06 21:00:33', NULL, NULL);
 
+-- 字典
+INSERT INTO `sys_dict`(`id`, `dict_name`, `dict_code`, `description`, `del_flag`, `create_by`, `create_time`, `update_by`, `update_time`, `type`) VALUES ('1569944741751529474', '流程是否退回', 'actIsReturn', '', 0, 'admin', '2022-09-14 15:02:49', NULL, NULL, 0);
+INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1569944780246851585', '1569944741751529474', '审批通过', '0', '默认审批通过，不退回', 1, 1, 'admin', '2022-09-14 15:02:58', 'admin', '2022-09-14 15:03:14');
+INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1569944924614795266', '1569944741751529474', '审批退回', '1', '', 2, 1, 'admin', '2022-09-14 15:03:33', NULL, NULL);
+
+INSERT INTO `sys_dict`(`id`, `dict_name`, `dict_code`, `description`, `del_flag`, `create_by`, `create_time`, `update_by`, `update_time`, `type`) VALUES ('1569946201646145538', '流程配置-表单类型', 'ext_flow_form_type', '', 0, 'admin', '2022-09-14 15:08:37', NULL, NULL, 0);
+INSERT INTO `sys_dict_item`(`id`, `dict_id`, `item_text`, `item_value`, `description`, `sort_order`, `status`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES ('1569946295590166529', '1569946201646145538', '自定义开发', '3', '', 3, 1, 'admin', '2022-09-14 15:09:00', NULL, NULL);
+
 
 -- 流程菜单
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1534453758712836097', '1534453116317429762', '我发起流程', '/flowable/myProcess/MyProcessList', 'flowable/myProcess/MyProcessList', NULL, NULL, 1, NULL, '1', 3, 0, NULL, 1, 1, 0, 0, 0, NULL, 'admin', '2022-06-08 16:34:20', 'admin', '2022-06-08 17:13:39', 0, 0, '1', 0);
@@ -48,7 +56,7 @@ INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `com
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1529772403697627137', '1529772027745382402', '流程设计', '/flowable/modeler/modelerDesign', 'flowable/modeler/modelerDesign', NULL, NULL, 1, NULL, '1', 1, 0, NULL, 1, 1, 0, 0, 0, NULL, 'admin', '2022-05-26 18:32:17', 'admin', '2022-06-05 18:29:45', 0, 0, '1', 0);
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1534462289604214786', '1534453116317429762', '待办任务', '/flowable/todoList/MyTodoList', 'flowable/todoList/MyTodoList', NULL, NULL, 1, NULL, '1', 1, 0, NULL, 1, 1, 0, 0, 0, NULL, 'admin', '2022-06-08 17:08:13', NULL, NULL, 0, 0, '1', 0);
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1534473146522349569', '1534472925054709762', '请假申请', '/demo/tbLeaveApplyList/TbLeaveApplyList', 'demo/tbLeaveApplyList/TbLeaveApplyList', NULL, NULL, 1, NULL, '1', 1, 0, NULL, 1, 1, 0, 0, 0, NULL, 'admin', '2022-06-08 17:51:22', 'admin', '2022-06-08 17:54:54', 0, 0, '1', 0);
-INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1529772027745382402', '', '流程设计', '/flowable', 'layouts/RouteView', NULL, NULL, 0, NULL, '1', 6.1, 0, 'cluster', 1, 0, 0, 0, 0, NULL, 'admin', '2022-05-26 18:30:48', 'admin', '2022-06-05 18:29:36', 0, 0, '1', 0);
+INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1529772027745382402', '', '流程设计', '/flowable/design', 'layouts/RouteView', NULL, NULL, 0, NULL, '1', 6.1, 0, 'cluster', 1, 0, 0, 0, 0, NULL, 'admin', '2022-05-26 18:30:48', 'admin', '2022-06-05 18:29:36', 0, 0, '1', 0);
 INSERT INTO `sys_permission`(`id`, `parent_id`, `name`, `url`, `component`, `component_name`, `redirect`, `menu_type`, `perms`, `perms_type`, `sort_no`, `always_show`, `icon`, `is_route`, `is_leaf`, `keep_alive`, `hidden`, `hide_tab`, `description`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`, `rule_flag`, `status`, `internal_or_external`) VALUES ('1534453116317429762', '', '个人办公', '/flowable', 'layouts/RouteView', NULL, NULL, 0, NULL, '1', 0.1, 0, 'share-alt', 1, 0, 0, 0, 0, NULL, 'admin', '2022-06-08 16:31:46', 'admin', '2022-06-08 16:32:07', 0, 0, '1', 0);
 
 -- 流程菜单默认授权给 admin
@@ -59,6 +67,28 @@ INSERT INTO `sys_role_permission`(`id`, `role_id`, `permission_id`, `data_rule_i
 INSERT INTO `sys_role_permission`(`id`, `role_id`, `permission_id`, `data_rule_ids`, `operate_date`, `operate_ip`) VALUES ('1534463722533629953', 'f6817f48af4fb3af11b9e8bf182f618b', '1534463621773864962', NULL, '2022-06-08 17:13:55', '0:0:0:0:0:0:0:1');
 INSERT INTO `sys_role_permission`(`id`, `role_id`, `permission_id`, `data_rule_ids`, `operate_date`, `operate_ip`) VALUES ('1534453853252448258', 'f6817f48af4fb3af11b9e8bf182f618b', '1534453116317429762', NULL, '2022-06-08 16:34:42', '0:0:0:0:0:0:0:1');
 INSERT INTO `sys_role_permission`(`id`, `role_id`, `permission_id`, `data_rule_ids`, `operate_date`, `operate_ip`) VALUES ('1529772484274401282', 'f6817f48af4fb3af11b9e8bf182f618b', '1529772027745382402', NULL, '2022-05-26 18:32:37', '0:0:0:0:0:0:0:1');
+
+DROP TABLE IF EXISTS `flow_my_business_config`;
+CREATE TABLE `flow_my_business_config` (
+                                           `id` varchar(36) NOT NULL,
+                                           `form_type` varchar(32) DEFAULT '3' COMMENT '表单类型',
+                                           `table_name` varchar(64) DEFAULT NULL COMMENT '表名/自定义表单 CODE',
+                                           `code` varchar(64) DEFAULT NULL COMMENT '唯一编码',
+                                           `bpm_status_column_name` varchar(32) DEFAULT NULL COMMENT '流程状态列名',
+                                           `title_expression` varchar(64) DEFAULT NULL COMMENT '标题表达式',
+                                           `create_by` varchar(50) DEFAULT NULL COMMENT '创建人',
+                                           `create_time` datetime DEFAULT NULL COMMENT '创建日期',
+                                           `update_by` varchar(50) DEFAULT NULL COMMENT '更新人',
+                                           `update_time` datetime DEFAULT NULL COMMENT '更新日期',
+                                           `sys_org_code` varchar(64) DEFAULT NULL COMMENT '所属部门',
+                                           `process_definition_key` varchar(32) NOT NULL COMMENT '流程定义key 一个key会有多个版本的id',
+                                           `jimu_report_id` varchar(64) DEFAULT NULL COMMENT '积木报表',
+                                           `pc_form_url` varchar(64) DEFAULT NULL COMMENT 'PC表单组件地址',
+                                           PRIMARY KEY (`id`) /*T![clustered_index] NONCLUSTERED */,
+                                           UNIQUE KEY `unique_table_name` (`table_name`),
+                                           UNIQUE KEY `unique_code` (`code`),
+                                           KEY `index_processDefinitionKey` (`process_definition_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of flow_my_business

@@ -1,7 +1,10 @@
 package org.jeecg.modules.flowable.service.impl;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -1072,7 +1075,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
      * @return
      */
     @Override
-    public Result flowRecord(String dataId) {
+    public Map<String, Object> flowRecord(String dataId) {
         FlowMyBusiness business = flowMyBusinessService.getByDataId(dataId);
         String procInsId = business.getProcessInstanceId();
         Map<String, Object> map = new HashMap<String, Object>();
@@ -1144,7 +1147,38 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             Object businessDataById = flowCallBackService.getBusinessDataById(dataId);
             map.put("formData",businessDataById);
         }
-        return Result.OK(map);
+        return map;
+    }
+
+    /**
+     * 查看积木报表单据
+     * @param dataId 关联表单ID
+     * @return
+     */
+    @Override
+    public Map<String, Object> jimuReportData(String dataId) {
+        Map<String, Object> flowRecordMap = flowRecord(dataId);
+        Object formData = flowRecordMap.get("formData");
+
+        Map<String, Object> resultMap = BeanUtil.beanToMap(formData);
+        List<FlowTaskDto> flowList = (List<FlowTaskDto>) flowRecordMap.get("flowList");
+
+        Map<String, FlowTaskDto> taskDtoMap = flowList.stream().collect(Collectors.toMap(FlowTaskDto::getTaskDefKey, e->e, (flowTaskDto1,flowTaskDto2) -> DateUtil.compare(flowTaskDto2.getFinishTime(),flowTaskDto1.getFinishTime()) > 0 ? flowTaskDto2 : flowTaskDto1));
+
+        for (FlowTaskDto flowTaskDto : taskDtoMap.values()) {
+            String taskDefKey = flowTaskDto.getTaskDefKey();
+            FlowCommentDto comment = flowTaskDto.getComment();
+            resultMap.put(taskDefKey + "-taskName",flowTaskDto.getTaskName());
+            resultMap.put(taskDefKey + "-commentType",comment.getType());
+            resultMap.put(taskDefKey + "-comment", comment.getComment());
+            resultMap.put(taskDefKey + "-assigneeId",flowTaskDto.getAssigneeId());
+            resultMap.put(taskDefKey + "-assigneeName",flowTaskDto.getAssigneeName());
+            resultMap.put(taskDefKey + "-deptName",flowTaskDto.getDeptName());
+            resultMap.put(taskDefKey + "-candidate",flowTaskDto.getCandidate());
+            resultMap.put(taskDefKey + "-finishTime", DateUtil.format(flowTaskDto.getFinishTime(), DatePattern.CHINESE_DATE_FORMAT));
+        }
+
+        return resultMap;
     }
 
     /**

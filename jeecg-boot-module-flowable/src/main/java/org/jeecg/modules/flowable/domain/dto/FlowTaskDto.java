@@ -89,11 +89,11 @@ public class FlowTaskDto implements Serializable {
     private String candidate;
 
     @ApiModelProperty("任务创建时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
     @ApiModelProperty("任务完成时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     private Date finishTime;
 
     /**流程业务简要描述*/

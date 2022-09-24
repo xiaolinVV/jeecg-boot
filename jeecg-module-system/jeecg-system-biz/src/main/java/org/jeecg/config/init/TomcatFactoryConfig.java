@@ -1,7 +1,10 @@
 package org.jeecg.config.init;
 
 import org.apache.catalina.Context;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.apache.tomcat.util.scan.StandardJarScanner;
+import org.springframework.boot.web.embedded.tomcat.TomcatContextCustomizer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +30,23 @@ public class TomcatFactoryConfig {
         factory.addConnectorCustomizers(connector -> {
             connector.setProperty("relaxedPathChars", "[]{}");
             connector.setProperty("relaxedQueryChars", "[]{}");
+        });
+        factory.addContextCustomizers(new TomcatContextCustomizer(){
+            @Override
+            public void customize(Context context) {
+                SecurityConstraint constraint = new SecurityConstraint();
+                SecurityCollection collection = new SecurityCollection();
+                //http方法
+                collection.addMethod("TRACE");
+                //url匹配表达式
+                collection.addPattern("/*");
+                constraint.addCollection(collection);
+                constraint.setAuthConstraint(true);
+                context.addConstraint(constraint );
+
+                //设置使用httpOnly
+                context.setUseHttpOnly(true);
+            }
         });
         return factory;
     }

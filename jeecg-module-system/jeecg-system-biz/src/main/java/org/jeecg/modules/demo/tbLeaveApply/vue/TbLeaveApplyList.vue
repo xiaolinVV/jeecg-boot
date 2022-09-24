@@ -103,6 +103,7 @@
   import { JeecgListMixin } from '@/mixins/JeecgListMixin'
   import TbLeaveApplyModal from './modules/TbLeaveApplyModal'
   import { postAction } from '@/api/manage'
+  import {filterMultiDictText} from '@/components/dict/JDictSelectUtil'
 
   export default {
     name: 'TbLeaveApplyList',
@@ -208,7 +209,7 @@
         fieldList.push({type:'datetime',value:'startTime',text:'开始时间'})
         fieldList.push({type:'int',value:'days',text:'请假天数',dictCode:''})
         fieldList.push({type:'string',value:'content',text:'请假事由',dictCode:''})
-        fieldList.push({type:'string',value:'bpmStatus',text:'审批状态',dictCode:''})
+        fieldList.push({type:'string',value:'bpmStatus',text:'审批状态',dictCode:'act_status'})
         this.superFieldList = fieldList
       }
     }
