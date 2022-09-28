@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
@@ -148,6 +150,24 @@ public class FormDesignController extends JeecgController<FormDesign, IFormDesig
 		}
 		return Result.OK(formDesign);
 	}
+
+	 /**
+	  * 通过code查询
+	  *
+	  * @param code
+	  * @return
+	  */
+	 @ApiOperation(value="表单设计表-通过code查询", notes="表单设计表-通过code查询")
+	 @GetMapping(value = "/queryByCode")
+	 public Result<FormDesign> queryByCode(@RequestParam(name="code",required=true) String code) {
+		 LambdaQueryWrapper<FormDesign> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+		 lambdaQueryWrapper.eq(FormDesign::getCode,code);
+		 FormDesign formDesign = formDesignService.getOne(lambdaQueryWrapper,false);
+		 if(formDesign==null) {
+			 return Result.error("未找到对应数据");
+		 }
+		 return Result.OK(formDesign);
+	 }
 
     /**
     * 导出excel
