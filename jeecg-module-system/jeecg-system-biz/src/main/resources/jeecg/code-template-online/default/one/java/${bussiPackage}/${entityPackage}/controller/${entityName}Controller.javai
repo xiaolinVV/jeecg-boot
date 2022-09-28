@@ -174,6 +174,22 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 	}
 
     /**
+     * 查询第一条数据,用于配置场景，通常配置只会有一条数据的
+     *
+     * @return
+     */
+    //@AutoLog(value = "${tableVo.ftlDescription}-查询第一条数据,用于配置场景")
+    @ApiOperation(value="${tableVo.ftlDescription}-查询第一条数据,用于配置场景", notes="${tableVo.ftlDescription}-查询第一条数据,用于配置场景")
+    @GetMapping(value = "/queryFirstData")
+    public Result<${entityName}> queryFirstData() {
+        ${entityName} ${entityName?uncap_first} = ${entityName?uncap_first}Service.getOne(new QueryWrapper<>(),false);
+        if(${entityName?uncap_first}==null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.OK(${entityName?uncap_first});
+    }
+
+    /**
     * 导出excel
     *
     * @param request
