@@ -26,6 +26,10 @@ CREATE TABLE `flow_my_business` (
                                     `done_users` varchar(1000) COLLATE utf8_general_ci DEFAULT NULL COMMENT '处理过的人',
                                     `priority` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT '当前任务节点的优先级 流程定义的时候所填',
                                     `jimu_report_id` varchar(64) COLLATE utf8_general_ci DEFAULT NULL COMMENT '积木报表ID, 可查看当前审批单挂载的单据报表页面',
+                                    `pc_form_url` varchar(100) COLLATE utf8_general_ci DEFAULT NULL COMMENT 'PC表单组件地址',
+                                    `proposer_dept_id` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '申请人部门ID',
+                                    `proposer_dept_name` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '申请人部门名称',
+                                    `proposer_name` varchar(50) COLLATE utf8_general_ci DEFAULT NULL COMMENT '申请人名称',
                                     PRIMARY KEY (`id`) /*T![clustered_index] NONCLUSTERED */,
                                     UNIQUE KEY `dataid` (`data_id`) COMMENT '业务数据Id索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='流程业务扩展表';
