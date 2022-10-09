@@ -79,6 +79,18 @@ public class FlowMyBusiness implements Serializable {
 	@Excel(name = "申请人", width = 15)
     @ApiModelProperty(value = "申请人")
     private String proposer;
+	/**申请人名称*/
+	@Excel(name = "申请人名称", width = 15)
+    @ApiModelProperty(value = "申请人名称")
+    private String proposerName;
+	/**申请人部门ID*/
+	@Excel(name = "申请人部门ID", width = 15)
+    @ApiModelProperty(value = "申请人部门ID")
+    private String proposerDeptId;
+	/**申请人部门名称*/
+	@Excel(name = "申请人部门名称", width = 15)
+    @ApiModelProperty(value = "申请人部门名称")
+    private String proposerDeptName;
 	/**流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常*/
 	@Excel(name = "流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常", width = 15)
     @ApiModelProperty(value = "流程状态说明，有：启动  撤回  驳回  审批中  审批通过  审批异常")

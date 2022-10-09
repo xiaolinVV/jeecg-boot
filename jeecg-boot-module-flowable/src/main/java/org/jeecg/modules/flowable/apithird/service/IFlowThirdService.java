@@ -52,5 +52,12 @@ public interface IFlowThirdService {
      */
     List<String> getDepartNamesByUsername(String username);
 
+    /**
+     * 通过用户账号查询部门集合
+     * @param username
+     * @return
+     */
+    List<String> getDepartIdsByUsername(String username);
+
 
 }

@@ -91,4 +91,9 @@ public class FlowThirdServiceImpl implements IFlowThirdService {
         List<String> departNamesByUsername = sysBaseAPI.getDepartNamesByUsername(username);
         return departNamesByUsername;
     }
+
+    @Override
+    public List<String> getDepartIdsByUsername(String username) {
+        return sysBaseAPI.getDepartIdsByUsername(username);
+    }
 }

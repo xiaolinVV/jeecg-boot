@@ -297,6 +297,10 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
             doneUserList.add(sysUser.getUsername());
         }
 
+        //部门ID、名称
+        String proposerDeptName = String.join(",", iFlowThirdService.getDepartNamesByUsername(sysUser.getUsername()));
+        String proposerDeptId = String.join(",", iFlowThirdService.getDepartIdsByUsername(sysUser.getUsername()));
+
         if (nextFlowNode!=null){
             //**有下一个节点
             UserTask nextTask = nextFlowNode.getUserTask();
@@ -333,6 +337,9 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
                     .setProcessInstanceId(processInstance.getProcessInstanceId())
                     .setBpmStatus(ActStatus.start.getValue())
                     .setProposer(sysUser.getUsername())
+                    .setProposerName(sysUser.getRealname())
+                    .setProposerDeptName(proposerDeptName)
+                    .setProposerDeptId(proposerDeptId)
                     .setTaskId(task2.getId())
                     .setTaskName(nextTask.getName())
                     .setTaskNameId(nextTask.getId())
@@ -346,6 +353,10 @@ public class FlowDefinitionServiceImpl extends FlowServiceFactory implements IFl
                     .setProcessInstanceId(processInstance.getProcessInstanceId())
                     .setBpmStatus(ActStatus.pass.getValue())
                     .setProposer(sysUser.getUsername())
+                    .setProposerName(sysUser.getRealname())
+                    .setProposerDeptName(proposerDeptName)
+                    .setProposerDeptId(proposerDeptId)
+                    .setProposerDeptName(proposerDeptName)
                     .setDoneUsers(doneUserList.toJSONString())
             ;
         }
