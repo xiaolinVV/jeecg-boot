@@ -41,9 +41,11 @@
 		</dependency>-->
 		<!--流程模块-->
 		<dependency>
-			<groupId>org.jeecgframework.boot</groupId>
-			<artifactId>jeecg-boot-module-flowable</artifactId>
-			<version>${jeecgboot.version}</version>
+			<groupId>com.hcframework</groupId>
+			<artifactId>jeecg-boot-starter-flowable</artifactId>
+			<version>3.4.2</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/main/resources/lib/jeecg-boot-starter-flowable-3.4.2.jar</systemPath>
 		</dependency>
 	</dependencies>
 	
