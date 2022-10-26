@@ -21,10 +21,12 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
 import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.entity.FlowMyBusinessConfig;
 import org.jeecg.modules.flowable.service.IFlowDefinitionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
@@ -84,7 +86,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     public boolean save(${entityName} ${entityName?uncap_first}) {
         /**新增数据，初始化流程关联信息**/
         ${entityName?uncap_first}.setId(IdUtil.fastSimpleUUID());
-        boolean saved super.save(${entityName?uncap_first});
+        boolean saved = super.save(${entityName?uncap_first});
         this.relationAct(${entityName?uncap_first}.getId());
 
         /**
@@ -93,7 +95,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
          * map.put("dataId",${entityName?uncap_first}.getId());
          * iFlowDefinitionService.startProcessInstanceByDataId(${entityName?uncap_first}.getId(), map);
          */
-        return saved
+        return saved;
     }
 
     @Override
