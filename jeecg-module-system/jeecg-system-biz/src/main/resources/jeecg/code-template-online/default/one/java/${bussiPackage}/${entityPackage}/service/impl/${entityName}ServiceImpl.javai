@@ -25,6 +25,7 @@ import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
 import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
+import org.jeecg.modules.flowable.service.IFlowDefinitionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
 import java.util.List;
@@ -48,6 +49,9 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     @Autowired
     IFlowMyBusinessConfigService flowMyBusinessConfigService;
 
+    @Autowired
+    private IFlowDefinitionService iFlowDefinitionService;
+
     /**
      * 关联流程
      * @param dataId 业务id
@@ -66,10 +70,10 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         if (CollUtil.isNotEmpty(records)) {
             List<String> ids = records.stream().map(${entityName}::getId).collect(Collectors.toList());
             Map<String, FlowMyBusiness> flowMyBusinessMap = flowCommonService.getMapByDataIds(ids);
-            for (${entityName} record : records) {
-                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(record.getId());
+            for (${entityName} ${entityName?uncap_first} : records) {
+                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(${entityName?uncap_first}.getId());
                 if (ObjectUtil.isNotNull(flowMyBusiness)) {
-                    BeanUtil.copyProperties(flowMyBusiness,record,"id","createBy","createTime","updateBy","updateTime");
+                    BeanUtil.copyProperties(flowMyBusiness,${entityName?uncap_first},"id","createBy","createTime","updateBy","updateTime");
                 }
             }
         }
@@ -80,8 +84,16 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     public boolean save(${entityName} ${entityName?uncap_first}) {
         /**新增数据，初始化流程关联信息**/
         ${entityName?uncap_first}.setId(IdUtil.fastSimpleUUID());
+        boolean saved super.save(${entityName?uncap_first});
         this.relationAct(${entityName?uncap_first}.getId());
-        return super.save(${entityName?uncap_first});
+
+        /**
+         * 默认情况是是新增完申请单数据后，前端再做一次提交的动作，不过有些场景需要默认新增申请单直接他提交流程，这里也支持，只需要解开注释就行！@by zhangshaolin
+         * Map<String, Object> map = BeanUtil.beanToMap(${entityName?uncap_first});
+         * map.put("dataId",${entityName?uncap_first}.getId());
+         * iFlowDefinitionService.startProcessInstanceByDataId(${entityName?uncap_first}.getId(), map);
+         */
+        return saved
     }
 
     @Override

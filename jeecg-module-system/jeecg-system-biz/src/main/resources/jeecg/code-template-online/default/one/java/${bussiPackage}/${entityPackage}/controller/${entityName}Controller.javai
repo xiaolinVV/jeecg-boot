@@ -42,7 +42,7 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 </#if>
 </#list>
 
- /**
+/**
  * @Description: ${tableVo.ftlDescription}
  * @Author: jeecg-boot
  * @Date:   ${.now?string["yyyy-MM-dd"]}
