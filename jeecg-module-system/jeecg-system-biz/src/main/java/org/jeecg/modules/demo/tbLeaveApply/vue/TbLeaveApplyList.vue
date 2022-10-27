@@ -83,9 +83,9 @@
         </template>
 
         <span slot="action" slot-scope="text, record">
-          <a @click="handleEdit(record)">编辑</a>
+          <a   v-if='isEditOrDelete(record)'  @click="handleEdit(record)">编辑</a>
 
-          <a-divider type="vertical" />
+          <a-divider  v-if='isEditOrDelete(record)'  type="vertical" />
           <a-dropdown>
             <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
             <a-menu slot="overlay">
@@ -96,7 +96,7 @@
                 <a @click="startProcess(record)">发起流程</a>
               </a-menu-item>
               <a-menu-item>
-                <a-popconfirm title="确定删除吗?" @confirm="() => handleDelete(record.id)">
+                <a-popconfirm  v-if='isEditOrDelete(record)'  title="确定删除吗?" @confirm="() => handleDelete(record.id)">
                   <a>删除</a>
                 </a-popconfirm>
               </a-menu-item>
@@ -118,11 +118,12 @@
   import { JeecgListMixin } from '@/mixins/JeecgListMixin'
   import TbLeaveApplyModal from './modules/TbLeaveApplyModal'
   import { postAction } from '@/api/manage'
+  import { FlowableMixin } from '@views/flowable/mixin/FlowableMixin'
   import {filterMultiDictText} from '@/components/dict/JDictSelectUtil'
 
   export default {
     name: 'TbLeaveApplyList',
-    mixins:[JeecgListMixin, mixinDevice],
+    mixins:[JeecgListMixin, mixinDevice, FlowableMixin],
     components: {
       TbLeaveApplyModal
     },
@@ -164,7 +165,7 @@
           {
             title:'审批状态',
             align:"center",
-            dataIndex: 'bpmStatus'
+            dataIndex: 'bpmStatus_dictText'
           },
           {
             title: '操作',

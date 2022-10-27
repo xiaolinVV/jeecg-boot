@@ -22,7 +22,7 @@ import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusinessDto;
 /**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-10-26
+ * @Date:   2022-10-27
  * @Version: V1.0
  */
 @Data
@@ -75,8 +75,8 @@ public class TbLeaveApply  extends FlowMyBusinessDto  implements Serializable {
     @ApiModelProperty(value = "请假事由")
     private java.lang.String content;
 	/**审批状态*/
-	@Excel(name = "审批状态", width = 15)
+	@Excel(name = "审批状态", width = 15, dicCode = "act_status")
+	@Dict(dicCode = "act_status")
     @ApiModelProperty(value = "审批状态")
-    @Dict(dicCode = "act_status")
     private java.lang.String bpmStatus;
 }
