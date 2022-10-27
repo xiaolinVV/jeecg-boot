@@ -188,9 +188,9 @@
         </template>
 
         <span slot="action" slot-scope="text, record">
-          <a @click="handleEdit(record)">编辑</a>
+          <a <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> @click="handleEdit(record)">编辑</a>
 
-          <a-divider type="vertical" />
+          <a-divider <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> type="vertical" />
           <a-dropdown>
             <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
             <a-menu slot="overlay">
@@ -203,7 +203,7 @@
               </a-menu-item>
               </#if>
               <a-menu-item>
-                <a-popconfirm title="确定删除吗?" @confirm="() => handleDelete(record.id)">
+                <a-popconfirm <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> title="确定删除吗?" @confirm="() => handleDelete(record.id)">
                   <a>删除</a>
                 </a-popconfirm>
               </a-menu-item>
@@ -226,6 +226,7 @@
   import ${entityName}Modal from './modules/${entityName}Modal'
   <#if bpm_flag>
   import { postAction } from '@/api/manage'
+  import { FlowableMixin } from '@views/flowable/mixin/FlowableMixin'
   </#if>
   <#if list_need_category>
   import { loadCategoryData } from '@/api/api'
@@ -239,7 +240,7 @@
 
   export default {
     name: '${entityName}List',
-    mixins:[JeecgListMixin, mixinDevice],
+    mixins:[JeecgListMixin, mixinDevice, <#if bpm_flag>FlowableMixin</#if>],
     components: {
       ${entityName}Modal
     },
