@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import io.swagger.annotations.ApiParam;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
@@ -20,6 +22,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.flowable.service.IFlowDefinitionService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -36,10 +39,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.aspect.annotation.AutoLog;
 
- /**
+/**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-09-14
+ * @Date:   2022-10-26
  * @Version: V1.0
  */
 @Api(tags="请假申请")
@@ -49,6 +52,9 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 public class TbLeaveApplyController extends JeecgController<TbLeaveApply, ITbLeaveApplyService> {
 	@Autowired
 	private ITbLeaveApplyService tbLeaveApplyService;
+
+	@Autowired
+	IFlowDefinitionService flowDefinitionService;
 	
 	/**
 	 * 分页列表查询
@@ -162,6 +168,22 @@ public class TbLeaveApplyController extends JeecgController<TbLeaveApply, ITbLea
 		}
 		return Result.OK(tbLeaveApply);
 	}
+
+    /**
+     * 查询第一条数据,用于配置场景，通常配置只会有一条数据的
+     *
+     * @return
+     */
+    //@AutoLog(value = "请假申请-查询第一条数据,用于配置场景")
+    @ApiOperation(value="请假申请-查询第一条数据,用于配置场景", notes="请假申请-查询第一条数据,用于配置场景")
+    @GetMapping(value = "/queryFirstData")
+    public Result<TbLeaveApply> queryFirstData() {
+        TbLeaveApply tbLeaveApply = tbLeaveApplyService.getOne(new QueryWrapper<>(),false);
+        if(tbLeaveApply==null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.OK(tbLeaveApply);
+    }
 
     /**
     * 导出excel

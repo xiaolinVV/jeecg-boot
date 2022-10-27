@@ -1,26 +1,28 @@
 package org.jeecg.modules.demo.tbLeaveApply.entity;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.math.BigDecimal;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.jeecg.common.aspect.annotation.Dict;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
-import org.jeecg.common.aspect.annotation.Dict;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+
+import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusinessDto;
+
+
+
 /**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-09-14
+ * @Date:   2022-10-26
  * @Version: V1.0
  */
 @Data
@@ -28,7 +30,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value="tb_leave_apply对象", description="请假申请")
-public class TbLeaveApply implements Serializable {
+public class TbLeaveApply  extends FlowMyBusinessDto  implements Serializable {
     private static final long serialVersionUID = 1L;
 
 	/**主键*/

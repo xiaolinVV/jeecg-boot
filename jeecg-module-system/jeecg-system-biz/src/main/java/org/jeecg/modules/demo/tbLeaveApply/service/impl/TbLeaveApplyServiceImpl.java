@@ -1,10 +1,8 @@
 package org.jeecg.modules.demo.tbLeaveApply.service.impl;
 
-import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import org.jeecg.modules.demo.tbLeaveApply.entity.TbLeaveApply;
 import org.jeecg.modules.demo.tbLeaveApply.mapper.TbLeaveApplyMapper;
 import org.jeecg.modules.demo.tbLeaveApply.service.ITbLeaveApplyService;
-import org.jeecg.modules.extFlow.flowMyBusinessConfig.entity.FlowMyBusinessConfig;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,10 +14,13 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
 import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
 import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
 import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
+import org.jeecg.modules.extFlow.flowMyBusinessConfig.entity.FlowMyBusinessConfig;
+import org.jeecg.modules.flowable.service.IFlowDefinitionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-09-14
+ * @Date:   2022-10-26
  * @Version: V1.0
  */
 @Service("tbLeaveApplyService")
@@ -40,6 +41,9 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
 
     @Autowired
     IFlowMyBusinessConfigService flowMyBusinessConfigService;
+
+    @Autowired
+    private IFlowDefinitionService iFlowDefinitionService;
 
     /**
      * 关联流程
@@ -59,10 +63,10 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
         if (CollUtil.isNotEmpty(records)) {
             List<String> ids = records.stream().map(TbLeaveApply::getId).collect(Collectors.toList());
             Map<String, FlowMyBusiness> flowMyBusinessMap = flowCommonService.getMapByDataIds(ids);
-            for (TbLeaveApply record : records) {
-                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(record.getId());
+            for (TbLeaveApply tbLeaveApply : records) {
+                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(tbLeaveApply.getId());
                 if (ObjectUtil.isNotNull(flowMyBusiness)) {
-                    BeanUtil.copyProperties(flowMyBusiness,record,"id","createBy","createTime","updateBy","updateTime");
+                    BeanUtil.copyProperties(flowMyBusiness,tbLeaveApply,"id","createBy","createTime","updateBy","updateTime");
                 }
             }
         }
@@ -73,8 +77,16 @@ public class TbLeaveApplyServiceImpl extends ServiceImpl<TbLeaveApplyMapper, TbL
     public boolean save(TbLeaveApply tbLeaveApply) {
         /**新增数据，初始化流程关联信息**/
         tbLeaveApply.setId(IdUtil.fastSimpleUUID());
+        boolean saved = super.save(tbLeaveApply);
         this.relationAct(tbLeaveApply.getId());
-        return super.save(tbLeaveApply);
+
+        /**
+         * 默认情况是是新增完申请单数据后，前端再做一次提交的动作，不过有些场景需要默认新增申请单直接他提交流程，这里也支持，只需要解开注释就行！@by zhangshaolin
+         * Map<String, Object> map = BeanUtil.beanToMap(tbLeaveApply);
+         * map.put("dataId",tbLeaveApply.getId());
+         * iFlowDefinitionService.startProcessInstanceByDataId(tbLeaveApply.getId(), map);
+         */
+        return saved;
     }
 
     @Override

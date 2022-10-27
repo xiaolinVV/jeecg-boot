@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 /**
  * @Description: 请假申请
  * @Author: jeecg-boot
- * @Date:   2022-09-14
+ * @Date:   2022-10-26
  * @Version: V1.0
  */
 public interface ITbLeaveApplyService extends IService<TbLeaveApply> {
