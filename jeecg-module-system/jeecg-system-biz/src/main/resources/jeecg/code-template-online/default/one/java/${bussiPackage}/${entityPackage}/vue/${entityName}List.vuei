@@ -197,6 +197,9 @@
               <a-menu-item>
                 <a @click="handleDetail(record)">详情</a>
               </a-menu-item>
+              <a-menu-item <#if bpm_flag> v-if='record.jimuReportId'</#if>>
+                 <a @click="goToApplyDoc(record)">审批单据</a>
+              </a-menu-item>
               <#if bpm_flag>
               <a-menu-item v-if="record.bpmStatus === '0'">
                 <a @click="startProcess(record)">发起流程</a>
@@ -227,6 +230,8 @@
   <#if bpm_flag>
   import { postAction } from '@/api/manage'
   import { FlowableMixin } from '@views/flowable/mixin/FlowableMixin'
+  import Vue from 'vue'
+  import { ACCESS_TOKEN } from '@/store/mutation-types'
   </#if>
   <#if list_need_category>
   import { loadCategoryData } from '@/api/api'
@@ -388,6 +393,13 @@
             })
           }
         })
+      },
+      </#if>
+      <#if bpm_flag>
+      goToApplyDoc(record) {
+        let jimuReportId = record.jimuReportId
+        let reportUrl = window._CONFIG['domianURL'] + '/jmreport/view/' + jimuReportId + '?token=' + Vue.ls.get(ACCESS_TOKEN) + '&id=' + record.id
+        window.open(reportUrl)
       },
       </#if>
       initDictConfig(){
