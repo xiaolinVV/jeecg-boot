@@ -2,6 +2,9 @@
 package ${bussiPackage}.${entityPackage}.entity;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.math.BigDecimal;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -9,24 +12,11 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
+import org.jeecg.common.aspect.annotation.Dict;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import org.jeecg.common.aspect.annotation.Dict;
-
-<#assign bpm_flag=false>
-<#list originalColumns as po>
-<#if po.fieldDbName=='bpm_status'>
-  <#assign bpm_flag=true>
-</#if>
-</#list>
-
-<#if bpm_flag>
-import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusinessDto;
-</#if>
-
-
 
 /**
  * @Description: ${tableVo.ftlDescription}
@@ -39,7 +29,7 @@ import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusinessDto;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value="${tableName}对象", description="${tableVo.ftlDescription}")
-public class ${entityName} <#if bpm_flag> extends FlowMyBusinessDto </#if> implements Serializable {
+public class ${entityName} implements Serializable {
     private static final long serialVersionUID = 1L;
 
     <#assign excel_ignore_arr=['createBy','createTime','updateBy','updateTime','sysOrgCode']>

@@ -8,12 +8,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-<#assign bpm_flag=false>
-<#list originalColumns as po>
-<#if po.fieldDbName=='bpm_status'>
-  <#assign bpm_flag=true>
-</#if>
-</#list>
 
 /**
  * @Description: ${tableVo.ftlDescription}
@@ -22,14 +16,6 @@ import java.util.List;
  * @Version: V1.0
  */
 public interface I${entityName}Service extends IService<${entityName}> {
-
-    <#if bpm_flag>
-    /**
-     * 关联流程
-     * @param dataId 业务id
-     */
-    void relationAct(String dataId);
-    </#if>
 
 	/**
 	 * 添加一对多

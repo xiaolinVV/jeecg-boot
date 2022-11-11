@@ -42,7 +42,7 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 </#if>
 </#list>
 
-/**
+ /**
  * @Description: ${tableVo.ftlDescription}
  * @Author: jeecg-boot
  * @Date:   ${.now?string["yyyy-MM-dd"]}
@@ -77,21 +77,6 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 		IPage<${entityName}> pageList = ${entityName?uncap_first}Service.page(page, queryWrapper);
 		return Result.OK(pageList);
 	}
-
-	<#if bpm_flag>
-    /**
-     *  关联流程
-     * @param request
-     * @param response
-     * @return
-     */
-    @GetMapping(value = "/relationAct")
-    public Result<?> relationAct(HttpServletRequest request, HttpServletResponse response) {
-         String dataId = request.getParameter("dataId");
-         ${entityName?uncap_first}Service.relationAct(dataId);
-         return Result.OK();
-    }
-    </#if>
 	
 	/**
 	 *   添加
@@ -105,7 +90,7 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 	@PostMapping(value = "/add")
 	public Result<String> add(@RequestBody ${entityName} ${entityName?uncap_first}) {
 	    <#if bpm_flag>
-        ${entityName?uncap_first}.setBpmStatus("0");
+        ${entityName?uncap_first}.setBpmStatus("1");
 	    </#if>
 		${entityName?uncap_first}Service.save(${entityName?uncap_first});
 		return Result.OK("添加成功！");
@@ -172,22 +157,6 @@ public class ${entityName}Controller extends JeecgController<${entityName}, I${e
 		}
 		return Result.OK(${entityName?uncap_first});
 	}
-
-    /**
-     * 查询第一条数据,用于配置场景，通常配置只会有一条数据的
-     *
-     * @return
-     */
-    //@AutoLog(value = "${tableVo.ftlDescription}-查询第一条数据,用于配置场景")
-    @ApiOperation(value="${tableVo.ftlDescription}-查询第一条数据,用于配置场景", notes="${tableVo.ftlDescription}-查询第一条数据,用于配置场景")
-    @GetMapping(value = "/queryFirstData")
-    public Result<${entityName}> queryFirstData() {
-        ${entityName} ${entityName?uncap_first} = ${entityName?uncap_first}Service.getOne(new QueryWrapper<>(),false);
-        if(${entityName?uncap_first}==null) {
-            return Result.error("未找到对应数据");
-        }
-        return Result.OK(${entityName?uncap_first});
-    }
 
     /**
     * 导出excel
