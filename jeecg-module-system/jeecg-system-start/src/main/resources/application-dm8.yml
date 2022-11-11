@@ -237,3 +237,11 @@ third-app:
       # appSecret
       client-secret: ??
       agent-id: ??
+# flowable config #
+flowable:
+  process:
+    definition-cache-limit: -1
+  database-schema-update: true
+  activity-font-name: 宋体
+  label-font-name: 宋体
+  annotation-font-name: 宋体
