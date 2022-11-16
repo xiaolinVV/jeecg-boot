@@ -30,8 +30,7 @@
       <!-- 子表单区域 -->
     <a-tabs v-model="activeKey" @change="handleChangeTabs">
       <a-tab-pane tab="订单产品明细" :key="refKeys[0]" :forceRender="true">
-        <j-vxe-table
-          keep-source
+        <j-editable-table
           :ref="refKeys[0]"
           :loading="testOrderProductTable.loading"
           :columns="testOrderProductTable.columns"
@@ -40,8 +39,7 @@
           :disabled="formDisabled"
           :rowNumber="true"
           :rowSelection="true"
-          :toolbar="true"
-          />
+          :actionButton="true"/>
       </a-tab-pane>
     </a-tabs>
   </a-spin>
@@ -50,17 +48,14 @@
 <script>
 
   import { getAction } from '@/api/manage'
-  import { JVxeTableModelMixin } from '@/mixins/JVxeTableModelMixin.js'
-  import { JVXETypes } from '@/components/jeecg/JVxeTable'
-  import { getRefPromise,VALIDATE_FAILED} from '@/components/jeecg/JVxeTable/utils/vxeUtils.js'
+  import { FormTypes,getRefPromise,VALIDATE_NO_PASSED } from '@/utils/JEditableTableUtil'
+  import { JEditableTableModelMixin } from '@/mixins/JEditableTableModelMixin'
   import { validateDuplicateValue } from '@/utils/util'
-  import JFormContainer from '@/components/jeecg/JFormContainer'
 
   export default {
     name: 'TestOrderMainForm',
-    mixins: [JVxeTableModelMixin],
+    mixins: [JEditableTableModelMixin],
     components: {
-      JFormContainer,
     },
     data() {
       return {
@@ -73,7 +68,7 @@
           sm: { span: 16 },
         },
         model:{
-         },
+        },
         // 新增时子表默认添加几行空数据
         addDefaultRowNum: 1,
         validatorRules: {
@@ -89,7 +84,7 @@
             {
               title: '产品名字',
               key: 'productName',
-               type: JVXETypes.input,
+              type: FormTypes.input,
               width:"200px",
               placeholder: '请输入${title}',
               defaultValue:'',
@@ -97,7 +92,7 @@
             {
               title: '价格',
               key: 'price',
-               type: JVXETypes.input,
+              type: FormTypes.inputNumber,
               width:"200px",
               placeholder: '请输入${title}',
               defaultValue:'',
@@ -106,7 +101,7 @@
             {
               title: '数量',
               key: 'num',
-               type: JVXETypes.input,
+              type: FormTypes.inputNumber,
               width:"200px",
               placeholder: '请输入${title}',
               defaultValue:'',
@@ -115,8 +110,7 @@
             {
               title: '产品类型',
               key: 'proType',
-              type: JVXETypes.select,
-              options:[],
+              type: FormTypes.select,
               dictCode:"sex",
               width:"200px",
               placeholder: '请输入${title}',
@@ -125,7 +119,7 @@
             {
               title: '描述',
               key: 'descc',
-               type: JVXETypes.input,
+              type: FormTypes.input,
               width:"200px",
               placeholder: '请输入${title}',
               defaultValue:'',
@@ -176,27 +170,27 @@
         }
       },
       //校验所有一对一子表表单
-        validateSubForm(allValues){
-            return new Promise((resolve,reject)=>{
-              Promise.all([
-              ]).then(() => {
-                resolve(allValues)
-              }).catch(e => {
-                if (e.error === VALIDATE_FAILED) {
-                  // 如果有未通过表单验证的子表，就自动跳转到它所在的tab
-                  this.activeKey = e.index == null ? this.activeKey : this.refKeys[e.index]
-                } else {
-                  console.error(e)
-                }
-              })
+      validateSubForm(allValues){
+          return new Promise((resolve,reject)=>{
+            Promise.all([
+            ]).then(() => {
+              resolve(allValues)
+            }).catch(e => {
+              if (e.error === VALIDATE_NO_PASSED) {
+                // 如果有未通过表单验证的子表，就自动跳转到它所在的tab
+                this.activeKey = e.index == null ? this.activeKey : this.refKeys[e.index]
+              } else {
+                console.error(e)
+              }
             })
-        },
+          })
+      },
       /** 整理成formData */
       classifyIntoFormData(allValues) {
         let main = Object.assign(this.model, allValues.formValue)
         return {
           ...main, // 展开
-          testOrderProductList: allValues.tablesValue[0].tableData,
+          testOrderProductList: allValues.tablesValue[0].values,
         }
       },
       validateError(msg){

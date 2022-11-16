@@ -15,13 +15,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * @Description: 测试订单主表
+ * @Description: 测试订单主表，一对多经典风格
  * @Author: jeecg-boot
  * @Date:   2022-11-16
  * @Version: V1.0
  */
 @Data
-@ApiModel(value="test_order_mainPage对象", description="测试订单主表")
+@ApiModel(value="test_order_mainPage对象", description="测试订单主表，一对多经典风格")
 public class TestOrderMainPage {
 
 	/**主键*/

@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * @Description: 测试订单主表
+ * @Description: 测试订单主表，一对多经典风格
  * @Author: jeecg-boot
  * @Date:   2022-11-16
  * @Version: V1.0
@@ -26,8 +26,8 @@ public interface ITestOrderMainService extends IService<TestOrderMain> {
 	/**
 	 * 修改一对多
 	 *
-   * @param testOrderMain
-   * @param testOrderProductList
+	 * @param testOrderMain
+	 * @param testOrderProductList
 	 */
 	public void updateMain(TestOrderMain testOrderMain,List<TestOrderProduct> testOrderProductList);
 	

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Collection;
 
 /**
- * @Description: 测试订单主表
+ * @Description: 测试订单主表，一对多经典风格
  * @Author: jeecg-boot
  * @Date:   2022-11-16
  * @Version: V1.0

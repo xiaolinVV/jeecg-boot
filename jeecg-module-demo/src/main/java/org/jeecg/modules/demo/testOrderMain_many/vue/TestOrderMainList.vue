@@ -39,7 +39,7 @@
     <!-- 操作按钮区域 -->
     <div class="table-operator">
       <a-button @click="handleAdd" type="primary" icon="plus">新增</a-button>
-      <a-button type="primary" icon="download" @click="handleExportXls('测试订单主表')">导出</a-button>
+      <a-button type="primary" icon="download" @click="handleExportXls('测试订单主表，一对多经典风格')">导出</a-button>
       <a-upload name="file" :showUploadList="false" :multiple="false" :headers="tokenHeader" :action="importExcelUrl" @change="handleImportExcel">
         <a-button type="primary" icon="import">导入</a-button>
       </a-upload>
@@ -135,7 +135,7 @@
     },
     data () {
       return {
-        description: '测试订单主表管理页面',
+        description: '测试订单主表，一对多经典风格管理页面',
         // 表头
         columns: [
           {
@@ -205,10 +205,10 @@
       },
       getSuperFieldList(){
         let fieldList=[];
-        fieldList.push({type:'string',value:'orderCode',text:'订单编码',dictCode:''})
-        fieldList.push({type:'date',value:'orderDate',text:'下单时间'})
-        fieldList.push({type:'string',value:'descc',text:'描述',dictCode:''})
-        fieldList.push({type:'list_multi',value:'xiala',text:'下拉多选',dictTable:"", dictText:'', dictCode:'sex'})
+         fieldList.push({type:'string',value:'orderCode',text:'订单编码',dictCode:''})
+         fieldList.push({type:'date',value:'orderDate',text:'下单时间'})
+         fieldList.push({type:'string',value:'descc',text:'描述',dictCode:''})
+         fieldList.push({type:'list_multi',value:'xiala',text:'下拉多选',dictTable:"", dictText:'', dictCode:'sex'})
         this.superFieldList = fieldList
       }
     }

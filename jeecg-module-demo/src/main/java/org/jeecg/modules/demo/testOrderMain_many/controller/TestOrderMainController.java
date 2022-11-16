@@ -43,12 +43,12 @@ import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.aspect.annotation.AutoLog;
 
  /**
- * @Description: 测试订单主表
+ * @Description: 测试订单主表，一对多经典风格
  * @Author: jeecg-boot
  * @Date:   2022-11-16
  * @Version: V1.0
  */
-@Api(tags="测试订单主表")
+@Api(tags="测试订单主表，一对多经典风格")
 @RestController
 @RequestMapping("/testOrderMain_many/testOrderMain")
 @Slf4j
@@ -67,8 +67,8 @@ public class TestOrderMainController {
 	 * @param req
 	 * @return
 	 */
-	//@AutoLog(value = "测试订单主表-分页列表查询")
-	@ApiOperation(value="测试订单主表-分页列表查询", notes="测试订单主表-分页列表查询")
+	//@AutoLog(value = "测试订单主表，一对多经典风格-分页列表查询")
+	@ApiOperation(value="测试订单主表，一对多经典风格-分页列表查询", notes="测试订单主表，一对多经典风格-分页列表查询")
 	@GetMapping(value = "/list")
 	public Result<IPage<TestOrderMain>> queryPageList(TestOrderMain testOrderMain,
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
@@ -86,9 +86,9 @@ public class TestOrderMainController {
 	 * @param testOrderMainPage
 	 * @return
 	 */
-	@AutoLog(value = "测试订单主表-添加")
-	@ApiOperation(value="测试订单主表-添加", notes="测试订单主表-添加")
-    //@RequiresPermissions("org.jeecg.modules.demo:test_order_main:add")
+	@AutoLog(value = "测试订单主表，一对多经典风格-添加")
+	@ApiOperation(value="测试订单主表，一对多经典风格-添加", notes="测试订单主表，一对多经典风格-添加")
+	//@RequiresPermissions("org.jeecg.modules.demo:test_order_main:add")
 	@PostMapping(value = "/add")
 	public Result<String> add(@RequestBody TestOrderMainPage testOrderMainPage) {
 		TestOrderMain testOrderMain = new TestOrderMain();
@@ -103,9 +103,9 @@ public class TestOrderMainController {
 	 * @param testOrderMainPage
 	 * @return
 	 */
-	@AutoLog(value = "测试订单主表-编辑")
-	@ApiOperation(value="测试订单主表-编辑", notes="测试订单主表-编辑")
-    //@RequiresPermissions("org.jeecg.modules.demo:test_order_main:edit")
+	@AutoLog(value = "测试订单主表，一对多经典风格-编辑")
+	@ApiOperation(value="测试订单主表，一对多经典风格-编辑", notes="测试订单主表，一对多经典风格-编辑")
+	//@RequiresPermissions("org.jeecg.modules.demo:test_order_main:edit")
 	@RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
 	public Result<String> edit(@RequestBody TestOrderMainPage testOrderMainPage) {
 		TestOrderMain testOrderMain = new TestOrderMain();
@@ -124,9 +124,9 @@ public class TestOrderMainController {
 	 * @param id
 	 * @return
 	 */
-	@AutoLog(value = "测试订单主表-通过id删除")
-	@ApiOperation(value="测试订单主表-通过id删除", notes="测试订单主表-通过id删除")
-    //@RequiresPermissions("org.jeecg.modules.demo:test_order_main:delete")
+	@AutoLog(value = "测试订单主表，一对多经典风格-通过id删除")
+	@ApiOperation(value="测试订单主表，一对多经典风格-通过id删除", notes="测试订单主表，一对多经典风格-通过id删除")
+	//@RequiresPermissions("org.jeecg.modules.demo:test_order_main:delete")
 	@DeleteMapping(value = "/delete")
 	public Result<String> delete(@RequestParam(name="id",required=true) String id) {
 		testOrderMainService.delMain(id);
@@ -139,9 +139,9 @@ public class TestOrderMainController {
 	 * @param ids
 	 * @return
 	 */
-	@AutoLog(value = "测试订单主表-批量删除")
-	@ApiOperation(value="测试订单主表-批量删除", notes="测试订单主表-批量删除")
-    //@RequiresPermissions("org.jeecg.modules.demo:test_order_main:deleteBatch")
+	@AutoLog(value = "测试订单主表，一对多经典风格-批量删除")
+	@ApiOperation(value="测试订单主表，一对多经典风格-批量删除", notes="测试订单主表，一对多经典风格-批量删除")
+	//@RequiresPermissions("org.jeecg.modules.demo:test_order_main:deleteBatch")
 	@DeleteMapping(value = "/deleteBatch")
 	public Result<String> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
 		this.testOrderMainService.delBatchMain(Arrays.asList(ids.split(",")));
@@ -154,8 +154,8 @@ public class TestOrderMainController {
 	 * @param id
 	 * @return
 	 */
-	//@AutoLog(value = "测试订单主表-通过id查询")
-	@ApiOperation(value="测试订单主表-通过id查询", notes="测试订单主表-通过id查询")
+	//@AutoLog(value = "测试订单主表，一对多经典风格-通过id查询")
+	@ApiOperation(value="测试订单主表，一对多经典风格-通过id查询", notes="测试订单主表，一对多经典风格-通过id查询")
 	@GetMapping(value = "/queryById")
 	public Result<TestOrderMain> queryById(@RequestParam(name="id",required=true) String id) {
 		TestOrderMain testOrderMain = testOrderMainService.getById(id);
@@ -196,8 +196,8 @@ public class TestOrderMainController {
       //配置选中数据查询条件
       String selections = request.getParameter("selections");
       if(oConvertUtils.isNotEmpty(selections)) {
-         List<String> selectionList = Arrays.asList(selections.split(","));
-         queryWrapper.in("id",selectionList);
+          List<String> selectionList = Arrays.asList(selections.split(","));
+          queryWrapper.in("id",selectionList);
       }
       //Step.2 获取导出数据
       List<TestOrderMain> testOrderMainList = testOrderMainService.list(queryWrapper);
@@ -214,9 +214,9 @@ public class TestOrderMainController {
 
       // Step.4 AutoPoi 导出Excel
       ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
-      mv.addObject(NormalExcelConstants.FILE_NAME, "测试订单主表列表");
+      mv.addObject(NormalExcelConstants.FILE_NAME, "测试订单主表，一对多经典风格列表");
       mv.addObject(NormalExcelConstants.CLASS, TestOrderMainPage.class);
-      mv.addObject(NormalExcelConstants.PARAMS, new ExportParams("测试订单主表数据", "导出人:"+sysUser.getRealname(), "测试订单主表"));
+      mv.addObject(NormalExcelConstants.PARAMS, new ExportParams("测试订单主表，一对多经典风格数据", "导出人:"+sysUser.getRealname(), "测试订单主表，一对多经典风格"));
       mv.addObject(NormalExcelConstants.DATA_LIST, pageList);
       return mv;
     }

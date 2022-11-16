@@ -12,11 +12,11 @@ import java.util.List;
  */
 public interface ITestOrderProductService extends IService<TestOrderProduct> {
 
-	/**
-	 * 通过主表id查询子表数据
-	 *
-	 * @param mainId 主表id
-	 * @return List<TestOrderProduct>
-	 */
+  /**
+   * 通过主表id查询子表数据
+   *
+   * @param mainId 主表id
+   * @return List<TestOrderProduct>
+   */
 	public List<TestOrderProduct> selectByMainId(String mainId);
 }

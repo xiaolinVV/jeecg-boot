@@ -13,12 +13,12 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface TestOrderProductMapper extends BaseMapper<TestOrderProduct> {
 
-	/**
-	 * 通过主表id删除子表数据
-	 *
-	 * @param mainId 主表id
-	 * @return boolean
-	 */
+  /**
+   * 通过主表id删除子表数据
+   *
+   * @param mainId 主表id
+   * @return boolean
+   */
 	public boolean deleteByMainId(@Param("mainId") String mainId);
 
   /**
