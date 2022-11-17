@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.demo.testOrderMain_erp.mapper.TestOrderProductErpMapper">
+
+	<delete id="deleteByMainId" parameterType="java.lang.String">
+		DELETE 
+		FROM  test_order_product 
+		WHERE
+			 order_fk_id = #{mainId} 
+	</delete>
+	
+	<select id="selectByMainId" parameterType="java.lang.String" resultType="org.jeecg.modules.demo.testOrderMain_erp.entity.TestOrderProductErp">
+		SELECT * 
+		FROM  test_order_product
+		WHERE
+			 order_fk_id = #{mainId} 
+	</select>
+</mapper>
