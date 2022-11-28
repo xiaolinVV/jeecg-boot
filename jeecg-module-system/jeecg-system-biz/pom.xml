@@ -39,6 +39,19 @@
 			<groupId>org.jeecgframework.jimureport</groupId>
 			<artifactId>jimureport-nosql-starter</artifactId>
 		</dependency>-->
+
+		<!-- 基于 Apache POI 的 Word 模板引擎 -->
+		<dependency>
+			<groupId>com.deepoove</groupId>
+			<artifactId>poi-tl</artifactId>
+			<version>1.10.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-io</artifactId>
+					<groupId>commons-io</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 	
 </project>
