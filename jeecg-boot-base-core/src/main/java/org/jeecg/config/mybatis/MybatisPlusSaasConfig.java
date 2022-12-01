@@ -7,6 +7,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.plugins.inner.DynamicTableNameInnerInterceptor;
 import org.jeecg.common.config.TenantContext;
 import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.util.ThreadLocalUtil;
 import org.jeecg.common.util.oConvertUtils;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
@@ -89,11 +90,11 @@ public class MybatisPlusSaasConfig {
         DynamicTableNameInnerInterceptor dynamicTableNameInnerInterceptor = new DynamicTableNameInnerInterceptor();
         dynamicTableNameInnerInterceptor.setTableNameHandler((sql, tableName) -> {
             //获取需要动态解析的表名
-            String dynamicTableName = ThreadLocalDataHelper.get(CommonConstant.DYNAMIC_TABLE_NAME);
+            String dynamicTableName = ThreadLocalUtil.get(CommonConstant.DYNAMIC_TABLE_NAME);
             //当dynamicTableName不为空时才走动态表名处理逻辑,否则返回原始表名
             if (ObjectUtil.isNotEmpty(dynamicTableName) && dynamicTableName.equals(tableName)) {
                 // 获取前端传递的版本号标识
-                Object version = ThreadLocalDataHelper.get(CommonConstant.VERSION);
+                Object version = ThreadLocalUtil.get(CommonConstant.VERSION);
                 if (ObjectUtil.isNotEmpty(version)) {
                     //拼接表名规则(原始表名+下划线+前端传递的版本号)
                     return tableName + "_" + version;
