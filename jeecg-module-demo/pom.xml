@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jeecg-boot-parent</artifactId>
         <groupId>org.jeecgframework.boot</groupId>
-        <version>3.4.2</version>
+        <version>3.4.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,12 +15,6 @@
         <dependency>
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-boot-base-core</artifactId>
-        </dependency>
-        <!--流程模块-->
-        <dependency>
-            <groupId>org.jeecgframework.boot</groupId>
-            <artifactId>jeecg-boot-module-flowable</artifactId>
-            <version>${jeecgboot.version}</version>
         </dependency>
     </dependencies>
 

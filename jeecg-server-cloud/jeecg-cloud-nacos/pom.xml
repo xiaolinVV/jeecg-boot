@@ -5,7 +5,7 @@
     <artifactId>jeecg-cloud-nacos</artifactId>
     <name>jeecg-cloud-nacos</name>
     <description>nacos启动模块</description>
-    <version>3.4.2</version>
+    <version>3.4.4</version>
 
     <!-- Nacos2不支持springboot2.6.6  -->
     <parent>
@@ -34,6 +34,10 @@
         </repository>
     </repositories>
 
+    <properties>
+        <log4j2.version>2.17.0</log4j2.version>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>

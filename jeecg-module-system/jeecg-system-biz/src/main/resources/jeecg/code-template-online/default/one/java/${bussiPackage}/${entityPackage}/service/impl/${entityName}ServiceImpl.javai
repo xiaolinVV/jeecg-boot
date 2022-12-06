@@ -7,111 +7,13 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
-<#assign bpm_flag=false>
-<#list originalColumns as po>
-<#if po.fieldDbName=='bpm_status'>
-  <#assign bpm_flag=true>
-</#if>
-</#list>
-
-<#if bpm_flag>
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import org.jeecg.modules.flowable.apithird.business.entity.FlowMyBusiness;
-import org.jeecg.modules.flowable.apithird.service.FlowCallBackServiceI;
-import org.jeecg.modules.flowable.apithird.service.FlowCommonService;
-import org.jeecg.modules.extFlow.flowMyBusinessConfig.service.IFlowMyBusinessConfigService;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-</#if>
-
 /**
  * @Description: ${tableVo.ftlDescription}
  * @Author: jeecg-boot
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-@Service("${entityName?uncap_first}Service")
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service <#if bpm_flag>, FlowCallBackServiceI </#if> {
+@Service
+public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service {
 
-    <#if bpm_flag>
-    @Autowired
-    FlowCommonService flowCommonService;
-
-    @Autowired
-    IFlowMyBusinessConfigService flowMyBusinessConfigService;
-
-    /**
-     * 关联流程
-     * @param dataId 业务id
-     */
-    @Override
-    public void relationAct(String dataId) {
-        String tableName = SqlHelper.table(${entityName}.class).getTableName();
-        FlowMyBusinessConfig flowMyBusinessConfig = flowMyBusinessConfigService.getFlowMyBusinessConfigByTableName(tableName);
-        flowCommonService.initActBusiness(flowMyBusinessConfig.getTitleExpression(), dataId, "${entityName?uncap_first}Service",flowMyBusinessConfig.getProcessDefinitionKey(),null,flowMyBusinessConfig.getJimuReportId(),flowMyBusinessConfig.getPcFormUrl());
-    }
-
-    @Override
-    public <E extends IPage<${entityName}>> E page(E page, Wrapper<${entityName}> queryWrapper) {
-        IPage<${entityName}> pageList = super.page(page, queryWrapper);
-        List<${entityName}> records = pageList.getRecords();
-        if (CollUtil.isNotEmpty(records)) {
-            List<String> ids = records.stream().map(${entityName}::getId).collect(Collectors.toList());
-            Map<String, FlowMyBusiness> flowMyBusinessMap = flowCommonService.getMapByDataIds(ids);
-            for (${entityName} record : records) {
-                FlowMyBusiness flowMyBusiness = flowMyBusinessMap.get(record.getId());
-                if (ObjectUtil.isNotNull(flowMyBusiness)) {
-                    BeanUtil.copyProperties(flowMyBusiness,record,"id","createBy","createTime","updateBy","updateTime");
-                }
-            }
-        }
-        return page;
-    }
-
-    @Override
-    public boolean save(${entityName} ${entityName?uncap_first}) {
-        /**新增数据，初始化流程关联信息**/
-        ${entityName?uncap_first}.setId(IdUtil.fastSimpleUUID());
-        this.relationAct(${entityName?uncap_first}.getId());
-        return super.save(${entityName?uncap_first});
-    }
-
-    @Override
-    public boolean removeById(Serializable id) {
-        /**删除数据，移除流程关联信息**/
-        flowCommonService.delActBusiness(id.toString());
-        return super.removeById(id);
-    }
-
-    @Override
-    public void afterFlowHandle(FlowMyBusiness business) {
-        //**流程处理完成后的回调,将其中关键信息存入业务表，即可单表业务操作,否则需要关联flow_my_business表获取流程信息<br/>**/
-        ${entityName} ${entityName?uncap_first} = getById(business.getDataId());
-        ${entityName?uncap_first}.setBpmStatus(business.getBpmStatus());
-        updateById(${entityName?uncap_first});
-    }
-
-    @Override
-    public Object getBusinessDataById(String dataId) {
-        return getById(dataId);
-    }
-
-    @Override
-    public Map<String, Object> flowValuesOfTask(String taskNameId, Map<String, Object> values) {
-        return null;
-    }
-
-    @Override
-    public List<String> flowCandidateUsernamesOfTask(String taskNameId, Map<String, Object> values) {
-        return null;
-    }
-    </#if>
 }

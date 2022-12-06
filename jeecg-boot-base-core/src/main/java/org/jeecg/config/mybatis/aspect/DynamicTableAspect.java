@@ -8,6 +8,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.jeecg.common.aspect.annotation.DynamicTable;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.util.SpringContextUtils;
+import org.jeecg.common.util.ThreadLocalUtil;
 import org.jeecg.config.mybatis.ThreadLocalDataHelper;
 import org.springframework.stereotype.Component;
 
@@ -42,13 +43,17 @@ public class DynamicTableAspect {
         //获取前端传递的版本标记
         String version = request.getHeader(CommonConstant.VERSION);
         //存储版本号到本地线程变量
-        ThreadLocalDataHelper.put(CommonConstant.VERSION, version);
+        ThreadLocalUtil.put(CommonConstant.VERSION, version);
         //存储表名到本地线程变量
-        ThreadLocalDataHelper.put(CommonConstant.DYNAMIC_TABLE_NAME, dynamicTable.value());
+        ThreadLocalUtil.put(CommonConstant.DYNAMIC_TABLE_NAME, dynamicTable.value());
         //执行方法
-        Object result = point.proceed();
-        //清空本地变量
-        ThreadLocalDataHelper.clear();
+        Object result = null;
+        try {
+            result = point.proceed();
+        } finally {
+            //清空本地变量
+            ThreadLocalUtil.remove();
+        }
         return result;
     }
 

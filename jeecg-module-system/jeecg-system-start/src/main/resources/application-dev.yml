@@ -26,7 +26,7 @@ spring:
       max-request-size: 10MB
   mail:
     host: smtp.163.com
-    username: jeecgos@163.com
+    username: ??
     password: ??
     properties:
       mail:
@@ -65,8 +65,8 @@ spring:
             threadsInheritContextClassLoaderOfInitializingThread: true
   #json 时间戳统一转换
   jackson:
-    date-format:   yyyy-MM-dd HH:mm:ss
-    time-zone:   GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
   jpa:
     open-in-view: false
   aop:
@@ -295,11 +295,3 @@ third-app:
       # appSecret
       client-secret: ??
       agent-id: ??
-# flowable config #
-flowable:
-  process:
-    definition-cache-limit: -1
-  database-schema-update: true
-  activity-font-name: 宋体
-  label-font-name: 宋体
-  annotation-font-name: 宋体

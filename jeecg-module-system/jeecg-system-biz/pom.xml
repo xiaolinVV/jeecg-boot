@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.jeecgframework.boot</groupId>
 		<artifactId>jeecg-module-system</artifactId>
-		<version>3.4.2</version>
+		<version>3.4.4</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -39,12 +39,6 @@
 			<groupId>org.jeecgframework.jimureport</groupId>
 			<artifactId>jimureport-nosql-starter</artifactId>
 		</dependency>-->
-		<!--流程模块-->
-		<dependency>
-			<groupId>org.jeecgframework.boot</groupId>
-			<artifactId>jeecg-boot-module-flowable</artifactId>
-			<version>${jeecgboot.version}</version>
-		</dependency>
 	</dependencies>
 	
 </project>
