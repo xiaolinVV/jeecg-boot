@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.jeecg.modules.shopBoot.storeType.mapper.StoreTypeMapper">
+<mapper namespace="org.jeecg.modules.shopBoot.store.storeType.mapper.StoreTypeMapper">
 
 	<update id="updateTreeNodeStatus" parameterType="java.lang.String">
 		update store_type set has_child = #{status} where id = #{id}

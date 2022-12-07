@@ -10,6 +10,8 @@ import org.jeecg.modules.shopBoot.store.storeType.service.IStoreTypeService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +29,14 @@ public class StoreTypeServiceImpl extends ServiceImpl<StoreTypeMapper, StoreType
 
 	@Override
 	public void addStoreType(StoreType storeType) {
+        storeType.setDelFlag("0");
 	   //新增时设置hasChild为0
 	    storeType.setHasChild(IStoreTypeService.NOCHILD);
 		if(oConvertUtils.isEmpty(storeType.getPid())){
+            storeType.setLevel(new BigDecimal(1));
 			storeType.setPid(IStoreTypeService.ROOT_PID_VALUE);
 		}else{
+            storeType.setLevel(new BigDecimal(2));
 			//如果当前节点父ID不为空 则设置父节点的hasChildren 为1
 			StoreType parent = baseMapper.selectById(storeType.getPid());
 			if(parent!=null && !"1".equals(parent.getHasChild())){
