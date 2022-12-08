@@ -1,5 +1,6 @@
 package org.jeecg.common.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jeecg.config.StaticConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
+import org.springframework.stereotype.Component;
 
 /**
  * Created on 17/6/7.
@@ -25,6 +27,8 @@ import com.aliyuncs.profile.IClientProfile;
  * 国际短信发送请勿参照此DEMO
  * @author: jeecg-boot
  */
+@Component
+@Slf4j
 public class DySmsHelper {
 	
 	private final static Logger logger=LoggerFactory.getLogger(DySmsHelper.class);

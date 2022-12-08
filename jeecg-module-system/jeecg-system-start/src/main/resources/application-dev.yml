@@ -183,6 +183,8 @@ jeecg:
     upload: /Users/zhangshaolin/Dev/SideWork/shop-boot/jeecg-boot/upload
     #webapp文件路径
     webapp: /opt/webapp
+    #证书地址
+    cert: /data/cert
   shiro:
     excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/category/**,/visual/**,/map/**,/jmreport/bigscreen2/**
   #阿里云oss存储和大鱼短信秘钥配置
