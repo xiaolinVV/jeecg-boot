@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLeagueBuyerRecordMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="map">
+                SELECT
+            ol.order_no AS orderNo,
+            gl.main_picture AS mainPicture,
+            gl.good_name AS goodName,
+            ( SELECT type_name FROM marketing_league_type WHERE id = mlbr.marketing_league_type_id ) AS typeName,
+            ol.actual_payment AS actualPayment,
+            ml.id AS mid,
+            ml.head_portrait AS headPortrait,
+            ml.nick_name AS nickName,
+            ml.phone,
+            ol.shipping_address AS shippingAddress,
+            IFNULL(( SELECT sum( award ) FROM marketing_league_award WHERE marketing_league_buyer_record_id = mlbr.id ), 0 ) AS awardTotal,
+            mlbr.id,
+            DATE_FORMAT( mlbr.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime
+        FROM
+            marketing_league_buyer_record mlbr
+            LEFT JOIN member_list ml ON mlbr.member_list_id = ml.id
+            LEFT JOIN order_list ol ON mlbr.order_list_id = ol.id
+            LEFT JOIN marketing_league_good_list mlgl ON mlgl.id = ol.active_id
+            LEFT JOIN good_list gl ON gl.id = mlgl.good_list_id
+        WHERE
+            mlbr.del_flag = '0'
+            AND ml.id IS NOT NULL
+
+            <if test="paramMap.orderNo!='' and paramMap.orderNo!=null">
+                and  ol.order_no=#{paramMap.orderNo}
+            </if>
+            <if test="paramMap.phone!='' and paramMap.phone!=null">
+                and  ml.phone=#{paramMap.phone}
+            </if>
+
+        ORDER BY
+            mlbr.create_time DESC
+
+    </select>
+</mapper>

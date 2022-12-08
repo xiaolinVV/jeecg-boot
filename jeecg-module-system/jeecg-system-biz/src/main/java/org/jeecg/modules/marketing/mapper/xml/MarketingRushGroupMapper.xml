@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingRushGroupMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mrg.`id`,
+          mrg.`transformation_threshold` AS transformationThreshold,
+          mrg.`can_consignment` AS canConsignment,
+          mrg.`if_purchase` AS ifPurchase,
+          mrg.`order_no` AS orderNo,
+        DATE_FORMAT(
+        mrg.`purchase_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS purchaseTime,
+          mrg.`consignment_status` AS consignmentStatus,
+        DATE_FORMAT(
+        mrg.`consignment_time`,
+        '%Y-%m-%d %H:%i:%s'
+        )
+        AS consignmentTime,
+          mrg.`serial_number` AS serialNumber,
+          mrt.`rush_name` AS rushName,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          mrg.`member_list_id` AS memberListId
+        FROM
+          (SELECT * FROM marketing_rush_group ${ew.customSqlSegment})mrg
+          LEFT JOIN marketing_rush_type mrt
+            ON mrt.`id` = mrg.`marketing_rush_type_id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mrg.`member_list_id`
+        WHERE mrg.`del_flag` = 0
+        <if test="requestMap.rushName != null and requestMap.rushName != ''">
+            AND mrt.`rush_name` LIKE concat('%',#{requestMap.rushName},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.`nick_name` LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        ORDER BY mrg.create_time DESC
+    </select>
+    <select id="findMarketingRushGroup" resultType="map">
+        SELECT
+          mrg.`id`,
+          mrt.`rush_name` AS rushName,
+          mrg.`consignment_status` AS consignmentStatus,
+          mrg.transformation_threshold AS transformationThreshold,
+          if(mrg.consignment_status = 2,DATE_FORMAT(
+        mrg.`consignment_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ),'') AS consignmentTime
+        FROM
+          marketing_rush_group mrg
+          LEFT JOIN marketing_rush_type mrt
+            ON mrg.`marketing_rush_type_id` = mrt.`id`
+        WHERE mrg.`member_list_id` = #{memberId}
+          AND mrg.`del_flag` = 0
+          <if test="consignmentStatus != null and consignmentStatus != ''">
+              AND mrg.consignment_status = #{consignmentStatus}
+          </if>
+        ORDER BY mrg.create_time DESC
+    </select>
+    <select id="findMarketingRushGoodPage" resultType="map">
+        SELECT
+          DATE_FORMAT(
+        mrr.`create_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS createTime,
+          mrr.`main_picture` AS mainPicture,
+          mrr.`good_name` AS goodName,
+          mrr.`specification` ,
+          mrr.`amount`,
+          gl.`market_price` AS marketPrice
+        FROM
+          marketing_rush_record mrr
+          LEFT JOIN good_specification gs
+            ON gs.`id` = mrr.`good_specification_id`
+          LEFT JOIN good_list gl
+            ON gl.`id` = gs.`good_list_id`
+        WHERE mrr.`marketing_rush_group_id` = #{id}
+          AND mrr.`member_list_id` = #{memberListId}
+          AND mrr.`del_flag` = 0
+          AND mrr.`status` = 1
+        ORDER BY mrr.`create_time` DESC
+    </select>
+</mapper>

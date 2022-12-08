@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingIntegralSignRecordMapper">
+
+    <select id="getSignTime" resultType="map" parameterType="map">
+                  SELECT
+                misr.sign_count AS signCount,
+                DATE_FORMAT( misr.sign_time, '%Y-%m-%d' ) AS signTime,
+                id
+            FROM
+                marketing_integral_sign_record misr
+            WHERE
+                misr.del_flag = '0'
+                AND misr.member_list_id = #{paramMap.memberListId}
+                AND DATE_FORMAT( misr.sign_time, '%Y-%m-%d' )= #{paramMap.signTime}
+                limit 1
+
+    </select>
+</mapper>

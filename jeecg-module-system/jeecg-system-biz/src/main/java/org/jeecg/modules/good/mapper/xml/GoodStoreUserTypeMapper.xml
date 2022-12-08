@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodStoreUserTypeMapper">
+    <select id="getGoodStoreUserType" resultType="org.jeecg.modules.good.entity.GoodStoreUserType">
+        SELECT * FROM `good_store_user_type` gut LEFT JOIN `good_store_type` gt ON  gut.good_store_type_id =gt.id  WHERE gut.del_flag = 0 AND gt.del_flag =  0
+      AND  gt.status = 1
+        <if test="sysUserId != null and sysUserId!=''">
+            AND gut.sys_user_id =#{sysUserId}
+        </if>
+        ORDER BY gut.create_time DESC
+        limit 8
+    </select>
+</mapper>

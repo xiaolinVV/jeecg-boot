@@ -182,4 +182,36 @@
 			and username != #{username}
 		</if>
 	</select>
+
+	<!--根据sysUserId 查询 返回角色roleCode-->
+	<select id="getUserRoleCode" resultType="string">
+		SELECT  sr.role_code FROM  (SELECT su.*,sur.id AS surId,sur.`role_id` AS roleId FROM sys_user su LEFT JOIN  sys_user_role sur ON  su.id = sur.user_id) suAndSur LEFT JOIN  sys_role sr ON suAndSur.roleId = sr.id
+		WHERE suAndSur.del_flag = 0 AND suAndSur.status = 1
+		<if test="sysUserId!=null and sysUserId!=''">
+			AND suAndSur.id =  #{sysUserId}
+		</if>
+	</select>
+
+	<select id="totalSum" resultType="org.jeecg.modules.system.vo.SysWorkbenchVO">
+		SELECT
+			(
+					(SELECT
+						 SUM(mwp.`bargain_payments`)
+					 FROM
+						 marketing_welfare_payments mwp
+					 WHERE mwp.`del_flag` = 0
+					   AND mwp.`is_platform` = 0
+					   AND mwp.`we_type` = 0) +
+					(SELECT
+						 SUM(mwp.`bargain_payments`)
+					 FROM
+						 marketing_welfare_payments mwp
+					 WHERE mwp.`del_flag` = 0
+					   AND mwp.`is_platform` = 1)
+				) AS earnings
+		FROM
+			sys_user su
+		WHERE su.`del_flag` = 0
+		  AND su.`id` = 'a75d45a015c44384a04449ee80dc3503'
+	</select>
 </mapper>

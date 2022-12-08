@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberBrowsingHistoryMapper">
+    <select id="getMemberGoodsCollectionVo" resultType="org.jeecg.modules.member.dto.MemberBrowsingHistoryDto">
+        SELECT
+        mgc.id AS id,
+        mgc.good_type AS good_type,
+        mgc.browsing_price as browsing_price,
+        mgc.browsing_time AS browsing_time,
+        mgc.del_flag AS del_flag,
+        ml.head_portrait AS head_portrait,
+        ml.phone AS phone,
+        ml.nick_name AS nick_name,
+        gl.good_name AS good_name,
+        gl.price AS price,
+        gl.frame_status AS frame_status,
+        gl.activities_type AS activities_type
+        FROM (member_browsing_history mgc  LEFT JOIN  member_list ml ON mgc.`member_list_id`=ml.`id`) LEFT JOIN good_list gl ON  mgc.`good_list_id`=gl.id
+       where 1=1
+        <if test="memberBrowsingHistoryVo != null and memberBrowsingHistoryVo.phone != null and memberBrowsingHistoryVo.phone != ''">
+            and  ml.phone LIKE concat('%',#{memberBrowsingHistoryVo.phone},'%')
+        </if>
+        <if test="memberBrowsingHistoryVo != null and memberBrowsingHistoryVo.nickName != null and memberBrowsingHistoryVo.nickName != ''">
+            and   ml.nick_name LIKE concat('%',#{memberBrowsingHistoryVo.nickName},'%')
+        </if>
+        <if test="memberBrowsingHistoryVo != null and memberBrowsingHistoryVo.createTime_begin != null and memberBrowsingHistoryVo.createTime_begin != ''">
+            and mgc.browsing_time <![CDATA[>=]]> concat(#{memberBrowsingHistoryVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberBrowsingHistoryVo != null and memberBrowsingHistoryVo.createTime_end != null and memberBrowsingHistoryVo.createTime_end != ''">
+            AND mgc.browsing_time <![CDATA[<=]]> concat( #{memberBrowsingHistoryVo.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY mgc.create_time DESC
+    </select>
+
+    <select id="findBrowsingHistoryBySort" resultType="map">
+            SELECT
+              *
+            FROM
+              (SELECT
+                YEAR,
+                MONTH,
+                DAY,
+                CONCAT(YEAR, MONTH, DAY) AS ymd
+              FROM
+                `member_browsing_history`
+              WHERE del_flag = '0'
+             AND member_list_id=#{memberId}
+              ) mbh
+            GROUP BY mbh.ymd ORDER BY mbh.ymd DESC
+
+    </select>
+</mapper>

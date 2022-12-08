@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGroupIntegralManageMapper">
+
+    <select id="getMarketingGroupIntegralManage" resultType="map">
+                SELECT
+            mgim.id,
+            mgim.another_name AS anotherName,
+            mgim.surface_plot AS surfacePlot,
+            mgim.main_picture AS mainPicture,
+            mgim.number_clusters AS numberClusters
+        FROM
+            marketing_group_integral_manage mgim
+        WHERE
+            mgim.`status` = '1'
+        ORDER BY
+            sort
+    </select>
+</mapper>

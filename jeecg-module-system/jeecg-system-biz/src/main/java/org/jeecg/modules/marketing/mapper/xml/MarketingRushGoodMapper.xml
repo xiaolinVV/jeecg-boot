@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingRushGoodMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+        mrg.`id`,
+        gl.`good_no` AS goodNo,
+        gl.`main_picture` AS mainPicture,
+        gl.`good_name` AS goodName,
+        CONCAT(
+        gtOne.`name`,
+        '-',
+        gtTwo.`name`,
+        '-',
+        gtThree.`name`
+        ) AS typeName,
+        gl.`market_price` AS marketPrice,
+        gl.`price`,
+        gl.`repertory`,
+        mrg.`sort`,
+        mrg.`status`,
+        mrg.`status_explain` AS statusExplain,
+        mrg.`create_by` AS createBy,
+        DATE_FORMAT(
+        mrg.`create_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS createTime,
+        mrg.`price` AS groupPrice
+        FROM
+        (SELECT * FROM marketing_rush_good ${ew.customSqlSegment})mrg
+        LEFT JOIN good_list gl
+        ON mrg.`good_list_id` = gl.`id`
+        LEFT JOIN good_type gtThree
+        ON gtThree.`id` = gl.`good_type_id`
+        LEFT JOIN good_type gtTwo
+        ON gtTwo.`id` = gtThree.`parent_id`
+        LEFT JOIN good_type gtOne
+        ON gtOne.`id` = gtTwo.`parent_id`
+        WHERE mrg.`del_flag` = 0
+        <if test="requestMap.goodNo != null and requestMap.goodNo != ''">
+            AND gl.`good_no` LIKE concat('%',#{requestMap.goodNo},'%')
+        </if>
+        <if test="requestMap.goodName != null and requestMap.goodName != ''">
+            AND gl.`good_name` LIKE concat('%',#{requestMap.goodName},'%')
+        </if>
+        <if test="requestMap.gtOneId != null and requestMap.gtOneId != ''">
+            AND gtOne.id = #{requestMap.gtOneId}
+        </if>
+        <if test="requestMap.gtTwoId != null and requestMap.gtTwoId != ''">
+            AND gtTwo.id = #{requestMap.gtTwoId}
+        </if>
+        <if test="requestMap.gtThreeId != null and requestMap.gtThreeId != ''">
+            AND gtThree.id = #{requestMap.gtThreeId}
+        </if>
+        ORDER BY mrg.sort ASC ,mrg.create_time DESC
+    </select>
+
+    <select id="getMarketingRushGoodByTypeId" resultType="map">
+          SELECT
+            gl.main_picture AS mainPicture,
+            gl.good_name AS goodName,
+            gl.`market_price` AS marketPrice,
+            gl.`id` AS goodListId,
+            1 AS isPlatform,
+            mrg.id,
+            (SELECT label FROM marketing_rush_base_setting limit 1) AS label,
+            mrg.price,
+            mrg.id AS marketingRushGoodId
+        FROM
+            marketing_rush_good mrg
+            LEFT JOIN good_list gl ON mrg.good_list_id = gl.id
+        WHERE
+            mrg.del_flag = '0'
+            AND mrg.`status` = '1'
+            AND gl.del_flag = '0'
+            AND gl.`status` = '1'
+            AND gl.frame_status = '1'
+            AND gl.good_form = '0'
+            AND gl.audit_status = '2'
+            and mrg.marketing_rush_type_id=#{marketingRushTypeId}
+        ORDER BY
+            mrg.sort
+    </select>
+</mapper>

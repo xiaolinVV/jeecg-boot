@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingPrefectureGoodMapper">
+
+    <select id="getMarketingPrefectureGood" resultType="org.jeecg.modules.marketing.dto.MarketingPrefectureGoodDTO">
+        SELECT
+        mpg.*,
+        if(mpt.level = 2,concat((SELECT
+        mpts.`type_name`
+        FROM
+        marketing_prefecture_type mpts
+        WHERE mpts.`id` = mpt.pid),'-',mpt.type_name),mpt.type_name) AS typeName,
+        if(mpt.level = 2,concat((SELECT
+        mpts.id
+        FROM
+        marketing_prefecture_type mpts
+        WHERE mpts.`id` = mpt.pid),',',mpt.id),mpt.id) AS typeId,
+        gl.main_picture AS mainPicture,
+        gl.good_name AS goodName,
+        gl.price AS price,
+        gl.repertory AS repertory,
+        gl.is_specification AS isSpecification,
+        gl.status AS goodStatus,
+        gl.market_price AS marketPrice,
+        mp.is_view_market_price AS isViewMarketPrice,
+        gtOne.name AS goodTypeOneName,
+        gtTwo.name AS goodTypeTwoName,
+        gtThree.name AS goodTypeThreeName,
+        gtOne.id AS goodTypeIdOne,
+        gtTwo.id AS goodTypeIdTwo,
+        gtThree.id AS goodTypeIdThree,
+        CONCAT_WS(
+        '-',
+        gtOne.name,
+        gtTwo.name,
+        gtThree.name
+        ) AS goodTypeNames,
+        su.realname AS realname,
+        gss.discount AS discount,
+        gss.minDiscount AS minDiscount,
+        gss.maxDiscount AS maxDiscount,
+        mp.is_integral as  isIntegral,
+        mp.`buyer_limit`,
+        CONCAT(CONCAT(
+        (SELECT
+        CAST((mpgs.prefecture_price/gs.price)*100 as DECIMAL(9,2))
+        FROM
+        marketing_prefecture_good_specification mpgs left join good_specification gs on mpgs.good_specification_id=gs.id
+        WHERE mpgs.`del_flag` = 0
+        AND mpgs.`marketing_prefecture_good_id` = mpg.`id`
+        order  by mpgs.prefecture_price asc
+        LIMIT 1),
+        '%'
+        ),'-',CONCAT(
+        (SELECT
+        CAST((mpgs.prefecture_price/gs.price)*100 as DECIMAL(9,2))
+        FROM
+        marketing_prefecture_good_specification mpgs left join good_specification gs on mpgs.good_specification_id=gs.id
+        WHERE mpgs.`del_flag` = 0
+        AND mpgs.`marketing_prefecture_good_id` = mpg.`id`
+        order  by mpgs.prefecture_price desc
+        LIMIT 1),
+        '%'
+        )) AS prefecturePriceProportion
+
+        FROM
+        `marketing_prefecture_good` mpg
+        LEFT JOIN good_list gl
+        ON gl.id = mpg.good_list_id
+        LEFT JOIN `good_type` gtThree
+        ON gl.good_type_id = gtThree.id
+        LEFT JOIN good_type gtTwo
+        ON gtThree.parent_id = gtTwo.id
+        LEFT JOIN good_type gtOne
+        ON gtTwo.parent_id = gtOne.id
+        LEFT JOIN `sys_user` su
+        ON su.id = gl.sys_user_id
+        LEFT JOIN `marketing_prefecture_type` mpt
+        ON mpt.id = mpg.marketing_prefecture_type_id
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        LEFT JOIN (SELECT gs.good_list_id AS good_list_id, IF(
+        MAX(CEIL(gs.cost_price/gs.price*10000)/100 ) = MIN(CEIL(gs.cost_price/gs.price*10000)/100),
+        CONCAT(FORMAT(MIN(CEIL(gs.cost_price/gs.price*10000)/100 ),2),'%'),
+        CONCAT_WS(
+        '-',CONCAT(FORMAT( MIN(CEIL(gs.cost_price/gs.price*10000)/100),2),'%') ,CONCAT(FORMAT( MAX(CEIL(gs.cost_price/gs.price*10000)/100),2),'%'))
+        ) AS discount,
+        FORMAT(MIN(CEIL(gs.cost_price/gs.price*10000)/100 ),2) AS minDiscount,
+        FORMAT(MAX(CEIL(gs.cost_price/gs.price*10000)/100 ),2) AS maxDiscount FROM `good_specification` gs WHERE gs.del_flag = 0 GROUP BY gs.good_list_id) gss
+        ON gss.good_list_id = gl.`id`
+        WHERE mpg.del_flag = 0
+        AND mp.del_flag = 0
+        AND gl.del_flag = 0
+        AND gl.audit_status = 2
+        AND gl.status = 1
+        AND gl.good_form = 0
+        AND gl.main_picture IS NOT NULL
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.marketingPrefectureId!=null and marketingPrefectureGoodVO.marketingPrefectureId!=''">
+            AND mpg.marketing_prefecture_id = #{marketingPrefectureGoodVO.marketingPrefectureId}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.goodName!=null and marketingPrefectureGoodVO.goodName!=''">
+            AND gl.good_name LIKE CONCAT(CONCAT('%',#{marketingPrefectureGoodVO.goodName}), '%')
+        </if>
+
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.goodName!=null and marketingPrefectureGoodVO.goodName!=''">
+            AND gl.good_name LIKE CONCAT(CONCAT('%',#{marketingPrefectureGoodVO.goodName}), '%')
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.goodTypeIdThree!=null and marketingPrefectureGoodVO.goodTypeIdThree!=''">
+            AND gtThree.id = #{marketingPrefectureGoodVO.goodTypeIdThree}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.goodTypeIdTwo!=null and marketingPrefectureGoodVO.goodTypeIdTwo!=''">
+            AND gtTwo.id = #{marketingPrefectureGoodVO.goodTypeIdTwo}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.goodTypeIdOne!=null and marketingPrefectureGoodVO.goodTypeIdOne!=''">
+            AND gtOne.id = #{marketingPrefectureGoodVO.goodTypeIdOne}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.realname!=null and marketingPrefectureGoodVO.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{marketingPrefectureGoodVO.realname}), '%')
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.typeName!=null and marketingPrefectureGoodVO.typeName!=''">
+            AND mpt.type_name LIKE CONCAT(CONCAT('%',#{marketingPrefectureGoodVO.typeName}), '%')
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.status!=null and marketingPrefectureGoodVO.status!=''">
+            AND mpg.status =#{marketingPrefectureGoodVO.status}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.createTime_begin != null and marketingPrefectureGoodVO.createTime_begin != ''">
+            and mpg.create_time <![CDATA[>=]]> concat(#{marketingPrefectureGoodVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.createTime_end != null and marketingPrefectureGoodVO.createTime_end != ''">
+            AND mpg.create_time <![CDATA[<=]]> concat( #{marketingPrefectureGoodVO.createTime_end},' 23:59:59')
+        </if>
+
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.updateTime_begin != null and marketingPrefectureGoodVO.updateTime_begin != ''">
+            and mpg.update_time <![CDATA[>=]]> concat(#{marketingPrefectureGoodVO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.updateTime_end != null and marketingPrefectureGoodVO.updateTime_end != ''">
+            AND mpg.update_time <![CDATA[<=]]> concat( #{marketingPrefectureGoodVO.updateTime_end},' 23:59:59')
+        </if>
+
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.minDiscount != null and marketingPrefectureGoodVO.minDiscount != ''">
+            and minDiscount <![CDATA[>=]]> #{marketingPrefectureGoodVO.minDiscount}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.maxDiscount != null and marketingPrefectureGoodVO.maxDiscount != ''">
+            and maxDiscount <![CDATA[<=]]> #{marketingPrefectureGoodVO.maxDiscount}
+        </if>
+        <if test="marketingPrefectureGoodVO != null and marketingPrefectureGoodVO.marketingPrefectureTypeId != null and marketingPrefectureGoodVO.marketingPrefectureTypeId != ''">
+            and marketing_prefecture_type_id = #{marketingPrefectureGoodVO.marketingPrefectureTypeId}
+        </if>
+        ORDER BY mpg.create_time DESC
+    </select>
+
+
+    <select id="getMarketingPrefectureGoodName" resultType="map">
+         SELECT
+          gl.id ,gl.good_name
+        FROM
+          `marketing_prefecture_good` mpg
+          LEFT JOIN `good_list` gl
+            ON gl.id = mpg.good_list_id
+        WHERE mpg.del_flag = 0
+          AND gl.del_flag = 0
+          AND mpg.status = 1
+          AND mpg.src_status = 1
+        <if test="marketingPrefectureId != null  and marketingPrefectureId!=''">
+            AND mpg.marketing_prefecture_id = #{marketingPrefectureId}
+        </if>
+
+    </select>
+
+
+
+    <select id="findByMarketingPrefectureType" resultType="map" parameterType="map">
+        SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        gl.supply_price as supplyPrice,
+        IF(mp.is_discount='0',0,(SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1')) AS discount,
+        source_type AS sourceType,
+        mpg.small_prefecture_price AS smallPrefecturePrice,
+        mpg.marketing_prefecture_id AS marketingPrefectureId,
+        mp.is_welfare AS isWelfare,
+        mp.is_give_welfare AS isGiveWelfare,
+        mp.is_view_market_price as isViewMarketPrice,
+        mp.prefecture_label AS prefectureLabel,
+        2 AS isViewVipPrice
+        FROM
+        (SELECT
+        m.*
+        FROM
+        `marketing_prefecture_good` m
+        WHERE del_flag = '0'
+        AND STATUS = '1'
+        AND src_status = '1'
+        AND m.marketing_prefecture_type_id = #{paramObjectMap.id}
+        ) mpg
+        LEFT JOIN
+        good_list gl
+        ON mpg.good_list_id = gl.id
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        AND gl.frame_status = '1'
+        AND gl.main_picture IS NOT NULL
+        and mpg.del_flag = 0
+        and mpg.status='1'
+        <if test="paramObjectMap.pattern==null">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramObjectMap.pattern==0">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramObjectMap.pattern==5">order by mpg.sort asc </if>
+        <if test="paramObjectMap.pattern==1">order by gl.sales_volume desc</if>
+        <if test="paramObjectMap.pattern==2">order by gl.update_time desc</if>
+        <if test="paramObjectMap.pattern==3">order by mpg.small_prefecture_price</if>
+        <if test="paramObjectMap.pattern==4">order by mpg.small_prefecture_price desc </if>
+    </select>
+
+    <select id="findByMarketingPrefectureTypeOne" resultType="map" parameterType="map">
+        SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        gl.supply_price as supplyPrice,
+        IF(mp.is_discount='0',0,(SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1')) AS discount,
+        source_type AS sourceType,
+        mpg.small_prefecture_price AS smallPrefecturePrice,
+        mpg.marketing_prefecture_id AS marketingPrefectureId,
+        mp.is_welfare AS isWelfare,
+        mp.is_give_welfare AS isGiveWelfare,
+        mp.is_view_market_price as isViewMarketPrice,
+        mp.prefecture_label AS prefectureLabel,
+        2 AS isViewVipPrice
+        FROM
+        (SELECT
+        m.*
+        FROM
+        `marketing_prefecture_good` m
+        LEFT JOIN marketing_prefecture_type mpt
+        ON m.`marketing_prefecture_type_id` = mpt.`id`
+        WHERE m.del_flag = '0'
+        AND m.STATUS = '1'
+        AND m.src_status = '1'
+        AND m.marketing_prefecture_type_id = #{paramObjectMap.id}
+        UNION
+        SELECT
+        m.*
+        FROM
+        `marketing_prefecture_good` m
+        LEFT JOIN marketing_prefecture_type mpt
+        ON m.`marketing_prefecture_type_id` = mpt.`id`
+        WHERE m.del_flag = '0'
+        AND m.STATUS = '1'
+        AND m.src_status = '1'
+        AND mpt.`pid` = #{paramObjectMap.id}) mpg
+        LEFT JOIN
+        good_list gl
+        ON mpg.good_list_id = gl.id
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        AND gl.frame_status = '1'
+        AND gl.main_picture IS NOT NULL
+        and mpg.del_flag = 0
+        and mpg.status='1'
+        <if test="paramObjectMap.pattern==null">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramObjectMap.pattern==0">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramObjectMap.pattern==5">order by mpg.sort asc </if>
+        <if test="paramObjectMap.pattern==1">order by gl.sales_volume desc</if>
+        <if test="paramObjectMap.pattern==2">order by gl.update_time desc</if>
+        <if test="paramObjectMap.pattern==3">order by mpg.small_prefecture_price</if>
+        <if test="paramObjectMap.pattern==4">order by mpg.small_prefecture_price desc </if>
+    </select>
+
+    <select id="findByMarketingPrefectureIdAndSearch" resultType="map" parameterType="map">
+
+        SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        gl.supply_price as supplyPrice,
+        IF(mp.is_discount='0',0,(SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1')) AS discount,
+        source_type AS sourceType,
+        mpg.small_prefecture_price AS smallPrefecturePrice,
+        mpg.marketing_prefecture_id AS marketingPrefectureId,
+        mp.is_welfare AS isWelfare,
+        mp.is_give_welfare AS isGiveWelfare,
+        mp.is_view_market_price as isViewMarketPrice,
+        mp.prefecture_label AS prefectureLabel,
+        2 AS isViewVipPrice
+        FROM
+        (SELECT
+        *
+        FROM
+        `marketing_prefecture_good`
+        WHERE marketing_prefecture_id = #{paramMap.id}) mpg
+        LEFT JOIN
+        good_list gl
+        ON mpg.good_list_id = gl.id
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        AND gl.frame_status = '1'
+        AND gl.main_picture IS NOT NULL
+        and mpg.del_flag = 0
+        and mpg.status='1'
+
+        <if test="paramMap.search!=null"> and  (gl.good_name like concat('%',#{paramMap.search},'%') or gl.good_describe like concat('%',#{paramMap.search},'%'))</if>
+        <if test="paramMap.pattern==5">order by mpg.sort asc </if>
+        <if test="paramMap.pattern==null">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramMap.pattern==0">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramMap.pattern==1">order by gl.sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by gl.update_time desc</if>
+        <if test="paramMap.pattern==3">order by mpg.small_prefecture_price</if>
+        <if test="paramMap.pattern==4">order by mpg.small_prefecture_price desc </if>
+    </select>
+
+    <!--商家端查询对应专区商品列表-->
+    <select id="findByMarketingPrefectureIdAndSearchMerchant" resultType="map" >
+        SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        gl.supply_price AS supplyPrice,
+        IF(mp.is_discount='0',0,(SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1')) AS discount,
+        source_type AS sourceType,
+        mpg.small_prefecture_price AS smallPrefecturePrice,
+        mpg.marketing_prefecture_id AS marketingPrefectureId,
+        mp.is_welfare AS isWelfare,
+        mp.is_give_welfare AS isGiveWelfare,
+        mp.is_view_market_price AS isViewMarketPrice,
+        mp.prefecture_label AS prefectureLabel,
+        2 AS isViewVipPrice,
+        mdgs.COUNT AS marketingDiscountGoodCount
+        FROM
+        marketing_prefecture_good mpg
+        LEFT JOIN
+        good_list gl
+        ON mpg.good_list_id = gl.id
+        LEFT JOIN (SELECT mdg.good_id,COUNT(0) AS COUNT FROM marketing_discount_good mdg WHERE mdg.`del_flag` = 0 AND  mdg.is_platform = 1 GROUP BY mdg.good_id) mdgs
+        ON mdgs.good_id = gl.id
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        AND gl.frame_status = '1'
+        AND gl.main_picture IS NOT NULL
+        AND mpg.del_flag = 0
+        AND mpg.status='1'
+
+        <if test="searchTermsVO != null and searchTermsVO.marketingPrefectureId!=null and searchTermsVO.marketingPrefectureId!=''">
+         and  mpg.marketing_prefecture_id =#{searchTermsVO.marketingPrefectureId}
+         </if>
+        <if test="searchTermsVO != null and searchTermsVO.marketingPrefectureTypeId!=null and searchTermsVO.marketingPrefectureTypeId!=''">
+            and  mpg.marketing_prefecture_type_id =#{searchTermsVO.marketingPrefectureTypeId}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.minPrice!=null and searchTermsVO.minPrice!=''">
+            and gl.small_price <![CDATA[>=]]> #{searchTermsVO.minPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.maxPrice!=null and searchTermsVO.maxPrice!=''">
+            and gl.small_price <![CDATA[<=]]> #{searchTermsVO.maxPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.sourceType!=null and searchTermsVO.sourceType!=''">
+            and gl.source_type =#{searchTermsVO.sourceType}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.marketingDiscountGoodCount!=null and searchTermsVO.marketingDiscountGoodCount!='' ">
+          and mp.is_discount='1' and mdgs.COUNT <![CDATA[>=]]> #{searchTermsVO.marketingDiscountGoodCount}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.isWelfare!=null and searchTermsVO.isWelfare!='' ">
+            and mpg.isWelfare <![CDATA[>=]]> #{searchTermsVO.isWelfare}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.isVipLower!=null and searchTermsVO.isVipLower!='' ">
+            and mpg.isVipLower <![CDATA[>=]]> #{searchTermsVO.isVipLower}
+        </if>
+
+
+        <if test="searchTermsVO != null and searchTermsVO.search!=null and searchTermsVO.search!=''"> and  (gl.good_name like concat('%',#{searchTermsVO.search},'%') or gl.good_describe like concat('%',#{searchTermsVO.search},'%'))</if>
+
+        <if test="searchTermsVO != null and searchTermsVO.pattern==null">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==0">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==1">order by gl.sales_volume desc</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==2">order by gl.update_time desc</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==3">order by mpg.small_prefecture_price</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==4">order by mpg.small_prefecture_price desc </if>
+    </select>
+
+    <select id="findByMarketingPrefectureId" resultType="map" parameterType="map">
+        SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        gl.supply_price as supplyPrice,
+        IF(mp.is_discount='0',0,(SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1')) AS discount,
+        source_type AS sourceType,
+        mpg.small_prefecture_price AS smallPrefecturePrice,
+        mpg.marketing_prefecture_id AS marketingPrefectureId,
+        mp.is_welfare AS isWelfare,
+        mp.is_give_welfare AS isGiveWelfare,
+        mp.is_view_market_price as isViewMarketPrice,
+        mp.prefecture_label AS prefectureLabel,
+        2 AS isViewVipPrice
+        FROM
+        (SELECT
+        *
+        FROM
+        marketing_prefecture mpp
+        WHERE mpp.`del_flag` = 0
+        AND mpp.`status` = 1
+        ORDER BY mpp.`sort`
+        LIMIT 3) mp
+        LEFT JOIN marketing_prefecture_good mpg
+        ON mp.id = mpg.marketing_prefecture_id
+        LEFT JOIN good_list gl
+        ON mpg.good_list_id = gl.id
+        WHERE gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        AND gl.frame_status = '1'
+        AND gl.main_picture IS NOT NULL
+        and mpg.del_flag = 0
+        and mpg.status='1'
+        <if test="paramMap.search!=null and paramMap.search != ''"> and  (gl.good_name like concat('%',#{paramMap.search},'%') or gl.good_describe like concat('%',#{paramMap.search},'%'))</if>
+        <if test="paramMap.pattern==null">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramMap.pattern==5">order by mpg.sort asc </if>
+        <if test="paramMap.pattern==0">ORDER BY mpg.small_prefecture_price ASC,gl.sales_volume,gl.update_time DESC </if>
+        <if test="paramMap.pattern==1">ORDER BY gl.sales_volume desc</if>
+        <if test="paramMap.pattern==2">ORDER BY gl.update_time desc</if>
+        <if test="paramMap.pattern==3">ORDER BY mpg.small_prefecture_price</if>
+        <if test="paramMap.pattern==4">ORDER BY mpg.small_prefecture_price desc</if>
+    </select>
+    <select id="findMarketingPrefectureGoodList" resultType="map">
+        SELECT
+          mpg.`id`,
+          gl.`main_picture` AS mainPicture,
+          gl.`good_name` AS goodName,
+          IF(LENGTH(TRIM(mpg.`marketing_prefecture_type_id`)) > 0,
+          IF(
+            mpt.level = 2,
+            CONCAT(
+              (SELECT
+                mpts.`type_name`
+              FROM
+                marketing_prefecture_type mpts
+              WHERE mpts.`id` = mpt.pid),
+              '-',
+              mpt.type_name
+            ),
+            mpt.type_name
+          ),'无分类') AS typeName,
+          mpg.`prefecture_price` AS prefecturePrice,
+          gl.`repertory`
+        FROM
+          marketing_prefecture_good mpg
+          LEFT JOIN good_list gl
+            ON mpg.`good_list_id` = gl.`id`
+          LEFT JOIN marketing_prefecture_type mpt
+            ON mpt.`id` = mpg.`marketing_prefecture_type_id`
+        WHERE mpg.`del_flag` = 0
+            AND mpg.id NOT IN (SELECT
+                  mprg.`marketing_prefecture_good_id`
+                FROM
+                  marketing_prefecture_recommend_good mprg
+                WHERE mprg.`marketing_prefecture_recommend_id` = #{marketingPrefectureGoodDTO.marketingPrefectureRecommendId}
+                AND mprg.del_flag = 0
+                )
+          AND gl.`del_flag` = 0
+          AND mpg.status = 1
+          AND mpg.src_status = 1
+          AND mpg.marketing_prefecture_id = #{marketingPrefectureGoodDTO.marketingPrefectureId}
+          <if test="marketingPrefectureGoodDTO.goodName != null and marketingPrefectureGoodDTO.goodName != ''">
+              AND gl.good_name LIKE concat('%',#{marketingPrefectureGoodDTO.goodName},'%')
+          </if>
+          <if test="marketingPrefectureGoodDTO.typeTwoId != null and marketingPrefectureGoodDTO.typeTwoId != ''">
+              AND mpt.id = #{marketingPrefectureGoodDTO.typeTwoId}
+          </if>
+        <if test="marketingPrefectureGoodDTO.typeOneId != null and marketingPrefectureGoodDTO.typeOneId != ''">
+            AND (mpt.id = #{marketingPrefectureGoodDTO.typeOneId} OR mpt.pid = #{marketingPrefectureGoodDTO.typeOneId})
+        </if>
+    </select>
+</mapper>

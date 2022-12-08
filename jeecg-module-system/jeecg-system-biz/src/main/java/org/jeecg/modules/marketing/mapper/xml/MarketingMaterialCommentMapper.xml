@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingMaterialCommentMapper">
+
+    <select id="getMarketingMaterialCommentDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialCommentDTO">
+         SELECT
+            mmc.*,
+            IF(mmc.parent_id = 0,mml.id,mmc.parent_id) AS parentIdS,
+            mml.title AS title,
+            mml.author AS author,
+            IF(mmc.user_type ='0',ml.head_portrait,su.avatar) AS headPortrait,
+            IF(mmc.user_type ='0',ml.nick_name,su.realname)   AS nickName,
+            mmcps.nickName AS parentNickName,
+            mmcbs.nickName AS byReplyName
+          FROM
+            `marketing_material_comment` mmc
+            LEFT JOIN `member_list` ml
+              ON ml.id = mmc.member_list_id
+            LEFT JOIN sys_user su
+              ON su.id = mmc.sys_user_id
+            LEFT JOIN
+              (SELECT
+                mmcp.id AS id,
+                ml.nick_name AS nickName
+              FROM
+                marketing_material_comment mmcp
+                LEFT JOIN `member_list` ml
+                  ON ml.id = mmcp.member_list_id
+              WHERE mmcp.del_flag = 0) mmcps
+              ON mmc.parent_id = mmcps.id
+            LEFT JOIN
+              (SELECT
+                mmcb.id AS id,
+                ml.nick_name AS nickName
+              FROM
+                marketing_material_comment mmcb
+                LEFT JOIN `member_list` ml
+                  ON ml.id = mmcb.member_list_id
+              WHERE mmcb.del_flag = 0) mmcbs
+              ON mmc.by_reply_id = mmcbs.id
+            LEFT JOIN marketing_material_list mml
+              ON mmc.marketing_material_list = mml.id
+           where mmc.del_flag = 0
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.marketingMaterialList!=null and marketingMaterialCommentVO.marketingMaterialList!=''">
+            AND mmc.marketing_material_list LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.marketingMaterialList}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentIdS!=null and marketingMaterialCommentVO.parentIdS!=''">
+            AND (mmc.parent_id LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentIdS}), '%') or (mmc.marketing_material_list LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentIdS}), '%') and mmc.parent_id= 0 ))
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentId!=null and marketingMaterialCommentVO.parentId!=''">
+            AND mmc.parent_id LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentId}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.title!=null and marketingMaterialCommentVO.title!=''">
+            AND mml.title LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.title}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.author!=null and marketingMaterialCommentVO.author!=''">
+            AND mml.author LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.author}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.nickName!=null and marketingMaterialCommentVO.nickName!=''">
+            AND ((mmc.user_type ='0' and ml.nick_name  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.nickName}), '%')) or(mmc.user_type ='1' and su.realname  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.nickName}), '%')) )
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentNickName!=null and marketingMaterialCommentVO.parentNickName!=''">
+            AND  mmcps.nickName  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentNickName}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.byReplyName!=null and marketingMaterialCommentVO.byReplyName!=''">
+            AND  mmcbs.nickName  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.byReplyName}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.status!=null and marketingMaterialCommentVO.status!=''">
+            AND  mmc.status  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.status}), '%')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.commentTime_begin != null and marketingMaterialCommentVO.commentTime_begin != ''">
+            and mmc.comment_time <![CDATA[>=]]> concat(#{marketingMaterialCommentVO.commentTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.commentTime_end != null and marketingMaterialCommentVO.commentTime_end != ''">
+            AND mmc.comment_time <![CDATA[<=]]> concat( #{marketingMaterialCommentVO.commentTime_end},' 23:59:59')
+        </if>
+        ORDER BY mmc.create_time DESC
+    </select>
+
+    <select id="getMarketingMaterialCommentMaps" resultType="map">
+        SELECT
+          mmc.id,
+        DATE_FORMAT(mmc.comment_time,'%Y-%m-%d %H:%i:%s') AS commentTime,
+        IF(mmc.user_type ='0',ml.head_portrait,su.avatar) AS headPortrait,
+        IF(mmc.user_type ='0',ml.nick_name,su.realname)   AS nickName,
+          mmc.content AS content
+        FROM
+          `marketing_material_comment` mmc
+          LEFT JOIN `member_list` ml
+            ON ml.id = mmc.member_list_id
+          LEFT JOIN sys_user su
+            ON su.id = mmc.sys_user_id
+        WHERE mmc.del_flag = 0
+          AND mmc.status != '2'
+         and  mmc.parent_id = '0'
+          <if test="paramMap != null and paramMap.containsKey('marketingMaterialListId')">
+              and  mmc.marketing_material_list = #{paramMap.marketingMaterialListId}
+          </if>
+        ORDER by mmc.comment_time desc
+    </select>
+    <select id="getMarketingMaterialCommentTwoMaps" resultType="map">
+        SELECT
+        mmc.id,
+        DATE_FORMAT(mmc.comment_time,'%Y-%m-%d %H:%i:%s') AS commentTime,
+        IF(mmc.user_type ='0',ml.head_portrait,su.avatar) AS headPortrait,
+        IF(mmc.user_type ='0',ml.nick_name,su.realname)   AS nickName,
+        mmc.content AS content,
+        (SELECT mls.nick_name FROM `marketing_material_comment` mmcs LEFT JOIN `member_list` mls
+        ON mls.id = mmcs.member_list_id WHERE mmcs.id =mmc.by_reply_id ) AS byReply
+        FROM
+        `marketing_material_comment` mmc
+        LEFT JOIN `member_list` ml
+        ON ml.id = mmc.member_list_id
+        LEFT JOIN sys_user su
+        ON su.id = mmc.sys_user_id
+        WHERE mmc.del_flag = 0
+        AND mmc.status != '2'
+        <if test="paramMap != null and paramMap.containsKey('marketingMaterialListId')">
+            and  mmc.marketing_material_list = #{paramMap.marketingMaterialListId}
+        </if>
+        <choose>
+            <when test="paramMap != null and paramMap.containsKey('parentId')">
+                and  mmc.parent_id = #{paramMap.parentId}
+            </when>
+            <otherwise>
+                and  mmc.parent_id = '0'
+            </otherwise>
+        </choose>
+      ORDER by mmc.comment_time asc
+
+    </select>
+
+
+</mapper>

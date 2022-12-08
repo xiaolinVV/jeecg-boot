@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderManageMapper">
+    <select id="findProviderManage" resultType="org.jeecg.modules.provider.vo.ProviderManageVO">
+        SELECT
+        pm.*,
+        CONCAT(
+        pm.`start_time`,
+        '~',
+        pm.`end_time`
+        ) AS timeName,
+        (
+        CASE
+        pm.status
+        WHEN 0
+        THEN '停用'
+        WHEN 1
+        THEN '启用'
+        ELSE ''
+        END
+        ) AS statusName,
+        CONCAT(
+        su.`realname`,
+        '(',
+        sr.`role_name`,
+        ')'
+        ) AS contactName
+        FROM
+        provider_manage pm
+        LEFT JOIN sys_user su
+        ON pm.`contact_person` = su.`id`
+        LEFT JOIN sys_user_role sur
+        ON sur.`user_id` = su.`id`
+        LEFT JOIN sys_role sr
+        ON sur.`role_id` = sr.`id`
+        WHERE pm.`del_flag` = 0
+        <if test="providerManageVO!=null and providerManageVO.name!=null and providerManageVO.name !=''">
+            AND pm.name LIKE CONCAT('%',#{providerManageVO.name},'%')
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.linkman!=null and providerManageVO.linkman !=''">
+            AND pm.linkman LIKE CONCAT('%',#{providerManageVO.linkman},'%')
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.accountType!=null and providerManageVO.accountType !=''">
+            AND pm.account_type = #{providerManageVO.accountType}
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.linkphone!=null and providerManageVO.linkphone !=''">
+            AND pm.linkphone LIKE CONCAT('%',#{providerManageVO.linkphone},'%')
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.status!=null and providerManageVO.status !=''">
+            AND pm.status = #{providerManageVO.status}
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.createTime_begin!=null and providerManageVO.createTime_begin !=''">
+            and pm.create_time <![CDATA[>=]]> concat(#{providerManageVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.createTime_end!=null and providerManageVO.createTime_end !=''">
+            AND pm.create_time <![CDATA[<=]]> concat(#{providerManageVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="providerManageVO != null and providerManageVO.areaAddress != null and providerManageVO.areaAddress != ''">
+            AND pm.area_address LIKE CONCAT('%',#{providerManageVO.areaAddress},'%')
+        </if>
+        ORDER BY pm.`create_time` DESC
+    </select>
+
+    <select id="findProviderByRoleCode" resultType="org.jeecg.modules.provider.vo.TestVO">
+        SELECT
+            su.id,
+            su.username AS name,
+            sr.role_code
+          FROM
+            sys_user su
+            LEFT JOIN sys_user_role sur
+              ON su.`id` = sur.`user_id`
+            LEFT JOIN sys_role sr
+              ON sr.`id` = sur.`role_id`
+          WHERE sr.`role_code` = #{roleCode}
+    </select>
+    <select id="findProviderBalance" resultType="org.jeecg.modules.provider.dto.ProviderManageDTO">
+        SELECT
+          pm.id,
+          su.`username` AS userName,
+          pm.`name`,
+          pm.`area_address`,
+          pm.`linkman`,
+          pm.`linkphone`,
+          pm.`balance`
+        FROM
+          provider_manage pm
+          LEFT JOIN sys_user su
+            ON pm.`sys_user_id` = su.`id`
+        WHERE pm.`del_flag` = 0
+        <if test="providerManageVO!=null and providerManageVO.userName!=null and providerManageVO.userName!=''">
+            AND su.username LIKE concat('%',#{providerManageVO.userName},'%')
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.linkman!=null and providerManageVO.linkman!=''">
+            AND pm.linkman LIKE concat('%',concat(#{providerManageVO.linkman},'%'))
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.linkphone!=null and providerManageVO.linkphone!=''">
+            AND pm.linkphone LIKE concat('%',concat(#{providerManageVO.linkphone},'%'))
+        </if>
+        <if test="providerManageVO!=null and providerManageVO.name!=null and providerManageVO.name!=''">
+            AND pm.name LIKE concat('%',concat(#{providerManageVO.name},'%'))
+        </if>
+        ORDER BY pm.`create_time` DESC
+    </select>
+    <select id="returnProvider" resultType="org.jeecg.modules.provider.vo.ProviderManageVO">
+        SELECT
+          pm.`id`,
+          su.`username` AS userName,
+          su.`avatar`,
+          pm.`name`,
+          pm.`sys_area_id`,
+          pm.`address`,
+          pm.`company_phone`,
+          pm.`linkman`,
+          pm.`linkphone`,
+          pm.`remark`,
+          pm.`area_address`
+        FROM
+          provider_manage pm
+          LEFT JOIN sys_user su
+            ON pm.`sys_user_id` = su.`id`
+        WHERE pm.`del_flag` = 0
+          AND pm.`sys_user_id` = #{userId}
+    </select>
+    <select id="findproviderWorkbenchVO" resultType="org.jeecg.modules.provider.vo.ProviderWorkbenchVO">
+        SELECT
+          su.`avatar`,
+          -- 头像
+          pm.`linkman`,
+          -- 联系人
+          pm.`name`,
+          -- 公司名称
+          sr.`role_name`,
+          -- 角色
+          pm.`status`,
+          -- 状态
+          (
+            CASE
+              pm.`status`
+              WHEN 0
+              THEN '停用'
+              WHEN 1
+              THEN '启用'
+              ELSE '异常'
+            END
+          ) AS statusName,
+          -- 状态说明
+          (SELECT
+            COUNT(1)
+          FROM
+            order_provider_list opl
+          WHERE opl.`del_flag` = 0
+            AND opl.`sys_user_id` = pm.`sys_user_id`
+            AND opl.`status` IN (1, 2, 3)) AS orderSum,
+          -- 有效订单
+          (SELECT
+            SUM(pac.`amount`)
+          FROM
+            provider_account_capital pac
+          WHERE pac.`del_flag` = 0
+            AND pac.`sys_user_id` = pm.`sys_user_id`
+            AND pac.`go_and_come` = 0) AS earnings,
+          -- 累计收益
+          (SELECT
+            COUNT(1)
+          FROM
+            order_provider_list opl
+          WHERE opl.`del_flag` = 0
+            AND opl.`sys_user_id` = pm.`sys_user_id`
+            AND opl.`status` = 1) AS waitDeliverGoods,
+          -- 待发货订单
+          (SELECT
+            count(1)
+          FROM
+            good_list gl
+          WHERE gl.`del_flag` = 0
+            AND gl.`sys_user_id` = pm.`sys_user_id`
+            AND gl.`status` = 1
+            AND gl.`frame_status` = 1
+            AND gl.`audit_status` = 2) AS forGoods,
+             -- 在售商品
+             pm.id,
+             pm.sys_user_id
+        FROM
+          provider_manage pm
+          LEFT JOIN sys_user su
+            ON pm.`sys_user_id` = su.`id`
+          LEFT JOIN sys_user_role sur
+            ON sur.`user_id` = su.`id`
+          LEFT JOIN sys_role sr
+            ON sr.`id` = sur.`role_id`
+        WHERE pm.`del_flag` = 0
+          AND pm.`sys_user_id` = #{userId}
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.provider.vo.ProviderRechargeRecordVO">
+        SELECT
+        prr.*,
+        su.`username` AS userName ,
+        pm.`name` AS providerName
+        FROM
+        provider_recharge_record prr
+        LEFT JOIN provider_manage pm
+        ON prr.`sys_user_id` = pm.`sys_user_id`
+        LEFT JOIN sys_user su
+        ON prr.`sys_user_id` = su.`id`
+        WHERE prr.`del_flag` = 0
+        <if test="providerManageDTO.sysUserId != null and providerManageDTO.sysUserId != ''">
+            AND prr.sys_user_id = #{providerManageDTO.sysUserId}
+        </if>
+        <if test="providerManageDTO.tradeNo != null and providerManageDTO.tradeNo != ''">
+            AND prr.order_no LIKE concat('%',#{providerManageDTO.tradeNo},'%')
+        </if>
+        <if test="providerManageDTO.orderNo != null and providerManageDTO.orderNo != ''">
+            AND prr.trade_no LIKE concat('%',#{providerManageDTO.orderNo},'%')
+        </if>
+        <if test="providerManageDTO.providerName != null and providerManageDTO.providerName != ''">
+            AND pm.name LIKE concat('%',#{providerManageDTO.providerName},'%')
+        </if>
+        <if test="providerManageDTO.userName != null and providerManageDTO.userName != ''">
+            AND su.username LIKE concat('%',#{providerManageDTO.userName},'%')
+        </if>
+        <if test="providerManageDTO.payType != null and providerManageDTO.payType != ''">
+            AND prr.pay_type = #{providerManageDTO.payType}
+        </if>
+        <if test="providerManageDTO.tradeStatus != null and providerManageDTO.tradeStatus != ''">
+            AND prr.trade_status = #{providerManageDTO.tradeStatus}
+        </if>
+        <if test="providerManageDTO.goAndCome != null and providerManageDTO.goAndCome != ''">
+            AND prr.go_and_come = #{providerManageDTO.goAndCome}
+        </if>
+        <if test="providerManageDTO.createTime_begin!=null and providerManageDTO.createTime_begin !=''">
+            AND prr.create_time <![CDATA[>=]]> concat(#{providerManageDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerManageDTO.createTime_end!=null and providerManageDTO.createTime_end !=''">
+            AND prr.create_time <![CDATA[<=]]> concat( #{providerManageDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY prr.`create_time` DESC,prr.`amount` DESC
+    </select>
+</mapper>

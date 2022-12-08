@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGroupRecordMapper">
+
+    <select id="getMarketingGroupRecordByMarketingGroupManageId" resultType="map">
+              SELECT
+          mgr.`marketing_group_manage_id` AS marketingGroupManageId,
+          mgr.`group_record_no` AS groupRecordNo,
+           DATE_FORMAT(mgr.`tuxedo_time`,'%Y-%m-%d %H:%i:%s') AS tuxedoTime,
+          mgr.`marketing_group_good_specification_id` AS marketingGroupGoodSpecificationId,
+          mgr.`specification`,
+          mgr.`market_price` AS marketPrice,
+          mgr.`small_price` AS smallPrice,
+          mgr.`activity_price` AS activityPrice,
+          mgr.`member_list_id` AS memberListId,
+          mgr.`quantity`,
+          mgr.`status`,
+           DATE_FORMAT(mgr.`user_time`,'%Y-%m-%d %H:%i:%s') AS userTime,
+          mgr.`order_list_id` AS orderListId,
+          mgr.`identity_status` AS identityStatus,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          mgr.`reward_type` AS rewardType,
+          mgr.`reward_status` AS rewardStatus,
+          mgr.`reward_number` AS rewardNumber,
+          mgr.`deadline`,
+          mgr.good_no as goodNo,
+          mgr.main_picture as mainPicture,
+          mgr.good_name as goodName,
+          mgr.id
+        FROM
+          marketing_group_record mgr
+          LEFT JOIN member_list ml
+            ON mgr.`member_list_id` = ml.`id`
+        WHERE mgr.`marketing_group_manage_id` = #{marketingGroupManageId}
+    </select>
+    <select id="getMarketingGroupRecordByMemberId" resultType="map" parameterType="map">
+                SELECT
+          mgr.`status`,
+        mgr.`tuxedo_welfare_payments` AS tuxedoWelfarePayments,
+          mgr.`main_picture` AS mainPicture,
+          mgr.`good_name` AS goodName,
+          mgr.`specification`,
+          mgr.`activity_price` AS activityPrice,
+          mgr.`market_price` AS marketPrice,
+          mgr.`quantity`,
+          mgr.`marketing_group_good_list_id` AS marketingGroupGoodListId,
+        mgr.`reward_status` AS rewardStatus,
+        TIMESTAMPDIFF(SECOND,NOW(),mgr.buy_end_time) AS surplusTime,
+        mgm.`status` AS mgmstatus,
+        mgr.`id`,
+        DATE_FORMAT(mgr.`tuxedo_time`,'%Y-%m-%d %H:%i:%s') AS tuxedoTime,
+        mgr.`group_record_no` AS groupRecordNo,
+        mgr.reward_type as rewardType,
+        mgr.reward_number as rewardNumber,
+        (SELECT good_list_id FROM marketing_group_good_list WHERE id=mgm.`marketing_group_good_list_id`) AS goodListId
+        FROM
+          `marketing_group_record` mgr LEFT JOIN marketing_group_manage mgm ON mgr.`marketing_group_manage_id`=mgm.`id`
+        WHERE mgr.member_list_id = #{paramMap.memberId}
+          <if test='paramMap.status!="-1"'>
+          AND mgm.`status` =#{paramMap.status}
+          </if>
+        ORDER BY mgr.`tuxedo_time` DESC
+    </select>
+
+
+    <select id="getMarketingGroupRecordById" resultType="map" >
+        SELECT
+        mgr.`status`,
+        mgr.`tuxedo_welfare_payments` AS tuxedoWelfarePayments,
+        mgr.`main_picture` AS mainPicture,
+        mgr.`good_name` AS goodName,
+        mgr.`specification`,
+        mgr.`activity_price` AS activityPrice,
+        mgr.`market_price` AS marketPrice,
+        mgr.`quantity`,
+        mgr.`marketing_group_good_list_id` AS marketingGroupGoodListId,
+        mgr.`reward_status` AS rewardStatus,
+        TIMESTAMPDIFF(SECOND,NOW(),mgr.buy_end_time) AS surplusTime,
+        mgm.`status` AS mgmstatus,
+        mgr.`id`,
+        DATE_FORMAT(mgr.`tuxedo_time`,'%Y-%m-%d %H:%i:%s') AS tuxedoTime,
+        mgr.`group_record_no` AS groupRecordNo,
+        mgr.reward_type as rewardType,
+        mgr.reward_number as rewardNumber,
+        (SELECT good_list_id FROM marketing_group_good_list WHERE id=mgm.`marketing_group_good_list_id`) AS goodListId
+        FROM
+        `marketing_group_record` mgr LEFT JOIN marketing_group_manage mgm ON mgr.`marketing_group_manage_id`=mgm.`id`
+        WHERE mgr.id=#{marketingGroupRecordId}
+    </select>
+
+
+    <select id="getMarketingGroupRecordList" resultType="map" parameterType="map">
+                SELECT
+          mgr.`marketing_group_manage_id` AS marketingGroupManageId,
+          mgr.`group_record_no` AS groupRecordNo,
+          DATE_FORMAT(mgr.`tuxedo_time`,'%Y-%m-%d %H:%i:%s') AS tuxedoTime,
+          mgr.`marketing_group_good_specification_id` AS marketingGroupGoodSpecificationId,
+          mgr.`specification`,
+          mgr.`market_price` AS marketPrice,
+          mgr.`small_price` AS smallPrice,
+          mgr.`activity_price` AS activityPrice,
+          mgr.`member_list_id` AS memberListId,
+          mgr.`quantity`,
+          mgr.`status`,
+          DATE_FORMAT(mgr.`user_time`,'%Y-%m-%d %H:%i:%s') AS userTime,
+          mgr.`order_list_id` AS orderListId,
+          mgr.`identity_status` AS identityStatus,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          mgr.`reward_type` AS rewardType,
+          mgr.`reward_status` AS rewardStatus,
+          mgr.`reward_number` AS rewardNumber,
+          mgr.`deadline`,
+          mgr.good_no AS goodNo,
+          mgr.main_picture AS mainPicture,
+          mgr.good_name AS goodName,
+          DATE_FORMAT(mgm.`success_time`,'%Y-%m-%d %H:%i:%s') AS successTime,
+          mgm.`time_out_period` AS timeOutPeriod,
+          mgm.`group_no` AS groupNo,
+          mgm.`status` AS ptStatus,
+        DATE_FORMAT(mgr.`buy_start_time`,'%Y-%m-%d %H:%i:%s') AS buyStartTime,
+        DATE_FORMAT(mgr.`buy_end_time`,'%Y-%m-%d %H:%i:%s') AS buyEndTime
+        FROM
+          marketing_group_record mgr
+          LEFT JOIN member_list ml
+            ON mgr.`member_list_id` = ml.`id`
+          LEFT JOIN marketing_group_manage mgm
+            ON mgr.`marketing_group_manage_id` = mgm.`id`
+        where 1=1
+        <if test="paramMap.groupNo!=null and paramMap.groupNo!=''">
+            and mgm.`group_no`=#{paramMap.groupNo}
+        </if>
+        <if test="paramMap.groupRecordNo!=null and paramMap.groupRecordNo!=''">
+            and mgr.`group_record_no`=#{paramMap.groupRecordNo}
+        </if>
+        <if test="paramMap.tuxedoTimeStart!=null and paramMap.tuxedoTimeStart!=''">
+            and mgr.`tuxedo_time` &gt;=#{paramMap.tuxedoTimeStart}
+        </if>
+        <if test="paramMap.tuxedoTimeEnd!=null and paramMap.tuxedoTimeEnd!=''">
+            and mgr.`tuxedo_time` &lt;=#{paramMap.tuxedoTimeEnd}
+        </if>
+        <if test="paramMap.goodNo!=null and paramMap.goodNo!=''">
+            and mgr.good_no=#{paramMap.goodNo}
+        </if>
+        <if test="paramMap.goodName!=null and paramMap.goodName!=''">
+            and mgr.good_name LIKE CONCAT(CONCAT('%',#{paramMap.goodName}), '%')
+        </if>
+        <if test="paramMap.phone!=null and paramMap.phone!=''">
+            and ml.`phone`=#{paramMap.phone}
+        </if>
+        <if test="paramMap.ptStatus!=null and paramMap.ptStatus!=''">
+            and mgm.`status`=#{paramMap.ptStatus}
+        </if>
+        <if test="paramMap.identityStatus!=null and paramMap.identityStatus!=''">
+            and mgr.`identity_status`=#{paramMap.identityStatus}
+        </if>
+        <if test='paramMap.rewardStatus=="1"'>
+            and mgr.`reward_status`=#{paramMap.rewardStatus}
+        </if>
+        <if test="paramMap.buyStartTimeStart!=null and paramMap.buyStartTimeStart!=''">
+            and mgr.`buy_start_time` &gt;=#{paramMap.buyStartTimeStart}
+        </if>
+        <if test="paramMap.buyStartTimeEnd!=null and paramMap.buyStartTimeEnd!=''">
+            and mgr.`buy_start_time` &lt;=#{paramMap.buyStartTimeEnd}
+        </if>
+        <if test="paramMap.buyEndTimeStart!=null and paramMap.buyEndTimeStart!=''">
+            and mgr.`buy_end_time` &gt;=#{paramMap.buyEndTimeStart}
+        </if>
+        <if test="paramMap.buyEndTimeEnd!=null and paramMap.buyEndTimeEnd!=''">
+            and mgr.`buy_end_time` &lt;=#{paramMap.buyEndTimeEnd}
+        </if>
+        <if test="paramMap.status!=null and paramMap.status!=''">
+            and mgr.`status`=#{paramMap.status}
+        </if>
+        ORDER BY mgr.`tuxedo_time` DESC
+    </select>
+
+    <select id="getMarketingGroupRecordByRewardStatus" resultType="map">
+                SELECT
+          ml.`head_portrait` AS headPortrait,
+          ml.`nick_name` AS nickName,
+          (mgr.`market_price`-mgr.`activity_price`) AS subPrice
+        FROM
+          `marketing_group_record` mgr
+          LEFT JOIN member_list ml
+            ON mgr.`member_list_id` = ml.`id`
+           WHERE mgr.`reward_status`='1'
+           ORDER BY mgr.`tuxedo_time` DESC
+           LIMIT 20
+    </select>
+
+</mapper>

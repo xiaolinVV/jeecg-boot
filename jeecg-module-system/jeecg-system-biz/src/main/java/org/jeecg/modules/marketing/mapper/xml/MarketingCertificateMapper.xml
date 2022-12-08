@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateMapper">
+    <select id="findMarketingCertificate" resultType="org.jeecg.modules.marketing.dto.MarketingCertificateDTO">
+        SELECT
+        mc.*,
+        (SELECT
+          COUNT(1)
+        FROM
+          marketing_certificate_good mcg
+        WHERE mcg.`marketing_certificate_id` = mc.`id`
+          AND mcg.`del_flag` = 0) AS goodQuantity,
+        IF(
+        mc.`reward_store` = 0,
+        '0',
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        WHERE mcs.`del_flag` = 0
+        AND mcs.`marketing_certificate_id` = mc.`id`)
+        ) storeQuantity,
+        (SELECT
+          COUNT(1)
+        FROM
+          marketing_certificate_record mcr
+        WHERE mcr.`status` = 2
+          AND mcr.`marketing_certificate_id` = mc.`id`) AS certificateUse,
+        (SELECT
+          COUNT(1)
+        FROM
+          marketing_certificate_record mcr
+        WHERE mcr.`marketing_certificate_id` = mc.`id`
+        AND mcr.status in (0,1,2,3,4,5)
+        ) AS certificateGet,
+        IF(
+        mc.`vouchers_way` = 1,
+        mc.`dis_data`,
+        ''
+        ) AS today,
+        IF(
+        mc.`vouchers_way` = 2,
+        mc.`dis_data`,
+        ''
+        ) AS tomorow,
+        mc.main_picture AS mainPictures,
+        mc.cover_plan AS coverPlans
+      FROM
+        marketing_certificate mc
+      WHERE mc.`del_flag` = 0
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',concat(#{marketingCertificateVO.id},'%'))
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.name!=null and marketingCertificateVO.name!=''">
+            AND mc.name LIKE concat('%',concat(#{marketingCertificateVO.name},'%'))
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.status!=null and marketingCertificateVO.status!=''">
+            AND mc.status = #{marketingCertificateVO.status}
+        </if>
+        <if test="marketingCertificateVO != null and marketingCertificateVO.createTime_begin != null and marketingCertificateVO.createTime_begin != ''">
+            AND mc.create_time <![CDATA[>=]]> CONCAT(#{marketingCertificateVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCertificateVO != null and marketingCertificateVO.createTime_end != null and marketingCertificateVO.createTime_end != ''">
+            AND mc.create_time <![CDATA[<=]]> CONCAT( #{marketingCertificateVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingCertificateVO != null and marketingCertificateVO.updateTime_begin != null and marketingCertificateVO.updateTime_begin != ''">
+            AND mc.updateTime <![CDATA[>=]]> CONCAT(#{marketingCertificateVO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCertificateVO != null and marketingCertificateVO.updateTime_end != null and marketingCertificateVO.updateTime_end != ''">
+            AND mc.updateTime <![CDATA[<=]]> CONCAT( #{marketingCertificateVO.updateTime_end},' 23:59:59')
+        </if>
+      ORDER BY mc.`create_time` DESC
+    </select>
+    <select id="findCertificateVO" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateVO">
+        SELECT
+        mc.`id`,
+        mc.`name`,
+        (
+        CASE
+        WHEN mc.`vouchers_way` = 0
+        THEN CONCAT(
+        mc.`start_time`,
+        "~",
+        mc.`end_time`
+        )
+        WHEN mc.`vouchers_way` = 1
+        THEN CONCAT(
+        "领券当日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        ELSE CONCAT(
+        "领券次日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        END
+        ) usrTime,
+        mc.`user_restrict`,
+        (
+        mc.`total` - mc.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        LEFT JOIN store_manage sm
+        ON sm.sys_user_id = mcs.sys_user_id
+        WHERE mcs.marketing_certificate_id = mc.id
+        AND mcs.del_flag = 0
+        AND sm.del_flag = 0) AS storeQuantity,
+        mc.the_reward,
+        IF(
+        CHAR_LENGTH(mc.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(mc.user_restrict,"0")=0,
+        '普通会员',
+        'vip会员'
+        )
+        ) AS memberTypeName,
+        IF(
+        mc.certificate_type = 0,
+        '可兑换的商品全部兑换',
+        '可兑换的商品任选一个'
+        ) AS certificateType,
+        mc.reward_store,
+        mc.main_picture,
+        mc.market_price,
+        mc.price,
+        mc.cost_price,
+        mc.total
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = m.`id`
+        AND mcg.del_flag = 0) AS goods,
+        m.*
+        FROM
+        marketing_certificate m) mc
+        WHERE mc.`del_flag` = 0
+        AND mc.status = 1
+        AND mc.is_nomal = 0
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
+            AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',#{marketingCertificateVO.id},'%')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+    <select id="findCertificate" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateVO">
+        SELECT
+        mc.`id`,
+        mc.`name`,
+        (
+        CASE
+        WHEN mc.`vouchers_way` = 0
+        THEN CONCAT(
+        mc.`start_time`,
+        "~",
+        mc.`end_time`
+        )
+        WHEN mc.`vouchers_way` = 1
+        THEN CONCAT(
+        "领券当日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        ELSE CONCAT(
+        "领券次日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        END
+        ) usrTime,
+        mc.`user_restrict`,
+        (
+        mc.`total` - mc.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        WHERE mcs.marketing_certificate_id = mc.id
+        AND mcs.del_flag = 0) AS storeQuantity,
+        mc.the_reward,
+        IF(
+        CHAR_LENGTH(mc.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(mc.user_restrict,"0"),
+        '普通会员',
+        'vip会员'
+        )
+        ) AS memberTypeName,
+        IF(LENGTH(TRIM(mc.`main_picture`))>0,mc.`main_picture` ->> '$."0"','') AS mainPicture,
+        mc.reward_store,
+        mc.main_picture,
+        mc.market_price,
+        mc.price,
+        mc.cost_price,
+        mc.total
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = m.`id`
+        AND mcg.del_flag = 0) AS goods,
+        m.*
+        FROM
+        marketing_certificate m) mc
+        WHERE mc.`del_flag` = 0
+        AND mc.status = 1
+        AND mc.is_nomal = 1
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
+            AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',#{marketingCertificateVO.id},'%')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+    <select id="findMarketingCertificateList" resultType="map">
+                SELECT
+                mc.id,
+                mc.NAME,
+                mc.market_price AS marketPrice,
+                mc.price AS price,
+                DATE_FORMAT(mc.start_time, '%Y-%m-%d') AS startTime,
+                DATE_FORMAT(mc.end_time, '%Y-%m-%d') AS endTime,
+                mc.is_give AS isGive,
+                mc.vouchers_way AS vouchersWay,
+                mc.dis_data AS disData,
+                mc.monad AS monad,
+                IF(
+                LENGTH(TRIM(mc.main_picture)) <![CDATA[<]]> 1 || ISNULL(mc.main_picture),
+                (SELECT
+                sfs.`front_logo`
+                FROM
+                sys_front_setting sfs
+                WHERE sfs.`del_flag` = 0
+                LIMIT 1),
+                mc.main_picture
+                ) AS mainPicture,
+                mc.cover_plan AS coverPlan,
+                '1' AS isPlatform
+                FROM
+                `marketing_certificate` mc
+                WHERE mc.del_flag = '0'
+                AND mc.total > mc.released_quantity
+                AND mc.STATUS = '1'
+                AND mc.is_nomal = 1
+              <if test="name!=null and name!=''">
+                  AND name LIKE concat('%',#{name},'%')
+              </if>
+            ORDER BY mc.sort,
+            mc.create_time DESC
+    </select>
+
+
+    <select id="findMarketingCertificateBySysUserId" resultType="map">
+            SELECT
+              mc.id,
+              mc.NAME,
+              mc.market_price AS marketPrice,
+              mc.price AS price,
+              DATE_FORMAT(mc.start_time, '%Y-%m-%d') AS startTime,
+              DATE_FORMAT(mc.end_time, '%Y-%m-%d') AS endTime,
+              mc.is_give AS isGive,
+              mc.vouchers_way AS vouchersWay,
+              mc.dis_data AS disData,
+              mc.monad AS monad,
+                IF(
+                LENGTH(TRIM(mc.main_picture)) <![CDATA[<]]> 1 || ISNULL(mc.main_picture),
+                (SELECT
+                sfs.`front_logo`
+                FROM
+                sys_front_setting sfs
+                WHERE sfs.`del_flag` = 0
+                LIMIT 1),
+                mc.main_picture
+                ) AS mainPicture,
+              mc.cover_plan AS coverPlan,
+              '0' AS isPlatform
+            FROM
+              (SELECT
+                *
+              FROM
+                `marketing_certificate_store`
+                  WHERE  del_flag = 0
+                <if test="sysUserId!=''">
+                      AND sys_user_id =#{sysUserId}
+                </if>
+        ) mcs
+              LEFT JOIN `marketing_certificate` mc
+                ON mcs.marketing_certificate_id = mc.`id`
+            WHERE mc.del_flag = '0'
+              AND mc.total > mc.released_quantity
+              AND mc.is_nomal = '1'
+              and mc.status='1'
+            ORDER BY mc.sort,
+              mc.create_time DESC
+    </select>
+
+
+
+    <select id="findMarketingCertificateInfo" resultType="map">
+        SELECT
+          id,
+          NAME,
+
+          market_price AS marketPrice,
+
+          price AS price,
+
+          cover_plan AS coverPlan,
+
+          (
+            CASE
+              vouchers_way
+              WHEN 0
+              THEN CONCAT(
+                DATE_FORMAT(start_time, '%Y-%m-%d'),
+                '~',
+                DATE_FORMAT(end_time, '%Y-%m-%d')
+              )
+              WHEN 1
+              THEN CONCAT(
+                '领券当日起',
+                dis_data,
+                monad
+              )
+              WHEN 2
+              THEN CONCAT(
+                '领券次日起',
+                dis_data,
+                monad
+              )
+              ELSE ''
+            END
+          ) AS times,
+
+          is_give AS isGive,
+
+          main_picture AS mainPicture,
+
+          user_restrict AS userRestrict,
+
+          discount_explain AS discountExplain,
+
+          1 AS isViewStore,
+          posters AS posters,
+          reward_store AS rewardStore,
+          sell_reward_store AS sellRewardStore
+        FROM
+          `marketing_certificate`
+        WHERE del_flag = 0
+          AND id = #{id}
+    </select>
+    <select id="findGiveMarketingCertificateVO" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateVO">
+        SELECT
+        mc.`id`,
+        mc.`name`,
+        (
+        CASE
+        WHEN mc.`vouchers_way` = 0
+        THEN CONCAT(
+        mc.`start_time`,
+        "~",
+        mc.`end_time`
+        )
+        WHEN mc.`vouchers_way` = 1
+        THEN CONCAT(
+        "领券当日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        ELSE CONCAT(
+        "领券次日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        END
+        ) usrTime,
+        mc.`user_restrict`,
+        (
+        mc.`total` - mc.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs LEFT JOIN store_manage sm ON sm.sys_user_id = mcs.sys_user_id
+        WHERE mcs.marketing_certificate_id = mc.id
+        AND mcs.del_flag = 0
+        AND sm.del_flag = 0
+        ) AS storeQuantity,
+        mc.the_reward,
+        IF(
+        CHAR_LENGTH(mc.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(mc.user_restrict,"0"),
+        'vip会员',
+        '普通会员'
+        )
+        ) AS memberTypeName,
+        IF(
+        mc.certificate_type = 0,
+        '可兑换的商品全部兑换',
+        '可兑换的商品任选一个'
+        ) AS certificateType
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = m.`id`
+        AND mcg.del_flag = 0) AS goods,
+        m.*
+        FROM
+        marketing_certificate m
+        <if test="marketingCertificateVO.certificateType!=null and marketingCertificateVO.certificateType!=''">
+            WHERE m.certificate_type LIKE concat('%',#{marketingCertificateVO.certificateType},'%')
+        </if>
+        ) mc
+        WHERE mc.`del_flag` = 0
+        AND mc.status = 1
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
+            AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',#{marketingCertificateVO.id},'%')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+    <select id="pageListBySout" resultType="map">
+        SELECT
+          mc.`id`,
+          mc.`main_picture` AS mainPicture,
+          CONCAT(
+            '￥',
+            0 + CAST(mc.`price` AS CHAR)
+          ) AS marketPrice
+        FROM
+          marketing_certificate mc
+        WHERE mc.`del_flag` = 0
+          AND mc.is_nomal = 1
+          and status='1'
+        ORDER BY mc.`sort`
+        LIMIT #{sout}
+    </select>
+    <select id="findCertificateData" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateVO">
+        SELECT
+        mc.`id`,
+        mc.`name`,
+        (
+        CASE
+        WHEN mc.`vouchers_way` = 0
+        THEN CONCAT(
+        mc.`start_time`,
+        "~",
+        mc.`end_time`
+        )
+        WHEN mc.`vouchers_way` = 1
+        THEN CONCAT(
+        "领券当日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        ELSE CONCAT(
+        "领券次日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        END
+        ) usrTime,
+        mc.`user_restrict`,
+        (
+        mc.`total` - mc.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        WHERE mcs.marketing_certificate_id = mc.id
+        AND mcs.del_flag = 0) AS storeQuantity,
+        mc.the_reward,
+        IF(
+        CHAR_LENGTH(mc.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(mc.user_restrict,"0"),
+        '普通会员',
+        'vip会员'
+        )
+        ) AS memberTypeName,
+        IF(LENGTH(TRIM(mc.`main_picture`))>0,mc.`main_picture` ->> '$."0"','') AS mainPicture,
+        mc.reward_store,
+        mc.main_picture,
+        mc.market_price,
+        mc.price,
+        mc.cost_price,
+        (mc.total - mc.released_quantity) AS total,
+        IF((SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_seckill_list mcsl
+        WHERE mcsl.`del_flag` = 0
+        AND mcsl.`marketing_certificate_id` = mc.id
+        AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateVO.marketingCertificateSeckillActivityListId}) > 0,1,0) AS ifSelected
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = m.`id`
+        AND mcg.del_flag = 0) AS goods,
+        m.*
+        FROM
+        marketing_certificate m) mc
+        WHERE mc.`del_flag` = 0
+        AND mc.status = 1
+        AND mc.is_nomal = 1
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
+            AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',#{marketingCertificateVO.id},'%')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+    <select id="findCertificateDataByType" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateVO">
+        SELECT
+        mc.`id`,
+        mc.`name`,
+        (
+        CASE
+        WHEN mc.`vouchers_way` = 0
+        THEN CONCAT(
+        mc.`start_time`,
+        "~",
+        mc.`end_time`
+        )
+        WHEN mc.`vouchers_way` = 1
+        THEN CONCAT(
+        "领券当日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        ELSE CONCAT(
+        "领券次日起",
+        mc.`dis_data`,
+        mc.`monad`,
+        "内"
+        )
+        END
+        ) usrTime,
+        mc.`user_restrict`,
+        (
+        mc.`total` - mc.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        WHERE mcs.marketing_certificate_id = mc.id
+        AND mcs.del_flag = 0) AS storeQuantity,
+        mc.the_reward,
+        IF(
+        CHAR_LENGTH(mc.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(mc.user_restrict,"0"),
+        '普通会员',
+        'vip会员'
+        )
+        ) AS memberTypeName,
+        IF(LENGTH(TRIM(mc.`main_picture`))>0,mc.`main_picture` ->> '$."0"','') AS mainPicture,
+        mc.reward_store,
+        mc.main_picture,
+        mc.market_price,
+        mc.price,
+        mc.cost_price,
+        (mc.total - mc.released_quantity) AS total,
+        IF((SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_group_list mcgl
+        WHERE mcgl.`del_flag` = 0
+        AND mcgl.`marketing_certificate_id` = mc.id) > 0,1,0) AS ifSelected
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = m.`id`
+        AND mcg.del_flag = 0) AS goods,
+        m.*
+        FROM
+        marketing_certificate m) mc
+        WHERE mc.`del_flag` = 0
+        AND mc.status = 1
+        AND mc.is_nomal = 1
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
+            AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
+        </if>
+        <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
+            AND mc.id LIKE concat('%',#{marketingCertificateVO.id},'%')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+</mapper>

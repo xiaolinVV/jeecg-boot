@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.vehicle.mapper.VehicleParkActivityTicketMapper">
+
+    <select id="getVehicleParkActivityTicketDTO" resultType="map" parameterType="org.jeecg.modules.vehicle.dto.VehicleParkActivityTicketDTO">
+                SELECT
+            vpat.activity_number AS activityNumber,
+            vpat.activity_name AS activityName,
+            vpat.activity_conditions AS activityConditions,
+            vpat.price,
+            vpat.activity_status AS activityStatus,
+            DATE_FORMAT( vpat.start_time, '%Y-%m-%d %H:%i:%s' ) AS startTime,
+            DATE_FORMAT( vpat.end_time, '%Y-%m-%d %H:%i:%s' ) AS endTime,
+            DATE_FORMAT( vpat.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+            vpt.ticket_name AS ticketName,
+            vpt.serial_number AS serialNumber,
+            vpat.id,
+            vpat.`status`,
+            vpat.status_explain AS statusExplain
+        FROM
+            vehicle_park_activity_ticket vpat
+            LEFT JOIN vehicle_park_ticket vpt ON vpat.vehicle_park_ticket_id = vpt.id
+        WHERE
+            vpat.del_flag = '0'
+
+            <if test="vehicleParkActivityTicketDTO.activityNumber!=null and vehicleParkActivityTicketDTO.activityNumber!=''">
+                and vpat.activity_number=#{vehicleParkActivityTicketDTO.activityNumber}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.activityName!=null and vehicleParkActivityTicketDTO.activityName!=''">
+                and vpat.activity_name=#{vehicleParkActivityTicketDTO.activityName}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.status!=null and vehicleParkActivityTicketDTO.status!=''">
+                and vpat.`status`=#{vehicleParkActivityTicketDTO.status}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.startTimeStart!=null">
+                and vpat.start_time &gt;=#{vehicleParkActivityTicketDTO.startTimeStart}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.startTimeEnd!=null">
+                and vpat.start_time &lt;=#{vehicleParkActivityTicketDTO.startTimeEnd}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.endTimeStart!=null">
+                and vpat.end_time &gt;=#{vehicleParkActivityTicketDTO.endTimeStart}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.endTimeEnd!=null">
+                and vpat.end_time &lt;=#{vehicleParkActivityTicketDTO.endTimeEnd}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.serialNumber!=null and vehicleParkActivityTicketDTO.serialNumber!=''">
+                and vpt.serial_number=#{vehicleParkActivityTicketDTO.serialNumber}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.ticketName!=null and vehicleParkActivityTicketDTO.ticketName!=''">
+                and vpt.ticket_name=#{vehicleParkActivityTicketDTO.ticketName}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.activityStatus!=null and vehicleParkActivityTicketDTO.activityStatus!=''">
+                and vpat.activity_status=#{vehicleParkActivityTicketDTO.activityStatus}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.createTimeStart!=null">
+                and vpat.create_time &gt;=#{vehicleParkActivityTicketDTO.createTimeStart}
+            </if>
+            <if test="vehicleParkActivityTicketDTO.createTimeEnd!=null">
+                and vpat.create_time &lt;=#{vehicleParkActivityTicketDTO.createTimeEnd}
+            </if>
+
+        ORDER BY
+            vpat.create_time DESC
+    </select>
+</mapper>

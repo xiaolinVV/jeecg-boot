@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingPrefectureGoodSpecificationMapper">
+    <select id="getMarketingPrefectureGoodSpecification" resultType="org.jeecg.modules.marketing.dto.MarketingPrefectureGoodSpecificationDTO">
+        SELECT
+        mpgs.id,
+        mpgs.marketing_prefecture_good_id,
+        mpgs.good_specification_id,
+        mpgs.prefecture_price,
+        CAST((mpgs.prefecture_price/gs.price)*100 as DECIMAL(9,2)) as prefecture_price_proportion,
+        mpgs.is_welfare,
+        mpgs.welfare_proportion,
+        mpgs.is_give_welfare,
+        mpgs.give_welfare_proportion,
+        mpgs.buy_proportion_day,
+        mpgs.buy_proportion_letter,
+        mpgs.is_vip_lower,
+        gs.specification as specification,
+        gs.price as price,
+        gs.repertory as repertory,
+        mpgs.proportion_integral
+        FROM
+        `marketing_prefecture_good_specification` mpgs
+        LEFT JOIN `good_specification` gs
+        ON gs.id = mpgs.good_specification_id
+         where gs.del_flag = 0 and mpgs.del_flag = 0
+        <if test="marketingPrefectureGoodId != null and  marketingPrefectureGoodId!=''">
+            AND mpgs.marketing_prefecture_good_id =#{marketingPrefectureGoodId}
+        </if>
+        ORDER BY mpgs.prefecture_price
+    </select>
+
+    <select id="selectMarketingPrefectureGoodSpecificationBySmallprice" resultType="map">
+
+                    SELECT
+              mpgs.`prefecture_price` AS prefecturePrice,
+              gs.specification AS specification
+            FROM
+              `marketing_prefecture_good_specification` mpgs
+              LEFT JOIN `good_specification` gs
+                ON gs.id = mpgs.good_specification_id
+            WHERE gs.del_flag = 0
+              AND mpgs.del_flag = 0
+              AND mpgs.`marketing_prefecture_good_id` = #{marketingPrefectureGoodId}
+              AND gs.repertory &gt;0
+            ORDER BY mpgs.`prefecture_price` ASC
+            LIMIT 1
+    </select>
+</mapper>

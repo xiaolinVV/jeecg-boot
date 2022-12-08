@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreTypeMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreTypeVO">
+        SELECT
+          st.*,
+          CONCAT(
+            st.`small_welfare_payments`,
+            '%'
+          ) AS smallWelfarePaymentsName,
+          IF(
+            st.level = 1,
+            '一级分类',
+            '二级分类'
+          ) AS typeRank,
+          IF(
+            st.`has_child` = 0,
+            IF(
+              (SELECT
+                COUNT(1)
+              FROM
+                store_manage sm
+              WHERE sm.`store_type_id` = st.`id`
+              ) > 0,
+              '1',
+              '0'
+            ),
+            '1'
+          ) AS isDel
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.pid = '0'
+          ORDER BY st.`sort`,st.create_time DESC
+    </select>
+    <select id="getUnderlingList" resultType="org.jeecg.modules.store.vo.StoreTypeVO">
+        SELECT
+          st.*,
+          CONCAT(
+            st.`small_welfare_payments`,
+            '%'
+          ) AS smallWelfarePaymentsName,
+          IF(
+            st.level = 1,
+            '一级分类',
+            '二级分类'
+          ) AS typeRank,
+          IF(
+            st.`has_child` = 0,
+            IF(
+              (SELECT
+                COUNT(1)
+              FROM
+                store_manage sm
+              WHERE sm.`store_type_id` = st.`id`) > 0,
+              '1',
+              '0'
+            ),
+            '1'
+          ) AS isDel
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.pid = #{id}
+          ORDER BY st.`sort`,st.create_time DESC
+    </select>
+
+    <select id="getStoreTypeMap" resultType="map">
+      SELECT
+        st.`id`,
+        st.`type_name` AS typeName,
+        st.`small_welfare_payments` AS smallWelfarePayments
+      FROM
+        store_type st
+      WHERE st.`del_flag` = 0
+      <if test="pId != null and pId != ''">
+        AND st.pid = #{pId}
+      </if>
+      <if test="pId == null or pId == ''">
+        AND st.level = 1
+      </if>
+      ORDER BY st.sort
+    </select>
+
+    <select id="getStoreTypeListMapById" resultType="map">
+      SELECT
+        *
+      FROM
+        (SELECT
+          st.`id`,
+          CONCAT(
+            st.`type_name`,
+            '(',
+            (SELECT
+              COUNT(1)
+            FROM
+              store_manage sm
+            WHERE sm.`del_flag` = 0
+        <if test="id != null and id != ''">
+            AND sm.`store_type_id` = st.`id`
+        </if>
+        <if test="map.level = 2">
+            AND sm.`store_type_id` IN (SELECT
+            sts.`id`
+            FROM
+            store_type sts
+            WHERE sts.`del_flag` = 0
+            AND sts.`status` = 1
+            AND sts.`pid` = st.id)
+        </if>
+        ),
+            ')'
+          ) AS NAME,
+          st.`has_child` AS hasChild,
+          st.`sort`
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.`status` = 1
+          <if test="id != null and id != ''">
+           AND st.pid = #{id}
+          </if>
+        UNION
+        SELECT
+          '' AS id,
+          CONCAT(
+            '全部',
+            '(',
+            (SELECT
+              COUNT(1)
+            FROM
+              store_manage sm
+            WHERE sm.`del_flag` = 0
+              AND sm.`store_type_id` IN (st.`id`)),
+            ')'
+          ) AS NAME,
+          '0' AS hasChild,
+          '0' AS sort
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.`status` = 1
+          <if test="id != null and id != ''">
+           AND st.pid = #{id}
+          </if>
+          ) m
+      ORDER BY m.sort
+    </select>
+    <select id="getstoreTypeListById" resultType="map">
+        SELECT
+          st.`id`,
+          st.`type_name` AS NAME,
+          (SELECT
+              COUNT(1)
+            FROM
+              store_manage sm
+            WHERE sm.`del_flag` = 0
+              AND sm.`store_type_id` = st.`id`) AS storeSum,
+          st.`logo_addr` AS logoAddr,
+          st.`small_welfare_payments` AS smallWelfarePayments
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.`status` = 1
+          AND st.`pid` = #{id}
+          ORDER BY st.sort
+    </select>
+    <select id="getStoreTypeMapListOne" resultType="map">
+      SELECT * FROM ( SELECT
+        st.`id`,
+        CONCAT(
+          st.`type_name`,
+          '(',
+          (SELECT
+            COUNT(1)
+          FROM
+            store_manage sm
+          WHERE sm.`del_flag` = 0
+            AND sm.status = 1
+            AND sm.`store_type_id` IN
+            (SELECT
+              sts.`id`
+            FROM
+              store_type sts
+            WHERE sts.`del_flag` = 0
+              AND sts.`status` = 1
+              AND sts.`level` = 2
+              AND sts.`pid` = st.`id`)),
+          '家',
+          ')'
+        ) AS NAME,
+        st.`sort`
+      FROM
+        store_type st
+      WHERE st.`del_flag` = 0
+        AND st.`status` = 1
+        AND st.`level` = 1
+      UNION
+      SELECT
+        '' AS id,
+        CONCAT(
+          '全部',
+          '(',
+          SUM((SELECT
+            COUNT(1)
+          FROM
+            store_manage sm
+          WHERE sm.`del_flag` = 0
+            AND sm.status = 1
+            AND sm.`store_type_id` IN (st.`id`))),
+          '家',
+          ')'
+        ) AS NAME,
+        0 AS sort
+      FROM
+        store_type st
+      WHERE st.`del_flag` = 0
+        AND st.`status` = 1
+        AND st.`level` = 2
+      ) m
+      GROUP BY m.id
+      ORDER BY m.sort ASC
+    </select>
+    <select id="getStoreTypeMapListTwo" resultType="map">
+      SELECT
+        *
+      FROM
+        (SELECT
+          st.`id`,
+          st.`type_name` AS NAME,
+            (SELECT
+              COUNT(1)
+            FROM
+              store_manage sm
+            WHERE sm.`del_flag` = 0
+              AND sm.`store_type_id` = st.`id`) AS storeSum,
+          st.`sort`
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.`status` = 1
+          AND st.`level` = 2
+          AND st.pid = #{id}
+        UNION
+        SELECT
+          '' AS id,
+          CONCAT('全部', st.`type_name`) AS NAME,
+            (SELECT
+              COUNT(1)
+            FROM
+              store_manage sm
+            WHERE sm.`del_flag` = 0
+              AND sm.`store_type_id` IN
+              (SELECT
+                sts.`id`
+              FROM
+                store_type sts
+              WHERE sts.`del_flag` = 0
+                AND sts.`status` = 1
+                AND sts.`level` = 2
+                AND sts.`pid` = st.`id`))
+           AS storeSum,
+          0 AS sort
+        FROM
+          store_type st
+        WHERE st.`del_flag` = 0
+          AND st.`status` = 1
+          AND st.`level` = 1
+          AND st.id = #{id}) m
+      GROUP BY m.id
+      ORDER BY m.sort ASC
+    </select>
+</mapper>

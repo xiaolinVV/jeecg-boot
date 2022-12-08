@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingRecordedMoneyMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingRecordedMoneyVO">
+        SELECT
+          mrm.*,
+          md.`name`,
+        mdg.group_name
+        FROM
+          marketing_recorded_money mrm
+          LEFT JOIN member_designation md
+            ON mrm.`member_designation_id` = md.`id`
+        LEFT JOIN member_designation_group mdg
+        ON md.member_designation_group_id = mdg.id
+        WHERE mrm.`del_flag` = 0
+        AND md.`del_flag` = 0
+        <if test="marketingRecordedMoneyDTO.orderNo != null and marketingRecordedMoneyDTO.orderNo != ''">
+            AND mrm.order_no LIKE concat('%',#{marketingRecordedMoneyDTO.orderNo},'%')
+        </if>
+        <if test="marketingRecordedMoneyDTO.memberDesignationId != null and marketingRecordedMoneyDTO.memberDesignationId != ''">
+            AND mrm.member_designation_id = #{marketingRecordedMoneyDTO.memberDesignationId}
+        </if>
+        <if test="marketingRecordedMoneyDTO.tradeType != null and marketingRecordedMoneyDTO.tradeType != ''">
+            AND mrm.trade_type = #{marketingRecordedMoneyDTO.tradeType}
+        </if>
+        <if test="marketingRecordedMoneyDTO.tradeTime_begin != null and marketingRecordedMoneyDTO.tradeTime_begin != ''">
+            AND mrm.trade_time <![CDATA[>=]]> CONCAT(#{marketingRecordedMoneyDTO.tradeTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingRecordedMoneyDTO.tradeTime_end != null and marketingRecordedMoneyDTO.tradeTime_end != ''">
+            AND mrm.trade_time <![CDATA[<=]]> CONCAT( #{marketingRecordedMoneyDTO.tradeTime_end},' 23:59:59')
+        </if>
+        <if test="marketingRecordedMoneyDTO.groupName != null and marketingRecordedMoneyDTO.groupName != ''">
+            AND mdg.group_name LIKE concat('%',#{marketingRecordedMoneyDTO.groupName},'%')
+        </if>
+        ORDER BY mrm.create_time DESC, md.sort ASC
+    </select>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGroupIntegralAdvertisingMapper">
+    <select id="getAdvertising" resultType="map">
+        SELECT
+        mgia.title,
+        mgia.picture_addr AS pictureAddr,
+        mgia.go_to_type AS goToType,
+        mgia.ad_adress AS adAdress
+        FROM
+        marketing_group_integral_advertising mgia
+        WHERE
+        mgia.`status` = '1'
+        AND mgia.del_flag = '0'
+        AND mgia.start_time &lt;= NOW() AND mgia.end_time &gt;= NOW()
+        ORDER BY
+        mgia.sort
+    </select>
+</mapper>

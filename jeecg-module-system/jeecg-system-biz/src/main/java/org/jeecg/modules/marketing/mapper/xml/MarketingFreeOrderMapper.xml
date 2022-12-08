@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingFreeOrderMapper">
+
+    <select id="selectMarketingFreeOrderGroupByPayTime" resultType="map" parameterType="map">
+                SELECT
+          aa.payTime,
+          SUM(aa.actualPayment) AS actualPayment,
+          SUM(aa.balance) AS balance,
+          SUM(aa.total) AS total,
+          COUNT(1) AS times,
+          IF(aa.freeDay=aa.payTime,'1','0') AS isFree
+        FROM
+          (SELECT
+            DATE_FORMAT(mfo.`pay_time`, '%Y-%m-%d') AS payTime,
+            DATE_FORMAT(mfs.free_day, '%Y-%m-%d') AS freeDay,
+            ol.`actual_payment` AS actualPayment,
+            ol.`balance`,
+            (
+              ol.`actual_payment` + ol.`balance`
+            ) AS total
+          FROM
+            `marketing_free_order` mfo
+            LEFT JOIN `order_list` ol
+              ON mfo.`order_list_id` = ol.`id` LEFT JOIN `marketing_free_session` mfs ON mfs.`id`=mfo.`marketing_free_session_id`
+          WHERE mfo.`del_flag` = '0'
+            AND mfo.`pay_type` = '1'
+            AND DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d')&gt;=DATE_FORMAT(mfs.`start_time`,'%Y-%m-%d')
+            AND DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d')&lt;=DATE_FORMAT(mfs.`end_time`,'%Y-%m-%d')
+            AND mfo.`marketing_free_session_id`=#{paramMap.marketingFreeSessionId}) aa
+            <if test='paramMap.isFree=="1"'>
+             where  IF(aa.freeDay=aa.payTime,'1','0')='1'
+            </if>
+        GROUP BY aa.payTime
+    </select>
+
+    <select id="selectMarketingFreeOrderByMarketingFreeSessionId" resultType="map" parameterType="map">
+
+            SELECT
+                ol.`order_no` AS orderNo,
+                ol.`goods_total` AS goodsTotal,
+                ol.`distribution`,
+                ol.`ship_fee` AS shipFee,
+                ol.`customary_dues` AS customaryDues,
+                ol.`actual_payment` AS actualPayment,
+                ol.status,
+                mfo.`id`,
+                mfo.`order_list_id` AS orderListId,
+                ol.`mode_payment` AS modePayment,
+                DATE_FORMAT(mfo.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+                DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d %H:%i:%s') AS payTime,
+                DATE_FORMAT(mfs.free_day, '%Y-%m-%d') as freeDay,
+                CONCAT(ol.`shipping_address`,ol.`house_number`) AS shippingAddress,
+                ol.`contact_number` AS contactNumber,
+                ol.`consignee`,
+                ml.`phone`,
+                ml.`nick_name` AS nickName,
+                ml.`member_type` AS memberType,
+                IF(ml.`member_grade_id`,(SELECT grade_name FROM member_grade WHERE id=ml.`member_grade_id`),'无') AS memberGrad,
+                ol.`member_list_id` AS memberListId,
+                mfo.free_status as freeStatus
+              FROM
+                `marketing_free_order` mfo
+                LEFT JOIN `order_list` ol
+                  ON mfo.`order_list_id` = ol.`id` LEFT JOIN  `member_list` ml ON ol.`member_list_id`=ml.`id` LEFT JOIN `marketing_free_session` mfs ON mfs.`id`=mfo.`marketing_free_session_id`
+              WHERE mfo.`del_flag` = '0'
+                AND mfo.`pay_type` = '1'
+                AND DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d')&gt;=DATE_FORMAT(mfs.`start_time`,'%Y-%m-%d')
+                AND DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d')&lt;=DATE_FORMAT(mfs.`end_time`,'%Y-%m-%d')
+                AND mfo.`marketing_free_session_id`=#{paramMap.marketingFreeSessionId}
+
+                <if test='paramMap.isFree=="1"'>
+                   and DATE_FORMAT(mfo.`pay_time`,'%Y-%m-%d')=DATE_FORMAT(mfs.free_day, '%Y-%m-%d')
+                </if>
+
+                <if test="paramMap.orderNo!='' and paramMap.orderNo!=null">
+                    and ol.`order_no`=#{paramMap.orderNo}
+                </if>
+
+                <if test="paramMap.phone!='' and paramMap.phone!=null">
+                    and ml.`phone` like concat('%',#{paramMap.phone},'%')
+                </if>
+
+
+                <if test="paramMap.createTimeStart!='' and paramMap.createTimeStart!=null">
+                    and mfo.`create_time` &gt;=#{paramMap.createTimeStart}
+                </if>
+
+                <if test="paramMap.createTimeEnd!='' and paramMap.createTimeEnd!=null">
+                    and mfo.`create_time` &lt;=#{paramMap.createTimeEnd}
+                </if>
+
+                ORDER BY mfo.`pay_time` DESC
+
+
+    </select>
+
+</mapper>

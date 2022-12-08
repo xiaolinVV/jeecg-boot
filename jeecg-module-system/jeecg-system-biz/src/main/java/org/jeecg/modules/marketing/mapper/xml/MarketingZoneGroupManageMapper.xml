@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupManageMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_zone_group_record mzgr
+          WHERE mzgr.`marketing_zone_group_manage_id` = mzgm.`id`) AS numberSum,
+          mzgm.`serial_number` AS serialNumber,
+          mzgm.`zone_name` AS zoneName,
+          mzgm.`price`,
+          mzgm.`virtual_group_members` AS virtualGroupMembers,
+          mzgm.actual_group_size AS actualGroupSize,
+          mzgm.`status`,
+          DATE_FORMAT(
+            mzgm.`start_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS startTime,
+          DATE_FORMAT(
+            mzgm.`end_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS endTime,
+          DATE_FORMAT(
+            mzgm.`clouds_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS cloudsTime,
+          DATE_FORMAT(
+            mzgm.`failure_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS failureTime,
+          mzgm.id
+        FROM
+          marketing_zone_group_manage mzgm ${ew.customSqlSegment}
+    </select>
+
+  <select id="numberTuxedo" resultType="map">
+        SELECT
+            mzgm.id,
+            mzgm.virtual_group_members AS virtualGroupMembers,
+            ( SELECT COUNT( 1 ) FROM marketing_zone_group_record WHERE marketing_zone_group_manage_id = mzgm.id ) AS numberTuxedo
+        FROM
+            marketing_zone_group_manage mzgm
+        WHERE
+            mzgm.`status` = '0'
+            and mzgm.marketing_zone_group_id=#{marketingZoneGroupId}
+            AND mzgm.del_flag = '0'
+        ORDER BY
+            numberTuxedo DESC
+            LIMIT 5
+  </select>
+</mapper>

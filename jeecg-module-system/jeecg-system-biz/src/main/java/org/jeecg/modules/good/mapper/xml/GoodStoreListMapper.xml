@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodStoreListMapper">
+    <select id="getGoodStoreListdelFlagOrAuditStatus" resultType="org.jeecg.modules.good.entity.GoodStoreList">
+        select * from  good_store_list  where 1=1
+        <if test="delFlag!=null and delFlag!=''">
+            AND del_flag =#{delFlag}
+        </if>
+        <if test="auditStatus!=null and auditStatus!=''">
+            AND audit_status =#{auditStatus}
+        </if>
+    </select>
+    <select id="getGoodStoreListById" resultType="org.jeecg.modules.good.entity.GoodStoreList">
+        select * from  good_store_list  where 1=1
+        <if test="id!=null and id!=''">
+          and  id =#{id}
+        </if>
+
+    </select>
+    <select id="getGoodStoreListOK" resultType="org.jeecg.modules.good.entity.GoodStoreList">
+        select * from  good_store_list  where del_flag =0 and status=1 and frame_status=1
+        <if test="sysUserId!=null and sysUserId!=''">
+            and sys_user_id= #{sysUserId}
+        </if>
+    </select>
+    <update id="updateDelFalg">
+        UPDATE good_store_list SET del_flag=#{delFlag}WHERE id=#{id}
+    </update>
+    <select id="getGoodListDto" resultType="org.jeecg.modules.good.dto.GoodStoreListDto">
+        /*select * from  good_store_list  where del_flag = 0*/
+        SELECT gstm.*,
+        sm.store_name AS storeName,
+        sm.sub_store_name AS subStoreName,
+        sm.good_audit AS goodAudit
+        FROM
+        (SELECT
+        gsl.*,
+        gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
+        gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
+        gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
+        gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
+        CONCAT_WS(
+        '-',
+        gsts.goodStoreTypeOneName,
+        gsts.goodStoreTypeTwoName
+        ) AS goodStoreTypeNames
+        FROM
+        good_store_list gsl
+        LEFT JOIN
+        (SELECT
+        gst.*,
+        gst.id AS goodStoreTypeIdTwo,
+        gst.name AS goodStoreTypeTwoName,
+        gstOne.id AS goodStoreTypeIdOne,
+        gstOne.name AS goodStoreTypeOneName
+        FROM
+        good_store_type gst
+        LEFT JOIN good_store_type gstOne
+        ON gst.parent_id = gstOne.id) gsts
+        ON gsl.good_store_type_id = gsts.id) gstm
+        LEFT JOIN `store_manage` sm ON gstm.sys_user_id = sm.sys_user_id
+        WHERE gstm.del_flag = 0
+        <!--不显示草稿箱信息-->
+        <if test="notauditStatus!=null and notauditStatus!=''">
+            AND gstm.audit_status != 0
+        </if>
+
+        <if test="goodListVo != null and goodListVo.goodStoreTypeId!=null and goodListVo.goodStoreTypeId!=''">
+            AND gstm.goodStoreTypeIdTwo =#{goodListVo.goodStoreTypeId}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodStoreTypeIdTwo!=null and goodListVo.goodStoreTypeIdTwo!=''">
+            AND gstm.goodStoreTypeIdTwo =#{goodListVo.goodStoreTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodStoreTypeIdOne!=null and goodListVo.goodStoreTypeIdOne!=''">
+            AND gstm.goodStoreTypeIdOne =#{goodListVo.goodStoreTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gstm.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}),'%')
+        </if>
+        <if test="goodListVo != null and goodListVo.storeName!=null and goodListVo.storeName!=''">
+            AND sm.store_name LIKE CONCAT(CONCAT('%',#{goodListVo.storeName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.subStoreName!=null and goodListVo.subStoreName!=''">
+            AND sm.sub_store_name LIKE CONCAT(CONCAT('%',#{goodListVo.subStoreName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodNo!=null and goodListVo.goodNo!=''">
+            AND gstm.good_no LIKE CONCAT(CONCAT('%',#{goodListVo.goodNo}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.sysUserId!=null and goodListVo.sysUserId!=''">
+            AND gstm.sys_user_id =#{goodListVo.sysUserId}
+        </if>
+        <if test="goodListVo != null and goodListVo.frameStatus!=null and goodListVo.frameStatus!=''">
+            AND gstm.frame_status =#{goodListVo.frameStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.auditStatus!=null and goodListVo.auditStatus!=''">
+            AND gstm.audit_status =#{goodListVo.auditStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.status!=null and goodListVo.status!=''">
+            AND gstm.status =#{goodListVo.status}
+        </if>
+        <if test="goodListVo != null and goodListVo.activitiesType!=null and goodListVo.activitiesType!=''">
+            AND gstm.activities_type =#{goodListVo.activitiesType}
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_begin != null and goodListVo.createTime_begin != ''">
+            and gstm.create_time <![CDATA[>=]]> concat(#{goodListVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_end != null and goodListVo.createTime_end != ''">
+            AND gstm.create_time <![CDATA[<=]]> concat( #{goodListVo.createTime_end},' 23:59:59')
+        </if>
+        <if test="goodListVo!=null and goodListVo.strings!=null and goodListVo.strings.size > 0 ">
+            and  gstm.id in
+            <foreach collection="goodListVo.strings" item="string" separator="," open="(" close=")">
+                #{string}
+            </foreach>
+        </if>
+       ORDER BY gstm.create_time DESC
+
+    </select>
+
+    <select id="findStoreGoodList" resultType="org.jeecg.modules.good.dto.GoodStoreDiscountDTO">
+            SELECT
+              gsl.`id`,
+              gsl.`main_picture`,
+              gsl.`good_name`,
+              CONCAT(gstOne.`name`, '-', gstTwo.`name`) AS typeName,
+              gsl.`market_price`,
+              gsl.`price`,
+              gsl.`cost_price`,
+              gsl.`vip_price`,
+              gsl.`repertory`,
+              gsl.create_time
+            FROM
+              good_store_list gsl
+              LEFT JOIN good_store_type gstTwo
+                ON gsl.`good_store_type_id` = gstTwo.`id`
+              LEFT JOIN good_store_type gstOne
+                ON gstTwo.`parent_id` = gstOne.`id`
+            WHERE gsl.`del_flag` = 0
+              AND gsl.`audit_status` = 2
+              AND gsl.`frame_status` = 1
+              AND gsl.`status` = 1
+              <if test="goodListVo!=null and goodListVo.sysUserId !=null and goodListVo.sysUserId !=''">
+              AND gsl.sys_user_id = #{goodListVo.sysUserId}
+              </if>
+                <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+                    AND gsl.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}),'%')
+                </if>
+            ORDER BY gsl.`create_time` DESC
+    </select>
+
+
+
+    <select id="getGoodListDtoDelFlag" resultType="org.jeecg.modules.good.dto.GoodStoreListDto">
+        SELECT
+            gsl.*,
+            gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
+            gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
+            gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
+            gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
+            CONCAT_WS(
+            '-',
+            gsts.goodStoreTypeOneName,
+            gsts.goodStoreTypeTwoName
+            ) AS goodStoreTypeNames
+            FROM
+            good_store_list gsl
+            LEFT JOIN
+            (SELECT
+            gst.*,
+            gst.id AS goodStoreTypeIdTwo,
+            gst.name AS goodStoreTypeTwoName,
+            gstOne.id AS goodStoreTypeIdOne,
+            gstOne.name AS goodStoreTypeOneName
+            FROM
+            good_store_type gst
+            LEFT JOIN good_store_type gstOne
+            ON gst.parent_id = gstOne.id) gsts
+            ON gsl.good_store_type_id = gsts.id
+            WHERE gsl.del_flag = 1
+        <if test="goodListVo != null and goodListVo.goodStoreTypeId!=null and goodListVo.goodStoreTypeId!=''">
+            AND goodStoreTypeIdTwo =#{goodListVo.goodStoreTypeId}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodStoreTypeIdTwo!=null and goodListVo.goodStoreTypeIdTwo!=''">
+            AND goodStoreTypeIdTwo =#{goodListVo.goodStoreTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodStoreTypeIdOne!=null and goodListVo.goodStoreTypeIdOne!=''">
+            AND goodStoreTypeIdOne =#{goodListVo.goodStoreTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gsl.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodNo!=null and goodListVo.goodNo!=''">
+            AND gsl.good_no LIKE CONCAT(CONCAT('%',#{goodListVo.goodNo}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.sysUserId!=null and goodListVo.sysUserId!=''">
+            AND gsl.sys_user_id =#{goodListVo.sysUserId}
+        </if>
+        <if test="goodListVo != null and goodListVo.frameStatus!=null and goodListVo.frameStatus!=''">
+            AND gsl.frame_status =#{goodListVo.frameStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.auditStatus!=null and goodListVo.auditStatus!=''">
+            AND gsl.audit_status =#{goodListVo.auditStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.status!=null and goodListVo.status!=''">
+            AND gsl.status =#{goodListVo.status}
+        </if>
+        <if test="goodListVo != null and goodListVo.activitiesType!=null and goodListVo.activitiesType!=''">
+            AND gsl.activities_type =#{goodListVo.activitiesType}
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_begin != null and goodListVo.createTime_begin != ''">
+            and gsl.create_time <![CDATA[>=]]> concat(#{goodListVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_end != null and goodListVo.createTime_end != ''">
+            AND gsl.create_time <![CDATA[<=]]> concat( #{goodListVo.createTime_end},' 23:59:59')
+        </if>
+         ORDER BY gsl.create_time DESC
+
+
+    </select>
+
+    <select id="findGoodListByGoodType" resultType="map" parameterType="map">
+        SELECT
+        id AS id,
+        main_picture AS mainPicture,
+        0 AS isPlatform,
+        good_name AS goodName,
+        small_price AS smallPrice,
+        small_vip_price AS smallVipPrice,
+        activities_type AS activitiesType,
+        activity_price AS activityPrice,
+        ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = g.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+        (
+        SELECT
+        COUNT( 1 )
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+        WHERE
+        ms.STATUS = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = g.id
+        AND mg.is_platform = '0'
+        ) AS discount,
+        g.is_specification AS isSpecification,
+        IFNULL(( SELECT quantity FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} AND is_view = '1' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS carCount,
+        IFNULL(( SELECT id FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} AND is_view = '1' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS memberShoppingCartId
+        FROM
+        good_store_list g
+        WHERE
+        del_flag = 0
+        AND STATUS = 1
+        AND frame_status = 1
+        AND audit_status = 2
+        <if test="paramMap.goodTypeId!=null">and good_store_type_id=#{paramMap.goodTypeId}</if>
+        <if test="paramMap.pattern==0">order by sales_volume desc,small_price,update_time desc </if>
+        <if test="paramMap.pattern==1">order by sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by update_time desc</if>
+        <if test="paramMap.pattern==3">order by small_price</if>
+        <if test="paramMap.pattern==4">order by small_price desc </if>
+    </select>
+
+    <select id="searchGoodList" resultType="map" parameterType="map">
+
+        SELECT
+        id AS id,
+        main_picture AS mainPicture,
+        0 AS isPlatform,
+        good_name AS goodName,
+        small_price AS smallPrice,
+        small_vip_price AS smallVipPrice,
+        activities_type AS activitiesType,
+        activity_price AS activityPrice,
+        ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = g.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+        (
+        SELECT
+        COUNT( 1 )
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+        WHERE
+        ms.STATUS = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = g.id
+        AND mg.is_platform = '0'
+        ) AS discount,
+        g.is_specification AS isSpecification,
+        IFNULL(( SELECT quantity FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} AND is_view = '1' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS carCount,
+        IFNULL(( SELECT id FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} AND is_view = '1' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS memberShoppingCartId
+        FROM
+        good_store_list g
+        WHERE
+        del_flag = 0
+        AND STATUS = 1
+        AND frame_status = 1
+        AND audit_status = 2
+        <if test="paramMap.search!=null">and good_name like concat('%',#{paramMap.search},'%') or good_describe like concat('%',#{paramMap.search},'%')</if>
+        <if test="paramMap.pattern==0">order by sales_volume desc,small_price,update_time desc </if>
+        <if test="paramMap.pattern==1">order by sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by update_time desc</if>
+        <if test="paramMap.pattern==3">order by small_price</if>
+        <if test="paramMap.pattern==4">order by small_price desc </if>
+    </select>
+
+    <select id="findGoodListBySysUserId" resultType="map">
+        SELECT
+          id AS id,
+          main_picture AS mainPicture,
+          0 AS isPlatform,
+          good_name AS goodName,
+          small_price AS smallPrice,
+          small_vip_price AS smallVipPrice,
+          activities_type AS activitiesType,
+          activity_price AS activityPrice,
+          market_price as marketPrice,
+          (SELECT
+            CONCAT(
+              store_name,
+              "(",
+              sub_store_name,
+              ")"
+            )
+          FROM
+            `store_manage`
+          WHERE sys_user_id = g.sys_user_id
+            AND del_flag = "0"
+          LIMIT 1) AS storeName,
+          (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt;ms.released_quantity AND mg.good_id = g.id AND mg.is_platform='0') AS discount
+        FROM
+          good_store_list g
+        WHERE del_flag = 0
+          AND STATUS = 1
+          AND frame_status = 1
+          and audit_status = 2
+          AND sys_user_id = #{sysUserId} ORDER BY sales_volume DESC,small_price,update_time
+    </select>
+
+    <select id="findGoodListByGoodId" resultType="map">
+        SELECT
+          id AS id,
+          main_picture AS mainPicture,
+          0 AS isPlatform,
+          good_name AS goodName,
+          small_price AS smallPrice,
+          good_describe AS goodDescribe,
+          market_price AS marketPrice,
+          small_vip_price AS smallVipPrice,
+          specification AS specification,
+          activity_price AS activityPrice,
+          good_video AS goodVideo,
+          details_goods AS detailsGoods,
+          repertory AS repertory,
+          frame_status AS frameStatus,
+          good_store_type_id AS goodTypeId,
+          activities_type AS activitiesType
+        FROM
+          good_store_list
+        WHERE del_flag = 0
+          AND STATUS = 1
+          AND id = #{goodId}
+    </select>
+
+    <select id="getEverydayGoodStoreTypeId" resultType="map">
+        SELECT
+        good_store_type_id as id,
+        COUNT(*) AS number
+        FROM
+        good_store_list
+        WHERE del_flag = 0
+        AND frame_status = '1'
+        AND STATUS = '1'
+        <if test="createTime != null and createTime!=null and createTime!=''">
+            AND create_time  LIKE CONCAT(CONCAT('%',#{createTime}), '%')
+        </if>
+        <if test="sysUserId!=null and sysUserId!=''">
+            AND sys_user_id =#{sysUserId}
+        </if>
+        GROUP BY good_store_type_id
+        ORDER BY number DESC
+        <if test="limit!=null and limit!=''">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+
+    <select id="getEveryWeekPreferential" resultType="map" parameterType="map">
+
+        SELECT id AS id,main_picture AS mainPicture,0 AS isPlatform,good_name AS goodName,small_price AS  smallPrice,small_vip_price AS smallVipPrice,activities_type AS activitiesType,activity_price AS activityPrice,
+        (SELECT CONCAT(store_name,"(",sub_store_name,")") AS storeName  FROM `store_manage` WHERE sys_user_id=g.sys_user_id  AND del_flag="0" LIMIT 1) AS storeName,
+        create_time as createTime,
+        (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt;ms.released_quantity AND mg.good_id = g.id AND mg.is_platform='0') AS discount
+        FROM  good_store_list g  WHERE del_flag =0 AND STATUS=1 AND frame_status=1 and audit_status = 2
+        <if test="paramMap != null and paramMap.smallPriceMin != null and paramMap.smallPriceMin != ''">
+            and small_price <![CDATA[ >= ]]> #{paramMap.smallPriceMin}
+        </if>
+        <if test="paramMap != null and paramMap.smallPriceMax != null and paramMap.smallPriceMax != ''">
+            AND small_price <![CDATA[ <= ]]> #{paramMap.smallPriceMax}
+        </if>
+        <if test="paramMap != null and paramMap.dateBegin != null and paramMap.dateBegin != ''">
+            and create_time <![CDATA[>=]]> concat(#{paramMap.dateBegin},' 00:00:00')
+        </if>
+        <if test="paramMap != null and paramMap.dateEnd != null and paramMap.dateEnd != ''">
+            AND create_time <![CDATA[<=]]> concat( #{paramMap.dateEnd},' 23:59:59')
+        </if>
+        UNION
+        SELECT id AS id,main_picture AS mainPicture,1 AS isPlatform,good_name AS goodName,small_price AS  smallPrice,small_vip_price AS smallVipPrice,activities_type AS activitiesType,activity_price AS activityPrice,''  AS storeName,create_time as createTime,
+        (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt;ms.released_quantity AND mg.good_id = gl.id AND mg.is_platform='1') AS discount
+         FROM  good_list gl WHERE del_flag =0 AND STATUS=1 AND frame_status=1 AND good_form='0' and audit_status = 2
+        <if test="paramMap != null and paramMap.smallPriceMin != null and paramMap.smallPriceMin != ''">
+            and small_price <![CDATA[ >= ]]> #{paramMap.smallPriceMin}
+        </if>
+        <if test="paramMap != null and paramMap.smallPriceMax != null and paramMap.smallPriceMax != ''">
+            AND small_price <![CDATA[ <= ]]> #{paramMap.smallPriceMax}
+        </if>
+        <if test="paramMap != null and paramMap.dateBegin != null and paramMap.dateBegin != ''">
+            and create_time <![CDATA[>=]]> concat(#{paramMap.dateBegin},' 00:00:00')
+        </if>
+        <if test="paramMap != null and paramMap.dateEnd != null and paramMap.dateEnd != ''">
+            AND create_time <![CDATA[<=]]> concat( #{paramMap.dateEnd},' 23:59:59')
+        </if>
+        ORDER BY mainPicture
+    </select>
+
+
+    <!--查询规格商品里有0库存的商品和目前总库存-->
+    <select id="getGoodStoreListIdAndRepertory" resultType="map">
+        SELECT gls.id AS id ,SUM(gss.repertory) AS repertory FROM `good_store_list` gls LEFT JOIN good_store_specification gss ON gls.id  = gss.`good_store_list_id` WHERE
+        gls.id IN (
+        SELECT
+        gs.good_store_list_id
+        FROM
+        `good_store_specification` gs
+        LEFT JOIN `good_store_list` gl
+        ON gl.id = gs.good_store_list_id
+        WHERE gs.del_flag = 0
+        AND gs.repertory &lt;= 0
+        AND gl.`del_flag` = 0
+        AND gl.frame_status = 1
+        GROUP BY gs.`good_store_list_id`
+        )
+        AND gss.`del_flag` = 0
+        GROUP BY gss.good_store_list_id
+    </select>
+
+    <select id="getGoodStoreListdelFlag" resultType="java.lang.Integer">
+        select COUNT(0) from  good_store_list  where del_flag =1
+        <if test="sysUserId!=null and sysUserId!=''">
+            and sys_user_id= #{sysUserId}
+        </if>
+    </select>
+    <select id="getGoodStoreListMaps" resultType="map">
+        SELECT
+          id,
+          0 AS isPlatform,
+          good_name AS goodName,
+          main_picture AS mainPicture,
+          repertory,
+          audit_status as auditStatus,
+          price
+        FROM
+          `good_store_list`
+        WHERE 1 = 1
+        <if test="paramMap.containsKey('sysUserId')">
+         AND   sys_user_id =#{paramMap.sysUserId}
+        </if>
+        <if test="paramMap.containsKey('goodStoreTypeId')">
+            AND   good_store_type_id =#{paramMap.goodStoreTypeId}
+        </if>
+        <if test="paramMap.containsKey('search')">and good_name like concat('%',#{paramMap.search},'%') or good_describe like concat('%',#{paramMap.search},'%')</if>
+
+        <!--店铺商品总数-->
+        <if test="paramMap.goodStatus==0">AND del_flag = 0 AND audit_status != 1</if>
+        <!--店铺 在售 商品数-->
+        <if test="paramMap.goodStatus==1">AND del_flag = 0 AND audit_status = 2 AND status =1 AND frame_status = 1 </if>
+        <!--店铺 下架 商品数-->
+        <if test="paramMap.goodStatus==2">AND del_flag = 0 AND audit_status = 2 AND status =1 AND frame_status = 0 </if>
+        <!--店铺 在审核 商品数-->
+        <if test="paramMap.goodStatus==3">AND del_flag = 0 AND(audit_status = 1 or audit_status = 3)  AND status =1 AND frame_status = 1 </if>
+        <!--回收站商品-->
+        <if test="paramMap.goodStatus==4">AND del_flag = 1 </if>
+        <!--在草稿箱商品-->
+        <if test="paramMap.goodStatus==5">AND del_flag = 0 AND audit_status = 1 </if>
+        order by create_time
+    </select>
+    <select id="searchGoodListStore" resultType="map" >
+        SELECT g.id AS id,g.main_picture AS mainPicture,0 AS isPlatform,g.good_name AS goodName,g.small_price AS  smallPrice,g.small_vip_price AS smallVipPrice,g.activities_type AS activitiesType,g.activity_price AS activityPrice,
+        (SELECT CONCAT(store_name,"(",sub_store_name,")") FROM `store_manage` WHERE sys_user_id=g.sys_user_id  AND del_flag="0" LIMIT 1) AS storeName,
+        (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity AND mg.good_id = g.id AND mg.is_platform='0') AS discount,
+        mdgs.COUNT AS marketingDiscountGoodCount
+        FROM  good_store_list g
+        LEFT JOIN
+        (SELECT
+        gst.*,
+        gst.id AS goodStoreTypeIdTwo,
+        gst.name AS goodStoreTypeTwoName,
+        gstOne.id AS goodStoreTypeIdOne,
+        gstOne.name AS goodStoreTypeOneName
+        FROM
+        good_store_type gst
+        LEFT JOIN good_store_type gstOne
+        ON gst.parent_id = gstOne.id) gsts  ON g.good_store_type_id = gsts.id
+        LEFT JOIN (SELECT mdg.good_id,COUNT(0) AS COUNT FROM marketing_discount_good mdg WHERE mdg.`del_flag` = 0 AND  mdg.is_platform = 0 GROUP BY mdg.good_id) mdgs
+        ON mdgs.good_id = g.id
+        WHERE g.del_flag =0 AND g.status=1 AND g.frame_status=1 AND g.audit_status = 2
+
+        <if test="searchTermsVO != null and searchTermsVO.search!=null and searchTermsVO.search!=''">and g.good_name like concat('%',#{searchTermsVO.search},'%') or g.good_describe like concat('%',#{searchTermsVO.search},'%')</if>
+        <if test="searchTermsVO != null and searchTermsVO.goodTypeId!=null and searchTermsVO.goodTypeId!=''">
+         and gsts.goodStoreTypeIdOne =#{searchTermsVO.goodTypeId}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.goodTypeIdTwo!=null and searchTermsVO.goodTypeIdTwo!=''">
+            and gsts.goodStoreTypeIdTwo =#{searchTermsVO.goodTypeIdTwo}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.minPrice!=null and searchTermsVO.minPrice!=''">
+            and g.small_price <![CDATA[>=]]> #{searchTermsVO.minPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.maxPrice!=null and searchTermsVO.maxPrice!=''">
+            and g.small_price <![CDATA[<=]]> #{searchTermsVO.maxPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.marketingDiscountGoodCount!=null and searchTermsVO.marketingDiscountGoodCount!='' ">
+            and mdgs.COUNT <![CDATA[>=]]> #{searchTermsVO.marketingDiscountGoodCount}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.sysUserId!=null and searchTermsVO.sysUserId!=''">
+            and g.sys_user_id =#{searchTermsVO.sysUserId}
+        </if>
+        <if test="searchTermsVO.pattern==0">order by g.sales_volume desc,g.small_price,g.update_time desc </if>
+        <if test="searchTermsVO.pattern==1">order by g.sales_volume desc</if>
+        <if test="searchTermsVO.pattern==2">order by g.update_time desc</if>
+        <if test="searchTermsVO.pattern==3">order by g.small_price</if>
+        <if test="searchTermsVO.pattern==4">order by g.small_price desc </if>
+    </select>
+
+</mapper>

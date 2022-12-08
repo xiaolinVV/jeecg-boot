@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagMapper">
+
+    <select id="getMarketingGiftBagList" parameterType="map" resultType="map">
+        SELECT
+        *
+        FROM
+        (SELECT
+          vgb.*,
+        IF(vgb.isMemView != 0 <![CDATA[&&]]>vgb.isSysView != 0 <![CDATA[&&]]> vgb.isVipMemberGrade != 0,'1','0') AS isViewBuy
+        FROM
+        (SELECT
+        mgb.*,
+        LOCATE(memberType, mgb.buyLimit) AS isMemView,
+        IF(
+        mgb.viewScope = 1,
+        mgb.viewScope,
+        mgb.storeCount
+        ) AS isSysView,
+        IF(
+        LOCATE(memberType, mgb.buyLimit) = 0,
+        '0',
+        IF(
+        LENGTH(TRIM(buyVipMemberGradeId)) <![CDATA[<=]]> 0,
+        '1',
+        IF(
+        LENGTH(TRIM(memberGradeId)) <![CDATA[<=]]> 0,
+        '0',
+        LOCATE(
+        memberGradeId,
+        buyVipMemberGradeId
+        )
+        )
+        )
+        ) AS isVipMemberGrade,
+        0 AS giftBagType
+        FROM
+        (SELECT
+        gift_name AS giftName,
+        price,
+        buy_limit AS buyLimit,
+        limit_times AS limitTimes,
+        view_scope AS viewscope,
+        main_picture as mainPicture,
+        repertory as repertory,
+        IF(
+        buy_vip_member_grade_id IS NULL,
+        '',
+        buy_vip_member_grade_id
+        ) AS buyVipMemberGradeId,
+        id,
+        (SELECT
+        member_type
+        FROM
+        `member_list`
+        WHERE id =#{paramMap.memberId}) AS memberType,
+        (SELECT
+        COUNT(1)
+        FROM
+        `marketing_gift_bag_store`
+        WHERE sys_user_id = #{paramMap.sysUserId}
+        AND del_flag = '0'
+        and marketing_gift_bag_id=mg.id) AS storeCount,
+        (SELECT
+        IF(
+        member_grade_id IS NULL,
+        '',
+        member_grade_id
+        )
+        FROM
+        `member_list`
+        WHERE id = #{paramMap.memberId}) AS memberGradeId
+        FROM
+        `marketing_gift_bag` mg
+        WHERE NOW() &gt;= start_time
+        AND NOW() &lt;= end_time
+        AND del_flag = '0'
+        AND STATUS = '1'
+        AND repertory <![CDATA[>]]> 0
+        ORDER BY mg.create_time DESC
+        ) mgb) vgb
+        <if test="paramMap.isBuy==1">
+            WHERE vgb.isMemView != 0
+            AND vgb.isSysView != 0
+            AND vgb.isVipMemberGrade != 0
+        </if>
+
+        <if test="paramMap.isBuy==0">
+            WHERE vgb.isMemView <![CDATA[>=]]> 0
+            AND vgb.isSysView = 1
+            AND vgb.isVipMemberGrade = 0
+        </if>
+        UNION
+        SELECT
+        vgb.*,
+        IF(vgb.isMemView != 0 <![CDATA[&&]]>vgb.isSysView != 0 <![CDATA[&&]]> vgb.isVipMemberGrade != 0,'1','0') AS isViewBuy
+        FROM
+        (SELECT
+        mgb.*,
+        LOCATE(memberType, mgb.buyLimit) AS isMemView,
+        IF(
+        mgb.viewScope = 1,
+        mgb.viewScope,
+        mgb.storeCount
+        ) AS isSysView,
+        IF(
+        LOCATE(memberType, mgb.buyLimit) = 0,
+        '0',
+        IF(
+        LENGTH(TRIM(buyVipMemberGradeId)) <![CDATA[<=]]> 0,
+        '1',
+        IF(
+        LENGTH(TRIM(memberGradeId)) <![CDATA[<=]]> 0,
+        '0',
+        LOCATE(
+        memberGradeId,
+        buyVipMemberGradeId
+        )
+        )
+        )
+        ) AS isVipMemberGrade,
+        1 AS giftBagType
+        FROM
+        (SELECT
+        gift_name AS giftName,
+        price,
+        buy_limit AS buyLimit,
+        small_buy_count AS limitTimes,
+        view_scope AS viewscope,
+        main_picture as mainPicture,
+        repertory as repertory,
+        IF(
+        buy_vip_member_grade_id IS NULL,
+        '',
+        buy_vip_member_grade_id
+        ) AS buyVipMemberGradeId,
+        id,
+        (SELECT
+        member_type
+        FROM
+        `member_list`
+        WHERE id =#{paramMap.memberId}) AS memberType,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_gift_bag_store_batch
+        WHERE sys_user_id = #{paramMap.sysUserId}
+        AND del_flag = '0'and marketing_gift_bag_batch_id=mg.id) AS storeCount,
+        (SELECT
+        IF(
+        member_grade_id IS NULL,
+        '',
+        member_grade_id
+        )
+        FROM
+        `member_list`
+        WHERE id = #{paramMap.memberId}) AS memberGradeId
+        FROM
+        marketing_gift_bag_batch mg
+        WHERE NOW() &gt;= start_time
+        AND NOW() &lt;= end_time
+        AND del_flag = '0'
+        AND STATUS = '1'
+        AND repertory <![CDATA[>]]> 0
+        ORDER BY mg.create_time DESC
+        ) mgb) vgb
+        <if test="paramMap.isBuy==1">
+            WHERE vgb.isMemView != 0
+            AND vgb.isSysView != 0
+            AND vgb.isVipMemberGrade != 0
+        </if>
+        ) m
+        ORDER BY m.isViewBuy DESC ,m.giftBagType ASC
+    </select>
+
+
+    <select id="findMarketingGiftBagById" resultType="map">
+        SELECT
+        gift_name AS giftName,
+        price,
+        id,
+        buy_limit AS buyLimit,
+        limit_times AS limitTimes,
+        view_scope AS viewscope,
+        main_picture as mainPicture,
+        repertory as repertory,
+        gift_deals as giftDeals,
+        gift_explain as giftExplain,
+        cover_plan as coverPlan,
+        posters as posters,
+        is_preposition AS isPreposition,
+          preposition_marketing_gift_bag AS prepositionMarketingGiftBag,
+          buy_vip_member_grade_id AS buyVipMemberGradeId,
+          IF(
+            is_preposition = 0,
+            '',
+            (SELECT
+              mgb.`gift_name`
+            FROM
+              marketing_gift_bag mgb
+            WHERE mgb.`id` = prepositionMarketingGiftBag)
+          ) AS prepositionName,
+          IF(
+            LOCATE(buy_limit,'1'),
+            IF(LENGTH(TRIM(buy_vip_member_grade_id)) > 0,(SELECT
+              GROUP_CONCAT(mg.`grade_name`)
+            FROM
+              member_grade mg
+            WHERE mg.`del_flag` = 0
+              AND mg.`id` IN (buy_vip_member_grade_id)),''),
+            ''
+          ) AS buyVipMemberGradeName
+        FROM
+        `marketing_gift_bag`
+        WHERE id=#{id}
+
+    </select>
+    <select id="findMarketingGifiBagPageList" resultType="org.jeecg.modules.marketing.vo.MarketingGiftBagVO">
+        SELECT
+          *
+        FROM
+        marketing_gift_bag mgb
+        WHERE mgb.`del_flag` = 0
+        <if test="marketingGiftBagVO!=null and marketingGiftBagVO.giftName!=null and marketingGiftBagVO.giftName!=''">
+            AND mgb.gift_name LIKE concat('%',concat(#{marketingGiftBagVO.giftName},'%'))
+        </if>
+        <if test="marketingGiftBagVO!=null and marketingGiftBagVO.giftName!=null and marketingGiftBagVO.giftName!=''">
+            AND mgb.gift_name LIKE concat('%',concat(#{marketingGiftBagVO.giftName},'%'))
+        </if>
+        <if test="marketingGiftBagVO!=null and marketingGiftBagVO.buyLimit!=null and marketingGiftBagVO.buyLimit!=''">
+            AND mgb.buy_limit = #{marketingGiftBagVO.buyLimit}
+        </if>
+        <if test="marketingGiftBagVO!=null and marketingGiftBagVO.status!=null and marketingGiftBagVO.status!=''">
+            AND mgb.status = #{marketingGiftBagVO.status}
+        </if>
+        <if test="marketingGiftBagVO != null and marketingGiftBagVO.startTime_begin != null and marketingGiftBagVO.startTime_begin != ''">
+            AND mgb.start_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagVO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagVO != null and marketingGiftBagVO.endTime_end != null and marketingGiftBagVO.endTime_end != ''">
+            AND mgb.end_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagVO.endTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagVO != null and marketingGiftBagVO.createTime_begin != null and marketingGiftBagVO.createTime_begin != ''">
+            AND mgb.create_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagVO != null and marketingGiftBagVO.createTime_end != null and marketingGiftBagVO.createTime_end != ''">
+            AND mgb.create_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagVO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY mgb.`create_time` DESC
+    </select>
+    <update id="deleteAndDelExplain">
+        UPDATE
+          marketing_gift_bag
+        SET
+          del_explain = #{delExplain},
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+
+    <select id="isPrepositionList" resultType="map">
+        SELECT
+          mgb.`id`,
+          mgb.`gift_name` AS giftName,
+          mgb.`main_picture` AS mainPicture,
+          mgb.`price`,
+          CONCAT(
+            mgb.`start_time`,
+            '~',
+            mgb.`end_time`
+          ) AS publishTime,
+          mgb.`create_time` AS createTime
+        FROM
+          marketing_gift_bag mgb
+        WHERE mgb.`del_flag` = 0
+          AND mgb.`status` = 1
+          <if test="marketingGiftBagDTO.id != null and marketingGiftBagDTO.id != ''">
+              AND mgb.id LIKE concat('%',#{marketingGiftBagDTO.id},'%')
+          </if>
+        <if test="marketingGiftBagDTO.giftName != null and marketingGiftBagDTO.giftName != ''">
+            AND mgb.gift_name LIKE concat('%',#{marketingGiftBagDTO.giftName},'%')
+        </if>
+        <if test="marketingGiftBagDTO.startTime_begin != null and marketingGiftBagDTO.startTime_begin != ''">
+            AND mgb.start_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagVO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagDTO.endTime_end != null and marketingGiftBagDTO.endTime_end != ''">
+            AND mgb.end_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagVO.endTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagDTO.createTime_begin != null and marketingGiftBagDTO.createTime_begin != ''">
+            AND mgb.create_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagDTO.createTime_end != null and marketingGiftBagDTO.createTime_end != ''">
+        AND mgb.create_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagVO.createTime_end},' 23:59:59')
+        </if>
+    </select>
+</mapper>

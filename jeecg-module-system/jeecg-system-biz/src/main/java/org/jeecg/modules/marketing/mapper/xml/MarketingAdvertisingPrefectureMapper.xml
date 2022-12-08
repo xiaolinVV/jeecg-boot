@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingAdvertisingPrefectureMapper">
+
+    <select id="getMarketingAdvertisingPrefectureDTO" resultType="org.jeecg.modules.marketing.dto.MarketingAdvertisingPrefectureDTO">
+        SELECT
+        map.*,
+        (SELECT
+        gl.good_name
+        FROM
+        good_list gl
+        WHERE gl.`id` = map.good_list_id) AS goodName
+        FROM
+        `marketing_advertising_prefecture` map
+        WHERE map.del_flag = 0
+        <if test="marketingAdvertisingPrefectureVO!=null and marketingAdvertisingPrefectureVO.marketingPrefectureId != null and marketingAdvertisingPrefectureVO.marketingPrefectureId!=''">
+            and map.marketing_prefecture_id =#{marketingAdvertisingPrefectureVO.marketingPrefectureId}
+        </if>
+
+        <if test="marketingAdvertisingPrefectureVO!=null and marketingAdvertisingPrefectureVO.title != null and marketingAdvertisingPrefectureVO.title!=''">
+            and map.title LIKE CONCAT(CONCAT('%',#{marketingAdvertisingPrefectureVO.title}), '%')
+        </if>
+
+        <if test="marketingAdvertisingPrefectureVO!=null and marketingAdvertisingPrefectureVO.goToType != null and marketingAdvertisingPrefectureVO.goToType!=''">
+            and map.go_to_type =#{marketingAdvertisingPrefectureVO.goToType}
+        </if>
+        <if test="marketingAdvertisingPrefectureVO!=null and marketingAdvertisingPrefectureVO.status != null and marketingAdvertisingPrefectureVO.status!=''">
+            and map.status =#{marketingAdvertisingPrefectureVO.status}
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.createTime_begin != null and marketingAdvertisingPrefectureVO.createTime_begin != ''">
+            and map.create_time <![CDATA[>=]]> concat(#{marketingAdvertisingPrefectureVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.createTime_end != null and marketingAdvertisingPrefectureVO.createTime_end != ''">
+            AND map.create_time <![CDATA[<=]]> concat( #{marketingAdvertisingPrefectureVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.startTime_begin != null and marketingAdvertisingPrefectureVO.startTime_begin != ''">
+            and map.start_time <![CDATA[>=]]> concat(#{marketingAdvertisingPrefectureVO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.startTime_end != null and marketingAdvertisingPrefectureVO.startTime_end != ''">
+            AND map.start_time <![CDATA[<=]]> concat( #{marketingAdvertisingPrefectureVO.startTime_end},' 23:59:59')
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.endTime_begin != null and marketingAdvertisingPrefectureVO.endTime_begin != ''">
+            and map.end_time <![CDATA[>=]]> concat(#{marketingAdvertisingPrefectureVO.endTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingAdvertisingPrefectureVO != null and marketingAdvertisingPrefectureVO.endTime_end != null and marketingAdvertisingPrefectureVO.endTime_end != ''">
+            AND map.end_time <![CDATA[<=]]> concat( #{marketingAdvertisingPrefectureVO.endTime_end},' 23:59:59')
+        </if>
+        order by sort desc
+    </select>
+
+
+    <select id="findByMarketingPrefectureId" resultType="map">
+        SELECT
+        picture_addr AS pictureAddr,
+        go_to_type AS goToType,
+        good_list_id AS goodListId
+        FROM
+        `marketing_advertising_prefecture`
+        WHERE marketing_prefecture_id = #{id}
+        AND del_flag = '0'
+        AND status = '1'
+        AND NOW() &gt;= START_TIME
+        AND NOW() &lt;= END_TIME
+        ORDER BY sort
+        LIMIT 5
+
+    </select>
+</mapper>

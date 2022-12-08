@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagStoreMapper">
+    <select id="findStoreById" resultType="org.jeecg.modules.store.dto.StoreManageDTO">
+        SELECT
+          sm.`id`,
+          sm.`logo_addr`,
+          sm.`store_name`,
+          sm.`sub_store_name`,
+          sm.`area_address`,
+          sm.`store_address`,
+          sm.sys_user_id
+        FROM
+          marketing_gift_bag_store mgbs
+          LEFT JOIN store_manage sm
+            ON mgbs.`sys_user_id` = sm.`sys_user_id`
+        WHERE mgbs.`del_flag` = 0
+          AND sm.`del_flag` = 0
+          AND mgbs.marketing_gift_bag_id = #{marketingGiftBagId}
+    </select>
+
+</mapper>

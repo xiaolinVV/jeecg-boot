@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberWithdrawDepositMapper">
+    <select id="getMemberWithdrawDeposit" resultType="org.jeecg.modules.member.vo.MemberWithdrawDepositVO">
+     SELECT
+        mwd.*,
+        ml.nick_name AS nickName,
+        CONCAT(
+        mwd.`bank_card`,
+        '(',
+        mwd.`bank_name`,
+        ')'
+        ) AS bankCardName,
+        ml.head_portrait
+        FROM
+        member_withdraw_deposit mwd
+        LEFT JOIN member_list ml
+          ON mwd.member_list_id = ml.id
+      WHERE mwd.del_flag = 0
+        AND ml.del_flag = 0
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.orderNo!=null and memberWithdrawDepositVO.orderNo!=''">
+            AND mwd.order_no LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.orderNo}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.phone!=null and memberWithdrawDepositVO.phone!=''">
+            AND mwd.phone LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.phone}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.nickName!=null and memberWithdrawDepositVO.nickName!=''">
+            AND ml.nick_name LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.nickName}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.withdrawalType!=null and memberWithdrawDepositVO.withdrawalType!=''">
+            AND mwd.withdrawal_type =#{memberWithdrawDepositVO.withdrawalType}
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.memberListId!=null and memberWithdrawDepositVO.memberListId!=''">
+            AND mwd.member_list_id =#{memberWithdrawDepositVO.memberListId}
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.bankCard!=null and memberWithdrawDepositVO.bankCard!=''">
+            AND mwd.bank_card LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.bankCard}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.cardholder!=null and memberWithdrawDepositVO.cardholder!=''">
+            AND mwd.cardholder LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.cardholder}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.identityNumber!=null and memberWithdrawDepositVO.identityNumber!=''">
+            AND mwd.identity_number LIKE CONCAT(CONCAT('%',#{memberWithdrawDepositVO.identityNumber}), '%')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.timeApplication_begin != null and memberWithdrawDepositVO.timeApplication_begin != ''">
+            and mwd.time_application <![CDATA[>=]]> concat(#{memberWithdrawDepositVO.timeApplication_begin},' 00:00:00')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.timeApplication_end != null and memberWithdrawDepositVO.timeApplication_end != ''">
+            AND mwd.time_application <![CDATA[<=]]> concat( #{memberWithdrawDepositVO.timeApplication_end},' 23:59:59')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.status!=null and memberWithdrawDepositVO.status!=''">
+            AND mwd.withdrawal_type =#{memberWithdrawDepositVO.status}
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.auditTime_begin != null and memberWithdrawDepositVO.auditTime_begin != ''">
+            and mwd.audit_time <![CDATA[>=]]> concat(#{memberWithdrawDepositVO.auditTime_begin},' 00:00:00')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.auditTime_end != null and memberWithdrawDepositVO.auditTime_end != ''">
+            AND mwd.audit_time <![CDATA[<=]]> concat( #{memberWithdrawDepositVO.auditTime_end},' 23:59:59')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.payTime_begin != null and memberWithdrawDepositVO.payTime_begin != ''">
+            and mwd.pay_time <![CDATA[>=]]> concat(#{memberWithdrawDepositVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.payTime_end != null and memberWithdrawDepositVO.payTime_end != ''">
+            AND mwd.pay_time <![CDATA[<=]]> concat( #{memberWithdrawDepositVO.payTime_end},' 23:59:59')
+        </if>
+        <if test="memberWithdrawDepositVO != null and memberWithdrawDepositVO.sysUserId!=null and memberWithdrawDepositVO.sysUserId!=''">
+            AND ml.sys_user_id =#{memberWithdrawDepositVO.sysUserId}
+        </if>
+        ORDER BY mwd.create_time DESC
+    </select>
+
+
+    <select id="findMemberWithdrawDepositByMemberId" resultType="map" parameterType="map">
+
+          SELECT
+          id,
+          money,
+          withdrawal_type,
+          service_charge,
+          amount,
+          STATUS,
+          DATE_FORMAT(
+            time_application,
+            '%Y-%m-%d %H:%i'
+          ) AS timeApplication
+        FROM
+          `member_withdraw_deposit`
+        WHERE member_list_id = #{paramMap.memberId}
+          AND del_flag = '0'
+        <if test="paramMap.pattern!=-1">and status=#{paramMap.pattern}</if>
+    </select>
+
+    <select id="findMemberWithdrawDepositById" resultType="map" >
+        SELECT
+        id,
+        money,
+        withdrawal_type,
+        service_charge,
+        amount,
+        STATUS,
+        DATE_FORMAT(
+        time_application,
+        '%Y-%m-%d %H:%i'
+        ) AS timeApplication
+        FROM
+        `member_withdraw_deposit`
+        WHERE id=#{id}
+    </select>
+    <select id="findMemberWithdrawDepositPageByMemberId" resultType="map">
+        SELECT
+          mwd.`id`,
+          DATE_FORMAT(
+            time_application,
+            '%Y-%m-%d %H:%i'
+          ) AS timeApplication,
+          (
+            CASE
+              mwd.`withdrawal_type`
+              WHEN 0
+              THEN '微信钱包'
+              WHEN 1
+              THEN '支付宝'
+              WHEN 2
+              THEN CONCAT(
+                mwd.`bank_name`,
+                '(',
+                RIGHT(bank_card,4),
+                ')'
+              )
+              ELSE ''
+            END
+          ) AS bankCard,
+          (
+            CASE
+              mwd.`status`
+              WHEN 0
+              THEN '待审核'
+              WHEN 1
+              THEN '成功'
+              WHEN 2
+              THEN '成功'
+              WHEN 3
+              THEN '失败'
+              ELSE '异常'
+            END
+          ) AS statusName,
+          mwd.`money`,
+          mwd.`service_charge` AS serviceCharge,
+          mwd.`amount`,
+          mwd.withdrawal_type AS withdrawalType
+        FROM
+          member_withdraw_deposit mwd
+        WHERE mwd.`del_flag` = 0
+        AND mwd.`member_list_id` = #{paramObjectMap.memberId}
+        <if test="paramObjectMap.pattern != -1 and paramObjectMap.pattern == 1">
+            AND mwd.`status` IN ('1','2')
+        </if>
+        <if test="paramObjectMap.pattern != -1 and paramObjectMap.pattern != 1">
+            AND mwd.`status` = #{paramObjectMap.pattern}
+        </if>
+        ORDER BY mwd.`create_time` DESC,
+          mwd.`money` DESC
+    </select>
+    <select id="findMemberWithdrawDepositParticulars" resultType="map">
+        SELECT
+          (
+            CASE
+              mwd.`status`
+              WHEN 0
+              THEN '提现审批中请耐心等待...'
+              WHEN 1
+              THEN '提现成功，到账时间为T+1天，节假日顺延。'
+              WHEN 2
+              THEN '提现成功，到账时间为T+1天，节假日顺延。'
+              WHEN 3
+              THEN mwd.`close_explain`
+              ELSE '数据异常,请联系客服'
+            END
+          ) AS closeExplain,
+          (
+            CASE
+              mwd.`status`
+              WHEN 0
+              THEN '待审核'
+              WHEN 1
+              THEN '成功'
+              WHEN 2
+              THEN '成功'
+              WHEN 3
+              THEN '失败'
+              ELSE '异常'
+            END
+          ) AS statusName,
+          mwd.`money`,
+          mwd.`service_charge`,
+          mwd.`amount`,
+          mwd.`time_application`,
+          (
+            CASE
+              mwd.`withdrawal_type`
+              WHEN 0
+              THEN '微信钱包'
+              WHEN 1
+              THEN '支付宝'
+              WHEN 2
+              THEN CONCAT(
+                mwd.`bank_name`,
+                '(',
+                RIGHT(bank_card,4),
+                ')'
+              )
+              ELSE ''
+            END
+          ) AS bankCard,
+          mwd.`order_no`
+        FROM
+          member_withdraw_deposit mwd
+          WHERE mwd.`del_flag` = 0
+          AND mwd.`id` = #{id}
+    </select>
+</mapper>

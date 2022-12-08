@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingThirdIntegralRecordMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingThirdIntegralRecordDTO">
+                    SELECT
+                mtir.serial_number AS serialNumber,
+                ml.phone,
+                ml.nick_name AS nickName,
+                (
+                SELECT
+                    s.item_text
+                FROM
+                    sys_dict_item s
+                WHERE
+                    s.dict_id = ( SELECT id FROM sys_dict WHERE dict_code = 'third_integral_deal_type' )
+                    AND s.`item_value` = mtir.trade_type
+                ) AS tradeType,
+                mtir.integral_group AS integralGroup,
+                ( CASE mtir.go_and_come WHEN '0' THEN '收入' WHEN '1' THEN '支出' ELSE '其他' END ) AS goAndCome,
+                mtir.integral AS integral,
+                mtir.integral_balance AS integralBalance,
+                mtir.total_integral AS totalIntegral,
+                mtir.trade_no AS tradeNo,
+                DATE_FORMAT( mtir.pay_time, '%Y-%m-%d %H:%i:%s' ) AS payTime
+            FROM
+                marketing_third_integral_record mtir
+                LEFT JOIN member_list ml ON mtir.member_list_id = ml.id
+            WHERE
+                mtir.del_flag = '0'
+                <if test="marketingThirdIntegralRecordDTO.serialNumber!=null and marketingThirdIntegralRecordDTO.serialNumber!=''">
+                    and mtir.serial_number=#{marketingThirdIntegralRecordDTO.serialNumber}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.phone!=null and marketingThirdIntegralRecordDTO.phone!=''">
+                    and ml.phone=#{marketingThirdIntegralRecordDTO.phone}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.nickName!=null and marketingThirdIntegralRecordDTO.nickName!=''">
+                    and ml.nick_name=#{marketingThirdIntegralRecordDTO.nickName}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.tradeType!=null and marketingThirdIntegralRecordDTO.tradeType!=''">
+                    and mtir.trade_type=#{marketingThirdIntegralRecordDTO.tradeType}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.goAndCome!=null and marketingThirdIntegralRecordDTO.goAndCome!=''">
+                    and mtir.go_and_come=#{marketingThirdIntegralRecordDTO.goAndCome}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.tradeNo!=null and marketingThirdIntegralRecordDTO.tradeNo!=''">
+                    and mtir.trade_no=#{marketingThirdIntegralRecordDTO.tradeNo}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.payTimeStart!=null">
+                    and mtir.pay_time &gt;=#{marketingThirdIntegralRecordDTO.payTimeStart}
+                </if>
+                <if test="marketingThirdIntegralRecordDTO.payTimeEnd!=null">
+                    and mtir.pay_time &lt;=#{marketingThirdIntegralRecordDTO.payTimeEnd}
+                </if>
+            ORDER BY
+                mtir.pay_time DESC
+    </select>
+</mapper>

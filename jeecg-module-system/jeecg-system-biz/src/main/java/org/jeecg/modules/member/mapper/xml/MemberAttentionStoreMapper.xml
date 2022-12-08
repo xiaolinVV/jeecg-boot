@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberAttentionStoreMapper">
+    <select id="getMemberAttentionStoreVo" resultType="org.jeecg.modules.member.dto.MemberAttentionStoreDto">
+        SELECT
+        mas.id,
+        mas.attention_time,
+        mas.activities_type,
+        mas.del_flag,
+        mas.activities_type,
+        ml.head_portrait,
+        ml.phone,
+        ml.nick_name,
+        sm.logo_addr,
+        sm.store_name,
+        sm.sub_store_name,
+        sm.store_address,
+        sm.comprehensive_evaluation,
+        sm.status,
+        su.id AS storeId
+        FROM
+        member_attention_store mas
+        LEFT OUTER JOIN member_list ml
+        ON mas.`member_list_id` = ml.`id`
+        LEFT OUTER JOIN sys_user su
+        ON mas.`sys_user_id` = su.`id`
+        LEFT OUTER JOIN store_manage sm
+        ON su.`id` = sm.`sys_user_id`
+        WHERE mas.`del_flag` = 0
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.phone != null and memberAttentionStoreVo.phone != ''">
+            and  ml.phone =#{memberAttentionStoreVo.phone}
+        </if>
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.nickName != null and memberAttentionStoreVo.nickName != ''">
+            and  ml.nick_name =#{memberAttentionStoreVo.nickName}
+        </if>
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.storeName != null and memberAttentionStoreVo.storeName != ''">
+            and  sm.store_name =#{memberAttentionStoreVo.storeName}
+        </if>
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.subStoreName != null and memberAttentionStoreVo.subStoreName != ''">
+            and  sm.sub_store_name =#{memberAttentionStoreVo.subStoreName}
+        </if>
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.createTime_begin != null and memberAttentionStoreVo.createTime_begin != ''">
+            and ml.attention_time <![CDATA[>=]]> concat(#{memberAttentionStoreVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberAttentionStoreVo != null and memberAttentionStoreVo.createTime_end != null and memberAttentionStoreVo.createTime_end != ''">
+            AND ml.attention_time <![CDATA[<=]]> concat( #{memberAttentionStoreVo.createTime_end},' 23:59:59')
+        </if>
+    </select>
+
+
+    <select id="findMemberAttentionStoreByMember" resultType="map" parameterType="map">
+
+        SELECT
+        *
+        FROM
+        (SELECT
+        sm.id,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.logo_addr AS logoAddr,
+        sm.store_address AS storeAddress,
+        sm.comprehensive_evaluation AS comprehensiveEvaluation,
+        sm.longitude,
+        sm.sys_user_id as sysUserId,
+        sm.latitude,
+        sm.matId,
+        sm.is_open_welfare_payments AS isOpenWelfarePayments,
+        sm.if_view_welfare_payments AS ifViewWelfarePayments,
+        (SELECT
+        COUNT(1)
+        FROM
+        `marketing_discount`
+        WHERE STATUS = '1'
+        AND del_flag = '0'
+        AND total > released_quantity
+        AND sys_user_id = sm.sys_user_id) AS disCount,
+        POWER(
+        POWER(sm.longitude - #{paramMap.longitude}, 2) + POWER(sm.latitude - #{paramMap.latitude}, 2),
+        1 / 2
+        ) AS distance
+        FROM
+        (SELECT s.*,mat.id as matId FROM `member_attention_store` mat LEFT JOIN `store_manage` s ON mat.`sys_user_id`=s.`sys_user_id` WHERE mat.`member_list_id`=#{paramMap.memberId}) sm
+        WHERE sm.status = '1'
+        AND sm.attestation_status = '1'
+        AND sm.del_flag = '0') m
+        <if test="paramMap.pattern==1">
+            ORDER BY m.distance ASC,
+            disCount,
+            comprehensiveEvaluation DESC
+        </if>
+        <if test="paramMap.pattern==2">
+            ORDER BY m.distance ASC
+        </if>
+        <if test="paramMap.pattern==3">
+            ORDER BY disCount DESC
+        </if>
+        <if test="paramMap.pattern==4">
+            ORDER BY  comprehensiveEvaluation DESC
+        </if>
+    </select>
+    <select id="getRecommendStore" resultType="map">
+        SELECT
+          m.sysUserId,
+          m.storePicture,
+          m.logoAddr
+        FROM
+          (SELECT
+            mas.`sys_user_id` AS sysUserId,
+            sm.`store_picture`AS storePicture,
+            sm.`logo_addr` AS logoAddr,
+            (COUNT(1)) AS storeSum
+          FROM
+            member_attention_store mas
+            LEFT JOIN store_manage sm
+              ON mas.`sys_user_id` = sm.`sys_user_id`
+          WHERE mas.`del_flag` = 0
+          AND sm.`del_flag` = 0
+          AND sm.status = 1
+          GROUP BY mas.`sys_user_id`) m
+        ORDER BY m.storeSum DESC
+        LIMIT 3
+    </select>
+</mapper>
+
+

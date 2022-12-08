@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingIntegralRecordMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingIntegralRecordVO">
+        SELECT
+        mir.id,
+        mir.create_time,
+        mir.update_time,
+        mir.member_list_id,
+        mir.serial_number,
+        mir.trade_type,
+        mir.go_and_come,
+        mir.integral,
+        mir.pay_time,
+        mir.trade_no,
+        mir.integral_balance,
+        ml.`nick_name`,
+        ml.`phone`
+        FROM
+        (SELECT
+        id,
+        create_time,
+        update_time,
+        del_flag,
+        member_list_id,
+        serial_number,
+        trade_type,
+        go_and_come,
+        integral,
+        pay_time,
+        trade_no,
+        integral_balance
+        FROM marketing_integral_record ${ew.customSqlSegment})mir
+        LEFT JOIN member_list ml
+        ON mir.`member_list_id` = ml.`id`
+        WHERE mir.`del_flag` = 0
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        ORDER BY mir.create_time DESC
+    </select>
+    <select id="getMarketingIntegralRecordPageMap" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'task_type')
+            AND s.`item_value` = mitr.`task_type`) AS taskType,
+          (
+            CASE
+              mitr.`award_type`
+              WHEN 0
+              THEN CONCAT(
+                (SELECT
+                  mis.integral_name
+                FROM
+                  marketing_integral_setting mis
+                WHERE mis.`del_flag` = 0
+                ORDER BY mis.`create_time` DESC
+                LIMIT 1),
+                0 + CAST(mitr.`award` AS CHAR),
+                '个'
+              )
+              WHEN 1
+              THEN CONCAT(
+                (SELECT
+                  mzgbs.`another_name`
+                FROM
+                  marketing_zone_group_base_setting mzgbs
+                WHERE mzgbs.`del_flag` = 0
+                ORDER BY mzgbs.`create_time` DESC
+                LIMIT 1),
+                '参团次数',
+                0 + CAST(mitr.`award` AS CHAR),
+                '次'
+              )
+              WHEN 2
+              THEN CONCAT(
+                '平台优惠券',
+                0 + CAST(mitr.`award` AS CHAR),
+                '张'
+              )
+              ELSE CONCAT(
+                '店铺优惠券',
+                0 + CAST(mitr.`award` AS CHAR),
+                '张'
+              )
+            END
+          ) AS award,
+          DATE_FORMAT(
+            mitr.`draw_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS drawTime
+        FROM
+          marketing_integral_task_record mitr
+        WHERE mitr.`member_list_id` = #{memberId}
+          AND mitr.`status` = 1
+          AND mitr.`del_flag` = 0
+        ORDER BY mitr.create_time DESC
+    </select>
+</mapper>

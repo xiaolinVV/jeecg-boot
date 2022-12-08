@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingStoreGiftCardMemberListMapper">
+
+    <select id="getByMemberId" resultType="map" parameterType="map">
+                SELECT
+            msgcml.id,
+        msgcml.car_name AS 	carName,
+        msgcml.serial_number AS serialNumber,
+        msgcml.denomination,
+        (select logo_addr  from store_manage where id=msgcml.store_manage_id) AS logoAddr,
+        DATE_FORMAT(msgcml.start_time,'%Y-%m-%d') AS startTime,
+        DATE_FORMAT(msgcml.end_time,'%Y-%m-%d') AS endTime
+        FROM
+            marketing_store_gift_card_member_list msgcml
+
+            WHERE msgcml.del_flag='0'
+
+            AND msgcml.member_list_id=#{paramMap.memberId}
+
+	        AND msgcml.`status`=#{paramMap.status}
+
+            ORDER BY msgcml.create_time DESC,msgcml.id ASC
+    </select>
+
+    <select id="getGoodTypeOne" resultType="map" parameterType="map">
+                    SELECT
+                gst.id,
+                gst.`name`
+            FROM
+                good_store_type gst
+            WHERE
+                gst.parent_id = '0'
+                AND gst.del_flag = '0'
+                AND (
+                SELECT
+                    count( 1 )
+                FROM
+                    marketing_store_gift_card_good_list msgcgl
+                    LEFT JOIN good_store_list gsl ON msgcgl.good_store_list_id = gsl.id
+                    LEFT JOIN (
+                    SELECT
+                        gst.*,
+                        gst.id AS goodStoreTypeIdTwo,
+                        gst.NAME AS goodStoreTypeTwoName,
+                        gstOne.id AS goodStoreTypeIdOne,
+                        gstOne.NAME AS goodStoreTypeOneName
+                    FROM
+                        good_store_type gst
+                        LEFT JOIN good_store_type gstOne ON gst.parent_id = gstOne.id
+                    ) gsts ON gsl.good_store_type_id = gsts.id
+                WHERE
+                    gsl.del_flag = 0
+                    AND gsl.`status` = 1
+                    AND gsl.frame_status = 1
+                    AND gsl.audit_status = 2
+                    AND gsts.goodStoreTypeIdOne = gst.id
+                    AND msgcgl.marketing_store_gift_card_list_id = #{paramMap.marketingStoreGiftCardListId}
+                ) &gt; 0
+                AND gst.sys_user_id = #{paramMap.sysUserId}
+                order by gst.sort asc
+
+    </select>
+
+    <select id="getGoodTypeTwo" resultType="map" parameterType="map">
+                    SELECT
+                gst.id,
+                gst.`name`
+            FROM
+                good_store_type gst
+            WHERE
+                gst.parent_id = #{paramMap.parentId}
+                AND gst.del_flag = '0'
+                AND (
+                SELECT
+                    count( 1 )
+                FROM
+                    marketing_store_gift_card_good_list msgcgl
+                    LEFT JOIN good_store_list gsl ON msgcgl.good_store_list_id = gsl.id
+                WHERE
+                    gsl.del_flag = 0
+                    AND gsl.`status` = 1
+                    AND gsl.frame_status = 1
+                    AND gsl.audit_status = 2
+                    AND gsl.good_store_type_id = gst.id
+                    AND msgcgl.marketing_store_gift_card_list_id = #{paramMap.marketingStoreGiftCardListId}
+                ) &gt; 0
+                AND gst.sys_user_id = #{paramMap.sysUserId}
+
+                order by gst.sort asc
+    </select>
+
+    <select id="getGoodList" resultType="map" parameterType="map">
+           SELECT
+            g.id AS id,
+            g.main_picture AS mainPicture,
+            0 AS isPlatform,
+            g.good_name AS goodName,
+            g.small_price AS smallPrice,
+            g.small_vip_price AS smallVipPrice,
+            g.activities_type AS activitiesType,
+            g.activity_price AS activityPrice,
+            ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = g.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+            (
+            SELECT
+            COUNT( 1 )
+            FROM
+            marketing_discount_good mg
+            LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+            WHERE
+            ms.STATUS = 1
+            AND ms.del_flag = 0
+            AND ms.total &gt; ms.released_quantity
+            AND mg.good_id = g.id
+            AND mg.is_platform = '0'
+            ) AS discount,
+            g.is_specification AS isSpecification,
+        IFNULL(( SELECT quantity FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS carCount,
+        IFNULL(( SELECT id FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS memberShoppingCartId
+            FROM
+
+                    marketing_store_gift_card_good_list msgcgl
+                    LEFT JOIN
+            good_store_list g
+                    ON msgcgl.good_store_list_id=g.id
+            WHERE
+            msgcgl.del_flag = 0
+            AND g.STATUS = 1
+            AND g.frame_status = 1
+            AND g.audit_status = 2
+            and g.good_store_type_id=#{paramMap.goodTypeId}
+
+                    and msgcgl.marketing_store_gift_card_list_id=#{paramMap.marketingStoreGiftCardListId}
+            order by g.sales_volume desc,g.small_price,g.update_time desc
+    </select>
+    <select id="queryPageList" resultType="map">
+        SELECT
+          ml.`phone`,
+          ml.`head_portrait` AS headPortrait,
+          ml.`nick_name` AS nickName,
+          msgcml.ways_obtain AS waysObtain,
+          DATE_FORMAT(msgcml.get_time,'%Y-%m-%d %H:%i:%s') AS getTime,
+          msgcl.`serial_number` AS cardSerialNumber,
+          msgcml.serial_number AS serialNumber,
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`del_flag` = 0
+        AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
+          msgcml.car_name AS carName,
+          msgcml.denomination,
+          msgcml.marketing_store_gift_card_list_id AS marketingStoreGiftCardListId,
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_store_gift_card_good_list
+          WHERE marketing_store_gift_card_list_id = msgcl.id) AS goodCount,
+          DATE_FORMAT(msgcml.start_time,'%Y-%m-%d %H:%i:%s') AS startTime,
+          DATE_FORMAT(msgcml.end_time,'%Y-%m-%d %H:%i:%s') AS endTime,
+          msgcml.status
+        FROM
+          (SELECT
+            *
+          FROM
+            marketing_store_gift_card_member_list ${ew.customSqlSegment}) msgcml
+          LEFT JOIN marketing_store_gift_card_list msgcl
+            ON msgcml.marketing_store_gift_card_list_id = msgcl.`id`
+          LEFT JOIN member_list ml
+            ON msgcml.member_list_id = ml.`id`
+          WHERE msgcml.del_flag = 0
+          <if test="paramMap.phone != null and paramMap.phone != ''">
+              AND ml.phone LIKE concat('%',#{paramMap.phone},'%')
+          </if>
+        <if test="paramMap.nickName != null and paramMap.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{paramMap.nickName},'%')
+        </if>
+        <if test="paramMap.cardSerialNumber != null and paramMap.cardSerialNumber != ''">
+            AND msgcl.`serial_number` LIKE concat('%',#{paramMap.cardSerialNumber},'%')
+        </if>
+        <if test="paramMap.storeName != null and paramMap.storeName != ''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`id` = msgcml.`store_manage_id`
+            ) LIKE concat('%',#{paramMap.storeName},'%')
+        </if>
+        ORDER BY msgcml.create_time DESC
+    </select>
+    <select id="giveList" resultType="map">
+        SELECT
+        ml.`phone`,
+        ml.`nick_name` AS nickName,
+        DATE_FORMAT(msgcml.get_time,'%Y-%m-%d %H:%i:%s') AS getTime,
+        msgcl.`serial_number` AS cardSerialNumber,
+        msgcml.serial_number AS serialNumber,
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`del_flag` = 0
+        AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
+        msgcml.car_name AS carName,
+        msgcml.denomination,
+        mls.`phone` AS givePhone,
+        mls.`nick_name` AS giveNickName
+        FROM
+        (SELECT
+        *
+        FROM
+        marketing_store_gift_card_member_list ${ew.customSqlSegment}) msgcml
+        LEFT JOIN marketing_store_gift_card_list msgcl
+        ON msgcml.marketing_store_gift_card_list_id = msgcl.`id`
+        LEFT JOIN member_list ml
+        ON msgcml.member_list_id = ml.`id`
+        LEFT JOIN member_list mls
+        ON msgcml.t_member_id = mls.`id`
+        WHERE msgcml.del_flag = 0
+        <if test="paramMap.phone != null and paramMap.phone != ''">
+            AND ml.phone LIKE concat('%',#{paramMap.phone},'%')
+        </if>
+        <if test="paramMap.givePhone != null and paramMap.givePhone != ''">
+            AND mls.phone LIKE concat('%',#{paramMap.givePhone},'%')
+        </if>
+        <if test="paramMap.nickName != null and paramMap.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{paramMap.nickName},'%')
+        </if>
+        <if test="paramMap.cardSerialNumber != null and paramMap.cardSerialNumber != ''">
+            AND msgcl.`serial_number` LIKE concat('%',#{paramMap.cardSerialNumber},'%')
+        </if>
+        <if test="paramMap.storeName != null and paramMap.storeName != ''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`id` = msgcml.`store_manage_id`
+            ) LIKE concat('%',#{paramMap.storeName},'%')
+        </if>
+        ORDER BY msgcml.create_time DESC
+    </select>
+</mapper>

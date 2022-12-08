@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagDiscountMapper">
+    <select id="findDiscountById" resultType="org.jeecg.modules.marketing.dto.MarketingGiftBagDiscountDTO">
+        SELECT
+          md.`id`,
+          md.`name`,
+          (
+            CASE
+              WHEN md.`is_threshold` = 0
+              THEN '无门槛'
+              ELSE CONCAT_WS(md.`completely`, "满", "元")
+            END
+          ) AS usingThreshold,
+          (
+            CONCAT_WS(md.`subtract`, "减", "元")
+          ) AS preferentialContent,
+          (
+            CASE
+              WHEN md.`vouchers_way` = 0
+              THEN CONCAT_WS(
+                '~',
+                md.`start_time`,
+                md.`end_time`
+              )
+              WHEN md.`vouchers_way` = 1
+              THEN CONCAT(
+                '领劵当日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+              ELSE CONCAT(
+                '领券次日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+            END
+          ) usrTime,
+          (
+            md.`total` - md.`released_quantity`
+          ) AS discountSurplus,
+          CONCAT('适用商品', md.goodSkr, '件') AS applyGood,
+          md.`user_restrict`,
+          (
+            CASE
+              WHEN md.`is_platform` = 0
+              THEN
+              (SELECT
+                sm.`store_name`
+              FROM
+                store_manage sm
+              WHERE sm.sys_user_id = md.`sys_user_id`)
+              ELSE '平台'
+            END
+          ) ISSUER,
+          mgbd.`distributed_amount`,
+          mgbd.`validity_type`,
+          IF(
+            mgbd.`validity_type` = 0,
+            '连续有效期',
+            '相同有效期'
+          ) AS validityTypeName,
+          IF(
+          CHAR_LENGTH(md.user_restrict) =3,
+          '普通会员,vip会员',
+          IF(
+            STRCMP(md.user_restrict,"0"),
+            '普通会员',
+            'vip会员'
+          )
+        ) AS memberTypeName
+        FROM
+          marketing_gift_bag_discount mgbd
+          LEFT JOIN
+            (SELECT
+              (SELECT
+                COUNT(1)
+              FROM
+                marketing_discount_good mdg
+              WHERE mdg.marketing_discount_id = m.id
+                AND mdg.del_flag = 0) AS goodSkr,
+              m.*
+            FROM
+              marketing_discount m) md
+            ON mgbd.marketing_discount_id = md.id
+        WHERE mgbd.`del_flag` = 0
+          AND md.`del_flag` = 0
+          AND md.status = 1
+          AND mgbd.`marketing_gift_bag_id` = #{marketingGiftBagId}
+    </select>
+</mapper>

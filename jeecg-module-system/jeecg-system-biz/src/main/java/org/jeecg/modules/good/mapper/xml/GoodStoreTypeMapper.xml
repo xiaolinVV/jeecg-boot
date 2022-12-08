@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodStoreTypeMapper">
+	<select id="getGoodStoreTypeOrParentIdList" resultType="org.jeecg.modules.good.entity.GoodStoreType">
+		select * from  good_store_type  where status =1 and del_flag =0
+		<if test="parentId!=null and parentId!=''">
+			and parent_id=#{parentId}
+		</if>
+		<if test="level!=null and level!= ''">
+			and level=#{level}
+		</if>
+		order by sort desc
+	</select>
+	<select id="getGoodStoreTypeOrParentIdListtwo" resultType="org.jeecg.modules.good.entity.GoodStoreType">
+		select * from  good_store_type  where del_flag =0 and status =1
+		<if test="parentId!=null and parentId!=''">
+			and parent_id=#{parentId}
+		</if>
+		<if test="level!=null and level!= ''">
+			and level=#{level}
+		</if>
+		order by sort desc
+	</select>
+	<update id="updateTreeNodeStatus" parameterType="java.lang.String">
+		update good_store_type set hasChild = #{status} where id = #{id}
+	</update>
+	<select id="getGoodTypeOrParentIdListtwo" resultType="org.jeecg.modules.good.entity.GoodStoreType">
+		select * from  good_store_type  where del_flag =0 and status =1
+		<if test="parentId!=null and parentId!=''">
+			and parent_id=#{parentId}
+		</if>
+		<if test="level!=null and level!= ''">
+			and level=#{level}
+		</if>
+		<if test="sysUserId!=null and sysUserId!= ''">
+			and sys_user_id=#{sysUserId}
+		</if>
+
+		order by sort desc
+	</select>
+	<select id="getgoodTypeListName" resultType="java.util.Map">
+		select id as id ,name as name,parent_id as parentId from  good_store_type  where del_flag =0 and status =1
+		<if test="nodeName!=null and nodeName!=''">
+			and name LIKE CONCAT('%',#{nodeName},'%')
+		</if>
+		<if test="level!=null and level!= ''">
+			and level=#{level}
+		</if>
+		<if test="sysUserId!=null and sysUserId!= ''">
+			and sys_user_id=#{sysUserId}
+		</if>
+		order by sort desc
+		limit  10
+	</select>
+	<select id="selectGoodTypeByParentId" resultType="org.jeecg.modules.good.entity.GoodStoreType">
+  select * from  good_store_type  where del_flag =0
+    and parent_id=#{parentId}
+</select>
+	<select id="selectGoodTypeByParentIdAndName" resultType="java.util.Map">
+  select id as id,name as name from  good_store_type  where del_flag =0 and status =1
+    and name LIKE CONCAT('%',#{name},'%')
+    and parent_id=#{parentId}
+    <if test="sysUserId !=null and sysUserId!=''">
+		sys_user_id =#{sysUserId}
+	</if>
+</select>
+
+
+	<select id="findGoodTypeBySysUserId" resultType="map">
+  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag =0 and status =1
+    and sys_user_id=#{sysUserId} and parent_id='0' order by sort
+</select>
+
+	<select id="findGoodTypeByParentId" resultType="map">
+  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag =0 and status =1
+    and parent_id=#{parentId}  order by sort
+</select>
+	<select id="getHotRecommended" resultType="map">
+		SELECT
+		gst.id AS id,gst.name AS NAME,0 AS isPlatform,gst.type_picture AS typePicture,
+		(SELECT
+		COUNT(*)
+		FROM
+		good_store_list gl
+		LEFT JOIN  `order_store_good_record` opgr ON  gl.id = opgr.good_store_list_id
+		WHERE gl.good_store_type_id = gst.id AND gl.good_store_type_id = gst.id ) AS number,
+		(SELECT
+		AVG(description_star)
+		FROM
+		`order_evaluate_store` oes
+		LEFT JOIN good_store_list gl
+		ON gl.id = oes.good_store_list_id
+		WHERE gl.good_store_type_id = gst.id) AS descriptionStar
+		FROM
+		good_store_type gst
+		LEFT JOIN good_store_list gsl
+		ON gsl.good_store_type_id = gst.id
+		WHERE gst.del_flag = 0
+		AND gst.STATUS = 1
+		AND gsl.del_flag ="0"
+		AND gsl.status ="1"
+		AND gsl.frame_status ="1"
+		<if test="sysUserId!=null and sysUserId!=''">
+			and gst.sys_user_id=#{sysUserId}
+		</if>
+		GROUP BY gst.id
+		ORDER BY number DESC
+		<if test="limit!=null and limit!=''">
+			LIMIT #{limit}
+		</if>
+	</select>
+	<select id="getHotRecommendedAVG" resultType="map">
+		SELECT
+		gst.id AS id,gst.name AS NAME,0 AS isPlatform,gst.type_picture AS typePicture,
+		(SELECT
+		AVG(description_star)
+		FROM
+		`order_evaluate_store` oes
+		LEFT JOIN good_store_list gl
+		ON gl.id = oes.good_store_list_id
+		WHERE gl.good_store_type_id = gst.id) AS descriptionStar
+		FROM
+		good_store_type gst
+		WHERE gst.del_flag = 0
+		AND gst.STATUS = 1
+		<if test="sysUserId!=null and sysUserId!= ''">
+			and gst.sys_user_id=#{sysUserId}
+		</if>
+		<if test="goodStoreTypeIds!=null and goodStoreTypeIds.size > 0 ">
+			AND id IN
+			<foreach collection="goodStoreTypeIds" item="goodStoreTypeId" separator="," open="(" close=")">
+				#{goodStoreTypeId}
+			</foreach>
+		</if>
+		ORDER BY descriptionStar DESC
+		<if test="limit!=null and limit!=''">
+			LIMIT #{limit}
+		</if>
+	</select>
+	<select id="getGoodStoreTypeNumberDesc" resultType="map">
+		SELECT
+		gt.id AS id,gt.name AS NAME,0 AS isPlatform,gt.type_picture AS typePicture,
+		COUNT(*) AS number
+		FROM
+		`good_store_type` gt LEFT JOIN `good_store_list` gl  ON gl.good_store_type_id = gt.id
+		LEFT JOIN  `order_store_good_record` opgr  ON gl.id = opgr.good_store_list_id
+		WHERE gl.good_store_type_id = gt.id
+		AND gt.del_flag = 0
+		AND gt.STATUS = 1
+		AND gl.del_flag = 0
+		AND gl.frame_status = '1'
+        <if test="sysUserId!=null and sysUserId!=''">
+            and gt.sys_user_id=#{sysUserId}
+        </if>
+		GROUP BY id
+		ORDER BY number DESC
+		<if test="limit!=null and limit!=''">
+			LIMIT #{limit}
+		</if>
+	</select>
+	<select id="getGoodStoreTypeAvgDesc" resultType="map">
+		SELECT
+		gt.id AS id,gt.name AS NAME,0 AS isPlatform,gt.type_picture AS typePicture,
+		AVG(oes.description_star) AS descriptionStar
+		FROM
+		good_store_type gt LEFT JOIN good_store_list gl
+		ON gl.good_store_type_id = gt.id
+		LEFT JOIN `order_evaluate_store` oes
+		ON gl.id = oes.good_store_list_id
+		WHERE
+		gl.del_flag = 0
+		AND gl.frame_status = '1'
+		AND gl.STATUS = '1'
+		<if test="goodTypeIds!=null and goodTypeIds.size > 0 ">
+			AND gl.good_store_type_id IN
+			<foreach collection="goodTypeIds" item="goodTypeId" separator="," open="(" close=")">
+				#{goodTypeId}
+			</foreach>
+		</if>
+		GROUP BY id
+		ORDER BY descriptionStar DESC
+	</select>
+
+</mapper>

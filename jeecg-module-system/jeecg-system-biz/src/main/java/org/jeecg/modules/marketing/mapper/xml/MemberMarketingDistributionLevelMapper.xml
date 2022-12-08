@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MemberMarketingDistributionLevelMapper">
+
+    <select id="getDistributionLevel" resultType="int" parameterType="map">
+                SELECT
+            COUNT( 1 )
+        FROM
+            member_list ml
+        WHERE
+            promoter =#{paramMap.promoter}
+            AND (
+            SELECT
+                COUNT( 1 )
+            FROM
+                member_marketing_distribution_level mmdl
+                LEFT JOIN member_distribution_level mdl ON mmdl.t_member_list_id = mdl.member_list_id
+            WHERE
+                mmdl.member_list_id = ml.id
+            AND mdl.marketing_distribution_level_id = #{paramMap.marketingDistributionLevelId}
+            )+(
+            SELECT
+                count( 1 )
+            FROM
+                member_distribution_level
+            WHERE
+                member_list_id = ml.id
+            AND marketing_distribution_level_id = #{paramMap.marketingDistributionLevelId}
+            ) &gt;0
+    </select>
+
+</mapper>

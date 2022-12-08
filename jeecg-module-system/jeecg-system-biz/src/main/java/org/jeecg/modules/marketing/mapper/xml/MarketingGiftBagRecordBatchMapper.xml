@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagRecordBatchMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingGiftBagRecordBatchVO">
+        SELECT * FROM (SELECT
+          mgbrb.*,
+          ml.`head_portrait`,
+          ml.`phone` AS mlPhone,
+          ml.`nick_name`,
+            (
+              CASE
+              mgbrb.`promoter_type`
+              WHEN 0
+              THEN
+              (SELECT
+                IF(
+                  LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                  CONCAT(
+                    sm.`store_name`,
+                    '(',
+                    sm.`sub_store_name`,
+                    ')'
+                  ),
+                  sm.`store_name`
+                )
+              FROM
+                store_manage sm
+              WHERE sm.`sys_user_id` = mgbrb.`promoter`)
+              WHEN 1
+              THEN
+              (SELECT
+                ml.`phone`
+              FROM
+                member_list ml
+              WHERE ml.`id` = mgbrb.`promoter`)
+              ELSE '平台'
+            END
+          ) AS promoterName,
+            (
+              CASE
+              mgbrb.`promoter_type_two`
+              WHEN 0
+              THEN
+              (SELECT
+                IF(
+                  LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                  CONCAT(
+                    sm.`store_name`,
+                    '(',
+                    sm.`sub_store_name`,
+                    ')'
+                  ),
+                  sm.`store_name`
+                )
+              FROM
+                store_manage sm
+              WHERE sm.`sys_user_id` = mgbrb.`promoter_two`)
+              WHEN 1
+              THEN
+              (SELECT
+                ml.`phone`
+              FROM
+                member_list ml
+              WHERE ml.`id` = mgbrb.`promoter_two`)
+              ELSE '平台'
+            END
+          ) AS promoterTwoName,
+          IF(
+            mgbrb.`affiliation_store` IS NOT NULL || LENGTH(TRIM(mgbrb.`affiliation_store`)) > 0,
+            (SELECT
+              IF(
+                LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                CONCAT(
+                  sm.`store_name`,
+                  '(',
+                  sm.`sub_store_name`,
+                  ')'
+                ),
+                sm.`store_name`
+              )
+            FROM
+              store_manage sm
+            WHERE sm.`sys_user_id` = mgbrb.`affiliation_store`),
+            '~'
+          ) AS affiliationStoreName,
+          IF(
+            mgbrb.distribution_channel IS NOT NULL || LENGTH(TRIM(mgbrb.distribution_channel)) > 0,
+            (SELECT
+              IF(
+                LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                CONCAT(
+                  sm.`store_name`,
+                  '(',
+                  sm.`sub_store_name`,
+                  ')'
+                ),
+                sm.`store_name`
+              )
+            FROM
+              store_manage sm
+            WHERE sm.`sys_user_id` = mgbrb.distribution_channel),
+            '~'
+          ) AS distributionChannelName,
+          IF(
+            mgbrb.`provice_id` IS NOT NULL || LENGTH(TRIM(mgbrb.`provice_id`)) > 0,
+            (SELECT
+              am.`name`
+            FROM
+              agency_manage am
+            WHERE am.`id` = mgbrb.`provice_id`),
+            '~'
+          ) AS proviceName,
+          IF(
+            mgbrb.`city_id` IS NOT NULL || LENGTH(TRIM(mgbrb.`city_id`)) > 0,
+            (SELECT
+              am.`name`
+            FROM
+              agency_manage am
+            WHERE am.`id` = mgbrb.`city_id`),
+            '~'
+          ) AS cityName,
+          IF(
+            mgbrb.`towm_id` IS NOT NULL || LENGTH(TRIM(mgbrb.`towm_id`)) > 0,
+            (SELECT
+              am.`name`
+            FROM
+              agency_manage am
+            WHERE am.`id` = mgbrb.`towm_id`),
+            '~'
+          ) AS towmName,
+          IF(
+            mgbrb.`alliance_id` IS NOT NULL || LENGTH(TRIM(mgbrb.`alliance_id`)) > 0,
+            (SELECT
+              am.`name`
+            FROM
+              alliance_manage am
+            WHERE am.`id` = mgbrb.`alliance_id`),
+            '~'
+          ) AS allianceName
+        FROM
+          marketing_gift_bag_record_batch mgbrb
+          LEFT JOIN member_list ml
+            ON mgbrb.`member_list_id` = ml.`id`
+        WHERE mgbrb.`del_flag` = 0
+          AND ml.`del_flag` = 0
+          AND mgbrb.`pay_status` = 1
+          <if test="marketingGiftBagRecordBatchDTO.id != null and marketingGiftBagRecordBatchDTO.id != ''">
+              AND mgbrb.id LIKE concat('%',#{marketingGiftBagRecordBatchDTO.id},'%')
+          </if>
+        <if test="marketingGiftBagRecordBatchDTO.payTime_begin != null and marketingGiftBagRecordBatchDTO.payTime_begin != ''">
+            AND mgbrb.pay_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagRecordBatchDTO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.payTime_end != null and marketingGiftBagRecordBatchDTO.payTime_end != ''">
+            AND mgbrb.pay_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagRecordBatchDTO.payTime_end},' 23:59:59')
+        </if>
+        ORDER BY mgbrb.create_time DESC
+        )m
+        WHERE m.del_flag = 0
+        <if test="marketingGiftBagRecordBatchDTO.mlPhone != null and marketingGiftBagRecordBatchDTO.mlPhone != ''">
+            AND m.mlPhone LIKE concat('%',#{marketingGiftBagRecordBatchDTO.mlPhone},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.nickName != null and marketingGiftBagRecordBatchDTO.nickName != ''">
+            AND m.nick_name LIKE concat('%',#{marketingGiftBagRecordBatchDTO.nickName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.linkman != null and marketingGiftBagRecordBatchDTO.linkman != ''">
+            AND m.linkman LIKE concat('%',#{marketingGiftBagRecordBatchDTO.linkman},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.phone != null and marketingGiftBagRecordBatchDTO.phone != ''">
+            AND m.phone LIKE concat('%',#{marketingGiftBagRecordBatchDTO.phone},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.marketingGiftBagBatchId != null and marketingGiftBagRecordBatchDTO.marketingGiftBagBatchId != ''">
+            AND m.marketing_gift_bag_batch_id LIKE concat('%',#{marketingGiftBagRecordBatchDTO.marketingGiftBagBatchId},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.giftName != null and marketingGiftBagRecordBatchDTO.giftName != ''">
+            AND m.gift_name LIKE concat('%',#{marketingGiftBagRecordBatchDTO.giftName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.promoterName != null and marketingGiftBagRecordBatchDTO.promoterName != ''">
+            AND m.promoterName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.promoterName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.promoterTwoName != null and marketingGiftBagRecordBatchDTO.promoterTwoName != ''">
+            AND m.promoterTwoName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.promoterTwoName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.affiliationStoreName != null and marketingGiftBagRecordBatchDTO.affiliationStoreName != ''">
+            AND m.affiliationStoreName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.affiliationStoreName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.distributionChannelName != null and marketingGiftBagRecordBatchDTO.distributionChannelName != ''">
+            AND m.distributionChannelName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.distributionChannelName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.proviceName != null and marketingGiftBagRecordBatchDTO.proviceName != ''">
+            AND m.proviceName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.proviceName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.cityName != null and marketingGiftBagRecordBatchDTO.cityName != ''">
+            AND m.cityName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.cityName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.towmName != null and marketingGiftBagRecordBatchDTO.towmName != ''">
+            AND m.towmName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.towmName},'%')
+        </if>
+        <if test="marketingGiftBagRecordBatchDTO.allianceName != null and marketingGiftBagRecordBatchDTO.allianceName != ''">
+            AND m.allianceName LIKE concat('%',#{marketingGiftBagRecordBatchDTO.allianceName},'%')
+        </if>
+    </select>
+</mapper>

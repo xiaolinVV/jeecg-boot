@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.agency.mapper.AgencyManageMapper">
+    <select id="getAgencyManageList" resultType="org.jeecg.modules.agency.dto.AgencyManageDTO">
+        SELECT
+        am.*,
+        su.realname AS realname,
+        su.username AS username,
+        su.avatar AS avatar,
+        su.phone AS phone,
+        (select GROUP_CONCAT(NAME) AS sysAreaName from sys_area where agency_manage_id = am.id) AS sysAreaName,
+        sa.leve AS leve,
+        sr.role_code AS roleCode,
+        ( SELECT sd.depart_name FROM `sys_depart` sd LEFT JOIN sys_user_depart sud ON sd.id = sud.dep_id WHERE
+        sd.del_flag = 0 AND sud.user_id = am.sys_user_id) as departName,
+        sr.role_name AS roleName
+        FROM
+        agency_manage am
+        LEFT JOIN sys_user su
+        ON am.sys_user_id = su.id
+        LEFT JOIN sys_area sa
+        ON am.sys_area_id = sa.id
+        LEFT JOIN sys_user_role sur
+        ON sur.user_id = su.id
+        LEFT JOIN sys_role sr
+        ON sr.id = sur.role_id
+        WHERE am.del_flag = 0
+        <if test="agencyManageVO != null and agencyManageVO.leve!=null and agencyManageVO.leve!=''">
+            AND leve =#{agencyManageVO.leve}
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.roleCode!=null and agencyManageVO.roleCode!=''">
+            AND sr.role_code =#{agencyManageVO.roleCode}
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.status!=null and agencyManageVO.status!=''">
+            AND am.status =#{agencyManageVO.status}
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.username!=null and agencyManageVO.username!=''">
+            AND username LIKE CONCAT(CONCAT('%',#{agencyManageVO.username}), '%')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.phone!=null and agencyManageVO.phone!=''">
+            AND phone LIKE CONCAT(CONCAT('%',#{agencyManageVO.phone}), '%')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.realname!=null and agencyManageVO.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{agencyManageVO.realname}), '%')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.createTime_begin != null and agencyManageVO.createTime_begin != ''">
+            and am.create_time <![CDATA[>=]]> concat(#{agencyManageVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.createTime_end != null and agencyManageVO.createTime_end != ''">
+            AND am.create_time <![CDATA[<=]]> concat( #{agencyManageVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.startTime_begin != null and agencyManageVO.startTime_begin != ''">
+            and am.start_time <![CDATA[>=]]> concat(#{agencyManageVO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.startTime_end != null and agencyManageVO.startTime_end != ''">
+            AND am.start_time <![CDATA[<=]]> concat( #{agencyManageVO.startTime_end},' 23:59:59')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.endTime_begin != null and agencyManageVO.endTime_begin != ''">
+            and am.end_time <![CDATA[>=]]> concat(#{agencyManageVO.endTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyManageVO != null and agencyManageVO.endTime_end != null and agencyManageVO.endTime_end != ''">
+            AND am.end_time <![CDATA[<=]]> concat( #{agencyManageVO.endTime_end},' 23:59:59')
+        </if>
+        ORDER BY am.create_time DESC
+    </select>
+    <select id="getAgencyManageMap" resultType="map">
+      SELECT
+        am.id,
+        su.id AS sysUserId,
+        CONCAT( su.realname ,  CONCAT( "(", CONCAT( sr.role_name ,")"))) AS nameAndAgency
+          FROM
+        agency_manage am
+        LEFT JOIN sys_user su
+        ON am.sys_user_id = su.id
+        LEFT JOIN sys_area sa
+        ON am.sys_area_id = sa.id
+        LEFT JOIN sys_user_role sur
+        ON sur.user_id = su.id
+        LEFT JOIN sys_role sr
+        ON  sr.id = sur.role_id
+        WHERE  am.del_flag = 0 and am.status = 1
+    </select>
+    <select id="findAgencyBalance" resultType="org.jeecg.modules.agency.dto.AgencyBalanceDTO">
+        SELECT
+        su.`username`,
+        su.`phone`,
+        su.`realname`,
+        sr.`role_name` AS roleName,
+        am.`balance`
+        FROM
+        agency_manage am
+        LEFT JOIN sys_user su
+        ON am.`sys_user_id` = su.`id`
+        LEFT JOIN sys_user_role sur
+        ON su.id = sur.`user_id`
+        LEFT JOIN sys_role sr
+        ON sr.`id` = sur.`role_id`
+        WHERE am.`del_flag` = 0
+        <if test="agencyBalanceVO!=null and agencyBalanceVO.username!=null and agencyBalanceVO.username!=''">
+            AND su.`username` LIKE concat('%',concat(#{agencyBalanceVO.username},'%'))
+        </if>
+        <if test="agencyBalanceVO!=null and agencyBalanceVO.phone!=null and agencyBalanceVO.phone!=''">
+            AND su.`phone` LIKE concat('%',concat(#{agencyBalanceVO.phone},'%'))
+        </if>
+        <if test="agencyBalanceVO!=null and agencyBalanceVO.realname!=null and agencyBalanceVO.realname!=''">
+            AND su.`realname` LIKE concat('%',concat(#{agencyBalanceVO.realname},'%'))
+        </if>
+        <if test="agencyBalanceVO!=null and agencyBalanceVO.roleName!=null and agencyBalanceVO.roleName!=''">
+            AND sr.`role_name` LIKE concat('%',concat(#{agencyBalanceVO.roleName},'%'))
+        </if>
+        ORDER BY am.`create_time` DESC
+    </select>
+    <select id="getAgencyManageVO" resultType="org.jeecg.modules.agency.vo.AgencyManageVO">
+        SELECT
+          am.`id`,
+          su.`avatar`,
+          su.`username`,
+          su.`phone`,
+          am.`name`,
+          su.`realname`,
+          sr.`role_name`,
+          (SELECT
+            GROUP_CONCAT(NAME)
+          FROM
+            sys_area
+          WHERE agency_manage_id = am.id) AS sysAreaName
+        FROM
+          agency_manage am
+          LEFT JOIN sys_user su
+            ON am.`sys_user_id` = su.`id`
+          LEFT JOIN sys_user_role sur
+            ON sur.`user_id` = am.`sys_user_id`
+          LEFT JOIN sys_role sr
+            ON sr.`id` = sur.`role_id`
+        WHERE am.`del_flag` = 0
+          AND am.`sys_user_id` = #{userId}
+    </select>
+    <select id="findAgencyWorkbenchVO" resultType="org.jeecg.modules.agency.vo.AgencyWorkbenchVO">
+            SELECT
+             am.sys_user_id,
+             am.id,
+              su.`avatar`,
+              -- 头像
+              su.`realname`,
+              -- 联系人
+              sr.`role_name`,
+              -- 角色
+              am.`status`,
+              -- 状态
+              am.name,
+              -- 公司名称
+              (
+                CASE
+                  am.`status`
+                  WHEN 0
+                  THEN '停用'
+                  WHEN 1
+                  THEN '启用'
+                  ELSE '异常'
+                END
+              ) AS statusName,
+              -- 状态说明
+              (
+                CASE
+                  sr.`role_code`
+                  WHEN 'Provincial_agents'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.status = 5
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  WHEN 'Municipal_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.status  = 5
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(
+                      SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                      ',',
+                      - 1
+                    ),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  WHEN 'County_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.status  = 5
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  ELSE '0'
+                END
+              ) AS orderSum,
+              --  有效订单
+              (SELECT
+                  SUM(aac.`amount`)
+                FROM
+                  agency_account_capital aac
+                WHERE aac.`del_flag` = 0
+                  AND aac.`sys_user_id` = am.sys_user_id
+                  AND aac.`go_and_come` = 0 ) AS earnings,
+              -- 累计收益
+              (
+                CASE
+                  sr.`role_code`
+                  WHEN 'Provincial_agents'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    member_list ml
+                    LEFT JOIN store_manage sm
+                      ON ml.`sys_user_id` = sm.`sys_user_id`
+                  WHERE ml.`del_flag` = 0
+                    AND sm.`del_flag` = 0
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+                    )
+                  WHEN 'Municipal_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    member_list ml
+                    LEFT JOIN store_manage sm
+                      ON ml.`sys_user_id` = sm.`sys_user_id`
+                  WHERE ml.`del_flag` = 0
+                    AND sm.`del_flag` = 0
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(
+                      SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                      ',',
+                      - 1
+                    ),am.`sys_area_id`)
+                    )
+                  WHEN 'County_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    member_list ml
+                    LEFT JOIN store_manage sm
+                      ON ml.`sys_user_id` = sm.`sys_user_id`
+                  WHERE ml.`del_flag` = 0
+                    AND sm.`del_flag` = 0
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+                    )
+                  ELSE '0'
+                END
+              ) AS memberSum,
+              -- 累计会员
+              (
+                  CASE
+                    sr.`role_code`
+                    WHEN 'Provincial_agents'
+                    THEN
+                    (SELECT
+                      COUNT(1)
+                    FROM
+                       store_manage sm
+                    WHERE sm.`del_flag` = 0
+                      AND sm.`pay_status` IN (1, 2)
+                      AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+                      )
+                    WHEN 'Municipal_agent'
+                    THEN
+                    (SELECT
+                      COUNT(1)
+                    FROM
+                      store_manage sm
+                    WHERE sm.`del_flag` = 0
+                      AND sm.`pay_status` IN (1, 2)
+                      AND FIND_IN_SET( SUBSTRING_INDEX(
+                        SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                        ',',
+                        - 1
+                      ),am.`sys_area_id`)
+                      )
+                    WHEN 'County_agent'
+                    THEN
+                    (SELECT
+                      COUNT(1)
+                    FROM
+                      store_manage sm
+                    WHERE sm.`del_flag` = 0
+                      AND sm.`pay_status` IN (1, 2)
+                      AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+                      )
+                    ELSE '0'
+                  END
+                ) AS storeSum,
+                -- 店铺统计
+              (
+                CASE
+                  sr.`role_code`
+                  WHEN 'Provincial_agents'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.`status` = 1
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  WHEN 'Municipal_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.`status` = 1
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET( SUBSTRING_INDEX(
+                      SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                      ',',
+                      - 1
+                    ),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  WHEN 'County_agent'
+                  THEN
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    order_store_list osl
+                    LEFT JOIN store_manage sm
+                      ON osl.`sys_user_id` = sm.`sys_user_id`
+                  WHERE osl.`del_flag` = 0
+                    AND osl.`status` = 1
+                    AND sm.`del_flag` = 0
+                    AND sm.`status` = 1
+                    AND sm.`attestation_status` IN (1, 2)
+                    AND sm.`pay_status` IN (1, 2)
+                    AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+                    AND osl.`create_time` <![CDATA[>=]]> am.start_time
+                    )
+                  ELSE '0'
+                END
+              ) AS waitDeliverGoods -- 待发货订单
+            FROM
+              agency_manage am
+              LEFT JOIN sys_user su
+                ON am.`sys_user_id` = su.`id`
+              LEFT JOIN sys_user_role sur
+                ON sur.`user_id` = su.`id`
+              LEFT JOIN sys_role sr
+                ON sr.`id` = sur.`role_id`
+            WHERE am.`del_flag` = 0
+              AND am.sys_user_id = #{userId}
+    </select>
+    <select id="returnAgencyInfo" resultType="org.jeecg.modules.agency.vo.AgencyManageVO">
+        SELECT
+          am.`id`,
+          su.`username`,
+          su.`avatar`,
+          am.`name`,
+          su.`realname`,
+          su.`phone`,
+          am.`agency_area_id`,
+          am.`area_address`,
+          am.`address`,
+          am.`company_phone`,
+          am.`remark`,
+          su.id AS sysUserId
+        FROM
+          agency_manage am
+          LEFT JOIN sys_user su
+            ON am.`sys_user_id` = su.`id`
+        WHERE am.`del_flag` = 0
+          AND am.`sys_user_id` = #{userId}
+    </select>
+
+    <select id="findAgencyManageByPhone" resultType="map">
+        SELECT
+        am.id,
+          CONCAT(
+            su.`phone`,
+            ' (',
+            am.`name`,
+            ',',
+            su.`realname`,
+            ')'
+          ) AS agencyName,
+          am.`name`,
+          su.`phone`,
+          su.`realname`
+        FROM
+          agency_manage am
+          LEFT JOIN sys_user su
+            ON am.`sys_user_id` = su.`id`
+        WHERE am.`del_flag` = 0
+        AND su.`del_flag` = 0
+        AND am.status = 1
+        AND su.phone LIKE concat('%',#{phone},'%')
+        LIMIT 10
+    </select>
+</mapper>

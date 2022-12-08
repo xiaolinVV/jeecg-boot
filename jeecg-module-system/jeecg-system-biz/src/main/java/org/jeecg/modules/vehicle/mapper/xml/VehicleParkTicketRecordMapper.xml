@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.vehicle.mapper.VehicleParkTicketRecordMapper">
+    <select id="getVehicleParkTicketRecordList" resultType="map" parameterType="map">
+                SELECT
+            vptr.`status`,
+            vptr.id,
+            vptr.ticket_name AS ticketName,
+            vptr.preferential_time AS preferentialTime,
+            vptr.time_type AS timeType,
+            DATE_FORMAT( vptr.start_time, '%Y-%m-%d' ) AS startTime,
+            DATE_FORMAT( vptr.end_time, '%Y-%m-%d' ) AS endTime,
+            vptr.main_picture AS mainPicture
+        FROM
+            `vehicle_park_ticket_record` vptr
+        WHERE
+            vptr.del_flag = '0'
+            AND vptr.member_list_id = #{paramMap.memberListId}
+            AND vptr.`status`=#{paramMap.status}
+        ORDER BY
+            vptr.create_time DESC
+    </select>
+
+    <select id="getVehicleParkTicketRecordListDTO" resultType="map" parameterType="org.jeecg.modules.vehicle.dto.VehicleParkTicketRecordDTO">
+                SELECT
+            vptr.serial_number AS  serialNumber,
+            vptr.ticket_no AS ticketNo,
+            ml.phone,
+            ml.nick_name AS nickName,
+            vptr.ticket_name AS ticketName,
+            vptr.main_picture AS mainPicture,
+            vptr.preferential_time AS preferentialTime,
+            vptr.time_type AS timeType,
+            DATE_FORMAT(vptr.start_time,'%Y-%m-%d %H:%i:%s') AS startTime,
+            DATE_FORMAT(vptr.end_time,'%Y-%m-%d %H:%i:%s') AS endTime,
+            vptr.get_way AS getWay,
+            vptr.activity_no AS activityNo,
+            DATE_FORMAT(vptr.get_time,'%Y-%m-%d %H:%i:%s') AS getTime,
+            vptr.`status`,
+            DATE_FORMAT(vptr.user_time,'%Y-%m-%d %H:%i:%s') AS userTime,
+            DATE_FORMAT(vptr.expiration_time,'%Y-%m-%d %H:%i:%s') AS expirationTime,
+            vptr.trade_no AS tradeNo
+        FROM
+            vehicle_park_ticket_record vptr
+            LEFT JOIN member_list ml ON vptr.member_list_id = ml.id
+        WHERE
+            vptr.del_flag = '0'
+            <if test="vehicleParkTicketRecordDTO.serialNumber!=null and vehicleParkTicketRecordDTO.serialNumber!=''">
+                and vptr.serial_number=#{vehicleParkTicketRecordDTO.serialNumber}
+
+            </if>
+            <if test="vehicleParkTicketRecordDTO.ticketName!=null and vehicleParkTicketRecordDTO.ticketName!=''">
+                and vptr.ticket_name=#{vehicleParkTicketRecordDTO.ticketName}
+            </if>
+            <if test="vehicleParkTicketRecordDTO.status!=null and vehicleParkTicketRecordDTO.status!=''">
+                and vptr.`status`=#{vehicleParkTicketRecordDTO.status}
+            </if>
+            <if test="vehicleParkTicketRecordDTO.getTimeStart!=null">
+                and vptr.get_time &gt;=#{vehicleParkTicketRecordDTO.getTimeStart}
+            </if>
+            <if test="vehicleParkTicketRecordDTO.getTimeEnd!=null">
+                and vptr.get_time &lt;=#{vehicleParkTicketRecordDTO.getTimeEnd}
+            </if>
+        ORDER BY
+            vptr.create_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderStoreListMapper">
+
+    <select id="getOrderStoreListDto" resultType="org.jeecg.modules.order.dto.OrderStoreListDTO">
+        SELECT
+        osl.*,
+        smm.storeName AS storeName,
+        ml.phone AS memberPhone
+        FROM
+        order_store_list osl
+        LEFT JOIN `member_list` ml
+        ON ml.id = osl.member_list_id
+        LEFT JOIN (SELECT sm.id,sm.sys_user_id,IF(LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName FROM store_manage sm  ) smm ON  osl.sys_user_id = smm.sys_user_id
+        WHERE osl.del_flag = 0
+         <if test="orderStoreListVO != null and orderStoreListVO.status!=null and orderStoreListVO.status!=''">
+            AND osl.status =#{orderStoreListVO.status}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.orderNo!=null and orderStoreListVO.orderNo!=''">
+            AND osl.order_no LIKE CONCAT(CONCAT('%',#{orderStoreListVO.orderNo}), '%')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.sysUserId!=null and orderStoreListVO.sysUserId!=''">
+            AND osl.sys_user_id =#{orderStoreListVO.sysUserId}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.orderType!=null and orderStoreListVO.orderType!=''">
+            AND osl.order_type =#{orderStoreListVO.orderType}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.contactNumber!=null and orderStoreListVO.contactNumber!=''">
+            AND osl.contact_number LIKE CONCAT(CONCAT('%',#{orderStoreListVO.contactNumber}), '%')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.closeType!=null and orderStoreListVO.closeType!=''">
+            AND osl.close_type =#{orderStoreListVO.closeType}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.closeExplain!=null and orderStoreListVO.closeExplain!=''">
+            AND osl.close_explain =#{orderStoreListVO.closeExplain}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.closeTime_begin != null and orderStoreListVO.closeTime_begin != ''">
+            and osl.close_time <![CDATA[>=]]> concat(#{orderStoreListVO.closeTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.closeTime_end != null and orderStoreListVO.closeTime_end != ''">
+            AND osl.close_time <![CDATA[<=]]> concat( #{orderStoreListVO.closeTime_end},' 23:59:59')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.createTime_begin != null and orderStoreListVO.createTime_begin != ''">
+            and osl.create_time <![CDATA[>=]]> concat(#{orderStoreListVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.createTime_end != null and orderStoreListVO.createTime_end != ''">
+            AND osl.create_time <![CDATA[<=]]> concat( #{orderStoreListVO.createTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.payTime_begin != null and orderStoreListVO.payTime_begin != ''">
+            and osl.pay_time <![CDATA[>=]]> concat(#{orderStoreListVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.payTime_end != null and orderStoreListVO.payTime_end != ''">
+            AND osl.pay_time <![CDATA[<=]]> concat( #{orderStoreListVO.payTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.shipmentsTime_begin != null and orderStoreListVO.shipmentsTime_begin != ''">
+            and osl.shipments_time <![CDATA[>=]]> concat(#{orderStoreListVO.shipmentsTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.shipmentsTime_end != null and orderStoreListVO.shipmentsTime_end != ''">
+            AND osl.shipments_time <![CDATA[<=]]> concat( #{orderStoreListVO.shipmentsTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.deliveryTime_begin != null and orderStoreListVO.deliveryTime_begin != ''">
+            and osl.delivery_time <![CDATA[>=]]> concat(#{orderStoreListVO.deliveryTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.deliveryTime_end != null and orderStoreListVO.deliveryTime_end != ''">
+            AND osl.delivery_time <![CDATA[<=]]> concat( #{orderStoreListVO.deliveryTime_end},' 23:59:59')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.memberPhone!=null and orderStoreListVO.memberPhone!=''">
+            AND ml.phone  LIKE CONCAT(CONCAT('%',#{orderStoreListVO.memberPhone}), '%')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.storeName!=null and orderStoreListVO.storeName!=''">
+            AND smm.storeName  LIKE CONCAT(CONCAT('%',#{orderStoreListVO.storeName}), '%')
+        </if>
+        order by create_time desc
+    </select>
+    <select id="getCancelOrderStoreList" resultType="org.jeecg.modules.order.entity.OrderStoreList">
+        SELECT
+        *
+        FROM
+        `order_store_list`
+        WHERE del_flag = 0
+            AND STATUS = 0
+        <if test="hour != null and hour != ''">
+            AND DATE_ADD(create_time, INTERVAL #{hour} HOUR) <![CDATA[<=]]>  NOW()
+        </if>
+        order by create_time asc
+        limit 50
+    </select>
+
+    <select id="getOrderStoreListTimer" parameterType="java.lang.String" resultType="String">
+        SELECT
+        IF(#{hour}>=1,TIMESTAMPDIFF(
+        SECOND,
+        NOW(),
+        DATE_ADD(create_time, INTERVAL #{hour} HOUR)
+        ),TIMESTAMPDIFF(
+        SECOND,
+        NOW(),
+        DATE_ADD(create_time, INTERVAL #{hour}*60 MINUTE)
+        )) AS timer
+        FROM
+        order_store_list
+        WHERE del_flag = 0
+            AND STATUS = 0
+        <if test="id != null and id != ''">
+            AND id=#{id}
+        </if>
+    </select>
+
+    <!--确认收货定时器-->
+    <select id="getStoreConfirmReceiptOrderList" resultType="org.jeecg.modules.order.entity.OrderStoreList">
+        SELECT
+        *
+        FROM
+        `order_store_list`
+        WHERE del_flag = 0
+        AND STATUS = 2
+        <if test="hour != null and hour != ''">
+            AND DATE_ADD(shipments_time, INTERVAL #{hour} HOUR) <![CDATA[<=]]>  NOW()
+        </if>
+        order by create_time asc
+        limit 50
+    </select>
+
+
+    <!--确认收货计时器(秒)-->
+    <select id="getStoreConfirmReceiptTimer" parameterType="java.lang.String" resultType="String">
+        SELECT
+        IF((#{hour}+0)>=1,TIMESTAMPDIFF(
+        SECOND,
+        NOW(),
+        DATE_ADD(shipments_time, INTERVAL #{hour} HOUR)
+        ),TIMESTAMPDIFF(
+        SECOND,
+        NOW(),
+        DATE_ADD(shipments_time, INTERVAL (#{hour}+0)*60 MINUTE)
+        )) AS timer
+        FROM
+        order_store_list
+        WHERE del_flag = 0
+        AND STATUS = 2
+        <if test="id != null and id != ''">
+            AND id=#{id}
+        </if>
+    </select>
+    <select id="getOrderCompletion" resultType="org.jeecg.modules.order.entity.OrderStoreList">
+        SELECT
+        *
+        FROM
+        order_store_list osl
+        WHERE osl.`del_flag` = 0
+        AND osl.`status` = 3
+        AND ISNULL(osl.`completion_time`) = 1
+        AND DATE_ADD(
+        osl.`delivery_time`,
+        INTERVAL #{hour} HOUR
+        ) <![CDATA[<=]]> NOW()
+        ORDER BY osl.`delivery_time` ASC
+        LIMIT 50
+    </select>
+
+    <select id="getOrderStoreListDtoExport" resultType="org.jeecg.modules.order.dto.OrderStoreListExportDTO" parameterType="map">
+        SELECT
+        osl.id as id,
+        ml.phone AS phone,
+        ml.member_type AS memberType,
+        osl.consignee AS consignee,
+        osl.contact_number AS contactNumber,
+        osl.shipping_address AS shippingAddress,
+        osl.message AS message,
+        osl.goods_total AS goodsTotal,
+        osl.ship_fee AS shipFee,
+        osl.coupon AS coupon,
+        osl.actual_payment AS actualPayment,
+        osl.status AS status,
+        osl.order_no AS orderNo,
+        osl.serial_number AS serialNumber,
+        osl.create_time AS createTime,
+        osl.pay_time AS payTime,
+        osl.shipments_time AS shipmentsTime,
+        osl.delivery_time AS deliveryTime,
+        osl.completion_time AS completionTime,
+        osl.close_time AS closeTime,
+        sm.storeName AS storeName,
+        opls.id AS oplId,
+        opls.good_name AS goodName,
+        opls.unit_price AS unitPrice,
+        opls.amount AS amount,
+        opls.goods_total AS oplsGoodsTotal,
+        opls.ship_fee AS oplsShipFee,
+        opls.customary_dues AS oplsCustomaryDues,
+        opls.status AS oplsStatus
+        FROM
+        `order_store_list` osl
+        LEFT JOIN
+        (SELECT
+        ossl.`id` AS id,
+        ossl.order_no AS order_no,
+        ossl.ship_fee AS ship_fee,
+        osgr.good_name AS good_name,
+        osgr.unit_price AS unit_price,
+        ossl.goods_total AS goods_total,
+        osgr.amount AS amount,
+        ossl.order_store_list_id AS order_store_list_id,
+        ossl.sys_user_id AS sys_user_id,
+        osgr.`good_store_list_id` AS good_store_list_id,
+        ossl.customary_dues AS customary_dues,
+        ossl.status AS STATUS
+        FROM
+        order_store_good_record osgr
+        LEFT JOIN order_store_sub_list ossl
+        ON osgr.order_store_sub_list_id = ossl.id
+        WHERE ossl.del_flag = 0
+        AND osgr.del_flag = 0) opls
+        ON opls.order_store_list_id = osl.id
+        LEFT JOIN `member_list` ml
+        ON ml.id = osl.member_list_id
+        LEFT JOIN
+        (SELECT
+        id,
+        IF(
+        sub_store_name IS NULL,
+        store_name,
+        CONCAT(
+        store_name,
+        '(',
+        sub_store_name,
+        ')'
+        )
+        ) AS storeName,
+        sys_user_id
+        FROM
+        store_manage
+        WHERE del_flag = 0) sm
+        ON sm.sys_user_id = osl.sys_user_id
+        where osl.del_flag = 0
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('status')">
+            AND osl.status =#{orderStoreListVO.status}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('orderNo')">
+            AND osl.order_no =#{orderStoreListVO.orderNo}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('sysUserId')">
+            AND osl.sys_user_id =#{orderStoreListVO.sysUserId}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('orderType')">
+            AND osl.order_type =#{orderStoreListVO.orderType}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('contactNumber')">
+            AND osl.contact_number =#{orderStoreListVO.contactNumber}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('closeType')">
+            AND osl.close_type =#{orderStoreListVO.closeType}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('closeExplain')">
+            AND osl.close_explain =#{orderStoreListVO.closeExplain}
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('closeTime_begin')">
+            and osl.close_time <![CDATA[>=]]> concat(#{orderStoreListVO.closeTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('closeTime_end')">
+            AND osl.close_time <![CDATA[<=]]> concat( #{orderStoreListVO.closeTime_end},' 23:59:59')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('createTime_begin')">
+            and osl.create_time <![CDATA[>=]]> concat(#{orderStoreListVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('createTime_end')">
+            AND osl.create_time <![CDATA[<=]]> concat( #{orderStoreListVO.createTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('payTime_begin')">
+            and osl.pay_time <![CDATA[>=]]> concat(#{orderStoreListVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('payTime_end')">
+            AND osl.pay_time <![CDATA[<=]]> concat( #{orderStoreListVO.payTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('shipmentsTime_begin')">
+            and osl.shipments_time <![CDATA[>=]]> concat(#{orderStoreListVO.shipmentsTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('shipmentsTime_end')">
+            AND osl.shipments_time <![CDATA[<=]]> concat( #{orderStoreListVO.shipmentsTime_end},' 23:59:59')
+        </if>
+
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('deliveryTime_begin')">
+            and osl.delivery_time <![CDATA[>=]]> concat(#{orderStoreListVO.deliveryTime_begin},' 00:00:00')
+        </if>
+        <if test="orderStoreListVO != null and orderStoreListVO.containsKey('deliveryTime_end')">
+            AND osl.delivery_time <![CDATA[<=]]> concat( #{orderStoreListVO.deliveryTime_end},' 23:59:59')
+        </if>
+        ORDER BY osl.create_time DESC
+    </select>
+
+</mapper>

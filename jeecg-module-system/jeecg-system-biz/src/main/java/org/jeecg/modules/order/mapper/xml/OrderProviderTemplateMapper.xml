@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderProviderTemplateMapper">
+
+    <select id="getOrderProviderTemplateMaps" resultType="map" >
+        SELECT opt.id,
+        su.realname AS sysUserName,
+        opt.template_name AS name,
+        opt.charge_mode AS chargeMode,
+        opt.ship_fee AS shipFee,
+        opt.accounting_rules AS accountingRules,
+        opt.quantity AS goodCount,
+        opl.distribution as distribution
+        FROM`order_provider_template` opt
+        LEFT JOIN   sys_user su
+        ON su.id = opt.sys_user_id
+        left join order_provider_list opl
+        on opl.id = opt.order_provider_list_id
+        WHERE opt.del_flag = 0
+        <if test="orderProviderIdList!=null and orderProviderIdList.size > 0 ">
+            and  opt.order_provider_list_id IN
+            <foreach collection="orderProviderIdList" item="orderProviderIdList" separator="," open="(" close=")">#{orderProviderIdList}</foreach>
+        </if>
+        order BY  opt.create_time desc
+    </select>
+
+
+    <select id="getOrderProviderTemplateMap" resultType="map" >
+        SELECT opt.id,
+        su.realname AS sysUserName,
+        opt.template_name AS name,
+        opt.charge_mode AS chargeMode,
+        opt.ship_fee AS shipFee,
+        opt.accounting_rules AS accountingRules,
+        opt.quantity AS goodCount,
+        opl.distribution as distribution
+        FROM`order_provider_template` opt
+        LEFT JOIN   sys_user su
+        ON su.id = opt.sys_user_id
+        left join order_provider_list opl
+        on opl.id = opt.order_provider_list_id
+        WHERE opt.del_flag = 0
+        <if test="orderProviderId!=null and orderProviderId!='' ">
+            and  opt.order_provider_list_id =#{orderProviderId}
+        </if>
+        order BY  opt.create_time desc
+    </select>
+
+
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderTemplateMapper">
+    <select id="getlistProviderTemplate" resultType="org.jeecg.modules.provider.dto.ProviderTemplateDTO">
+        select * from  provider_template  where del_flag = 0 AND sys_user_id = #{uId}
+    </select>
+    <update id="updateIsTemplateByid">
+        UPDATE
+          provider_template
+        SET
+          is_template = "0"
+        WHERE sys_user_id = #{id}
+    </update>
+    <select id="getProviderTemplateList" resultType="org.jeecg.modules.provider.dto.ProviderTemplateDTO">
+        SELECT * FROM (
+        SELECT
+          pt.*,
+          su.realname
+        FROM
+          provider_template pt
+          LEFT OUTER JOIN sys_user su
+            ON pt.sys_user_id = su.`id`
+        WHERE pt.del_flag = 0
+          ORDER BY pt.create_time DESC) m
+          WHERE m.del_flag = 0
+          <if test="providerTemplateVO.realname != null and providerTemplateVO.realname != ''">
+              AND m.realname LIKE concat('%',#{providerTemplateVO.realname},'%')
+          </if>
+        <if test="providerTemplateVO.name != null and providerTemplateVO.name != ''">
+            AND m.name LIKE concat('%',#{providerTemplateVO.name},'%')
+        </if>
+    </select>
+    <select id="getProviderTemplateMaps" resultType="map">
+        SELECT
+        pt.id,
+        su.realname AS sysUserName,
+        pt.name AS name,
+        pt.charge_mode AS chargeMode,
+        pt.exemption_postage AS exemptionPostage,
+        pt.template_type AS templateType,
+        opl.ship_fee as shipFee,
+        pt.mail_delivery AS mailDelivery,
+        COUNT(pt.id) AS goodCount,
+        opl.distribution as distribution
+        FROM
+        `provider_template` pt
+        LEFT JOIN `good_list` gl
+        ON gl.provider_template_id = pt.id
+        LEFT JOIN sys_user su ON su.id = pt.sys_user_id
+        LEFT JOIN `order_provider_good_record` opgr ON opgr.good_list_id = gl.id
+        LEFT JOIN order_provider_list opl ON opl.id = opgr.order_provider_list_id
+
+        WHERE pt.del_flag = 0
+        <if test="orderProviderIdList!=null and orderProviderIdList.size > 0 ">
+            and opgr.order_provider_list_id in
+            <foreach collection="orderProviderIdList" item="orderProviderId" separator="," open="(" close=")">
+                #{orderProviderId}
+            </foreach>
+        </if>
+
+        GROUP BY pt.id
+
+
+    </select>
+
+
+    <select id="getProviderTemplateMap" resultType="map">
+        SELECT
+        pt.id,
+        su.realname AS sysUserName,
+        pt.name AS name,
+        pt.charge_mode AS chargeMode,
+        pt.exemption_postage AS exemptionPostage,
+        pt.template_type AS templateType,
+        opl.ship_fee as shipFee,
+        pt.mail_delivery AS mailDelivery,
+        COUNT(pt.id) AS goodCount,
+        opl.distribution as distribution
+        FROM
+        `provider_template` pt
+        LEFT JOIN `good_list` gl
+        ON gl.provider_template_id = pt.id
+        LEFT JOIN sys_user su ON su.id = pt.sys_user_id
+        LEFT JOIN `order_provider_good_record` opgr ON opgr.good_list_id = gl.id
+        LEFT JOIN order_provider_list opl ON opl.id = opgr.order_provider_list_id
+
+        WHERE pt.del_flag = 0
+        <if test="orderProviderId!=null and orderProviderId!='' ">
+            and opgr.order_provider_list_id = #{orderProviderId}
+        </if>
+
+        GROUP BY pt.id
+
+
+    </select>
+
+
+</mapper>

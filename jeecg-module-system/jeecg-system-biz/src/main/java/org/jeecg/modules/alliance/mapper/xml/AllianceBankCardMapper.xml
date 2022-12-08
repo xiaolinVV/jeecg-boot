@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.alliance.mapper.AllianceBankCardMapper">
+    <select id="findBankCardById" resultType="org.jeecg.modules.alliance.dto.AllianceBankCardDTO">
+        SELECT
+          CONCAT(
+            abc.`bank_name`,
+            '(',
+            RIGHT(bank_card, 4),
+            ',',
+            abc.`cardholder`,
+            ')'
+          ) AS sbcName,
+          abc.`bank_card`,
+          abc.id AS allianceBankCardId,
+          abc.car_type
+        FROM
+          alliance_bank_card abc
+        WHERE abc.`del_flag` = 0
+        AND abc.sys_user_id = #{sysUserId}
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceBankCardVO">
+        SELECT
+        su.`avatar`,
+        su.`username`,
+        am.`name`,
+        abc.*
+        FROM
+        alliance_bank_card abc
+        LEFT JOIN alliance_manage am
+        ON abc.`sys_user_id` = am.`sys_user_id`
+        LEFT JOIN sys_user su
+        ON su.`id` = am.`sys_user_id`
+        WHERE abc.`del_flag` = 0
+        AND am.`del_flag` = 0
+        AND su.`del_flag` = 0
+        AND abc.car_type = 0
+        <if test="allianceBankCardDTO.username != null and allianceBankCardDTO.username != ''">
+            AND su.username LIKE concat('%',#{allianceBankCardDTO.username},'%')
+        </if>
+        <if test="allianceBankCardDTO.name != null and allianceBankCardDTO.name != ''">
+            AND am.name LIKE concat('%',#{allianceBankCardDTO.name},'%')
+        </if>
+        <if test="allianceBankCardDTO.phone != null and allianceBankCardDTO.phone != ''">
+            AND abc.phone LIKE concat('%',#{allianceBankCardDTO.phone},'%')
+        </if>
+        <if test="allianceBankCardDTO.bankName != null and allianceBankCardDTO.bankName != ''">
+            AND abc.bank_name LIKE concat('%',#{allianceBankCardDTO.bankName},'%')
+        </if>
+        <if test="allianceBankCardDTO.bankCard != null and allianceBankCardDTO.bankCard != ''">
+            AND abc.bank_card LIKE concat('%',#{allianceBankCardDTO.bankCard},'%')
+        </if>
+        <if test="allianceBankCardDTO.createTime_begin != null and allianceBankCardDTO.createTime_begin != ''">
+            and abc.create_time <![CDATA[>=]]> CONCAT(#{allianceBankCardDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceBankCardDTO.createTime_end != null and allianceBankCardDTO.createTime_end != ''">
+            AND abc.create_time <![CDATA[<=]]> CONCAT( #{allianceBankCardDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="allianceBankCardDTO.updateTime_begin != null and allianceBankCardDTO.updateTime_begin != ''">
+            and abc.update_time <![CDATA[>=]]> CONCAT(#{allianceBankCardDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceBankCardDTO.updateTime_end != null and allianceBankCardDTO.updateTime_end != ''">
+            AND abc.update_time <![CDATA[<=]]> CONCAT( #{allianceBankCardDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY abc.`create_time` DESC
+    </select>
+</mapper>

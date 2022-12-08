@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberBankCardMapper">
+    <select id="findMemberBankCard" resultType="org.jeecg.modules.member.vo.MemberBankCardVO">
+        SELECT
+        ml.`head_portrait`,
+        ml.`phone` AS mlPhone,
+        ml.`nick_name`,
+        mbc.*
+        FROM
+        member_bank_card mbc
+        LEFT JOIN member_list ml
+        ON mbc.`member_list_id` = ml.`id`
+        WHERE mbc.`del_flag` = 0
+        AND ml.`del_flag` = 0
+        AND ml.`status` = 1
+        AND mbc.car_type = 0
+        <if test="memberBankCardDTO!=null and memberBankCardDTO.mlPhone!=null and memberBankCardDTO.mlPhone!=''">
+            AND ml.phone LIKE concat('%',concat(#{memberBankCardDTO.mlPhone},'%'))
+        </if>
+        <if test="memberBankCardDTO!=null and memberBankCardDTO.nickName!=null and memberBankCardDTO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{memberBankCardDTO.nickName},'%'))
+        </if>
+        <if test="memberBankCardDTO!=null and memberBankCardDTO.phone!=null and memberBankCardDTO.phone!=''">
+            AND mbc.phone LIKE concat('%',concat(#{memberBankCardDTO.phone},'%'))
+        </if>
+        <if test="memberBankCardDTO!=null and memberBankCardDTO.bankName!=null and memberBankCardDTO.bankName!=''">
+            AND mbc.bank_name LIKE concat('%',concat(#{memberBankCardDTO.bankName},'%'))
+        </if>
+        <if test="memberBankCardDTO!=null and memberBankCardDTO.bankCard!=null and memberBankCardDTO.bankCard!=''">
+            AND mbc.bank_card LIKE concat('%',concat(#{memberBankCardDTO.bankCard},'%'))
+        </if>
+        <if test="memberBankCardDTO != null and memberBankCardDTO.createTime_begin != null and memberBankCardDTO.createTime_begin != ''">
+            and mbc.create_time <![CDATA[>=]]> CONCAT(#{memberBankCardDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberBankCardDTO != null and memberBankCardDTO.createTime_end != null and memberBankCardDTO.createTime_end != ''">
+            AND mbc.create_time <![CDATA[<=]]> CONCAT( #{memberBankCardDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberBankCardDTO != null and memberBankCardDTO.updateTime_begin != null and memberBankCardDTO.updateTime_begin != ''">
+            and mbc.update_time <![CDATA[>=]]> CONCAT(#{memberBankCardDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="memberBankCardDTO != null and memberBankCardDTO.updateTime_end != null and memberBankCardDTO.updateTime_end != ''">
+            AND mbc.update_time <![CDATA[<=]]> CONCAT( #{memberBankCardDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY mbc.`create_time` DESC
+    </select>
+</mapper>

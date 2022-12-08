@@ -1,0 +1,1208 @@
+package org.jeecg.modules.order.service.impl;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Maps;
+import com.huifu.adapay.core.exception.BaseAdaPayException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jeecg.common.util.OrderNoUtils;
+import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.good.entity.GoodStoreList;
+import org.jeecg.modules.good.entity.GoodStoreSpecification;
+import org.jeecg.modules.good.service.IGoodStoreListService;
+import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
+import org.jeecg.modules.marketing.entity.MarketingDiscountCoupon;
+import org.jeecg.modules.marketing.entity.MarketingStoreDistributionSetting;
+import org.jeecg.modules.marketing.entity.MarketingStoreGiftCardMemberList;
+import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
+import org.jeecg.modules.marketing.service.IMarketingStoreDistributionSettingService;
+import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
+import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;
+import org.jeecg.modules.member.entity.*;
+import org.jeecg.modules.member.service.*;
+import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
+import org.jeecg.modules.order.dto.OrderStoreListDTO;
+import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
+import org.jeecg.modules.order.dto.OrderStoreSubListDTO;
+import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
+import org.jeecg.modules.order.entity.OrderStoreList;
+import org.jeecg.modules.order.entity.OrderStoreSubList;
+import org.jeecg.modules.order.mapper.OrderStoreListMapper;
+import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
+import org.jeecg.modules.order.service.IOrderStoreListService;
+import org.jeecg.modules.order.service.IOrderStoreSubListService;
+import org.jeecg.modules.order.service.IOrderStoreTemplateService;
+import org.jeecg.modules.order.utils.PayUtils;
+import org.jeecg.modules.order.vo.OrderStoreListVO;
+import org.jeecg.modules.pay.entity.PayOrderCarLog;
+import org.jeecg.modules.pay.utils.HftxPayUtils;
+import org.jeecg.modules.store.dto.StoreAddressDTO;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.*;
+import org.jeecg.modules.system.entity.SysUser;
+import org.jeecg.modules.system.service.ISysDictService;
+import org.jeecg.modules.system.service.ISysUserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * @Description: 商品订单列表
+ * @Author: jeecg-boot
+ * @Date:   2019-11-30
+ * @Version: V1.0
+ */
+@Service
+@Slf4j
+public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper, OrderStoreList> implements IOrderStoreListService {
+    @Autowired(required = false)
+    private OrderStoreListMapper orderStoreListMapper;
+
+    @Autowired
+    @Lazy
+    private IMemberListService iMemberListService;
+
+    @Autowired
+    @Lazy
+    private IMarketingDiscountCouponService iMarketingDiscountCouponService;
+
+    @Autowired
+    @Lazy
+    private IStoreManageService iStoreManageService;
+
+    @Autowired
+    @Lazy
+    private IStoreRechargeRecordService iStoreRechargeRecordService;
+
+    @Autowired
+    @Lazy
+    private IOrderStoreSubListService iOrderStoreSubListService;
+
+    @Autowired
+    @Lazy
+    private IGoodStoreSpecificationService iGoodStoreSpecificationService;
+
+    @Autowired
+    @Lazy
+    private IGoodStoreListService iGoodStoreListService;
+
+    @Autowired
+    @Lazy
+    private IOrderStoreGoodRecordService iOrderStoreGoodRecordService;
+
+    @Autowired
+    @Lazy
+    private IOrderStoreGoodRecordService  orderStoreGoodRecordService;
+    @Autowired
+    @Lazy
+    private ISysUserService sysUserService;
+    @Autowired
+    @Lazy
+    private IStoreAddressService storeAddressService;
+
+    @Autowired
+    @Lazy
+    private IStoreTemplateService iStoreTemplateService;
+    @Autowired
+    @Lazy
+    private ISysDictService iSysDictService;
+    @Autowired
+    @Lazy
+    private IMarketingStoreDistributionSettingService iMarketingStoreDistributionSettingService;
+    @Autowired
+    @Lazy
+    private IMemberRechargeRecordService iMemberRechargeRecordService;
+    @Autowired
+    @Lazy
+    private IMemberDistributionRecordService iMemberDistributionRecordService;
+    @Autowired
+    @Lazy
+    private IMemberAccountCapitalService iMemberAccountCapitalService;
+    @Autowired
+    @Lazy
+    private IStoreAccountCapitalService iStoreAccountCapitalService;
+
+    @Autowired
+    @Lazy
+    private IMemberGradeService iMemberGradeService;
+
+    @Autowired
+    @Lazy
+    private IMemberGrowthRecordService iMemberGrowthRecordService;
+    @Autowired
+    @Lazy
+    private IOrderStoreTemplateService iOrderStoreTemplateService;
+
+    @Autowired
+    @Lazy
+    private IMarketingWelfarePaymentsSettingService iMarketingWelfarePaymentsSettingService;
+
+    @Autowired
+    @Lazy
+    private IMarketingStoreGiftCardMemberListService iMarketingStoreGiftCardMemberListService;
+
+    @Autowired
+    private IMemberWelfarePaymentsService iMemberWelfarePaymentsService;
+
+
+    @Autowired
+    private PayUtils payUtils;
+
+    @Autowired
+    private HftxPayUtils hftxPayUtils;
+
+    @Autowired
+    @Lazy
+    private IStoreCashierRoutingService iStoreCashierRoutingService;
+
+    @Override
+    public IPage<OrderStoreListDTO> getOrderStoreListDto(Page<OrderStoreList> page, OrderStoreListVO orderListVO, String sysUserId) {
+        IPage<OrderStoreListDTO> page1=orderStoreListMapper.getOrderStoreListDto(page, orderListVO);
+
+
+            page1.getRecords().forEach(ol->{
+                //会员信息
+                MemberList memberList = iMemberListService.getMemberListById(ol.getMemberListId());
+                if(memberList!=null){ol.setMemberList(memberList);}
+                //优惠券信息
+                MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(ol.getMarketingDiscountCouponId());
+                if(marketingDiscountCoupon!=null){ol.setMarketingDiscountCoupon(marketingDiscountCoupon);}
+                List<OrderStoreSubListDTO>  orderProviderLists;
+                if("2".equals(ol.getStatus()) || "3".equals(ol.getStatus()) || "5".equals(ol.getStatus())){
+                    //发货后的商品信息
+                    orderProviderLists= iOrderStoreSubListService.selectorderStoreListId(ol.getId(),sysUserId,null,"0");
+                }else{
+                    //未发货的商品信息
+                    //查询供应商订单信息 sysUserId：null为平台登录，不为null为供应商登录
+                    orderProviderLists= iOrderStoreSubListService.selectorderStoreListId(ol.getId(),sysUserId,"0",null);
+                }
+
+                orderProviderLists.forEach(opl -> {
+                    SysUser sysUser = sysUserService.getById(opl.getSysUserId());
+                    if(sysUser!=null){
+                        opl.setSysUserName(sysUser.getRealname());
+                    }
+                    List<OrderStoreGoodRecord>  orderProviderGoodRecords= orderStoreGoodRecordService.selectOrderStoreSubListId(opl.getId());
+                    //添加供应商订单商品记录
+                    opl.setOrderStoreGoodRecords(orderProviderGoodRecords);
+
+                    List<OrderStoreGoodRecordDTO>  orderStoreGoodRecordDTOList= orderStoreGoodRecordService.selectOrderStoreSubListIdDTO(opl.getId());
+                    //添加供应商订单商品记录
+                    opl.setOrderStoreGoodRecordDTOList(orderStoreGoodRecordDTOList);
+
+
+                    //供应商发货信息
+                    Map<String,String> paramMap = Maps.newHashMap();
+                    paramMap.put("id",opl.getStoreAddressIdSender());
+                    if(opl.getStoreAddressIdSender()==null || "".equals( opl.getStoreAddressIdSender())){
+                        paramMap.put("sysUserId",opl.getSysUserId());
+                        paramMap.put("isDeliver","1");//发货默认
+                        paramMap.put("isReturn","");//退货
+                    }
+                    List<StoreAddressDTO> listStoreAddressDTO= storeAddressService.getlistStoreAddress(paramMap);
+                    if(listStoreAddressDTO.size()>0){
+                        opl.setStoreAddressDTOFa(listStoreAddressDTO.get(0));
+                    }
+                    //供应商退信息
+                    Map<String,String> paramMaptui = Maps.newHashMap();
+                    paramMaptui.put("id",opl.getStoreAddressIdTui());
+                    if(opl.getStoreAddressIdTui()== null || "".equals(opl.getStoreAddressIdTui())){
+                        paramMaptui.put("sysUserId",opl.getSysUserId());
+                        paramMaptui.put("isDeliver","");//发货默认
+                        paramMaptui.put("isReturn","1");//退货
+                    }
+                    List<StoreAddressDTO> listStoreAddressDTOTui= storeAddressService.getlistStoreAddress(paramMaptui);
+                    if(listStoreAddressDTOTui.size()>0){
+                        opl.setStoreAddressDTOTui(listStoreAddressDTOTui.get(0));
+                    }
+
+
+
+
+
+                });
+                //添加供应商订单列表
+                if(orderProviderLists.size()>0){
+                    ol.setOrderStoreSubListDTOs(orderProviderLists);
+
+                    List<String> OrderStoreSubIdList = new ArrayList<>();
+                    //查询运费模板信息
+                    for(OrderStoreSubListDTO opl:orderProviderLists){
+                        OrderStoreSubIdList.add(opl.getId());
+                    }
+                    List<Map<String,Object>> providerTemplateMaps = new ArrayList<>();
+                    OrderStoreSubIdList = OrderStoreSubIdList.stream().distinct().collect(Collectors.toList());
+                    //查询运费模板信息
+                    providerTemplateMaps =   iOrderStoreTemplateService.getOrderStoreTemplateMaps(OrderStoreSubIdList);
+                    if(providerTemplateMaps.size() ==0){
+                        //如果未生成运费模板信息,查询运费模板匹配信息
+                        providerTemplateMaps =  iStoreTemplateService.getStoreTemplateMaps(OrderStoreSubIdList);
+                    }
+                    //添加运费模板信息
+                    ol.setStoreTemplateMaps(providerTemplateMaps);
+                }
+            });
+
+        return page1;
+    }
+
+   //发货后信息
+    @Override
+    public IPage<OrderStoreListDTO> getOrderListDtoWaitForReceiving(Page<OrderStoreList> page, OrderStoreListVO orderListVO, String sysUserId) {
+        IPage<OrderStoreListDTO> page1=orderStoreListMapper.getOrderStoreListDto(page, orderListVO);
+                page1.getRecords().forEach(ol->{
+                    //会员信息
+                    MemberList memberList = iMemberListService.getMemberListById(ol.getMemberListId());
+                    if(memberList!=null){ol.setMemberList(memberList);}
+                    //优惠券信息
+                    MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(ol.getMarketingDiscountCouponId());
+                    if(marketingDiscountCoupon!=null){ol.setMarketingDiscountCoupon(marketingDiscountCoupon);}
+                    //查询供应商订单信息 sysUserId：null为平台登录，不为null为供应商登录
+                    List<OrderStoreSubListDTO>  orderProviderLists= iOrderStoreSubListService.selectorderStoreListId(ol.getId(),sysUserId,null,"0");
+                    orderProviderLists.forEach(opl -> {
+                        SysUser sysUser = sysUserService.getById(opl.getSysUserId());
+                        if(sysUser!=null){
+                            opl.setSysUserName(sysUser.getRealname());
+                        }
+                        List<OrderStoreGoodRecord>  orderProviderGoodRecords= orderStoreGoodRecordService.selectOrderStoreSubListId(opl.getId());
+                        //添加供应商订单商品记录
+                        opl.setOrderStoreGoodRecords(orderProviderGoodRecords);
+                        List<OrderStoreGoodRecordDTO>  orderStoreGoodRecordDTOList= orderStoreGoodRecordService.selectOrderStoreSubListIdDTO(opl.getId());
+                        //添加供应商订单商品记录
+                        opl.setOrderStoreGoodRecordDTOList(orderStoreGoodRecordDTOList);
+
+                        //供应商发货信息
+                        Map<String,String> paramMap = Maps.newHashMap();
+                        paramMap.put("id",opl.getStoreAddressIdSender());
+                        if(opl.getStoreAddressIdSender()==null || "".equals( opl.getStoreAddressIdSender())){
+                            paramMap.put("sysUserId",opl.getSysUserId());
+                            paramMap.put("isDeliver","1");//发货默认
+                            paramMap.put("isReturn","");//退货
+                        }
+                        List<StoreAddressDTO> listStoreAddressDTO= storeAddressService.getlistStoreAddress(paramMap);
+                        if(listStoreAddressDTO.size()>0){
+                            opl.setStoreAddressDTOFa(listStoreAddressDTO.get(0));
+                        }
+                        //供应商退信息
+                        Map<String,String> paramMaptui = Maps.newHashMap();
+                        paramMaptui.put("id",opl.getStoreAddressIdTui());
+                        if(opl.getStoreAddressIdTui()== null || "".equals(opl.getStoreAddressIdTui())){
+                            paramMaptui.put("sysUserId",opl.getSysUserId());
+                            paramMaptui.put("isDeliver","");//发货默认
+                            paramMaptui.put("isReturn","1");//退货
+                        }
+                        List<StoreAddressDTO> listStoreAddressDTOTui= storeAddressService.getlistStoreAddress(paramMaptui);
+                        if(listStoreAddressDTOTui.size()>0){
+                            opl.setStoreAddressDTOTui(listStoreAddressDTOTui.get(0));
+                        }
+                    });
+                    //添加供应商订单列表
+                    if(orderProviderLists.size()>0){
+                        ol.setOrderStoreSubListDTOs(orderProviderLists);
+                        List<String> OrderStoreSubIdList = new ArrayList<>();
+                        //查询运费模板信息
+                        for(OrderStoreSubListDTO opl:orderProviderLists){
+                            OrderStoreSubIdList.add(opl.getId());
+                        }
+                        OrderStoreSubIdList = OrderStoreSubIdList.stream().distinct().collect(Collectors.toList());
+                        List<Map<String,Object>> providerTemplateMaps = new ArrayList<>();
+                        //查询运费模板信息
+                         providerTemplateMaps =   iOrderStoreTemplateService.getOrderStoreTemplateMaps(OrderStoreSubIdList);
+                        if(providerTemplateMaps.size() ==0){
+                            //如果未生成运费模板信息,查询运费模板匹配信息
+                            providerTemplateMaps =  iStoreTemplateService.getStoreTemplateMaps(OrderStoreSubIdList);
+                        }
+                        //添加运费模板信息
+                        ol.setStoreTemplateMaps(providerTemplateMaps);
+                    }
+                });
+
+        return page1;
+    }
+
+
+    @Override
+    @Transactional
+    public OrderStoreList submitOrderStoreGoods(Map<String,Object> storeGood,
+                                                String memberId, String orderJson,
+                                                MemberShippingAddress memberShippingAddress,
+                                                String longitude,String latitude) {
+
+        //总运费
+        BigDecimal freight=new BigDecimal(0);
+        //价格
+        BigDecimal totalPrice=new BigDecimal(0);
+        //店铺成本价
+        BigDecimal costPrice=new BigDecimal(0);
+        //件数
+        BigDecimal allNumberUnits=new BigDecimal(0);
+        //获取用户信息
+        MemberList memberList=iMemberListService.getById(memberId);
+        //解析订单json
+        JSONObject orderJsonObject= JSON.parseObject(orderJson);
+        JSONArray storeGoods=orderJsonObject.getJSONArray("storeGoods");
+        JSONObject jsonGoods=null;
+        for (Object s:storeGoods) {
+            JSONObject ss=(JSONObject) s;
+            if(storeGood.get("id").toString().equals(ss.getString("id"))){
+                jsonGoods=ss;
+                break;
+            }
+        }
+
+
+        //建立店铺订单
+        OrderStoreList orderStoreList=new OrderStoreList();
+        orderStoreList.setDelFlag("0");
+        //普通订单
+        orderStoreList.setOrderType("0");
+        //订单号
+        orderStoreList.setOrderNo(OrderNoUtils.getOrderNo());
+        //会员设置
+        orderStoreList.setMemberListId(memberId);
+        //收货地址设置
+        orderStoreList.setConsignee(memberShippingAddress.getLinkman());
+        orderStoreList.setContactNumber(memberShippingAddress.getPhone());
+        orderStoreList.setShippingAddress(memberShippingAddress.getAreaExplan()+memberShippingAddress.getAreaAddress());
+        orderStoreList.setHouseNumber(memberShippingAddress.getHouseNumber());
+        //设置留言
+        orderStoreList.setMessage(jsonGoods.getString("message"));
+        orderStoreList.setCoupon(new BigDecimal(0));
+        //通过优惠券判断优惠金额
+        String discountId = jsonGoods.getString("discountId");
+        if (!oConvertUtils.isEmpty(discountId)) {
+            //设置优惠金额
+            MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
+            if (marketingDiscountCoupon == null || !marketingDiscountCoupon.getStatus().equals("1")) {
+                log.info("优惠券不可用");
+            }
+            orderStoreList.setCoupon(marketingDiscountCoupon.getPrice());
+            //标识优惠券已使用
+            marketingDiscountCoupon.setStatus("2");
+            //优惠券id
+            orderStoreList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+            iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
+        } else {
+            orderStoreList.setCoupon(new BigDecimal(0));
+        }
+        //设置无修改地址
+        orderStoreList.setIsUpdateAddr("0");
+        //设置订单状态
+        orderStoreList.setStatus("0");
+        //推广人设置
+        String promoterType=memberList.getPromoterType();
+        String promoter=memberList.getPromoter();
+        if (StringUtils.isNotBlank(promoter)){
+            if (promoterType.equals("2")){
+                orderStoreList.setPromoter("平台")
+                        .setPromoterType("2");
+            }else {
+                orderStoreList
+                        .setPromoter(promoter)
+                        .setPromoterType(promoterType);
+            }
+        }
+
+        //归属店铺
+        orderStoreList.setSysUserId(storeGood.get("id").toString());
+
+
+        //配送方式
+        orderStoreList.setDistribution(jsonGoods.getString("distribution"));
+
+        //是否部分发货
+        orderStoreList.setIsSender("0");
+
+        //设置未评价
+        orderStoreList.setIsEvaluate("0");
+
+         //保存订单信息
+        this.saveOrUpdate(orderStoreList);
+
+        //建立sub子订单信息
+
+        //商品总价(成本价)
+        BigDecimal goodsTotal=new BigDecimal(0);
+        //建立供应商订单
+        OrderStoreSubList orderStoreSubList=new OrderStoreSubList();
+        orderStoreSubList.setDelFlag("0");
+        orderStoreSubList.setMemberListId(memberList.getId());
+        //设置订单id
+        orderStoreSubList.setOrderStoreListId(orderStoreList.getId());
+        //设置店铺id
+        orderStoreSubList.setSysUserId(storeGood.get("id").toString());
+        //设置订单号
+        orderStoreSubList.setOrderNo(OrderNoUtils.getOrderNo());
+        orderStoreSubList.setDistribution(orderStoreList.getDistribution());
+        orderStoreSubList.setParentId("0");
+        orderStoreSubList.setStatus("0");
+        orderStoreSubList.setShipFee(orderStoreList.getShipFee());
+        //保存订单信息
+        iOrderStoreSubListService.saveOrUpdate(orderStoreSubList);
+        //建立店铺商品快照
+
+        List<Map<String,Object>> myStoreGoods=( List<Map<String,Object>>)storeGood.get("myStoreGoods");
+        //有地址计算运费
+        if(memberShippingAddress!=null) {
+            freight=iStoreTemplateService.calculateFreight(myStoreGoods,memberShippingAddress.getSysAreaId());
+          //添加店铺运费模板信息
+            iStoreTemplateService.addOrderStoreTemplate( myStoreGoods,  memberShippingAddress.getSysAreaId(), orderStoreSubList);
+
+            }
+        orderStoreList.setShipFee(freight);
+        orderStoreSubList.setShipFee(freight);
+        //商品礼品卡金额
+        BigDecimal goodGiftCardtotal=new BigDecimal(0);
+        String marketingStoreGiftCardMemberListId=null;
+
+        for (Map<String,Object> m:myStoreGoods) {
+            GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(m.get("goodSpecificationId").toString());
+            GoodStoreList goodStoreList=iGoodStoreListService.getById(m.get("goodId").toString());
+            goodsTotal=goodsTotal.add(goodStoreSpecification.getCostPrice());
+            //添加商品记录
+            OrderStoreGoodRecord orderStoreGoodRecord=new OrderStoreGoodRecord();
+            orderStoreGoodRecord.setDelFlag("0");
+            orderStoreGoodRecord.setOrderStoreSubListId(orderStoreSubList.getId());
+            orderStoreGoodRecord.setMainPicture(goodStoreList.getMainPicture());
+            orderStoreGoodRecord.setGoodStoreListId(goodStoreList.getId());
+            orderStoreGoodRecord.setGoodStoreSpecificationId(goodStoreSpecification.getId());
+            orderStoreGoodRecord.setGoodName(goodStoreList.getGoodName());
+            orderStoreGoodRecord.setSpecification(goodStoreSpecification.getSpecification());
+            orderStoreGoodRecord.setPrice(goodStoreSpecification.getPrice());
+            orderStoreGoodRecord.setVipPrice(goodStoreSpecification.getVipPrice());
+            orderStoreGoodRecord.setCostPrice(goodStoreSpecification.getCostPrice());
+            orderStoreGoodRecord.setUnitPrice((BigDecimal) m.get("price"));
+            orderStoreGoodRecord.setAmount((BigDecimal) m.get("quantity"));
+            orderStoreGoodRecord.setTotal(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
+            //商品总重量
+            orderStoreGoodRecord.setWeight(goodStoreSpecification.getWeight().multiply(new BigDecimal(m.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
+            iOrderStoreGoodRecordService.save(orderStoreGoodRecord);
+            //扣除库存
+            goodStoreList.setRepertory(goodStoreList.getRepertory().subtract(orderStoreGoodRecord.getAmount()));
+            //增加销量
+            if(goodStoreList.getSalesVolume()==null){
+                goodStoreList.setSalesVolume(new BigDecimal(0));
+            }
+            goodStoreList.setSalesVolume(goodStoreList.getSalesVolume().add(orderStoreGoodRecord.getAmount()));
+            goodStoreSpecification.setRepertory(goodStoreSpecification.getRepertory().subtract(orderStoreGoodRecord.getAmount()));
+            iGoodStoreListService.saveOrUpdate(goodStoreList);
+            iGoodStoreSpecificationService.saveOrUpdate(goodStoreSpecification);
+
+            //计算总价格
+            totalPrice=totalPrice.add(orderStoreGoodRecord.getTotal());
+
+            //判断礼品卡商品和金额
+            if(m.get("marketingStoreGiftCardMemberListId")!=null){
+                goodGiftCardtotal=goodGiftCardtotal.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
+                if(StringUtils.isBlank(marketingStoreGiftCardMemberListId)){
+                    marketingStoreGiftCardMemberListId=m.get("marketingStoreGiftCardMemberListId").toString();
+                }
+            }
+
+            //店铺成本价
+            costPrice=costPrice.add(goodStoreSpecification.getCostPrice().multiply((BigDecimal) m.get("quantity")));
+            //商品总件数
+            allNumberUnits=allNumberUnits.add((BigDecimal) m.get("quantity"));
+        }
+        //商品总价(成本价)
+        orderStoreSubList.setGoodsTotal(goodsTotal);
+        //应付款
+        orderStoreSubList.setCustomaryDues(orderStoreSubList.getGoodsTotal().add(orderStoreSubList.getShipFee()));
+        //实付款
+        orderStoreSubList.setActualPayment(orderStoreSubList.getGoodsTotal().add(orderStoreSubList.getShipFee()));
+        //保存订单信息
+        iOrderStoreSubListService.saveOrUpdate(orderStoreSubList);
+
+
+        //子订单数(拆分供应商后写入)
+        orderStoreList.setChildOrder(new BigDecimal(1));
+        //设置商品总价
+        orderStoreList.setGoodsTotal(totalPrice);
+        //运费
+        orderStoreList.setShipFee(freight);
+        //商品总件数
+        orderStoreList.setAllNumberUnits(allNumberUnits);
+        //成本价
+        costPrice=costPrice.add(freight);
+        orderStoreList.setCostPrice(costPrice);
+
+        //控制优惠金额的优惠幅度
+        if(totalPrice.subtract(orderStoreList.getCoupon()).doubleValue()<0){
+            orderStoreList.setCoupon(totalPrice);
+        }
+
+
+        //应付款
+        orderStoreList.setCustomaryDues(totalPrice.subtract(orderStoreList.getCoupon()));
+        //实付款
+        orderStoreList.setActualPayment(totalPrice.subtract(orderStoreList.getCoupon()));
+
+        //实付款小于等于，就设置为0
+        if(orderStoreList.getActualPayment().doubleValue()<=0){
+            orderStoreList.setActualPayment(new BigDecimal(0));
+        }
+
+        //给应付款和支付款加上运费
+        orderStoreList.setCustomaryDues(orderStoreList.getCustomaryDues().add(freight));
+        //实付款
+        orderStoreList.setActualPayment(orderStoreList.getActualPayment().add(freight));
+
+        //无优惠的总价
+        totalPrice=totalPrice.add(freight);
+
+
+        //判断礼品卡的优惠
+        if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){
+            MarketingStoreGiftCardMemberList marketingStoreGiftCardMemberList=iMarketingStoreGiftCardMemberListService.getById(marketingStoreGiftCardMemberListId);
+            if(marketingStoreGiftCardMemberList.getDenomination().subtract(goodGiftCardtotal).doubleValue()<0){
+                goodGiftCardtotal=marketingStoreGiftCardMemberList.getDenomination();
+            }
+            orderStoreList.setActiveId(marketingStoreGiftCardMemberListId);
+            orderStoreList.setOrderType("7");
+        }
+
+        //设置礼品卡优惠金额
+        orderStoreList.setGiftCardTotal(goodGiftCardtotal);
+
+        //应付款
+        orderStoreList.setCustomaryDues(totalPrice.subtract(goodGiftCardtotal));
+        //实付款
+        orderStoreList.setActualPayment(totalPrice.subtract(goodGiftCardtotal));
+
+        //实际分销佣金
+        BigDecimal actualBrokerage = new BigDecimal(0);
+
+        //商品利润
+        orderStoreList.setProfit(orderStoreList.getActualPayment().subtract(costPrice));
+        //分销佣金
+        orderStoreList.setDistributionCommission(new BigDecimal(0));
+        if (orderStoreList.getProfit().doubleValue()>0){
+            LambdaQueryWrapper<MarketingStoreDistributionSetting> marketingStoreDistributionSettingLambdaQueryWrapper = new LambdaQueryWrapper<MarketingStoreDistributionSetting>()
+                    .eq(MarketingStoreDistributionSetting::getDelFlag, "0")
+                    .eq(MarketingStoreDistributionSetting::getStatus, "1")
+                    .eq(MarketingStoreDistributionSetting::getSysUserId, orderStoreList.getSysUserId());
+            if (iMarketingStoreDistributionSettingService.count(marketingStoreDistributionSettingLambdaQueryWrapper)>0){
+                //获取分销比例
+                MarketingStoreDistributionSetting marketingStoreDistributionSetting = iMarketingStoreDistributionSettingService.list(marketingStoreDistributionSettingLambdaQueryWrapper).get(0);
+                
+                orderStoreList.setDistributionCommission(orderStoreList.getActualPayment().subtract(costPrice));
+                
+                if (oConvertUtils.isNotEmpty(marketingStoreDistributionSetting) && StringUtils.isNotBlank(memberList.getPromoterType()) && StringUtils.isNotBlank(memberList.getPromoter())){
+                    //判断推广人是否为用户
+                    if (memberList.getPromoterType().equals("1")){
+                        MemberList firstMemberList = iMemberListService.getById(memberList.getPromoter());
+                        //判断用户是否为vip
+                        if (firstMemberList.getMemberType().equals("0")){
+                            BigDecimal commonFirst = marketingStoreDistributionSetting.getCommonFirst();
+                            //普通用户一级分销
+                            if (commonFirst.doubleValue()>0){
+                                MemberRechargeRecord memberRechargeRecord = new MemberRechargeRecord()
+                                        .setDelFlag("0")
+                                        .setMemberListId(firstMemberList.getId())
+                                        .setPayType("3")
+                                        .setGoAndCome("0")
+                                        .setAmount(orderStoreList.getDistributionCommission().multiply(commonFirst.divide(new BigDecimal(100))))
+                                        .setTradeStatus("0")
+                                        .setOrderNo(OrderNoUtils.getOrderNo())
+                                        .setOperator("系统")
+                                        .setRemark("订单分销奖励 (一) ["+orderStoreList.getOrderNo()+"]")
+                                        .setPayment("0")
+                                        .setTradeNo(orderStoreList.getOrderNo())
+                                        .setTradeType("0")
+                                        .setMemberLevel("1")
+                                        .setTMemberListId(orderStoreList.getMemberListId());
+                                iMemberRechargeRecordService.save(memberRechargeRecord);
+                                actualBrokerage = actualBrokerage.add(memberRechargeRecord.getAmount());
+
+                                myStoreGoods.forEach(sg->{
+
+                                    GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(sg.get("goodSpecificationId").toString());
+
+                                    GoodStoreList goodStoreList=iGoodStoreListService.getById(sg.get("goodId").toString());
+
+                                    iMemberDistributionRecordService.save(new MemberDistributionRecord()
+                                            .setDelFlag("0")
+                                            .setMemberRechargeRecordId(memberRechargeRecord.getId())
+                                            .setGoodPicture(goodStoreList.getMainPicture())
+                                            .setGoodName(goodStoreList.getGoodName())
+                                            .setGoodSpecification(goodStoreSpecification.getSpecification())
+                                            .setCommission(((BigDecimal)sg.get("price"))
+                                                    .multiply(((BigDecimal)sg.get("quantity")))
+                                                    .divide(orderStoreList.getGoodsTotal(),2,BigDecimal.ROUND_UP)
+                                                    .multiply(memberRechargeRecord.getAmount())));
+                                });
+                                log.info("形成待支付订单一级分销：" + memberRechargeRecord.getAmount() + "--普通会员冻结金额：" + firstMemberList.getAccountFrozen() + "--会员：" + firstMemberList.getNickName());
+
+                            }
+                        }
+                        //判断用户是VIP
+                        if (firstMemberList.getMemberType().equals("1")){
+
+                            BigDecimal vipFirst = marketingStoreDistributionSetting.getVipFirst();
+
+                            if (vipFirst.doubleValue()>0){
+                                MemberRechargeRecord memberRechargeRecord = new MemberRechargeRecord()
+                                        .setDelFlag("0")
+                                        .setMemberListId(firstMemberList.getId())
+                                        .setPayType("3")
+                                        .setGoAndCome("0")
+                                        .setAmount(orderStoreList.getDistributionCommission().multiply(vipFirst.divide(new BigDecimal(100))))
+                                        .setTradeStatus("0")
+                                        .setOrderNo(OrderNoUtils.getOrderNo())
+                                        .setOperator("系统")
+                                        .setRemark("订单分销奖励 (一) ["+orderStoreList.getOrderNo()+"]")
+                                        .setPayment("0")
+                                        .setTradeNo(orderStoreList.getOrderNo())
+                                        .setTradeType("0")
+                                        .setMemberLevel("1")
+                                        .setTMemberListId(orderStoreList.getMemberListId());
+                                iMemberRechargeRecordService.save(memberRechargeRecord);
+                                actualBrokerage = actualBrokerage.add(memberRechargeRecord.getAmount());
+
+                                myStoreGoods.forEach(sg->{
+
+                                    GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(sg.get("goodSpecificationId").toString());
+
+                                    GoodStoreList goodStoreList=iGoodStoreListService.getById(sg.get("goodId").toString());
+
+                                    iMemberDistributionRecordService.save(new MemberDistributionRecord()
+                                            .setDelFlag("0")
+                                            .setMemberRechargeRecordId(memberRechargeRecord.getId())
+                                            .setGoodPicture(goodStoreList.getMainPicture())
+                                            .setGoodName(goodStoreList.getGoodName())
+                                            .setGoodSpecification(goodStoreSpecification.getSpecification())
+                                            .setCommission(((BigDecimal)sg.get("price"))
+                                                    .multiply(((BigDecimal)sg.get("quantity")))
+                                                    .divide(orderStoreList.getGoodsTotal(),2,BigDecimal.ROUND_UP)
+                                                    .multiply(memberRechargeRecord.getAmount())));
+                                });
+                                log.info("形成待支付订单一级分销：" + memberRechargeRecord.getAmount() + "--vip会员冻结金额：" + firstMemberList.getAccountFrozen() + "--vip会员：" + firstMemberList.getNickName());
+
+                            }
+                        }
+                        //判断二级分销有没有上级
+                        if (StringUtils.isNotBlank(firstMemberList.getPromoterType())&&StringUtils.isNotBlank(firstMemberList.getPromoterType())){
+                            if (firstMemberList.getPromoterType().equals("1")) {
+
+                                MemberList secondMemberList = iMemberListService.getById(firstMemberList.getPromoter());
+                                //推广人为普通会员
+                                if (secondMemberList.getMemberType().equals("0")){
+                                    BigDecimal commonSecond = marketingStoreDistributionSetting.getCommonSecond();
+                                    if (commonSecond.doubleValue() > 0){
+                                        MemberRechargeRecord memberRechargeRecord = new MemberRechargeRecord()
+                                                .setDelFlag("0")
+                                                .setMemberListId(secondMemberList.getId())
+                                                .setPayType("3")
+                                                .setGoAndCome("0")
+                                                .setAmount(orderStoreList.getDistributionCommission().multiply(commonSecond.divide(new BigDecimal(100))))
+                                                .setTradeStatus("0")
+                                                .setOrderNo(OrderNoUtils.getOrderNo())
+                                                .setOperator("系统")
+                                                .setRemark("订单分销奖励 (二) ["+orderStoreList.getOrderNo()+"]")
+                                                .setPayment("0")
+                                                .setTradeNo(orderStoreList.getOrderNo())
+                                                .setTradeType("0")
+                                                .setMemberLevel("2")
+                                                .setTMemberListId(orderStoreList.getMemberListId());
+                                        iMemberRechargeRecordService.save(memberRechargeRecord);
+                                        actualBrokerage = actualBrokerage.add(memberRechargeRecord.getAmount());
+
+                                        myStoreGoods.forEach(sg->{
+
+                                            GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(sg.get("goodSpecificationId").toString());
+
+                                            GoodStoreList goodStoreList=iGoodStoreListService.getById(sg.get("goodId").toString());
+
+                                            iMemberDistributionRecordService.save(new MemberDistributionRecord()
+                                                    .setDelFlag("0")
+                                                    .setMemberRechargeRecordId(memberRechargeRecord.getId())
+                                                    .setGoodPicture(goodStoreList.getMainPicture())
+                                                    .setGoodName(goodStoreList.getGoodName())
+                                                    .setGoodSpecification(goodStoreSpecification.getSpecification())
+                                                    .setCommission(((BigDecimal)sg.get("price"))
+                                                            .multiply(((BigDecimal)sg.get("quantity")))
+                                                            .divide(orderStoreList.getGoodsTotal(),2,BigDecimal.ROUND_UP)
+                                                            .multiply(memberRechargeRecord.getAmount())));
+                                        });
+                                        log.info("形成待支付订单二级分销：" + memberRechargeRecord.getAmount() + "--二级分销普通会员冻结金额：" + secondMemberList.getAccountFrozen() + "--二级分销会员：" + secondMemberList.getNickName());
+
+                                    }
+                                }
+                                if (secondMemberList.getMemberType().equals("1")){
+                                    BigDecimal vipSecond = marketingStoreDistributionSetting.getVipSecond();
+                                    if (vipSecond.doubleValue() > 0){
+                                        MemberRechargeRecord memberRechargeRecord = new MemberRechargeRecord()
+                                                .setDelFlag("0")
+                                                .setMemberListId(secondMemberList.getId())
+                                                .setPayType("3")
+                                                .setGoAndCome("0")
+                                                .setAmount(orderStoreList.getDistributionCommission().multiply(vipSecond.divide(new BigDecimal(100))))
+                                                .setTradeStatus("0")
+                                                .setOrderNo(OrderNoUtils.getOrderNo())
+                                                .setOperator("系统")
+                                                .setRemark("订单分销奖励 (二) ["+orderStoreList.getOrderNo()+"]")
+                                                .setPayment("0")
+                                                .setTradeNo(orderStoreList.getOrderNo())
+                                                .setTradeType("0")
+                                                .setMemberLevel("2")
+                                                .setTMemberListId(orderStoreList.getMemberListId());
+                                        iMemberRechargeRecordService.save(memberRechargeRecord);
+                                        actualBrokerage = actualBrokerage.add(memberRechargeRecord.getAmount());
+
+                                        myStoreGoods.forEach(sg->{
+
+                                            GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(sg.get("goodSpecificationId").toString());
+
+                                            GoodStoreList goodStoreList=iGoodStoreListService.getById(sg.get("goodId").toString());
+
+                                            iMemberDistributionRecordService.save(new MemberDistributionRecord()
+                                                    .setDelFlag("0")
+                                                    .setMemberRechargeRecordId(memberRechargeRecord.getId())
+                                                    .setGoodPicture(goodStoreList.getMainPicture())
+                                                    .setGoodName(goodStoreList.getGoodName())
+                                                    .setGoodSpecification(goodStoreSpecification.getSpecification())
+                                                    .setCommission(((BigDecimal)sg.get("price"))
+                                                            .multiply(((BigDecimal)sg.get("quantity")))
+                                                            .divide(orderStoreList.getGoodsTotal(),2,BigDecimal.ROUND_UP)
+                                                            .multiply(memberRechargeRecord.getAmount())));
+                                        });
+                                        log.info("形成待支付订单二级分销：" + memberRechargeRecord.getAmount() + "--二级分销vip会员冻结金额：" + secondMemberList.getAccountFrozen() + "--二级分销会员：" + secondMemberList.getNickName());
+
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        log.info("实际分销金额：" + actualBrokerage);
+        //净利润
+        orderStoreList.setRetainedProfits(orderStoreList.getProfit().subtract(actualBrokerage));
+        //保存订单信息
+        this.saveOrUpdate(orderStoreList);
+
+        //判断礼品卡的优惠
+        if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){
+            iMarketingStoreGiftCardMemberListService.subtractBlance(marketingStoreGiftCardMemberListId,goodGiftCardtotal,orderStoreList.getOrderNo(),"1");
+        }
+        return orderStoreList;
+    }
+
+    @Override
+    @Transactional
+    public Boolean paySuccessOrder(String id, PayOrderCarLog payOrderCarLog) {
+        //修改订单成功状态信息
+        OrderStoreList orderStoreList=this.getById(id);
+        if(orderStoreList.getStatus().equals("1")){
+            return true;
+        }
+        orderStoreList.setStatus("1");
+
+        orderStoreList.setModePayment(payOrderCarLog.getPayModel());//支付方式的设定
+        log.info("支付成功后日志内容："+JSON.toJSONString(payOrderCarLog));
+        BigDecimal integralValue=iMarketingWelfarePaymentsSettingService.getIntegralValue();
+        if(payOrderCarLog.getPayPrice().doubleValue()!=0) {
+            orderStoreList.setPayPrice(orderStoreList.getActualPayment().divide(payOrderCarLog.getAllTotalPrice(), 2, RoundingMode.HALF_UP).multiply(payOrderCarLog.getPayPrice()));
+        }
+        if(payOrderCarLog.getBalance().doubleValue()!=0) {
+            orderStoreList.setBalance(orderStoreList.getActualPayment().divide(payOrderCarLog.getAllTotalPrice(), 2, RoundingMode.HALF_UP).multiply(payOrderCarLog.getBalance()));
+        }
+        if(payOrderCarLog.getWelfarePayments().doubleValue()!=0) {
+            orderStoreList.setPayWelfarePayments(orderStoreList.getActualPayment().divide(payOrderCarLog.getAllTotalPrice(), 2, RoundingMode.HALF_UP).multiply(payOrderCarLog.getWelfarePayments()));
+            orderStoreList.setPayWelfarePaymentsPrice(orderStoreList.getPayWelfarePayments().multiply(integralValue));
+        }
+
+
+        orderStoreList.setPayTime(new Date());
+        //设置交易流水号
+        orderStoreList.setSerialNumber(payOrderCarLog.getId());
+        orderStoreList.setHftxSerialNumber(payOrderCarLog.getSerialNumber());
+        this.saveOrUpdate(orderStoreList);
+        iStoreCashierRoutingService.independentAccountOrderBalance(orderStoreList);
+
+        //修改子订单状态
+        OrderStoreSubList orderStoreSubList=new OrderStoreSubList();
+        orderStoreSubList.setStatus("1");
+        UpdateWrapper<OrderStoreSubList> orderProviderListUpdateWrapper=new UpdateWrapper<>();
+        orderProviderListUpdateWrapper.eq("order_store_list_id",orderStoreList.getId());
+        iOrderStoreSubListService.update(orderStoreSubList,orderProviderListUpdateWrapper);
+        //分销记录条件构造器
+        LambdaQueryWrapper<MemberRechargeRecord> memberRechargeRecordLambdaQueryWrapper = new LambdaQueryWrapper<MemberRechargeRecord>()
+                .eq(MemberRechargeRecord::getTradeNo, orderStoreList.getOrderNo())
+                .eq(MemberRechargeRecord::getTradeType, "0")
+                .eq(MemberRechargeRecord::getTradeStatus, "0")
+                .eq(MemberRechargeRecord::getPayType, "3");
+        //查出分销记录
+        if (iMemberRechargeRecordService.count(memberRechargeRecordLambdaQueryWrapper)>0){
+            List<MemberRechargeRecord> memberRechargeRecords = iMemberRechargeRecordService.list(memberRechargeRecordLambdaQueryWrapper);
+            memberRechargeRecords.forEach(mrrs->{
+                //修改分销记录状态
+                iMemberRechargeRecordService.saveOrUpdate(mrrs.setTradeStatus("2"));
+                MemberList memberList = iMemberListService.getById(mrrs.getMemberListId());
+                //分配分销佣金
+                iMemberListService.saveOrUpdate(memberList
+                        .setAccountFrozen(memberList.getAccountFrozen().add(mrrs.getAmount()))
+                        .setTotalCommission(memberList.getTotalCommission().add(mrrs.getAmount())));
+            });
+        }
+        return true;
+    }
+
+    @Override
+    public void abrogateOrder(String id, String CloseExplain, String closeType) {
+        OrderStoreList orderStoreList=this.getById(id);
+        //买家关闭
+        orderStoreList.setCloseType(closeType);
+        orderStoreList.setCloseExplain(CloseExplain);
+        orderStoreList.setCloseTime(new Date());
+        //交易关闭
+        orderStoreList.setStatus("4");
+        this.saveOrUpdate(orderStoreList);
+        //礼品卡金额退回
+        if(orderStoreList.getOrderType().equals("7")&&StringUtils.isNotBlank(orderStoreList.getActiveId())&&orderStoreList.getGiftCardTotal().doubleValue()>0){
+            iMarketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(),orderStoreList.getGiftCardTotal(),orderStoreList.getOrderNo(),"2");
+        }
+        QueryWrapper<OrderStoreSubList> orderStoreSubListQueryWrapper=new QueryWrapper<>();
+        orderStoreSubListQueryWrapper.eq("order_store_list_id",id);
+        List<OrderStoreSubList> orderStoreSubLists=iOrderStoreSubListService.list(orderStoreSubListQueryWrapper);
+        orderStoreSubLists.forEach(oss->{
+            oss.setStatus("4");
+            iOrderStoreSubListService.saveOrUpdate(oss);
+            //退回库存
+            QueryWrapper<OrderStoreGoodRecord> orderStoreGoodRecordQueryWrapper=new QueryWrapper<>();
+            orderStoreGoodRecordQueryWrapper.eq("order_store_sub_list_id",oss.getId());
+            List<OrderStoreGoodRecord> orderStoreGoodRecords=iOrderStoreGoodRecordService.list(orderStoreGoodRecordQueryWrapper);
+            orderStoreGoodRecords.forEach(osgr->{
+                String goodStoreListId=osgr.getGoodStoreListId();
+                String goodStoreSpecificationId=osgr.getGoodStoreSpecificationId();
+                GoodStoreList goodStoreList=iGoodStoreListService.getById(goodStoreListId);
+                if(goodStoreList!=null){
+                    goodStoreList.setRepertory(goodStoreList.getRepertory().add(osgr.getAmount()));
+                    goodStoreList.setSalesVolume(goodStoreList.getSalesVolume().subtract(osgr.getAmount()));
+                    iGoodStoreListService.saveOrUpdate(goodStoreList);
+                    GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(goodStoreSpecificationId);
+                    if(goodStoreSpecification!=null) {
+                        goodStoreSpecification.setRepertory(goodStoreSpecification.getRepertory().add(osgr.getAmount()));
+                        iGoodStoreSpecificationService.saveOrUpdate(goodStoreSpecification);
+                    }
+                }
+            });
+        });
+
+        //查询出分销用户
+        List<MemberRechargeRecord> memberRechargeRecords = iMemberRechargeRecordService.list(new LambdaQueryWrapper<MemberRechargeRecord>()
+                .eq(MemberRechargeRecord::getTradeNo, orderStoreList.getOrderNo())
+                .eq(MemberRechargeRecord::getTradeType, "0")
+                .eq(MemberRechargeRecord::getTradeStatus, "0")
+                .eq(MemberRechargeRecord::getPayType, "3"));
+        if (oConvertUtils.isNotEmpty(memberRechargeRecords)){
+            //遍历出分销用户
+            memberRechargeRecords.forEach(mrrs->{
+                //交易关闭
+                iMemberRechargeRecordService.saveOrUpdate(mrrs
+                        .setTradeStatus("7"));
+            });
+        }
+
+
+        //店铺查询条件
+        LambdaQueryWrapper<StoreManage> storeManageLambdaQueryWrapper = new LambdaQueryWrapper<StoreManage>()
+                .eq(StoreManage::getSysUserId, orderStoreList.getSysUserId());
+
+        long count = iStoreManageService.count(storeManageLambdaQueryWrapper);
+    }
+
+
+    @Override
+    @Transactional
+    public void refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
+
+        OrderStoreList orderStoreList=this.getById(id);
+        if(orderStoreList.getStatus().equals("0")||orderStoreList.getStatus().equals("4")){
+            return;
+        }
+        //退回款项
+        if(orderStoreList.getPayPrice().doubleValue()>0){
+            try {
+                Map<String,Object> balanceMap=hftxPayUtils.getSettleAccountBalance();
+                if(!balanceMap.get("status").equals("succeeded")){
+                    log.info("汇付账户的余额查询出错");
+                    return;
+                }
+                if(Double.parseDouble(balanceMap.get("avl_balance").toString())<orderStoreList.getPayPrice().doubleValue()){
+                    log.info("汇付账户的余额不足");
+                    return;
+                }
+            } catch (BaseAdaPayException e) {
+                e.printStackTrace();
+            }
+            Map<String, Object> resultMap=payUtils.refund(orderStoreList.getPayPrice(),orderStoreList.getSerialNumber(),orderStoreList.getHftxSerialNumber());
+            if(resultMap.get("status").equals("failed")){
+                log.info("现金退款失败");
+                return;
+            }
+            orderStoreList.setRefundJson(JSON.toJSONString(resultMap));
+        }
+        this.saveOrUpdate(orderStoreList);
+        //退回余额
+        iMemberListService.addBlance(orderStoreList.getMemberListId(),orderStoreList.getBalance(),orderStoreList.getOrderNo(),"2");
+        //退回交易积分
+        iMemberWelfarePaymentsService.addWelfarePayments(orderStoreList.getMemberListId(),orderStoreList.getPayWelfarePayments(),"20",orderStoreList.getOrderNo(),"");
+        //取消订单
+        this.abrogateOrder(id,closeExplain,closeType);
+    }
+
+
+
+
+    @Override
+    public void affirmOrder(String id) {
+        OrderStoreList orderStoreList=this.getById(id);
+        orderStoreList.setDeliveryTime(new Date());
+        orderStoreList.setStatus("3");
+        this.saveOrUpdate(orderStoreList);
+        QueryWrapper<OrderStoreSubList> orderStoreSubListQueryWrapper=new QueryWrapper<>();
+        orderStoreSubListQueryWrapper.eq("order_store_list_id",id);
+        List<OrderStoreSubList> orderStoreSubLists=iOrderStoreSubListService.list(orderStoreSubListQueryWrapper);
+        orderStoreSubLists.stream().forEach(oss->{
+            iOrderStoreSubListService.saveOrUpdate(oss.setStatus("3"));
+        });
+
+    }
+
+    /**
+     * 待支付订单超时数据
+     * @param hour
+     * @return
+     */
+    @Override
+    public List<OrderStoreList>  getCancelOrderStoreList(String hour){
+        return  baseMapper.getCancelOrderStoreList(hour);
+    }
+    /**
+     * 定时器取消订单
+     */
+    @Override
+    public void cancelOrderStoreListJob(){
+        //过期时间(小时)
+        String  hour= iSysDictService
+                .queryTableDictTextByKey("sys_dict_item","item_value","item_text","common_order_payment_timeout");
+        if(StringUtils.isNotBlank(hour)){
+            List<OrderStoreList>  orderStoreListList   = baseMapper.getCancelOrderStoreList(hour);
+            orderStoreListList.forEach(ol->{
+                log.info("定时器取消 店铺 待支付订单超时未支付:订单编号:"+ol.getOrderNo());
+                abrogateOrder(ol.getId(), "0", "0");
+            });
+
+        }
+
+    }
+    /**
+     * 返回待支付订单计时器(秒)
+     * @param id
+     * @param hour
+     * @return
+     */
+    @Override
+    public String getOrderStoreListTimer(String id,String hour){
+       return baseMapper.getOrderStoreListTimer(id,hour);
+    }
+    /**
+     * 确认订单超时数据
+     * @param hour
+     * @return
+     */
+    @Override
+    public List<OrderStoreList>   getStoreConfirmReceiptOrderList(String hour){
+        return  baseMapper.getStoreConfirmReceiptOrderList(hour);
+    }
+    /**
+     * 定时器取消订单
+     */
+    @Override
+    public void storeConfirmReceiptOrderList(){
+        //过期时间(小时)
+        String  hour= iSysDictService
+                .queryTableDictTextByKey("sys_dict_item","item_value","item_text","order_confirmation_receiving_timeout");
+        if(StringUtils.isNotBlank(hour)){
+            List<OrderStoreList>  orderStoreListList   = baseMapper.getStoreConfirmReceiptOrderList(hour);
+            orderStoreListList.forEach(ol->{
+                log.info("定时器取消 店铺 确认收货超时:订单编号:"+ol.getOrderNo());
+                affirmOrder(ol.getId());
+            });
+
+        }
+
+    }
+
+    @Override
+    public void confirmReceiptOrderJob() {
+        //确认收货时间超过7天后完成订单
+        //获取售后时间(单位:小时)
+        String hour = iSysDictService
+                .queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "order_after_service_timeout");
+        if (StringUtils.isNotBlank(hour)){
+            //查询出超过售后时间的订单(50条上限) 取店铺订单
+            List<OrderStoreList> orderCompletion = baseMapper.getOrderCompletion(hour);
+            //遍历店铺订单
+            orderCompletion.forEach(oc->{
+                log.info(" 店铺 确认收货后7天完成订单:订单编号:"+oc.getOrderNo());
+                this.accomplishStoreOrder(oc.getId());
+        });
+        }
+    }
+
+
+
+
+    /**
+     * 返回确认收货订单计时器(秒)
+     * @param id
+     * @param hour
+     * @return
+     */
+    @Override
+    public  String getStoreConfirmReceiptTimer( String id,String hour){
+        return baseMapper.getStoreConfirmReceiptTimer(id,hour);
+    };
+
+
+    @Override
+    @Transactional
+    public void accomplishStoreOrder(String id) {
+        OrderStoreList orderStoreList = this.getById(id);
+        //写入订单完成时间,状态为交易完成
+        this.saveOrUpdate(orderStoreList
+                .setCompletionTime(new Date())
+                .setStatus("5"));
+        MemberList member = iMemberListService.getById(orderStoreList.getMemberListId());
+        LambdaQueryWrapper<MemberGrade> memberGradeLambdaQueryWrapper = new LambdaQueryWrapper<MemberGrade>()
+                .eq(MemberGrade::getDelFlag,"0")
+                .eq(MemberGrade::getStatus,"1")
+                ;
+        String storeOrderTransaction = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "store_order_transaction");
+        //订单实付款大于0赠送成长值
+        if (orderStoreList.getActualPayment().doubleValue()>0&&iMemberGradeService.count(memberGradeLambdaQueryWrapper)>0&&storeOrderTransaction.equals("1")){
+            if (StringUtils.isNotBlank(member.getMemberGradeId())){
+                member.setGrowthValue(member.getGrowthValue().add(orderStoreList.getActualPayment()));
+                MemberGrade memberGrade = iMemberGradeService.getById(member.getMemberGradeId());
+
+                if (member.getGrowthValue().doubleValue() > memberGrade.getGrowthValueBig().doubleValue()){
+
+                    memberGradeLambdaQueryWrapper.le(MemberGrade::getGrowthValueSmall, member.getGrowthValue())
+                                    .ge(MemberGrade::getGrowthValueBig, member.getGrowthValue())
+                                    .orderByAsc(MemberGrade::getSort);
+
+                    if (iMemberGradeService.count(memberGradeLambdaQueryWrapper)>0){
+                        MemberGrade grade = iMemberGradeService.list(memberGradeLambdaQueryWrapper).get(0);
+                        if (member.getGrowthValue().doubleValue()>grade.getGrowthValueSmall().doubleValue()){
+                            member.setMemberGradeId(grade.getId());
+                        }
+
+                    }
+                }
+
+            }else {
+                member.setGrowthValue(member.getGrowthValue().add(orderStoreList.getActualPayment()));
+                memberGradeLambdaQueryWrapper
+                        .le(MemberGrade::getGrowthValueSmall, member.getGrowthValue())
+                        .ge(MemberGrade::getGrowthValueBig, member.getGrowthValue())
+                        .orderByAsc(MemberGrade::getSort)
+                ;
+
+                if (iMemberGradeService.count(memberGradeLambdaQueryWrapper)>0){
+                    if (member.getMemberType().equals("0")){
+                        member.setMemberType("1");
+                        member.setVipTime(new Date());
+                    }
+                    member.setMemberGradeId(iMemberGradeService.list(memberGradeLambdaQueryWrapper).get(0).getId());
+                }else {
+                    MemberGrade grade = iMemberGradeService.list(new LambdaQueryWrapper<MemberGrade>()
+                            .eq(MemberGrade::getDelFlag, "0")
+                            .eq(MemberGrade::getStatus, "1")
+                            .orderByDesc(MemberGrade::getSort)).get(0);
+                    if (grade.getGrowthValueBig().doubleValue()<=member.getGrowthValue().doubleValue()){
+                        if (member.getMemberType().equals("0")){
+                            member.setMemberType("1");
+                            member.setVipTime(new Date());
+                        }
+                        member.setMemberGradeId(grade.getId());
+                    }
+                }
+            }
+            iMemberListService.saveOrUpdate(member);
+            iMemberGrowthRecordService.save(new MemberGrowthRecord()
+                    .setMemberListId(member.getId())
+                    .setTradeNo(orderStoreList.getOrderNo())
+                    .setTradeType("1")
+                    .setRemark("订单交易["+orderStoreList.getOrderNo()+"]")
+                    .setGrowthValue(orderStoreList.getActualPayment())
+                    .setOrderNo(OrderNoUtils.getOrderNo())
+            );
+        }
+        //判断分销
+        if (orderStoreList.getDistributionCommission().doubleValue()>0){
+            //获取分销集合
+            List<MemberRechargeRecord> memberRechargeRecords = iMemberRechargeRecordService.list(new LambdaQueryWrapper<MemberRechargeRecord>()
+                    .eq(MemberRechargeRecord::getTradeNo, orderStoreList.getOrderNo())
+                    .eq(MemberRechargeRecord::getPayType, "3")
+                    .eq(MemberRechargeRecord::getGoAndCome, "0")
+                    .eq(MemberRechargeRecord::getTradeStatus, "2")
+                    .eq(MemberRechargeRecord::getTradeType, "0"));
+            //不为空时遍历
+            if (oConvertUtils.isNotEmpty(memberRechargeRecords)){
+                memberRechargeRecords.forEach(mrrs->{
+                    //获取分销会员
+                    MemberList memberList = iMemberListService.getById(mrrs.getMemberListId());
+                    //将分销冻结金额转为金额
+                    iMemberListService.saveOrUpdate(memberList
+                            .setAccountFrozen(memberList.getAccountFrozen().subtract(mrrs.getAmount()))
+                            .setBalance(memberList.getBalance().add(mrrs.getAmount())));
+                    //交易完成
+                    iMemberRechargeRecordService.saveOrUpdate(mrrs.setTradeStatus("5"));
+                    //生成资金流水记录
+                    iMemberAccountCapitalService.save(new MemberAccountCapital()
+                            .setDelFlag("0")
+                            .setMemberListId(mrrs.getMemberListId())
+                            .setPayType("3")
+                            .setGoAndCome("0")
+                            .setAmount(mrrs.getAmount())
+                            .setOrderNo(mrrs.getOrderNo())
+                            .setBalance(memberList.getBalance()));
+                    log.info(" 店铺 确认收货后7天完成订单:分销会员:"+ mrrs.getOrderNo());
+                });
+            }
+
+        }
+    }
+    /**
+     * 订单导出列表
+     * @param orderStoreListVO
+     * @return
+     */
+    @Override
+    public  List<OrderStoreListExportDTO> getOrderStoreListDtoExport(Map<String,Object> orderStoreListVO){
+       return baseMapper.getOrderStoreListDtoExport(orderStoreListVO);
+    };
+
+}

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagBatchMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingGiftBagBatchVO">
+        SELECT
+          *
+        FROM
+          marketing_gift_bag_batch mgbb
+        WHERE mgbb.`del_flag` = 0
+        <if test="marketingGiftBagBatchDTO.id != null and marketingGiftBagBatchDTO.id != ''">
+            AND mgbb.id LIKE concat('%',#{marketingGiftBagBatchDTO.id},'%')
+        </if>
+        <if test="marketingGiftBagBatchDTO.giftName != null and marketingGiftBagBatchDTO.giftName != ''">
+            AND mgbb.gift_name LIKE concat('%',#{marketingGiftBagBatchDTO.giftName},'%')
+        </if>
+        <if test="marketingGiftBagBatchDTO.status != null and marketingGiftBagBatchDTO.status != ''">
+            AND mgbb.status LIKE concat('%',#{marketingGiftBagBatchDTO.status},'%')
+        </if>
+        <if test="marketingGiftBagBatchDTO.createTime_begin != null and marketingGiftBagBatchDTO.createTime_begin != ''">
+            AND mgbb.create_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagBatchDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagBatchDTO.createTime_end != null and marketingGiftBagBatchDTO.createTime_end != ''">
+            AND mgbb.create_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagBatchDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagBatchDTO.updateTime_begin != null and marketingGiftBagBatchDTO.updateTime_begin != ''">
+            AND mgbb.update_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagBatchDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagBatchDTO.updateTime_end != null and marketingGiftBagBatchDTO.updateTime_end != ''">
+            AND mgbb.update_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagBatchDTO.updateTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagBatchDTO.startTime_begin != null and marketingGiftBagBatchDTO.startTime_begin != ''">
+            AND mgbb.start_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagBatchDTO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagBatchDTO.startTime_end != null and marketingGiftBagBatchDTO.startTime_end != ''">
+            AND mgbb.end_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagBatchDTO.startTime_end},' 23:59:59')
+        </if>
+        ORDER BY mgbb.`create_time` DESC
+    </select>
+    <select id="findMarketingGiftBagBatch" resultType="map">
+        SELECT
+          mgbb.`id`,
+          mgbb.`gift_name` AS giftName,
+          mgbb.`main_picture` AS mainPicture,
+          mgbb.`price`,
+          mgbb.`send_times` AS sendTimes,
+          CONCAT(
+            mgbb.`start_time`,
+            '~',
+            mgbb.`end_time`
+          ) AS issueTime,
+        DATE_FORMAT(
+        mgbb.create_time,
+        '%Y-%m-%d %H:%i'
+        ) AS createTime
+        FROM
+          marketing_gift_bag_batch mgbb
+        WHERE mgbb.`del_flag` = 0
+        <if test="marketingGiftBagBatchDTO.id != null and marketingGiftBagBatchDTO.id != ''">
+            AND mgbb.id LIKE concat('%',#{marketingGiftBagBatchDTO.id},'%')
+        </if>
+        <if test="marketingGiftBagBatchDTO.giftName != null and marketingGiftBagBatchDTO.giftName != ''">
+            AND mgbb.gift_name LIKE concat('%',#{marketingGiftBagBatchDTO.giftName},'%')
+        </if>
+        <if test="marketingGiftBagBatchDTO.startTime_begin != null and marketingGiftBagBatchDTO.startTime_begin != ''">
+            AND mgbb.start_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagBatchDTO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagBatchDTO.startTime_end != null and marketingGiftBagBatchDTO.startTime_end != ''">
+            AND mgbb.end_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagBatchDTO.startTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagBatchDTO.createTime_begin != null and marketingGiftBagBatchDTO.createTime_begin != ''">
+            AND mgbb.create_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagBatchDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagBatchDTO.createTime_end != null and marketingGiftBagBatchDTO.createTime_end != ''">
+            AND mgbb.create_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagBatchDTO.createTime_end},' 23:59:59')
+        </if>
+    </select>
+</mapper>

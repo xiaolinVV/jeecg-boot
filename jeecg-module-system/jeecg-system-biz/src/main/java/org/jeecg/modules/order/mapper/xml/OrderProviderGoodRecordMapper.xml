@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderProviderGoodRecordMapper">
+    <select id="selectOrderProviderListId" resultType="org.jeecg.modules.order.entity.OrderProviderGoodRecord">
+        select * from  order_provider_good_record  where del_flag = 0
+        <if test="orderProviderListId!=null and orderProviderListId!=''">
+            and  order_provider_list_id = #{orderProviderListId}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+    <select id="selectOrderProviderListIdDTO" resultType="org.jeecg.modules.order.dto.OrderProviderGoodRecordDTO">
+        SELECT
+        opgr.*,
+        gl.`good_no` AS goodNo
+        FROM
+        order_provider_good_record opgr
+        LEFT JOIN `good_list` gl
+        ON gl.id = opgr.good_list_id
+        WHERE opgr.del_flag = 0
+        <if test="orderProviderListId!=null and orderProviderListId!=''">
+            and  opgr.order_provider_list_id = #{orderProviderListId}
+        </if>
+        ORDER BY opgr.create_time DESC
+    </select>
+    <select id="getOrderProviderGoodRecordByOrderId" resultType="map">
+        SELECT
+          main_picture AS mainPicture,
+          good_name AS goodName,
+          specification,
+          unit_price AS price,
+          amount,
+          prefecture_label AS label
+        FROM
+          `order_provider_good_record`
+        WHERE order_provider_list_id IN
+          (SELECT
+            id
+          FROM
+            `order_provider_list`
+          WHERE order_list_id = #{orderId}
+          )
+    </select>
+    <select id="getOrderProviderGoodRecordByOrderIdNew" resultType="map">
+        SELECT
+        main_picture AS mainPicture,
+        good_name AS goodName,
+        specification,
+        unit_price AS price,
+        amount,
+        prefecture_label AS label
+        FROM
+        `order_provider_good_record`
+        WHERE order_provider_list_id IN
+        (SELECT
+        id
+        FROM
+        `order_provider_list`
+        WHERE order_list_id = #{orderId}
+        AND parent_id != '0'
+        )
+    </select>
+    <select id="getOrderProviderGoodRecordByOrderIdEvaluate" resultType="map">
+        SELECT
+         id,
+          main_picture AS mainPicture,
+          good_name AS goodName,
+          specification,
+           5 AS descriptionStar,
+          '' AS content,
+          '' AS pictures
+        FROM
+          `order_provider_good_record`
+        WHERE order_provider_list_id IN
+          (SELECT
+            id
+          FROM
+            `order_provider_list`
+          WHERE order_list_id = #{orderId});
+    </select>
+
+
+    <select id="getGoodListByOrderProviderListId" resultType="map">
+
+            SELECT
+          opgr.good_no AS goodNo,
+          (SELECT sku_no FROM `good_specification` WHERE id= opgr.`good_specification_id`) AS skuNo,
+          opgr.amount AS amount,
+          opgr.`good_list_id` AS goodListId,
+          opgr.`good_specification_id` AS goodSpecificationId,
+          opgr.`price` AS price,
+          opgr.id,
+          opgr.is_send as isSend
+        FROM
+          `order_provider_good_record` opgr
+        WHERE order_provider_list_id= #{orderProviderListId}
+</select>
+
+    <select id="iOrderProviderGoodRecordById" resultType="map">
+
+                SELECT
+              opgr.good_no AS goodNo,
+              opgr.sku_no  AS skuNo,
+              opgr.amount AS amount,
+              opgr.`good_list_id` AS goodListId,
+              opgr.`good_specification_id` AS goodSpecificationId,
+              opgr.`price` AS price,
+              opgr.id,
+              opgr.is_send as isSend
+            FROM
+              `order_provider_good_record` opgr
+            WHERE opgr.id= #{id}
+    </select>
+
+</mapper>

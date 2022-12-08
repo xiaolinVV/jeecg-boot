@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateGroupRecordMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateGroupRecordVO">
+        SELECT
+          *
+          FROM
+          (SELECT
+              mcgr.*,
+              ml.`nick_name`,
+              ml.`head_portrait`,
+              ml.phone,
+              mcr.qqzixuangu
+            FROM
+              marketing_certificate_group_record mcgr
+              LEFT JOIN member_list ml
+                ON mcgr.`member_list_id` = ml.`id`
+              LEFT JOIN marketing_certificate_record mcr
+                ON mcr.id = mcgr.marketing_certificate_record_id
+            WHERE mcgr.`del_flag` = 0 ) m ${ew.customSqlSegment}
+    </select>
+    <select id="getMemberList" resultType="map">
+        SELECT
+          ml.`nick_name` AS nickName,
+          ml.`head_portrait` AS headPortrait,
+          (mcgr.market_price - mcgr.activity_price)AS price
+        FROM
+          marketing_certificate_group_record mcgr
+          LEFT JOIN member_list ml
+            ON mcgr.`member_list_id` = ml.`id`
+        WHERE mcgr.`del_flag` = 0
+        ORDER BY mcgr.`create_time` DESC
+        LIMIT 10
+    </select>
+    <select id="getMemberListByMarketingCertificateGroupManageId" resultType="map">
+        SELECT
+          ml.id,
+          ml.`head_portrait` AS headPortrait
+        FROM
+          marketing_certificate_group_record mcgr
+          LEFT JOIN member_list ml
+            ON mcgr.`member_list_id` = ml.`id`
+        WHERE mcgr.`del_flag` = 0
+          AND mcgr.marketing_certificate_group_manage_id = #{marketingCertificateGroupManageId}
+        ORDER BY mcgr.group_identity DESC
+    </select>
+    <select id="getMarketingCertificateGroupManageRecordList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateGroupRecordVO">
+        SELECT
+          mcgr.*,
+          ml.`nick_name`,
+          ml.`head_portrait`,
+          ml.phone,
+          mcgl.`marketing_certificate_id`
+        FROM
+          marketing_certificate_group_record mcgr
+          LEFT JOIN member_list ml
+            ON mcgr.`member_list_id` = ml.`id`
+          LEFT JOIN marketing_certificate_group_list mcgl
+            ON mcgl.`id` = mcgr.`marketing_certificate_group_list_id`
+        WHERE mcgr.`marketing_certificate_group_manage_id` = #{id}
+    </select>
+</mapper>

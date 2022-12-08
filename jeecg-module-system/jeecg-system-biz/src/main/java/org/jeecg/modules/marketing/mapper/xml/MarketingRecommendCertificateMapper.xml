@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingRecommendCertificateMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingRecommendCertificateVO">
+        SELECT
+          mrc.*,
+          mc.`name`,
+          mc.`main_picture` ->>'$."0"' AS mainPicture
+        FROM
+          marketing_recommend_certificate mrc
+          LEFT JOIN marketing_certificate mc
+            ON mrc.`marketing_certificate_id` = mc.`id`
+        WHERE mrc.`del_flag` = 0
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.marketingCertificateId != null and marketingCertificateId.marketingCertificateId!=''">
+            AND mrc.marketing_certificate_id LIKE concat('%',#{marketingRecommendCertificateDTO.marketingCertificateId},'%')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.name != null and marketingRecommendCertificateDTO.name!=''">
+            AND mc.name LIKE concat('%',#{marketingRecommendCertificateDTO.name},'%')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.startTime_begin != null and marketingRecommendCertificateDTO.startTime_begin != ''">
+            and mrc.start_time <![CDATA[>=]]> concat(#{marketingRecommendCertificateDTO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.startTime_end != null and marketingRecommendCertificateDTO.startTime_end != ''">
+            AND mrc.start_time <![CDATA[<=]]> concat( #{marketingRecommendCertificateDTO.startTime_end},' 23:59:59')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.endTime_begin != null and marketingRecommendCertificateDTO.endTime_begin != ''">
+            and mrc.end_time <![CDATA[>=]]> concat(#{marketingRecommendCertificateDTO.endTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.endTime_end != null and marketingRecommendCertificateDTO.endTime_end != ''">
+            AND mrc.end_time <![CDATA[<=]]> concat( #{providerRechRargeRecordVO.endTime_end},' 23:59:59')
+        </if>
+        <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.status != null and marketingRecommendCertificateDTO.status!=''">
+            AND mrc.status = #{marketingRecommendCertificateDTO.status}
+        </if>
+        ORDER BY mrc.`create_time` DESC
+    </select>
+    <select id="findMarketingRecommendCertificateList" resultType="map">
+        SELECT
+        mc.`id`,
+        mc.`main_picture`AS mainPicture,
+        mc.`name`,
+        mc.`market_price`AS marketPrice,
+        mc.`price`,
+        mc.`cost_price` AS coverPlan,
+        (
+        CASE
+        mc.vouchers_way
+        WHEN 0
+        THEN CONCAT(
+        DATE_FORMAT(mc.start_time, '%Y-%m-%d'),
+        '~',
+        DATE_FORMAT(mc.end_time, '%Y-%m-%d')
+        )
+        WHEN 1
+        THEN CONCAT(
+        '领券当日起',
+        mc.dis_data,
+        mc.monad
+        )
+        WHEN 2
+        THEN CONCAT(
+        '领券次日起',
+        mc.dis_data,
+        mc.monad
+        )
+        ELSE ''
+        END
+        ) AS times
+        FROM
+        marketing_recommend_certificate mrc
+        LEFT JOIN marketing_certificate mc
+        ON mrc.`marketing_certificate_id` = mc.`id`
+        WHERE mrc.`del_flag` = 0
+        AND mc.`del_flag` = 0
+        AND mrc.`recommend_local` = 1
+        AND mrc.`status` = 1
+        AND mc.`status` = 1
+        AND mrc.`start_time` <![CDATA[<]]> NOW()
+        AND mrc.`end_time` <![CDATA[>]]> NOW()
+        ORDER BY mrc.`sort`,mrc.`create_time` DESC
+    </select>
+</mapper>

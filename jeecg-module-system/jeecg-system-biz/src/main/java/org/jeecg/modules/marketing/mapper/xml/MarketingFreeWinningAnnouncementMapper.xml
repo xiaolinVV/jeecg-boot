@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingFreeWinningAnnouncementMapper">
+
+
+    <select id="getMarketingFreeWinningAnnouncementIndex" resultType="map">
+                SELECT
+          DATE_FORMAT(mfs.`free_day`, '%m.%d') AS freeDay,
+          mfs.`serial_number` AS serialNumber,
+          mfwa.`total_free_times` AS totalFreeTimes
+        FROM
+          `marketing_free_winning_announcement` mfwa
+          LEFT JOIN `marketing_free_session` mfs
+            ON mfs.`id` = mfwa.`marketing_free_session_id`
+        WHERE mfwa.`del_flag` = '0'
+          AND mfwa.`status` = '1'
+        ORDER BY mfwa.`release_time` DESC
+        LIMIT 10
+    </select>
+
+    <select id="getMarketingFreeWinningAnnouncementList" resultType="map">
+                SELECT
+            DATE_FORMAT( mfs.`free_day`, '%m.%d' ) AS freeDay,
+            mfs.`serial_number` AS serialNumber,
+            mfwa.`total_free_times` AS totalFreeTimes,
+            DATE_FORMAT( mfs.start_time, '%m.%d' ) AS startTime,
+            DATE_FORMAT( mfs.end_time, '%m.%d' ) AS endTime
+        FROM
+            `marketing_free_winning_announcement` mfwa
+            LEFT JOIN `marketing_free_session` mfs ON mfs.`id` = mfwa.`marketing_free_session_id`
+        WHERE
+            mfwa.`del_flag` = '0'
+            AND mfwa.`status` = '1'
+        ORDER BY
+            mfwa.`release_time` DESC
+    </select>
+
+
+    <select id="selectMarketingFreeWinningAnnouncementList" parameterType="map" resultType="map">
+
+        SELECT
+          mfs.`serial_number` AS serialNumber,
+          mfs.`period_days` AS periodDays,
+          DATE_FORMAT(mfs.`start_time`, '%Y-%m-%d') AS startTime,
+          DATE_FORMAT(mfs.`end_time`, '%Y-%m-%d') AS endTime,
+          DATE_FORMAT(mfs.free_day, '%Y-%m-%d') AS freeDay,
+          mfwa.`marketing_free_session_id` AS marketingFreeSessionId,
+          mfwa.`id`,
+          mfwa.`practical_free_times` AS practicalFreeTimes,
+          mfwa.`virtual_free_times` AS virtualFreeTimes,
+          mfwa.`total_free_times` AS totalFreeTimes,
+          mfwa.`status`,
+          DATE_FORMAT(
+            mfwa.`release_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS releaseTime,
+          mfwa.`publisher`
+        FROM
+          `marketing_free_winning_announcement` mfwa
+          LEFT JOIN `marketing_free_session` mfs
+            ON mfwa.`marketing_free_session_id` = mfs.`id`
+        WHERE mfwa.`del_flag` = '0'
+
+        <if test="paramMap.serialNumber!=null and paramMap.serialNumber!=''">
+            and mfs.`serial_number`=#{paramMap.serialNumber}
+        </if>
+
+        <if test="paramMap.startTimeStart!=null and paramMap.startTimeStart!=''">
+            and DATE_FORMAT(mfs.`start_time`, '%Y-%m-%d') &gt;=#{paramMap.startTimeStart}
+        </if>
+
+        <if test="paramMap.startTimeEnd!=null and paramMap.startTimeEnd!=''">
+            and DATE_FORMAT(mfs.`start_time`, '%Y-%m-%d') &lt;=#{paramMap.startTimeEnd}
+        </if>
+
+        <if test="paramMap.endTimeStart!=null and paramMap.endTimeStart!=''">
+            and DATE_FORMAT(mfs.`end_time`, '%Y-%m-%d') &gt;=#{paramMap.endTimeStart}
+        </if>
+
+        <if test="paramMap.endTimeEnd!=null and paramMap.endTimeEnd!=''">
+            and DATE_FORMAT(mfs.`end_time`, '%Y-%m-%d') &lt;=#{paramMap.endTimeEnd}
+        </if>
+
+        <if test="paramMap.freeDayStart!=null and paramMap.freeDayStart!=''">
+            and mfs.free_day &gt;=#{paramMap.freeDayStart}
+        </if>
+
+        <if test="paramMap.freeDayEnd!=null and paramMap.freeDayEnd!=''">
+            and mfs.free_day &lt;=#{paramMap.freeDayEnd}
+        </if>
+
+        <if test="paramMap.freeDayStart!=null and paramMap.freeDayStart!=''">
+          and mfwa.`status`=#{paramMap.freeDayStart}
+        </if>
+
+        <if test="paramMap.releaseTimeStart!=null and paramMap.releaseTimeStart!=''">
+            and mfwa.`release_time` &gt;=#{paramMap.releaseTimeStart}
+        </if>
+
+        <if test="paramMap.releaseTimeEnd!=null and paramMap.releaseTimeEnd!=''">
+            and mfwa.`release_time` &lt;=#{paramMap.releaseTimeEnd}
+        </if>
+
+        ORDER BY mfs.free_day DESC
+
+    </select>
+</mapper>

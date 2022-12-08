@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagRecordMapper">
+
+
+    <select id="getMarketingGiftBagRecordList" parameterType="map" resultType="map">
+            SELECT
+            gift_name AS giftName,
+            price,
+            buy_limit AS buyLimit,
+            main_picture AS mainPicture,
+            id,
+            marketing_gift_bag_id as marketingGiftBagId,
+            0 AS giftBagType,
+            residue_pay_times AS residuePayTimes,
+            total_fee AS totalFee
+            FROM
+            `marketing_gift_bag_record`
+            WHERE pay_status='1'
+            AND del_flag = '0'
+            AND member_list_id=#{paramMap.memberId}
+
+            ORDER BY create_time DESC
+    </select>
+
+
+    <select id="findMarketingGiftBagRecordById" resultType="map">
+
+                    SELECT
+                    gift_name AS giftName,
+                    price,
+                    marketing_gift_bag_id AS id,
+                    buy_limit AS buyLimit,
+                    limit_times AS limitTimes,
+                    main_picture AS mainPicture,
+                    gift_deals AS giftDeals,
+                    gift_explain AS giftExplain,
+                    cover_plan as coverPlan,
+                    posters as posters,
+                    id AS mid,
+                    residue_pay_times AS residuePayTimes,
+                    total_fee AS totalFee
+                    FROM
+                    `marketing_gift_bag_record`
+                    WHERE id=#{id}
+
+    </select>
+    <select id="findGiftBagRecord" resultType="org.jeecg.modules.marketing.vo.MarketingGiftBagRecordVO">
+        SELECT
+          m.*
+        FROM
+        (SELECT
+        mgbr.id,
+        mgbr.create_time as createTime,
+        mgbr.marketing_gift_bag_id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        mgbr.`gift_no`,
+        mgbr.member_list_id,
+        mgbr.`gift_name`,
+        mgbr.`price`,
+        CONCAT(
+        mgb.`start_time`,
+        '~',
+        mgb.`end_time`
+        ) AS bagTime,
+        mgbr.`pay_time`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        mls.nick_name
+        FROM
+        member_list mls
+        WHERE mls.id = ml.`promoter`)
+        ELSE
+        (SELECT
+        username
+        FROM
+        sys_user su
+        WHERE su.id = ml.`sys_user_id`)
+        END
+        ) AS promoterName,
+        IF(
+        ml.`promoter_type` = 1,
+        (SELECT
+        IF(
+        mls.`promoter_type` = 1,
+        ( SELECT
+        mlss.nick_name
+        FROM
+        member_list mlss
+        WHERE mlss.id = mls.`promoter`),
+        '-'
+        )
+        FROM
+        member_list mls
+        WHERE mls.id = ml.`promoter`),
+        '-'
+        ) AS promoterTwoName,
+        mgbr.`pay_status`,
+        (SELECT
+        IF(
+        LENGTH(TRIM(m.`sub_store_name`)) > 0,
+        CONCAT(
+        m.`store_name`,
+        '(',
+        m.`sub_store_name`,
+        ')'
+        ),
+        m.`store_name`
+        )
+        FROM
+        store_manage m
+        WHERE m.sys_user_id = mgbr.`distribution_channel`) AS channelName,
+        mgbr.vip_privilege,
+        mgb.welfare_payments,
+        mgbr.distribution_privileges,
+        mgbr.team_privileges,
+        ml.sys_user_id,
+        IF(mgbr.t_member_id IS NOT NULL ,(SELECT
+        ml.`nick_name`
+        FROM
+        member_list ml
+        WHERE ml.`id` = mgbr.t_member_id),'-') AS shareName
+        FROM
+        marketing_gift_bag_record mgbr
+        LEFT JOIN member_list ml
+        ON mgbr.`member_list_id` = ml.`id`
+        LEFT JOIN marketing_gift_bag mgb
+        ON mgb.`id` = mgbr.`marketing_gift_bag_id`
+        LEFT JOIN store_manage sm
+        ON mgbr.`affiliation_store` = sm.`sys_user_id`
+        WHERE mgbr.`del_flag` = 0
+        AND mgbr.pay_status = 1
+        AND ml.`del_flag` = 0
+        <if test="marketingGiftBagRecordVO!=null and marketingGiftBagRecordVO.phone!=null and marketingGiftBagRecordVO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{marketingGiftBagRecordVO.phone},'%'))
+        </if>
+        <if test="marketingGiftBagRecordVO.nickName!=null and marketingGiftBagRecordVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',#{marketingGiftBagRecordVO.nickName},'%')
+        </if>
+        <if test="marketingGiftBagRecordVO!=null and marketingGiftBagRecordVO.giftNo!=null and marketingGiftBagRecordVO.giftNo!=''">
+            AND mgbr.gift_no LIKE concat('%',concat(#{marketingGiftBagRecordVO.giftNo},'%'))
+        </if>
+        <if test="marketingGiftBagRecordVO.id!=null and marketingGiftBagRecordVO.id!=''">
+            AND mgbr.id LIKE concat('%',#{marketingGiftBagRecordVO.id},'%')
+        </if>
+        <if test="marketingGiftBagRecordVO!=null and marketingGiftBagRecordVO.giftName!=null and marketingGiftBagRecordVO.giftName!=''">
+            AND mgbr.gift_name LIKE concat('%',concat(#{marketingGiftBagRecordVO.giftName},'%'))
+        </if>
+        <if test="marketingGiftBagRecordVO != null and marketingGiftBagRecordVO.payTime_begin != null and marketingGiftBagRecordVO.payTime_begin != ''">
+            AND mgbr.create_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagRecordVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagRecordVO != null and marketingGiftBagRecordVO.payTime_end != null and marketingGiftBagRecordVO.payTime_end != ''">
+            AND mgbr.create_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagRecordVO.payTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagRecordVO != null and marketingGiftBagRecordVO.startTime_begin != null and marketingGiftBagRecordVO.startTime_begin != ''">
+            AND mgb.start_time <![CDATA[>=]]> CONCAT(#{marketingGiftBagRecordVO.startTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingGiftBagRecordVO != null and marketingGiftBagRecordVO.endTime_end != null and marketingGiftBagRecordVO.endTime_end != ''">
+            AND mgb.end_time <![CDATA[<=]]> CONCAT( #{marketingGiftBagRecordVO.endTime_end},' 23:59:59')
+        </if>
+        <if test="marketingGiftBagRecordVO!=null and marketingGiftBagRecordVO.marketingGiftBagId!=null and marketingGiftBagRecordVO.marketingGiftBagId!=''">
+            AND mgbr.marketing_gift_bag_id = #{marketingGiftBagRecordVO.marketingGiftBagId}
+        </if>
+        <if test="marketingGiftBagRecordVO.allianceManageUserId!=null and marketingGiftBagRecordVO.allianceManageUserId!=''">
+            AND ml.sys_user_id IS NOT NULL
+        </if>
+        <if test="marketingGiftBagRecordVO.promoterName!=null and marketingGiftBagRecordVO.promoterName!=''">
+            AND (
+            CASE
+            ml.`promoter_type`
+            WHEN 0
+            THEN
+            (SELECT
+            IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+            sm.`store_name`,
+            '(',
+            sm.`sub_store_name`,
+            ')'
+            ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE sm.sys_user_id = ml.`promoter`)
+            WHEN 1
+            THEN
+            (SELECT
+            concat(mls.nick_name,'(',mls.phone,')')
+            FROM
+            member_list mls
+            WHERE mls.id = ml.`promoter`)
+            ELSE
+            '平台'
+            END
+            ) LIKE concat('%',#{marketingGiftBagRecordVO.promoterName},'%')
+        </if>
+        <if test="marketingGiftBagRecordVO.promoterTwoName!=null and marketingGiftBagRecordVO.promoterTwoName!=''">
+            AND (
+            ml.`promoter_type` = 1,
+            (SELECT
+            IF(
+            mls.`promoter_type` = 1,
+            ( SELECT
+            mlss.nick_name
+            FROM
+            member_list mlss
+            WHERE mlss.id = mls.`promoter`),
+            '-'
+            )
+            FROM
+            member_list mls
+            WHERE mls.id = ml.`promoter`)
+            ) LIKE concat('%',#{marketingGiftBagRecordVO.promoterTwoName},'%')
+        </if>
+        <if test="marketingGiftBagRecordVO.storeName!=null and marketingGiftBagRecordVO.storeName!=''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`sys_user_id` = mgbr.`affiliation_store`
+            ) LIKE concat('%',#{marketingGiftBagRecordVO.storeName},'%')
+        </if>
+        <if test="marketingGiftBagRecordVO.channelName!=null and marketingGiftBagRecordVO.channelName!=''">
+            AND (SELECT
+            IF(
+            LENGTH(TRIM(m.`sub_store_name`)) > 0,
+            CONCAT(
+            m.`store_name`,
+            '(',
+            m.`sub_store_name`,
+            ')'
+            ),
+            m.`store_name`
+            )
+            FROM
+            store_manage m
+            WHERE m.sys_user_id = mgbr.`distribution_channel`) LIKE concat('%',#{marketingGiftBagRecordVO.channelName},'%')
+        </if>
+        ORDER BY mgbr.`create_time` DESC) m
+        <if test="marketingGiftBagRecordVO.allianceManageUserId!=null and marketingGiftBagRecordVO.allianceManageUserId!=''">
+            LEFT JOIN store_manage smc
+            ON m.sys_user_id = smc.`sys_user_id`
+            WHERE smc.alliance_user_id = #{marketingGiftBagRecordVO.allianceManageUserId}
+        </if>
+    </select>
+</mapper>

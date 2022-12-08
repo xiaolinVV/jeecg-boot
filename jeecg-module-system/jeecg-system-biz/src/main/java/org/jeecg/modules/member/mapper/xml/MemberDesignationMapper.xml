@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberDesignationMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.member.vo.MemberDesignationVO">
+        SELECT
+        m.*,
+        IF(
+        m.is_average = 1 <![CDATA[&&]]> m.low_level_dividends = 1,
+        CONCAT(
+        m.mdIsAverage,
+        ', 参加低级别分红: ',
+        m.mdLowLevelDividends
+        ),
+        IF(
+        m.low_level_dividends = 1,
+        CONCAT(
+        '参加低级别分红: ',
+        m.mdLowLevelDividends
+        ),
+        IF(
+        m.is_average = 1,
+        m.mdIsAverage,
+        '无'
+        )
+        )
+        ) AS privilege
+        FROM
+        (SELECT
+        md.*,
+        IF(md.is_default = 0,'购买礼包赠送','无') AS upgradeCondition,
+        IF(
+        md.`is_average` = 1,
+        '均分当期称号分红资金',
+        ''
+        ) AS mdIsAverage,
+        IF(
+        md.`low_level_dividends` = 1,
+        (SELECT
+        GROUP_CONCAT(mdc.`name`)
+        FROM
+        member_designation mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`status` = 1
+        AND FIND_IN_SET(
+        mdc.id,
+        md.`member_designations`
+        )),
+        ''
+        ) AS mdLowLevelDividends,
+        IF(
+        LENGTH(TRIM(md.`custom_remark`)) > 0,
+        md.`custom_remark`,
+        '无'
+        ) AS mdCustomRemark,
+        mgb.`gift_name` AS giftName,
+        IF(mdg.group_name IS NULL ,'-',mdg.group_name) AS groupName
+        FROM
+        member_designation md
+        LEFT JOIN marketing_gift_bag mgb
+        ON md.`marketing_gift_bag_id` = mgb.`id`
+        LEFT JOIN member_designation_group mdg
+        ON md.member_designation_group_id = mdg.id
+        WHERE md.`del_flag` = 0
+        <if test="memberDesignationDTO.id != null and memberDesignationDTO.id != ''">
+            AND md.id LIKE concat('%',#{memberDesignationDTO.id},'%')
+        </if>
+        <if test="memberDesignationDTO.name != null and memberDesignationDTO.name != ''">
+            AND md.name LIKE concat('%',#{memberDesignationDTO.name},'%')
+        </if>
+        <if test="memberDesignationDTO.status != null and memberDesignationDTO.status != ''">
+            AND md.status = #{memberDesignationDTO.status}
+        </if>
+        <if test="memberDesignationDTO != null and memberDesignationDTO.createTime_begin != null and memberDesignationDTO.createTime_begin != ''">
+            and md.create_time <![CDATA[>=]]> CONCAT(#{memberDesignationDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberDesignationDTO != null and memberDesignationDTO.createTime_end != null and memberDesignationDTO.createTime_end != ''">
+            AND md.create_time <![CDATA[<=]]> CONCAT( #{memberDesignationDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberDesignationDTO != null and memberDesignationDTO.updateTime_begin != null and memberDesignationDTO.updateTime_begin != ''">
+            and md.update_time <![CDATA[>=]]> CONCAT(#{memberDesignationDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="memberDesignationDTO != null and memberDesignationDTO.updateTime_end != null and memberDesignationDTO.updateTime_end != ''">
+            AND md.update_time <![CDATA[<=]]> CONCAT( #{memberDesignationDTO.updateTime_end},' 23:59:59')
+        </if>
+        <if test="memberDesignationDTO.memberDesignationId != null and memberDesignationDTO.memberDesignationId != ''">
+            AND md.id = #{memberDesignationDTO.memberDesignationId}
+        </if>
+        <if test="memberDesignationDTO.groupName != null and memberDesignationDTO.groupName != ''">
+            AND mdg.group_name LIKE concat('%',#{memberDesignationDTO.groupName},'%')
+        </if>
+        ORDER BY md.sort
+        ) m
+    </select>
+    <select id="memberDesignationNameList" resultType="map">
+        SELECT
+          md.`name`,
+          md.`id` AS memberDesignationId,
+          md.participation
+        FROM
+          member_designation md
+        WHERE md.`del_flag` = 0
+          AND md.`status` = 1
+          AND md.is_default = 0
+          AND md.is_buy_giftbag = 1
+          <if test="id != null and id != ''">
+              AND md.member_designation_group_id = #{id}
+          </if>
+        ORDER BY md.`sort`
+    </select>
+    <select id="getMemberDesignationListBySort" resultType="map">
+        SELECT
+        md.`name`,
+        md.`id` AS memberDesignationId
+        FROM
+        member_designation md
+        WHERE md.`del_flag` = 0
+        AND md.`status` = 1
+        AND md.is_default = 0
+        AND md.member_designation_group_id = #{memberDesignationGroupId}
+        AND md.`sort` <![CDATA[<]]> #{sort}
+        ORDER BY md.`sort`
+    </select>
+    <select id="getMemberDesignationById" resultType="org.jeecg.modules.member.vo.MemberDesignationVO">
+        SELECT
+        m.*,
+        IF(
+        m.is_average = 1 <![CDATA[&&]]> m.low_level_dividends = 1,
+        CONCAT(
+        m.mdIsAverage,
+        ', 参加低级别分红: ',
+        m.mdLowLevelDividends
+        ),
+        IF(
+        m.low_level_dividends = 1,
+        CONCAT(
+        '参加低级别分红: ',
+        m.mdLowLevelDividends
+        ),
+        IF(
+        m.is_average = 1,
+        m.mdIsAverage,
+        ''
+        )
+        )
+        ) AS privilege
+        FROM
+        (SELECT
+        md.*,
+        IF(
+        LENGTH(TRIM(md.`straight_push_id`)) > 0,
+        CONCAT(
+        '直推人数',
+        md.`direct_referrals`,
+        ', 总推荐人数',
+        md.`total_recommend`,
+        '; 关联直推',
+        (SELECT
+        mdo.`name`
+        FROM
+        member_designation mdo
+        WHERE mdo.`id` = md.straight_push_id),
+        md.`straight_push_prople`,
+        '人'
+        ),
+        CONCAT(
+        '直推人数',
+        md.`direct_referrals`,
+        ', 总推荐人数',
+        md.`total_recommend`
+        )
+        ) AS upgradeCondition,
+        IF(
+        md.`is_average` = 1,
+        '均分当期称号分红资金',
+        ''
+        ) AS mdIsAverage,
+        IF(
+        md.`low_level_dividends` = 1,
+        (SELECT
+        GROUP_CONCAT(mdc.`name`)
+        FROM
+        member_designation mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`status` = 1
+        AND FIND_IN_SET(
+        mdc.id,
+        md.`member_designations`
+        )),
+        ''
+        ) AS mdLowLevelDividends,
+        IF(
+        LENGTH(TRIM(md.`custom_remark`)) > 0,
+        md.`custom_remark`,
+        ''
+        ) AS mdCustomRemark
+        FROM
+        member_designation md
+        WHERE md.`del_flag` = 0
+        AND md.id = #{memberDesignationId}
+        ) m
+    </select>
+</mapper>

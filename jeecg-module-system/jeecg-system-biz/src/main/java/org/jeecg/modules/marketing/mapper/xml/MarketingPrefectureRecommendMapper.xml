@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingPrefectureRecommendMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingPrefectureRecommendVO">
+        SELECT
+          mpr.*,
+          mp.`prefecture_name`
+        FROM
+          marketing_prefecture_recommend mpr
+          LEFT JOIN marketing_prefecture mp
+            ON mpr.`marketing_prefecture_id` = mp.`id`
+        WHERE mpr.`del_flag` = 0
+          AND mp.`del_flag` = 0
+          <if test="marketingPrefectureRecommendDTO.marketingPrefectureId != null and marketingPrefectureRecommendDTO.marketingPrefectureId != ''">
+              AND mpr.marketing_prefecture_id LIKE concat('%',#{marketingPrefectureRecommendDTO.marketingPrefectureId},'%')
+          </if>
+        <if test="marketingPrefectureRecommendDTO.prefectureName != null and marketingPrefectureRecommendDTO.prefectureName != ''">
+            AND mp.`prefecture_name` LIKE concat('%',#{marketingPrefectureRecommendDTO.prefectureName},'%')
+        </if>
+        <if test="marketingPrefectureRecommendDTO.recommendName != null and marketingPrefectureRecommendDTO.recommendName != ''">
+            AND mpr.`recommend_name` LIKE concat('%',#{marketingPrefectureRecommendDTO.recommendName},'%')
+        </if>
+        <if test="marketingPrefectureRecommendDTO.appearType != null and marketingPrefectureRecommendDTO.appearType != ''">
+            AND mpr.`appear_type` = #{marketingPrefectureRecommendDTO.appearType}
+        </if>
+        <if test="marketingPrefectureRecommendDTO.status != null and marketingPrefectureRecommendDTO.status != ''">
+            AND mpr.`status` = #{marketingPrefectureRecommendDTO.status}
+        </if>
+        <if test="marketingPrefectureRecommendDTO.createTime_begin != null and marketingPrefectureRecommendDTO.createTime_begin != ''">
+            AND mpr.create_time <![CDATA[>=]]> CONCAT(#{marketingPrefectureRecommendDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingPrefectureRecommendDTO.createTime_end != null and marketingPrefectureRecommendDTO.createTime_end != ''">
+            AND mpr.create_time <![CDATA[<=]]> CONCAT( #{marketingPrefectureRecommendDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingPrefectureRecommendDTO.updateTime_begin != null and marketingPrefectureRecommendDTO.updateTime_begin != ''">
+            AND mpr.update_time <![CDATA[>=]]> CONCAT(#{marketingPrefectureRecommendDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingPrefectureRecommendDTO.updateTime_end != null and marketingPrefectureRecommendDTO.updateTime_end != ''">
+            AND mpr.update_time <![CDATA[<=]]> CONCAT( #{marketingPrefectureRecommendDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY mpr.`create_time` DESC
+    </select>
+    <select id="getMarketingPrefectureRecommendList" resultType="map">
+        SELECT
+          mpr.`id`,
+          mpr.`recommend_name`
+        FROM
+          marketing_prefecture_recommend mpr
+        WHERE mpr.`del_flag` = 0
+          AND mpr.`marketing_prefecture_id` = #{marketingPrefectureId}
+          ORDER BY mpr.appear_type ASC
+    </select>
+    <select id="getMarketingPrefectureRecommendColumn" resultType="map">
+        SELECT
+        *
+        FROM
+        (SELECT
+        mpr.`id`,
+        mpr.`recommend_name` AS recommendName,
+        mpr.`cover_picture` AS coverPicture,
+        ((SELECT
+        COUNT(1)
+        FROM
+        marketing_prefecture_recommend_good mprg
+        LEFT JOIN marketing_prefecture_good mpg
+        ON mprg.`marketing_prefecture_good_id` = mpg.`id`
+        WHERE mprg.`del_flag` = 0
+        AND mprg.`marketing_prefecture_recommend_id` = mpr.id
+        AND mpg.`del_flag` = 0
+        <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
+            AND mpg.`marketing_prefecture_type_id` = #{map.marketingPrefectureTypeId}
+        </if>)+
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_prefecture_recommend_good mprg
+        LEFT JOIN marketing_prefecture_good mpg
+        ON mprg.`marketing_prefecture_good_id` = mpg.`id`
+        LEFT JOIN marketing_prefecture_type mpt
+        ON mpt.id = mpg.marketing_prefecture_type_id
+        WHERE mprg.`del_flag` = 0
+        AND mprg.`marketing_prefecture_recommend_id` = mpr.id
+        AND mpg.`del_flag` = 0
+        <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
+            AND mpt.pid = #{map.marketingPrefectureTypeId}
+        </if>)
+        ) AS recommendGoods
+        FROM
+        marketing_prefecture_recommend mpr
+        WHERE mpr.`del_flag` = 0
+        AND mpr.status = 1
+        AND mpr.`marketing_prefecture_id` = #{map.id}
+        AND mpr.`appear_type` = #{map.appearType}
+        <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
+           AND mpr.recommend_classify = 1
+        </if>
+        ORDER BY
+        mpr.`sort` ASC
+        ) m
+        <if test="map.appearType == 1">
+            WHERE m.recommendGoods > 0
+        </if>
+    </select>
+</mapper>

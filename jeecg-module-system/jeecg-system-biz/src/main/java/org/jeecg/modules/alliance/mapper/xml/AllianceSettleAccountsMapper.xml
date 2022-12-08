@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.alliance.mapper.AllianceSettleAccountsMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceSettleAccountsVO">
+        SELECT
+          asa.*,
+          am.`name`,
+          su.`username`,
+          su.`realname`,
+        CONCAT(
+        asa.`bank_card`,
+        '(',
+        asa.`bank_name`,
+        ')'
+        ) AS bank
+        FROM
+          alliance_settle_accounts asa
+          LEFT JOIN alliance_manage am
+            ON asa.`sys_user_id` = am.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON asa.`sys_user_id` = su.`id`
+        WHERE asa.`del_flag` = 0
+        <if test="allianceSettleAccountsDTO.sysUserId != null and allianceSettleAccountsDTO.sysUserId != ''">
+            AND asa.`sys_user_id` = #{allianceSettleAccountsDTO.sysUserId}
+        </if>
+        <if test="allianceSettleAccountsDTO.orderNo != null and allianceSettleAccountsDTO.orderNo != ''">
+            AND asa.order_no LIKE concat('%',#{allianceSettleAccountsDTO.orderNo},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.username != null and allianceSettleAccountsDTO.username != ''">
+            AND su.username LIKE concat('%',#{allianceSettleAccountsDTO.username},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.realname != null and allianceSettleAccountsDTO.realname != ''">
+            AND su.realname LIKE concat('%',#{allianceSettleAccountsDTO.realname},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.name != null and allianceSettleAccountsDTO.name != ''">
+            AND am.name LIKE concat('%',#{allianceSettleAccountsDTO.name},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.phone != null and allianceSettleAccountsDTO.phone != ''">
+            AND asa.phone LIKE concat('%',#{allianceSettleAccountsDTO.phone},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.withdrawalType != null and allianceSettleAccountsDTO.withdrawalType != ''">
+            AND asa.withdrawal_type = #{allianceSettleAccountsDTO.withdrawalType}
+        </if>
+        <if test="allianceSettleAccountsDTO.cardholder != null and allianceSettleAccountsDTO.cardholder != ''">
+            AND asa.cardholder LIKE concat('%',#{allianceSettleAccountsDTO.cardholder},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.createTime_begin != null and allianceSettleAccountsDTO.createTime_begin != ''">
+            AND asa.create_time <![CDATA[>=]]> concat(#{allianceSettleAccountsDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceSettleAccountsDTO.createTime_end != null and allianceSettleAccountsDTO.createTime_end != ''">
+            AND asa.create_time <![CDATA[<=]]> concat( #{allianceSettleAccountsDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="allianceSettleAccountsDTO.bankCard != null and allianceSettleAccountsDTO.bankCard != ''">
+            AND asa.bank_card LIKE concat('%',#{allianceSettleAccountsDTO.bankCard},'%')
+        </if>
+        <if test="allianceSettleAccountsDTO.auditTime_begin != null and allianceSettleAccountsDTO.auditTime_begin != ''">
+            AND asa.audit_time <![CDATA[>=]]> concat(#{allianceSettleAccountsDTO.auditTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceSettleAccountsDTO.auditTime_end != null and allianceSettleAccountsDTO.auditTime_end != ''">
+            AND asa.audit_time <![CDATA[<=]]> concat( #{allianceSettleAccountsDTO.auditTime_end},' 23:59:59')
+        </if>
+        <if test="allianceSettleAccountsDTO.payTime_begin != null and allianceSettleAccountsDTO.payTime_begin != ''">
+            AND asa.pay_time <![CDATA[>=]]> concat(#{allianceSettleAccountsDTO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceSettleAccountsDTO.payTime_end != null and allianceSettleAccountsDTO.payTime_end != ''">
+            AND asa.pay_time <![CDATA[<=]]> concat( #{allianceSettleAccountsDTO.payTime_end},' 23:59:59')
+        </if>
+        <if test="allianceSettleAccountsDTO.status != null and allianceSettleAccountsDTO.status != ''">
+            AND asa.status = #{allianceSettleAccountsDTO.status}
+        </if>
+        ORDER BY asa.`create_time` DESC
+    </select>
+</mapper>

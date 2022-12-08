@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreTemplateMapper">
+    <select id="getListStoreTemplate" resultType="org.jeecg.modules.store.dto.StoreTemplateDTO">
+        SELECT * from store_template WHERE del_flag = 0 AND sys_user_id = #{uId}
+    </select>
+    <update id="updateIsTemplateById">
+        UPDATE
+          store_template
+        SET
+          is_template = "0"
+        WHERE sys_user_id = #{id}
+    </update>
+
+    <select id="getStoreTemplateMaps" resultType="map" >
+        SELECT
+        pt.id,
+        su.realname AS sysUserName,
+        pt.name AS name,
+        pt.charge_mode AS chargeMode,
+        pt.exemption_postage AS exemptionPostage,
+        pt.template_type AS templateType,
+        opl.ship_fee AS shipFee,
+        pt.mail_delivery AS mailDelivery,
+        COUNT(pt.id) AS goodCount,
+        opl.distribution as distribution
+        FROM
+        `store_template` pt
+        LEFT JOIN `good_store_list` gl
+        ON gl.store_template_id = pt.id
+        LEFT JOIN   sys_user su ON su.id = pt.sys_user_id
+        LEFT JOIN  `order_store_good_record` opgr ON opgr.good_store_list_id = gl.id
+        LEFT JOIN order_store_sub_list opl ON  opl.id =  opgr.order_store_sub_list_id
+
+        WHERE pt.del_flag = 0
+        <if test="orderStoreSubListIdList!=null and orderStoreSubListIdList.size > 0 ">
+            and  opgr.order_store_sub_list_id in
+            <foreach collection="orderStoreSubListIdList" item="orderStoreSubListId" separator="," open="(" close=")">
+                #{orderStoreSubListId}
+            </foreach>
+        </if>
+
+        GROUP BY  pt.id
+    </select>
+
+</mapper>

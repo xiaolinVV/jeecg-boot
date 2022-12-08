@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingAdvertisingMapper">
+    <!-- 根据广告位置查询 org.jeecg.modules.marketing.entity.MarketingAdvertisingMapper-->
+    <select id="getMarketingAdvertisingByAdLocation" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising">
+		select * from  marketing_advertising  where ad_location = #{adLocation} and status =1 and del_flag =0 order by sort desc
+	</select>
+    <select id="allAvailable" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising">
+		select * from  marketing_advertising  where  status =1 and del_flag =0 order by sort desc
+	</select>
+    <select id="getMarketingAdvertisingList" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising" >
+          select * from  marketing_advertising  where status =1 and del_flag =0
+		<if test="createBy!=null and createBy!=''">
+			and  create_by = #{createBy}
+		</if>
+		<if test="title!=null and title!=''">
+			and  title = #{title}
+		</if>
+		<if test="goToType!=null and goToType!=''">
+			and  go_to_type = #{goToType}
+		</if>
+		<if test="adType!=null and adType!=''">
+			and  ad_type = #{adType}
+		</if>ad_location
+		<if test="adLocation!=null and adLocation!=''">
+			and  ad_location = #{adLocation}
+		</if>
+		<if test="goodListId!=null and goodListId!=''">
+			and  good_list_id = #{goodListId}
+		</if>
+          order by sort desc
+	</select>
+	<select id="getMarketingAdvertisingDTO" resultType="org.jeecg.modules.marketing.dto.MarketingAdvertisingDTO">
+		SELECT
+		ma.*,
+		IF(
+		ad_type = '0',
+		(SELECT
+		gl.good_name
+		FROM
+		good_list gl
+		WHERE gl.`id` = ma.good_list_id),
+		(SELECT
+		gsl.good_name
+		FROM
+		good_store_list gsl
+		WHERE gsl.`id` = ma.good_list_id)
+		) AS goodName,
+		IF(go_to_type = '3',(SELECT title FROM `marketing_material_list` WHERE id = ma.marketing_material_list_id),'' ) AS marketingMaterialTitle
+		FROM
+		marketing_advertising ma
+		WHERE ma.del_flag = 0
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.sysUserId != null and marketingAdvertisingVO.sysUserId!=''">
+			and ma.sys_user_id =#{marketingAdvertisingVO.sysUserId}
+		</if>
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.title != null and marketingAdvertisingVO.title!=''">
+			and ma.title LIKE CONCAT(CONCAT('%',#{marketingAdvertisingVO.title}), '%')
+		</if>
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.adType != null and marketingAdvertisingVO.adType!=''">
+			and ma.ad_type =#{marketingAdvertisingVO.adType}
+		</if>
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.adLocation != null and marketingAdvertisingVO.adLocation!=''">
+			and ma.ad_location =#{marketingAdvertisingVO.adLocation}
+		</if>
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.goToType != null and marketingAdvertisingVO.goToType!=''">
+			and ma.go_to_type =#{marketingAdvertisingVO.goToType}
+		</if>
+		<if test="marketingAdvertisingVO!=null and marketingAdvertisingVO.status != null and marketingAdvertisingVO.status!=''">
+			and ma.status =#{marketingAdvertisingVO.status}
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.createTime_begin != null and marketingAdvertisingVO.createTime_begin != ''">
+			and ma.create_time <![CDATA[>=]]> concat(#{marketingAdvertisingVO.createTime_begin},' 00:00:00')
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.createTime_end != null and marketingAdvertisingVO.createTime_end != ''">
+			AND ma.create_time <![CDATA[<=]]> concat( #{marketingAdvertisingVO.createTime_end},' 23:59:59')
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.startTime_begin != null and marketingAdvertisingVO.startTime_begin != ''">
+			and ma.start_time <![CDATA[>=]]> concat(#{marketingAdvertisingVO.startTime_begin},' 00:00:00')
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.startTime_end != null and marketingAdvertisingVO.startTime_end != ''">
+			AND ma.start_time <![CDATA[<=]]> concat( #{marketingAdvertisingVO.startTime_end},' 23:59:59')
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.endTime_begin != null and marketingAdvertisingVO.endTime_begin != ''">
+			and ma.end_time <![CDATA[>=]]> concat(#{marketingAdvertisingVO.endTime_begin},' 00:00:00')
+		</if>
+		<if test="marketingAdvertisingVO != null and marketingAdvertisingVO.endTime_end != null and marketingAdvertisingVO.endTime_end != ''">
+			AND ma.end_time <![CDATA[<=]]> concat( #{marketingAdvertisingVO.endTime_end},' 23:59:59')
+		</if>
+		 order by ma.create_time desc, ma.sort asc
+	</select>
+
+	<select id="findMarketingAdvertisingByAdLocation" resultType="map" parameterType="map">
+		SELECT
+		title,
+		if(ad_type=1,0,1) AS isPlatform,
+		picture_addr AS pictureAddr,
+		good_list_id AS goodId,
+		go_to_type AS goToType,
+		picture_details AS pictureDetails,
+		marketing_material_list_id AS marketingMaterialListId
+		FROM
+		`marketing_advertising`
+		WHERE del_flag = '0'
+		AND STATUS = '1'
+		AND NOW() &gt;= START_TIME
+		AND NOW() &lt;= END_TIME
+		AND ad_location =#{paramObjectMap.pattern}
+		<if test="paramObjectMap.sysUserId != '' and paramObjectMap.sysUserId != null">
+			and sys_user_id=#{paramObjectMap.sysUserId}
+		</if>
+		<if test="paramObjectMap.sysUserId == '' or paramObjectMap.sysUserId == null">
+			and ad_type= 0
+		</if>
+		ORDER BY sort ASC ,create_time DESC
+		LIMIT 5
+	</select>
+
+
+</mapper>

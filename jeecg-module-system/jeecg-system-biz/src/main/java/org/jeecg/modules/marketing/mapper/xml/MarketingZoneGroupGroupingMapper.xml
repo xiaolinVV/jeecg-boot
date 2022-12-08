@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupGroupingMapper">
+    <select id="findMarketingZoneGroupGroupingByMemberId" resultType="map">
+        SELECT
+          mzgg.`id`,
+          mzg.zone_name AS zoneName,
+          mzg.transformation_threshold AS transformationThreshold
+        FROM
+          marketing_zone_group_grouping mzgg
+          LEFT JOIN marketing_zone_group mzg
+            ON mzgg.marketing_zone_group_id = mzg.id
+        WHERE mzgg.`member_list_id` = #{memberId}
+        ORDER BY mzgg.create_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberDistributionRecordMapper">
+    <select id="findMemberDistributionRecordVOById" resultType="org.jeecg.modules.member.vo.MemberDistributionRecordVO">
+            SELECT
+              mlOne.`head_portrait`,
+              mlOne.`phone`,
+              mlOne.`nick_name`,
+              mlOne.`member_type`,
+              mrr.`member_level`,
+              IF(
+                mrr.`member_level` = 1,
+                '一级',
+                '二级'
+              ) AS levelName,
+              mrr.`order_no`,
+              mdr.`good_picture`,
+              mdr.`good_name`,
+              mdr.`good_specification`,
+              mrr.`trade_status`,
+              mdr.`commission`
+            FROM
+              member_distribution_record mdr
+              LEFT JOIN member_recharge_record mrr
+                ON mdr.`member_recharge_record_id` = mrr.`id`
+              LEFT JOIN member_list mlOne
+                ON mrr.`member_list_id` = mlOne.`id`
+              LEFT JOIN member_list mls
+                ON mlOne.`promoter` = mls.`id`
+            WHERE mdr.`del_flag` = 0
+              AND mrr.`del_flag` = 0
+              AND mlOne.`del_flag` = 0
+              AND mls.id = #{mId}
+              UNION
+              SELECT
+              mlTwo.`head_portrait`,
+              mlTwo.`phone`,
+              mlTwo.`nick_name`,
+              mlTwo.`member_type`,
+              mrr.`member_level`,
+              IF(
+                mrr.`member_level` = 1,
+                '一级',
+                '二级'
+              ) AS levelName,
+              mrr.`order_no`,
+              mdr.`good_picture`,
+              mdr.`good_name`,
+              mdr.`good_specification`,
+              mrr.`trade_status`,
+              mdr.`commission`
+            FROM
+              member_distribution_record mdr
+              LEFT JOIN member_recharge_record mrr
+                ON mdr.`member_recharge_record_id` = mrr.`id`
+              LEFT JOIN member_list mlTwo
+                ON mrr.`member_list_id` = mlTwo.`id`
+                LEFT JOIN member_list mlOne ON mlTwo.promoter = mlOne.`id`
+              LEFT JOIN member_list mls
+                ON mlOne.`promoter` = mls.`id`
+            WHERE mdr.`del_flag` = 0
+              AND mrr.`del_flag` = 0
+              AND mlOne.`del_flag` = 0
+              AND mlTwo.del_flag = 0
+              AND mls.id = #{mId}
+    </select>
+
+
+  <select id="findMemberDistributionRecordByMrrId" resultType="map">
+
+          SELECT
+        good_picture AS goodPicture,
+        good_name AS goodName,
+        good_specification AS goodSpecification,
+        commission
+      FROM
+        `member_distribution_record`
+      WHERE member_recharge_record_id = #{memberRechargeRecordId}
+        AND del_flag = '0'
+
+  </select>
+</mapper>

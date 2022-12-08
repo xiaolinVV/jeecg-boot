@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingDiscountMapper">
+    <update id="updateMarketingDiscountById">
+        UPDATE
+          marketing_discount
+        SET
+          del_explain = #{delExplain},
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+
+    <select id="findMarketingDiscountByGoodId" resultType="map" parameterType="map">
+                SELECT
+                  ms.id AS id,
+                  ms.name AS NAME,
+                  ms.is_threshold AS isThreshold,
+                  ms.completely AS completely,
+                  ms.subtract AS subtract,
+                  DATE_FORMAT(ms.start_time, '%Y-%m-%d') AS startTime,
+                  DATE_FORMAT(ms.end_time, '%Y-%m-%d') AS endTime,
+                  ms.is_give AS isGive,
+                  is_platform AS isPlatform,
+                  vouchers_way AS vouchersWay,
+                  dis_data AS disData,
+                  monad AS monad,
+                  ms.`main_picture` AS logoAddr
+                FROM
+                  (SELECT
+                    marketing_discount_id
+                  FROM
+                    marketing_discount_good
+                  WHERE good_id = #{paramMap.goodId} and is_platform=#{paramMap.isPlatform} AND del_flag='0')  mg
+
+                    LEFT JOIN marketing_discount ms
+                      ON mg.marketing_discount_id = ms.id
+                  WHERE ms.status = 1
+                    AND ms.del_flag = 0 and ms.is_nomal='0'
+                    AND ms.total &gt;ms.released_quantity
+                ORDER BY ms.released_quantity,
+                ms.create_time DESC
+    </select>
+
+    <select id="findMarketingDiscountBySysUserId" resultType="map">
+          SELECT
+          m.id,
+          m.NAME,
+          m.is_threshold AS isThreshold,
+          m.completely AS completely,
+          m.subtract AS subtract,
+          DATE_FORMAT(m.start_time, '%Y-%m-%d') AS startTime,
+          DATE_FORMAT(m.end_time, '%Y-%m-%d') AS endTime,
+          m.is_give AS isGive,
+          m.is_platform AS isPlatform,
+          m.vouchers_way AS vouchersWay,
+          m.dis_data AS disData,
+          m.monad AS monad,
+          m.`main_picture` AS logoAddr
+        FROM
+          marketing_discount m
+          LEFT JOIN store_manage sm
+            ON sm.`sys_user_id` = m.`sys_user_id`
+        WHERE m.STATUS = '1'
+          AND m.del_flag = '0'
+          AND m.is_nomal = '0'
+          AND m.total > m.released_quantity
+        and m.start_time &lt; now()
+        and m.end_time &gt; now()
+        <if test="sysUserId!=''">
+            AND m.sys_user_id = #{sysUserId}
+            AND sm.status = 1
+        </if>
+        ORDER BY m.is_platform DESC ,
+          m.create_time DESC
+    </select>
+
+    <select id="findMarketingDiscountByIsThreshold" resultType="map">
+          SELECT
+          id,
+          NAME,
+          is_threshold AS isThreshold,
+          completely AS completely,
+          subtract AS subtract,
+        DATE_FORMAT(start_time, '%Y-%m-%d') AS startTime,
+        DATE_FORMAT(end_time, '%Y-%m-%d') AS endTime,
+          is_give AS isGive,
+          is_platform AS isPlatform,
+        vouchers_way as vouchersWay,
+        dis_data as disData,
+        monad as monad,
+        IF(LENGTH(TRIM(m.`main_picture`))>0,m.`main_picture` ->> '$."0"','') AS logoAddr
+        FROM
+          marketing_discount m
+        WHERE STATUS = '1' and is_nomal='0' and del_flag='0'
+          <if test="isThreshold==0||isThreshold==1">  and is_threshold=#{isThreshold}  </if>
+        <if test="name!= null">
+            AND name LIKE concat('%',#{name},'%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findMarketingDiscountById" resultType="map">
+         SELECT
+          id,
+          NAME,
+          is_threshold AS isThreshold,
+          completely AS completely,
+          subtract AS subtract,
+           DATE_FORMAT(start_time, '%Y-%m-%d %H:%i:%s') AS startTime,
+          DATE_FORMAT(end_time, '%Y-%m-%d %H:%i:%s') AS endTime,
+          is_give AS isGive,
+          is_platform AS isPlatform,
+          sys_user_id as sysUserId,
+          user_restrict as userRestrict,
+          discount_explain as discountExplain,
+          vouchers_way as vouchersWay,
+          dis_data as disData,
+          monad as monad,
+          cover_plan as coverPlan,
+          posters as posters,
+          IF(LENGTH(TRIM(main_picture))>0,main_picture ->> '$."0"','') AS logoAddr,
+          main_picture as mainPicture
+        FROM
+          marketing_discount
+        where
+          id=#{id}
+    </select>
+
+    <select id="findMarketingDiscountStoreList" resultType="org.jeecg.modules.marketing.dto.MarketingDiscountDTO">
+        SELECT
+        md.*,
+        md.main_picture AS mainPictures,
+        md.cover_plan AS coverPlans,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`marketing_discount_id` = md.`id`
+        AND mdc.del_flag = 0) AS statusGet,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`marketing_discount_id` = md.`id`
+        AND mdc.status = 2
+        AND mdc.del_flag = 0) AS statusUse,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_channel_discount mcd
+        WHERE mcd.`del_flag` = 0
+        AND mcd.`marketing_discount_id` = md.`id`) AS channelInfo,
+        IF(
+        md.`vouchers_way` = 1,
+        md.`dis_data`,
+        ''
+        ) AS today,
+        IF(
+        md.`vouchers_way` = 2,
+        md.`dis_data`,
+        ''
+        ) AS tomorow
+        FROM
+        marketing_discount md
+        WHERE md.`del_flag` = 0
+        AND md.`is_platform` = 0
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!= ''">
+            AND md.id LIKE concat('%',#{marketingDiscountVO.id},'%')
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.uId!=null and marketingDiscountVO.uId!= ''">
+            AND md.sys_user_id = #{marketingDiscountVO.uId}
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.name!=null and marketingDiscountVO.name!= ''">
+            AND md.name LIKE concat('%',#{marketingDiscountVO.name},'%')
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.status!=null and marketingDiscountVO.status!= ''">
+            AND md.status = #{marketingDiscountVO.status}
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.createTime_begin != null and marketingDiscountVO.createTime_begin != ''">
+            and md.create_time <![CDATA[>=]]> concat(#{marketingDiscountVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.createTime_end != null and marketingDiscountVO.createTime_end != ''">
+            AND md.create_time <![CDATA[<=]]> concat( #{marketingDiscountVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.updateTime_begin != null and marketingDiscountVO.updateTime_begin != ''">
+            and md.update_time <![CDATA[>=]]> concat(#{marketingDiscountVO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.updateTime_end != null and marketingDiscountVO.updateTime_end != ''">
+            AND md.update_time <![CDATA[<=]]> concat( #{marketingDiscountVO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY md.create_time DESC
+    </select>
+
+
+    <select id="getMarketingDiscountList" resultType="org.jeecg.modules.marketing.dto.MarketingDiscountDTO">
+        SELECT
+          md.*,
+        md.main_picture AS mainPictures,
+        md.cover_plan AS coverPlans,
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_discount_coupon mdc
+          WHERE mdc.`marketing_discount_id` = md.`id`
+            AND mdc.del_flag = 0) AS statusGet,
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_discount_coupon mdc
+          WHERE mdc.`marketing_discount_id` = md.`id`
+            AND mdc.status = 2
+            AND mdc.del_flag = 0) AS statusUse,
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_channel_discount mcd
+          WHERE mcd.`del_flag` = 0
+            AND mcd.`marketing_discount_id` = md.`id`) AS channelInfo,
+        IF(
+        md.`vouchers_way` = 1,
+        md.`dis_data`,
+        ''
+        ) AS today,
+        IF(
+        md.`vouchers_way` = 2,
+        md.`dis_data`,
+        ''
+        ) AS tomorow
+        FROM
+          marketing_discount md
+        WHERE md.`del_flag` = 0
+          AND md.`is_platform` = 1
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!= ''">
+            AND md.id LIKE concat('%',concat(#{marketingDiscountVO.id},'%'))
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.name!=null and marketingDiscountVO.name!= ''">
+            AND md.name LIKE concat('%',concat(#{marketingDiscountVO.name},'%'))
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.status!=null and marketingDiscountVO.status!= ''">
+            AND md.status = #{marketingDiscountVO.status}
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.createTime_begin != null and marketingDiscountVO.createTime_begin != ''">
+            and md.create_time <![CDATA[>=]]> concat(#{marketingDiscountVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.createTime_end != null and marketingDiscountVO.createTime_end != ''">
+            AND md.create_time <![CDATA[<=]]> concat( #{marketingDiscountVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.updateTime_begin != null and marketingDiscountVO.updateTime_begin != ''">
+            and md.update_time <![CDATA[>=]]> concat(#{marketingDiscountVO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingDiscountVO != null and marketingDiscountVO.updateTime_end != null and marketingDiscountVO.updateTime_end != ''">
+            AND md.update_time <![CDATA[<=]]> concat( #{marketingDiscountVO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY md.create_time DESC
+    </select>
+
+    <select id="findMarketingDiscountDTO" resultType="org.jeecg.modules.marketing.dto.MarketingDiscountDTO">
+        SELECT
+          md.*,
+          mcd.marketing_channel_id
+        FROM
+          marketing_discount md
+          LEFT JOIN marketing_channel_discount mcd
+            ON md.`id` = mcd.`marketing_discount_id`
+        WHERE md.`del_flag` = 0
+          AND mcd.`del_flag` = 0
+          AND md.id = #{id}
+    </select>
+    <select id="findMarketingDiscountVO" resultType="org.jeecg.modules.marketing.vo.MarketingDiscountVO">
+        SELECT * FROM (SELECT
+          md.`id`,
+          md.`name`,
+          (
+            CASE
+              WHEN md.`is_threshold` = 0
+              THEN '无门槛'
+              ELSE CONCAT_WS(md.`completely`, "满", "元")
+            END
+          ) AS usingThreshold,
+          (
+            CONCAT_WS(md.`subtract`, "减", "元")
+          ) AS preferentialContent,
+          (
+            CASE
+              WHEN md.`vouchers_way` = 0
+              THEN CONCAT_WS(
+                '~',
+                md.`start_time`,
+                md.`end_time`
+              )
+              WHEN md.`vouchers_way` = 1
+              THEN CONCAT(
+                '领劵当日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+              ELSE CONCAT(
+                '领券次日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+            END
+          ) usrTime,
+          (
+            md.`total` - md.`released_quantity`
+          ) AS discountSurplus,
+          CONCAT('适用商品', md.goodSkr, '件') AS applyGood,
+          md.`user_restrict`,
+          (
+            CASE
+              WHEN md.`is_platform` = 0
+              THEN
+              (SELECT
+                sm.`store_name`
+              FROM
+                store_manage sm
+              WHERE sm.sys_user_id = md.`sys_user_id`)
+              ELSE '平台'
+            END
+          ) ISSUER,
+        IF(
+        CHAR_LENGTH(md.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(md.user_restrict,"0"),
+        'vip会员',
+        '普通会员'
+        )
+        ) AS memberTypeName
+        FROM
+          (SELECT
+            (SELECT
+              COUNT(1)
+            FROM
+              marketing_discount_good mdg
+            WHERE mdg.marketing_discount_id = m.id
+            AND mdg.del_flag = 0
+            ) AS goodSkr,
+            m.*
+          FROM
+            marketing_discount m) md
+        WHERE md.`del_flag` = 0
+          AND md.`status` = 1
+          AND md.is_nomal = 1
+          <if test="marketingDiscountVO!=null and marketingDiscountVO.discoountName!=null and marketingDiscountVO.discoountName!=''">
+              AND md.name LIKE concat('%',#{marketingDiscountVO.discoountName},'%')
+          </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!=''">
+            AND md.id LIKE concat('%',#{marketingDiscountVO.id},'%')
+        </if>
+        <if test="marketingDiscountVO.getRestrict!=null and marketingDiscountVO.getRestrict!=''">
+            AND md.get_restrict LIKE concat('%',#{marketingDiscountVO.getRestrict},'%')
+        </if>
+        ORDER BY md.`create_time` DESC) mds
+        <if test="marketingDiscountVO.issuer!=null and marketingDiscountVO.issuer!=''">
+            WHERE mds.issuer LIKE concat('%',#{marketingDiscountVO.issuer},'%')
+        </if>
+    </select>
+    <update id="updateMarketingDiscountStaleDated">
+        UPDATE
+          marketing_discount md
+        SET
+          md.`status` = 0
+        WHERE md.`del_flag` = 0
+          AND md.`status` = 1
+          AND md.`vouchers_way` = 0
+          AND NOW() > md.`end_time`
+    </update>
+
+    <select id="findGiveMarketingDiscountVO" resultType="org.jeecg.modules.marketing.vo.MarketingDiscountVO">
+        SELECT * FROM (SELECT
+        md.`id`,
+        md.`name`,
+        (
+        CASE
+        WHEN md.`is_threshold` = 0
+        THEN '无门槛'
+        ELSE CONCAT_WS(md.`completely`, "满", "元")
+        END
+        ) AS usingThreshold,
+        (
+        CONCAT_WS(md.`subtract`, "减", "元")
+        ) AS preferentialContent,
+        (
+        CASE
+        WHEN md.`vouchers_way` = 0
+        THEN CONCAT_WS(
+        '~',
+        md.`start_time`,
+        md.`end_time`
+        )
+        WHEN md.`vouchers_way` = 1
+        THEN CONCAT(
+        '领劵当日起',
+        md.`dis_data`,
+        md.`monad`,
+        '内'
+        )
+        ELSE CONCAT(
+        '领券次日起',
+        md.`dis_data`,
+        md.`monad`,
+        '内'
+        )
+        END
+        ) usrTime,
+        (
+        md.`total` - md.`released_quantity`
+        ) AS discountSurplus,
+        CONCAT('适用商品', md.goodSkr, '件') AS applyGood,
+        md.`user_restrict`,
+        (
+        CASE
+        WHEN md.`is_platform` = 0
+        THEN
+        (SELECT
+        sm.`store_name`
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = md.`sys_user_id`)
+        ELSE '平台'
+        END
+        ) issuer,
+        IF(
+        CHAR_LENGTH(md.user_restrict) =3,
+        '普通会员,vip会员',
+        IF(
+        STRCMP(md.user_restrict,"0")=0,
+        '普通会员',
+        'vip会员'
+        )
+        ) AS memberTypeName
+        FROM
+        (SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mdg
+        WHERE mdg.marketing_discount_id = m.id
+        AND mdg.del_flag = 0
+        ) AS goodSkr,
+        m.*
+        FROM
+        marketing_discount m) md
+        WHERE md.`del_flag` = 0
+        AND md.`status` = 1
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.discoountName!=null and marketingDiscountVO.discoountName!=''">
+            AND md.name LIKE concat('%',#{marketingDiscountVO.discoountName},'%')
+        </if>
+        <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!=''">
+            AND md.id LIKE concat('%',#{marketingDiscountVO.id},'%')
+        </if>
+        <if test="marketingDiscountVO.userRestrict!=null and marketingDiscountVO.userRestrict!=''">
+            AND md.user_restrict LIKE concat('%',#{marketingDiscountVO.userRestrict},'%')
+        </if>
+        <if test="marketingDiscountVO.id!=null and marketingDiscountVO.id!=''">
+            AND md.id LIKE concat('%',#{marketingDiscountVO.id},'%')
+        </if>
+        ORDER BY md.`create_time` DESC) mds
+        <if test="marketingDiscountVO.issuer!=null and marketingDiscountVO.issuer!=''">
+            WHERE mds.issuer LIKE concat('%',#{marketingDiscountVO.issuer},'%')
+        </if>
+    </select>
+    <select id="findMarketingDiscountPage" resultType="map">
+        SELECT
+          md.`id`,
+          md.`main_picture` AS mainPicture,
+          IF(
+            md.`is_platform` = 0,
+            CONCAT(
+              IF(
+                LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                CONCAT(
+                  sm.`store_name`,
+                  '(',
+                  sm.`sub_store_name`,
+                  ')'
+                ),
+                sm.`store_name`
+              ),
+              md.`name`
+            ),
+            md.`name`
+          ) AS NAME,
+          md.`subtract`,
+          (
+            CASE
+              WHEN md.`is_threshold` = 0
+              THEN '无门槛'
+              ELSE CONCAT_WS(md.`completely`, "满", "元")
+            END
+          ) AS usingThreshold,
+          (
+            CASE
+              WHEN md.`vouchers_way` = 0
+              THEN CONCAT_WS(
+                '~',
+                md.`start_time`,
+                md.`end_time`
+              )
+              WHEN md.`vouchers_way` = 1
+              THEN CONCAT(
+                '领劵当日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+              ELSE CONCAT(
+                '领券次日起',
+                md.`dis_data`,
+                md.`monad`,
+                '内'
+              )
+            END
+          ) usrTime,
+          md.`is_platform` AS isPlatform,
+          md.is_get_the AS isGetThe,
+          md.again_get AS againGet
+        FROM
+          marketing_discount md
+          LEFT JOIN store_manage sm
+            ON md.`sys_user_id` = sm.`sys_user_id`
+        WHERE md.`del_flag` = 0
+          AND md.`status` = 1
+          AND md.is_nomal = 0
+        ORDER BY md.`is_platform` DESC,
+          md.`sort` ASC
+    </select>
+</mapper>

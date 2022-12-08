@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingBusinessGiftTeamListMapper">
+
+    <select id="getByteamRecordId" resultType="map">
+
+                SELECT
+            ml.id,
+            ml.head_portrait AS headPortrait,
+            ml.phone,
+            ml.nick_name AS nickName,
+            mbtl.grade,
+            ( SELECT phone FROM member_list WHERE id = mbtl.t_member_list_id ) AS tPhone,
+            ml.promotion_code AS promotionCode,
+            mbtl.testimonial
+        FROM
+            marketing_business_gift_team_list mbtl
+            LEFT JOIN member_list ml ON mbtl.member_list_id = ml.id
+        WHERE
+            mbtl.marketing_business_gift_team_record_id = #{marketingBusinessGiftTeamRecordId}
+        ORDER BY
+            mbtl.grade DESC
+    </select>
+
+    <select id="getByMemberId" resultType="map" parameterType="map">
+
+                SELECT
+            mbgl.marketing_business_gift_team_record_id AS id
+        FROM
+            marketing_business_gift_team_list mbgl
+        WHERE
+            mbgl.member_list_id = #{memberId}
+            ORDER BY mbgl.create_time DESC
+    </select>
+
+
+    <select id="getRecordIdByMemberId" resultType="map">
+
+                SELECT
+            mbgl.marketing_business_gift_team_record_id AS id
+        FROM
+            marketing_business_gift_team_list mbgl
+            LEFT JOIN marketing_business_gift_team_record mbtr ON mbgl.marketing_business_gift_team_record_id = mbtr.id
+        WHERE
+            mbgl.member_list_id =#{memberId}
+            AND mbtr.`status` = '0'
+        ORDER BY
+            mbgl.create_time DESC
+            LIMIT 1
+
+    </select>
+
+</mapper>

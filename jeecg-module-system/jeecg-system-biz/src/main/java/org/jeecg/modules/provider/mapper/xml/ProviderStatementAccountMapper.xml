@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderStatementAccountMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.provider.vo.ProviderStatementAccountVO">
+        SELECT
+          psa.*,
+          pm.`name` AS providerName,
+          su.`username` AS userName
+        FROM
+          provider_statement_account psa
+          LEFT JOIN provider_manage pm
+            ON psa.`sys_user_id` = pm.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON su.`id` = pm.`sys_user_id`
+        WHERE psa.`del_flag` = 0
+        <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.sysUserId != null and providerStatementAccountDTO.sysUserId != ''">
+            AND psa.sys_user_id = #{providerStatementAccountDTO.sysUserId}
+        </if>
+        <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.calendarDate_begin != null and providerStatementAccountDTO.calendarDate_begin != ''">
+            AND psa.calendar_date <![CDATA[>=]]> concat(#{providerStatementAccountDTO.calendarDate_begin},' 00:00:00')
+        </if>
+        <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.calendarDate_end != null and providerStatementAccountDTO.calendarDate_end != ''">
+            AND psa.calendar_date <![CDATA[<=]]> concat(#{providerStatementAccountDTO.calendarDate_end},' 23:59:59')
+        </if>
+        <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.userName != null and providerStatementAccountDTO.userName != ''">
+            AND su.username LIKE concat('%',#{providerStatementAccountDTO.userName},'%')
+        </if>
+        <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.providerName != null and providerStatementAccountDTO.providerName != ''">
+            AND pm.name LIKE concat('%',#{providerStatementAccountDTO.providerName},'%')
+        </if>
+        order by psa.calendar_date desc
+    </select>
+</mapper>

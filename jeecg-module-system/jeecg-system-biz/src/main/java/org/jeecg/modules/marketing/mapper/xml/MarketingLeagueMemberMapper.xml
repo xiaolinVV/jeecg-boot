@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLeagueMemberMapper">
+
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingLeagueMemberDTO">
+
+        SELECT
+        ml.id AS mid,
+        ml.head_portrait AS headPortrait,
+        ml.phone AS phone,
+        ml.nick_name AS nickName,
+        mli.identity_name AS identityName,
+        (
+        SELECT
+        GROUP_CONCAT( mlir.identity_name ) AS a
+        FROM
+        marketing_league_member mlj
+        INNER JOIN marketing_league_identity mlir ON mlir.id = mlj.marketing_league_identity_id
+        WHERE
+        mlj.member_list_id = mlju.member_list_id
+        AND mlir.del_flag = '0'
+        AND mlir.additional_identity = '1'
+        ) AS identityNames,
+        DATE_FORMAT( mlju.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime
+        FROM
+        marketing_league_member mlju
+        INNER JOIN member_list ml ON ml.id = mlju.member_list_id
+        INNER JOIN marketing_league_identity mli ON mli.id = mlju.marketing_league_identity_id
+        WHERE
+        mlju.del_flag = '0'
+        AND mli.additional_identity = '0'
+
+        <if test="marketingLeagueMemberDTO.mid!=null and marketingLeagueMemberDTO.mid!=''">
+            and ml.id=#{marketingLeagueMemberDTO.mid}
+        </if>
+        <if test="marketingLeagueMemberDTO.phone!=null and marketingLeagueMemberDTO.phone!=''">
+            and ml.phone=#{marketingLeagueMemberDTO.phone}
+        </if>
+        <if test="marketingLeagueMemberDTO.nickName!=null and marketingLeagueMemberDTO.nickName!=''">
+            and ml.nick_name=#{marketingLeagueMemberDTO.nickName}
+        </if>
+
+        ORDER BY
+        mlju.create_time DESC
+
+    </select>
+
+    <select id="queryPageListByGetWay" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingLeagueMemberDTO">
+
+        SELECT
+        ml.id AS mid,
+        ml.head_portrait AS headPortrait,
+        ml.phone AS phone,
+        ml.nick_name AS nickName,
+        mli.identity_name AS identityName,
+        mli.pay_price AS payPrice,
+        DATE_FORMAT( mlju.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+        mlju.area_explain AS areaExplain,
+        mlju.reward_ratio AS rewardRatio
+        FROM
+        marketing_league_member mlju
+        INNER JOIN member_list ml ON ml.id = mlju.member_list_id
+        INNER JOIN marketing_league_identity mli ON mli.id = mlju.marketing_league_identity_id
+        WHERE
+        mlju.del_flag = '0'
+
+        <if test="marketingLeagueMemberDTO.mid!=null and marketingLeagueMemberDTO.mid!=''">
+            and ml.id=#{marketingLeagueMemberDTO.mid}
+        </if>
+        <if test="marketingLeagueMemberDTO.phone!=null and marketingLeagueMemberDTO.phone!=''">
+            and ml.phone=#{marketingLeagueMemberDTO.phone}
+        </if>
+        <if test="marketingLeagueMemberDTO.nickName!=null and marketingLeagueMemberDTO.nickName!=''">
+            and ml.nick_name=#{marketingLeagueMemberDTO.nickName}
+        </if>
+
+        <if test="marketingLeagueMemberDTO.getWay!=null and marketingLeagueMemberDTO.getWay!=''">
+            and mli.get_way=#{marketingLeagueMemberDTO.getWay}
+        </if>
+
+        ORDER BY
+        mlju.create_time DESC
+
+    </select>
+
+    <select id="getMarketingLeagueMemberList" resultType="map" parameterType="map">
+
+                    SELECT
+                ml.nick_name AS nickName,
+                ml.phone,
+                ml.head_portrait AS headPortrait,
+                mli.identity_name AS identityName,
+                DATE_FORMAT( mlm.create_time, '%Y-%m-%d' ) mydate,
+                IFNULL(( SELECT nick_name FROM member_list WHERE id = mlm.src_parant_id ),( SELECT nick_name FROM member_list WHERE id = mlm.parant_id )) AS tNickName,
+                IFNULL(( SELECT nick_name FROM member_list WHERE id = mlm.src_parant_id ),( SELECT nick_name FROM member_list WHERE id = mlm.parant_id )) AS tPhone
+            FROM
+                marketing_league_member mlm
+                LEFT JOIN marketing_league_identity mli ON mli.id = mlm.marketing_league_identity_id
+                LEFT JOIN member_list ml ON ml.id = mlm.member_list_id
+            WHERE
+                mlm.del_flag = '0'
+                AND mli.get_way = #{paramMap.getWay}
+                AND mlm.parant_id =#{paramMap.memberId}
+            ORDER BY
+                mlm.create_time
+
+
+    </select>
+</mapper>

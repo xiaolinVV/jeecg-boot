@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingEnterMoneyMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingEnterMoneyVO">
+        SELECT
+          mem.*,
+          md.`name`,
+        mdg.group_name
+        FROM
+          marketing_enter_money mem
+          LEFT JOIN member_designation md
+            ON mem.`member_designation_id` = md.`id`
+        LEFT JOIN member_designation_group mdg
+        ON md.member_designation_group_id = mdg.id
+        WHERE mem.`del_flag` = 0
+        AND md.`del_flag` = 0
+      <if test="marketingEnterMoneyDTO.orderNo != null and marketingEnterMoneyDTO.orderNo != ''">
+          AND mem.order_no LIKE concat('%',#{marketingEnterMoneyDTO.orderNo},"%")
+      </if>
+        <if test="marketingEnterMoneyDTO.memberDesignationId != null and marketingEnterMoneyDTO.memberDesignationId != ''">
+            AND mem.member_designation_id = #{marketingEnterMoneyDTO.memberDesignationId}
+        </if>
+        <if test="marketingEnterMoneyDTO.tradeTime_begin != null and marketingEnterMoneyDTO.tradeTime_begin != ''">
+            AND mem.trade_time <![CDATA[>=]]> CONCAT(#{marketingEnterMoneyDTO.tradeTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingEnterMoneyDTO.tradeTime_end != null and marketingEnterMoneyDTO.tradeTime_end != ''">
+            AND mem.trade_time <![CDATA[<=]]> CONCAT( #{marketingEnterMoneyDTO.tradeTime_end},' 23:59:59')
+        </if>
+        <if test="marketingEnterMoneyDTO.groupName != null and marketingEnterMoneyDTO.groupName != ''">
+            AND mdg.group_name LIKE concat('%',#{marketingEnterMoneyDTO.groupName},"%")
+        </if>
+        ORDER BY mem.create_time DESC, md.sort ASC
+    </select>
+</mapper>

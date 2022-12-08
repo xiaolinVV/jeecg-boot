@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderEvaluateMapper">
+
+    <select id="findOrderEvaluateByGoodId" resultType="map" parameterType="map">
+        select oe.id as id,oe.content as content,oe.pictures as pictures,oe.create_time as createTime,ml.nick_name as nickName,ml.head_portrait as headPortrait,gs.specification as specification,1 as isPlatform,oe.description_star as descriptionStar from order_evaluate oe
+        left join member_list ml on  oe.member_list_id=ml.id  left join good_specification gs on oe.good_specification_id=gs.id
+        where oe.good_list_id=#{paraMap.goodId} and oe.status =1
+        <if test="paraMap.pattern==0">
+            order by oe.create_time,oe.description_star desc
+        </if>
+        <if test="paraMap.pattern==1">
+            order by oe.create_time desc
+        </if>
+        <if test="paraMap.pattern==2">
+           and oe.pictures is not null order by oe.create_time,oe.description_star desc
+        </if>
+    </select>
+    <select id="discussList" resultType="org.jeecg.modules.order.dto.OrderEvaluateDTO">
+         SELECT
+          oe.*,
+          gl.main_picture AS mainPicture,
+          gl.good_name AS goodName,
+          (SELECT
+            specification
+          FROM
+            good_specification
+          WHERE id = oe.good_specification_id) AS specification
+        FROM
+          order_evaluate oe
+          LEFT JOIN good_list gl
+            ON oe.good_list_id = gl.id
+            where oe.del_flag =0
+            <if test="orderListId != null and orderListId != ''">
+                and oe.order_list_id =#{orderListId}
+            </if>
+        ORDER BY oe.create_time DESC
+    </select>
+
+</mapper>

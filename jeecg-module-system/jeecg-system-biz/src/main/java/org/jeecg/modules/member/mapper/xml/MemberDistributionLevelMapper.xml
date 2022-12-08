@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberDistributionLevelMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.member.dto.MemberDistributionLevelDTO">
+
+            SELECT
+            ml.phone,
+            ml.nick_name AS nickName,
+            IFNULL(ml.head_portrait,"--") AS headPortrait,
+            IFNULL(mdls.level_name,"--") AS levelName,
+            mdl.id,
+            IFNULL(DATE_FORMAT(mdl.update_time,'%Y-%m-%d %H:%i:%s'),"--") AS updateTime,
+            IFNULL(mdl.update_by,"--") AS updateBy,
+            mdl.upgrade_direct AS upgradeDirect,
+            mdl.upgrade_team_number AS upgradeTeamNumber
+        FROM
+            member_distribution_level mdl
+            LEFT JOIN member_list ml ON mdl.member_list_id = ml.id
+            LEFT JOIN marketing_distribution_level mdls ON mdl.marketing_distribution_level_id = mdls.id
+
+            WHERE
+            mdl.del_flag='0'
+
+            <if test="memberDistributionLevelDTO.phone!='' and memberDistributionLevelDTO.phone!=null">
+                and ml.phone=#{memberDistributionLevelDTO.phone}
+            </if>
+
+        <if test="memberDistributionLevelDTO.nickName!='' and memberDistributionLevelDTO.nickName!=null">
+            and ml.nick_name=#{memberDistributionLevelDTO.nickName}
+        </if>
+
+        <if test="memberDistributionLevelDTO.levelName!='' and memberDistributionLevelDTO.levelName!=null">
+            and mdls.level_name=#{memberDistributionLevelDTO.levelName}
+        </if>
+
+        <if test="memberDistributionLevelDTO.updateTimeStart!=null">
+            and mdl.update_time  &gt;=#{memberDistributionLevelDTO.updateTimeStart}
+        </if>
+
+        <if test="memberDistributionLevelDTO.updateTimeEnd!=null">
+            and mdl.update_time  &lt;=#{memberDistributionLevelDTO.updateTimeEnd}
+        </if>
+
+            ORDER BY mdl.create_time DESC
+
+    </select>
+</mapper>

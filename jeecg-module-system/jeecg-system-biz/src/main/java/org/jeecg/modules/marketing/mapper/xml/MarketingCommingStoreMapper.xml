@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCommingStoreMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCommingStoreVO">
+        SELECT * FROM (
+        SELECT
+          mcs.*,
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          su.`username`,
+          sm.`boss_phone`,
+          '查看奖励' AS checkAward
+        FROM
+          marketing_comming_store mcs
+          LEFT JOIN store_manage sm
+            ON mcs.`store_manage_id` = sm.`id`
+          LEFT JOIN sys_user su
+            ON su.`id` = sm.`sys_user_id`
+        WHERE mcs.`del_flag` = 0
+          AND sm.`del_flag` = 0
+          AND su.`del_flag` = 0
+        <if test="marketingCommingStoreDTO.sysUserId != null and marketingCommingStoreDTO.sysUserId != ''">
+            AND sm.sys_user_id = #{marketingCommingStoreDTO.sysUserId}
+        </if>
+      <if test="marketingCommingStoreDTO.id != null and marketingCommingStoreDTO.id != ''">
+          AND mcs.id LIKE concat('%',#{marketingCommingStoreDTO.id},'%')
+      </if>
+        <if test="marketingCommingStoreDTO.title != null and marketingCommingStoreDTO.title != ''">
+            AND mcs.title LIKE concat('%',#{marketingCommingStoreDTO.title},'%')
+        </if>
+        <if test="marketingCommingStoreDTO.username != null and marketingCommingStoreDTO.username != ''">
+            AND su.username LIKE concat('%',#{marketingCommingStoreDTO.username},'%')
+        </if>
+        <if test="marketingCommingStoreDTO.takeWay != null and marketingCommingStoreDTO.takeWay != ''">
+            AND mcs.take_way = #{marketingCommingStoreDTO.takeWay}
+        </if>
+        <if test="marketingCommingStoreDTO.createTime_begin != null and marketingCommingStoreDTO.createTime_begin != ''">
+            AND mcs.create_time <![CDATA[>=]]> CONCAT(#{marketingCommingStoreDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCommingStoreDTO.createTime_end != null and marketingCommingStoreDTO.createTime_end != ''">
+            AND mcs.create_time <![CDATA[<=]]> CONCAT( #{marketingCommingStoreDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingCommingStoreDTO.updateTime_begin != null and marketingCommingStoreDTO.updateTime_begin != ''">
+            AND mcs.update_time <![CDATA[>=]]> CONCAT(#{marketingCommingStoreDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCommingStoreDTO.updateTime_end != null and marketingCommingStoreDTO.updateTime_end != ''">
+            AND mcs.update_time <![CDATA[<=]]> CONCAT( #{marketingCommingStoreDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY mcs.create_time DESC) m
+        <if test="marketingCommingStoreDTO.storeName != null and marketingCommingStoreDTO.storeName != ''">
+            WHERE m.storeName LIKE concat('%',#{marketingCommingStoreDTO.storeName},'%')
+        </if>
+    </select>
+</mapper>

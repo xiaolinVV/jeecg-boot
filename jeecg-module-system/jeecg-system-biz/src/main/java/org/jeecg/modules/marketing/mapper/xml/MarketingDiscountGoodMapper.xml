@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingDiscountGoodMapper">
+
+    <select id="findGood" resultType="org.jeecg.modules.marketing.dto.MarketingDisountGoodDTO">
+        SELECT
+            gl.`id`,
+            gl.`main_picture`,
+            gl.`good_name`,
+            CONCAT(
+            gtOne.`name`,
+            '-',
+            gtTwo.`name`,
+            '-',
+            gtTree.`name`
+            ) AS typeName,
+            gl.`market_price`,
+            gl.`price`,
+            gl.`cost_price`,
+            gl.`vip_price`,
+            gl.supply_price,
+            gl.`repertory`,
+            gl.`create_time`,
+            pm.`name`
+            FROM
+            marketing_discount_good mdg
+            LEFT JOIN good_list gl
+            ON mdg.good_id = gl.id
+            LEFT JOIN good_type gtTree
+            ON gl.`good_type_id` = gtTree.`id`
+            LEFT JOIN good_type gtTwo
+            ON gtTree.`parent_id` = gtTwo.`id`
+            LEFT JOIN good_type gtOne
+            ON gtTwo.`parent_id` = gtOne.`id`
+            LEFT JOIN provider_manage pm
+            ON pm.`sys_user_id` = gl.`sys_user_id`
+        WHERE mdg.`del_flag` = 0
+          AND gl.`del_flag` = 0
+          AND mdg.`marketing_discount_id` = #{marketingDiscountId}
+    </select>
+
+
+    <select id="findStoreGood" resultType="org.jeecg.modules.marketing.dto.MarketingDisountGoodDTO">
+            SELECT
+              gsl.`id`,
+              gsl.`main_picture`,
+              gsl.`good_name`,
+              CONCAT(gstOne.`name`, '-', gstTwo.`name`) AS typeName,
+              gsl.`market_price`,
+              gsl.`price`,
+              gsl.`cost_price`,
+              gsl.`vip_price`,
+              gsl.`repertory`,
+              gsl.create_time
+              FROM
+              marketing_discount_good mdg
+              LEFT JOIN good_store_list gsl
+              ON mdg.`good_id` = gsl.`id`
+              LEFT JOIN good_store_type gstTwo
+                ON gsl.`good_store_type_id` = gstTwo.`id`
+              LEFT JOIN good_store_type gstOne
+                ON gstTwo.`parent_id` = gstOne.`id`
+        WHERE mdg.`del_flag` = 0
+          AND mdg.`marketing_discount_id` = #{marketingDiscountId}
+    </select>
+    <select id="findMarketingDiscountGoodById" resultType="map">
+        SELECT
+          gl.`id`,
+          gl.`main_picture` AS mainPicture
+        FROM
+          marketing_discount_good mdg
+          LEFT JOIN good_list gl
+            ON mdg.`good_id` = gl.`id`
+        WHERE mdg.`del_flag` = 0
+          AND mdg.`is_platform` = 1
+          AND mdg.marketing_discount_id = #{id}
+        ORDER BY mdg.`create_time` DESC
+        LIMIT 10
+    </select>
+    <select id="findMarketingDiscountStoreGoodById" resultType="map">
+        SELECT
+          gsl.`id`,
+          gsl.`main_picture` AS mainPicture
+        FROM
+          marketing_discount_good mdg
+          LEFT JOIN good_store_list gsl
+            ON mdg.`good_id` = gsl.`id`
+        WHERE mdg.`del_flag` = 0
+          AND mdg.`is_platform` = 0
+          AND mdg.marketing_discount_id = #{id}
+        ORDER BY mdg.`create_time` DESC
+        LIMIT 10
+    </select>
+    <select id="findMarketingDiscountGoodPageListById" resultType="map">
+        SELECT
+          gl.`id`,
+          gl.`main_picture` AS mainPicture,
+          gl.`good_name` AS goodName,
+          gl.`price`
+        FROM
+          marketing_discount_good mdg
+          LEFT JOIN good_list gl
+            ON mdg.`good_id` = gl.`id`
+        WHERE mdg.`del_flag` = 0
+          AND mdg.`is_platform` = 1
+          AND mdg.`marketing_discount_id` = #{id}
+        ORDER BY mdg.`create_time` DESC
+    </select>
+    <select id="findMarketingDiscountStoreGoodPageListById" resultType="map">
+        SELECT
+          gsl.`id`,
+          gsl.`main_picture` AS mainPicture,
+          gsl.`good_name` AS goodName,
+          gsl.`price`
+        FROM
+          marketing_discount_good mdg
+          LEFT JOIN good_store_list gsl
+            ON mdg.`good_id` = gsl.`id`
+        WHERE mdg.`del_flag` = 0
+          AND mdg.`is_platform` = 0
+          AND mdg.`marketing_discount_id` = #{id}
+        ORDER BY mdg.`create_time` DESC
+    </select>
+</mapper>

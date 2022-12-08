@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.vehicle.mapper.VehicleParkLicenseManagementMapper">
+
+    <select id="getVehicleParkLicenseManagementList" resultType="map">
+
+                SELECT
+            vplm.license_type AS licenseType,
+            vplm.license_plate_number AS licensePlateNumber,
+            vplm.is_default AS isDefault,
+            vplm.id
+        FROM
+            vehicle_park_license_management vplm
+        WHERE
+            vplm.member_list_id = #{memberListId}
+            AND vplm.del_flag = '0'
+        ORDER BY
+            vplm.create_time DESC
+
+
+    </select>
+
+    <select id="getVehicleParkLicenseManagementListDTO" resultType="map" parameterType="org.jeecg.modules.vehicle.dto.VehicleParkLicenseManagementDTO">
+
+                SELECT
+            vplm.id,
+            ml.phone,
+            ml.nick_name AS nickName,
+            vplm.license_type AS licenseType,
+            vplm.license_plate_number AS licensePlateNumber,
+            DATE_FORMAT( vplm.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime
+        FROM
+            vehicle_park_license_management vplm
+            LEFT JOIN member_list ml ON vplm.member_list_id = ml.id
+        WHERE
+            vplm.del_flag = '0'
+        <if test="vehicleParkLicenseManagementDTO.phone!=null and vehicleParkLicenseManagementDTO.phone!=''">
+            and ml.phone=#{vehicleParkLicenseManagementDTO.phone}
+        </if>
+
+        <if test="vehicleParkLicenseManagementDTO.nickName!=null and vehicleParkLicenseManagementDTO.nickName!=''">
+            and ml.nick_name=#{vehicleParkLicenseManagementDTO.nickName}
+        </if>
+
+
+        <if test="vehicleParkLicenseManagementDTO.licenseType!=null and vehicleParkLicenseManagementDTO.licenseType!=''">
+            and vplm.license_type=#{vehicleParkLicenseManagementDTO.licenseType}
+        </if>
+
+
+        <if test="vehicleParkLicenseManagementDTO.licensePlateNumber!=null and vehicleParkLicenseManagementDTO.licensePlateNumber!=''">
+            and vplm.license_plate_number=#{vehicleParkLicenseManagementDTO.licensePlateNumber}
+        </if>
+
+
+        <if test="vehicleParkLicenseManagementDTO.createTimeStart!=null">
+            and vplm.create_time &gt;=#{vehicleParkLicenseManagementDTO.createTimeStart}
+        </if>
+
+
+        <if test="vehicleParkLicenseManagementDTO.createTimeEnd!=null">
+            and vplm.create_time &lt;=#{vehicleParkLicenseManagementDTO.createTimeEnd}
+        </if>
+
+        ORDER BY
+        vplm.create_time DESC
+
+    </select>
+
+</mapper>

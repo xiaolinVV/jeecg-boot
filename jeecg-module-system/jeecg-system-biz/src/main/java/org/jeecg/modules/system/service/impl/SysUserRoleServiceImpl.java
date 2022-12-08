@@ -27,4 +27,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 @Service
 public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUserRole> implements ISysUserRoleService {
 
+    @Autowired
+    private SysUserRoleMapper sysUserRoleMapper;
+
+    /**
+     * 根据userId查询出对应角色
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<String> getRoleByUserId(String userId) {
+        List<String> roleByUserId = sysUserRoleMapper.getRoleByUserId(userId);
+        return roleByUserId;
+    }
 }

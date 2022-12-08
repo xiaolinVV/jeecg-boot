@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberGradeMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.member.vo.MemberGradeVO">
+        SELECT
+          mg.*,
+        CONCAT(
+        '成长达到',
+        mg.`growth_value_small`,
+        '~',
+        mg.`growth_value_big`
+        ) AS gradeCondition,
+        CONCAT(
+        '会员价*',
+        mg.discount,
+        '%') AS discountName
+        FROM
+          member_grade mg
+        WHERE mg.`del_flag` = 0
+        <if test="memberGradeDTO.id != null and memberGradeDTO.id != ''">
+            AND mg.id LIKE concat('%',#{memberGradeDTO.id},'%')
+        </if>
+        <if test="memberGradeDTO.gradeName != null and memberGradeDTO.gradeName != ''">
+            AND mg.grade_name LIKE concat('%',#{memberGradeDTO.gradeName},'%')
+        </if>
+        <if test="memberGradeDTO.status != null and memberGradeDTO.status != ''">
+            AND mg.status = #{memberGradeDTO.status}
+        </if>
+        <if test="memberGradeDTO != null and memberGradeDTO.createTime_begin != null and memberGradeDTO.createTime_begin != ''">
+            and mg.create_time <![CDATA[>=]]> CONCAT(#{memberGradeDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberGradeDTO != null and memberGradeDTO.createTime_end != null and memberGradeDTO.createTime_end != ''">
+            AND mg.create_time <![CDATA[<=]]> CONCAT( #{memberGradeDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberGradeDTO != null and memberGradeDTO.updateTime_begin != null and memberGradeDTO.updateTime_begin != ''">
+            and mg.update_time <![CDATA[>=]]> CONCAT(#{memberGradeDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="memberGradeDTO != null and memberGradeDTO.updateTime_end != null and memberGradeDTO.updateTime_end != ''">
+            AND mg.update_time <![CDATA[<=]]> CONCAT( #{memberGradeDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY mg.sort
+    </select>
+    <select id="findMemberGradeListMap" resultType="map">
+        SELECT
+          mg.`id`,
+          mg.`grade_name` AS gradeName
+        FROM
+          member_grade mg
+        WHERE mg.`del_flag` = 0
+        ORDER BY mg.`sort`
+    </select>
+    <select id="getReferMemberGradeList" resultType="map">
+        SELECT
+          mg.`grade_name` AS referGradeName,
+          mg.`grade_logo` AS referGradeLogo,
+          CONCAT(
+            0+CAST(mg.`growth_value_small` AS CHAR),
+            '-',
+            0+CAST(mg.`growth_value_big` AS CHAR)
+          ) AS refetGradeValue,
+          IF(
+            mg.`sort` != 0,
+            CONCAT(
+              '会员价再享',
+              0+CAST(mg.`discount` AS CHAR),
+              '折'
+            ),
+            '会员价'
+          ) AS discount
+        FROM
+          member_grade mg
+        WHERE mg.`del_flag` = 0
+          AND mg.`status` = 1
+        ORDER BY mg.`sort`
+    </select>
+</mapper>

@@ -5,9 +5,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 import org.jeecg.common.constant.SymbolConstant;
 import org.springframework.util.StringUtils;
@@ -682,6 +680,61 @@ public class DateUtils extends PropertyEditorSupport {
         }catch (Exception e){
         }
         return null;
+    }
+
+    /**
+     * 获取当前日期是星期几<br>
+     *
+     * @param dt
+     * @return 当前日期是星期几
+     */
+    public static String getWeekOfDate(Date dt) {
+        String[] weekDays = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dt);
+        int w = cal.get(Calendar.DAY_OF_WEEK) - 1;
+        if (w < 0)
+            w = 0;
+        return weekDays[w];
+    }
+
+    /**
+     * 获取某一段时间内的每一天的日期
+     * 张靠勤   2021-3-18
+     * @param dBegin
+     * @param dEnd
+     * @return
+     */
+    public static List<Date> findDates(Date dBegin, Date dEnd)
+    {
+        List lDate = new ArrayList();
+        lDate.add(dBegin);
+        Calendar calBegin = Calendar.getInstance();
+        // 使用给定的 Date 设置此 Calendar 的时间
+        calBegin.setTime(dBegin);
+        Calendar calEnd = Calendar.getInstance();
+        // 使用给定的 Date 设置此 Calendar 的时间
+        calEnd.setTime(dEnd);
+        // 测试此日期是否在指定日期之后
+        while (dEnd.after(calBegin.getTime()))
+        {
+            // 根据日历的规则，为给定的日历字段添加或减去指定的时间量
+            calBegin.add(Calendar.DAY_OF_MONTH, 1);
+            lDate.add(calBegin.getTime());
+        }
+        return lDate;
+    }
+
+    public static Date dateAddHour(int hour){
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) + hour);
+        return calendar.getTime();
+    }
+
+    public static Date dateAddMinute(int minute){
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE,minute);
+        return calendar.getTime();
     }
 
 }

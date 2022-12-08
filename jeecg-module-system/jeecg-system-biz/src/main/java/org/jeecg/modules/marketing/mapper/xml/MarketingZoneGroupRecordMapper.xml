@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupRecordMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mzgm.`serial_number` AS manageSerialNumber,
+          mzgr.`serial_number` AS serialNumber,
+          DATE_FORMAT(
+            mzgr.`tuxedo_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS tuxedoTime,
+          mzgm.`zone_name` AS zoneName,
+          mzgr.`good_no` AS goodNo,
+          mzgr.`main_picture` AS mainPicture,
+          mzgr.`good_name` AS goodName,
+          mzgr.`specification`,
+          mzgr.`quantity`,
+          mzgr.`pay_price` AS payPrice,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`member_type` AS memberType,
+          mzgr.`identity`,
+          mzgr.`status`,
+          mzgr.pay_zone_group_log_id AS payZoneGroupLogId
+        FROM
+          (SELECT * FROM marketing_zone_group_record ${ew.customSqlSegment}) mzgr
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgr.`marketing_zone_group_manage_id` = mzgm.`id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mzgr.`member_list_id`
+          WHERE mzgr.del_flag = 0
+          <if test="requestMap.manageSerialNumber != null and requestMap.manageSerialNumber != ''">
+              AND mzgm.serial_number LIKE concat('%',#{requestMap.manageSerialNumber},'%')
+          </if>
+        <if test="requestMap.zoneName != null and requestMap.zoneName != ''">
+            AND mzgm.`zone_name` LIKE concat('%',#{requestMap.zoneName},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.`nick_name` LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        <if test="requestMap.memberType != null and requestMap.memberType != ''">
+            AND ml.`member_type` = #{requestMap.memberType}
+        </if>
+          ORDER BY mzgr.create_time DESC
+    </select>
+
+    <select id="getIndexByStatus" resultType="map">
+                SELECT
+            mzgr.id,
+            ml.head_portrait AS headPortrait,
+            ml.nick_name AS nickName
+        FROM
+            marketing_zone_group_record mzgr
+            LEFT JOIN member_list ml ON mzgr.member_list_id = ml.id
+        WHERE
+            mzgr.`status` = '1'
+        ORDER BY
+            mzgr.create_time DESC
+            LIMIT 10
+    </select>
+    <select id="getZoneGroupManageMemberList" resultType="map">
+        SELECT
+          ml.`id`,
+          CONCAT(
+            ml.`phone`,
+            '(',
+            ml.`nick_name`,
+            ')'
+          ) AS nickName
+        FROM
+          marketing_zone_group_record mzgr
+          LEFT JOIN member_list ml
+            ON mzgr.`member_list_id` = ml.`id`
+        WHERE mzgr.`marketing_zone_group_manage_id` = #{id}
+          AND mzgr.`del_flag` = 0
+    </select>
+    <select id="getMarketingZoneGroupRecordByMemberId" resultType="map">
+        SELECT
+          (
+            CASE
+              mzgm.`status`
+              WHEN 0
+              THEN '进行中'
+              WHEN 1
+              THEN IF(
+                mzgr.`status` = 0,
+                '成功-未中奖',
+                '成功-已中奖'
+              )
+              WHEN 2
+              THEN '失败'
+              ELSE '异常'
+            END
+          ) AS statusDeclare,
+          mzgm.`zone_name` AS zoneName,
+          mzgr.`main_picture` AS mainPicture,
+          mzgr.`good_name` AS goodName,
+          mzgr.`specification`,
+          mzgm.`price` AS guoupPrice,
+          gl.market_price AS marketPrice,
+          mzgr.`quantity`,
+          mzgr.id
+        FROM
+          marketing_zone_group_record mzgr
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgr.`marketing_zone_group_manage_id` = mzgm.`id`
+          LEFT JOIN good_specification gs
+            ON gs.`id` = mzgr.`good_specification_id`
+          LEFT JOIN good_list gl
+            ON gl.id = gs.good_list_id
+        WHERE mzgr.`member_list_id` = #{map.memberId}
+        AND mzgr.del_flag = 0
+        <if test="map.status != null and map.status != ''">
+            AND mzgm.`status` = #{map.status}
+        </if>
+          ORDER BY mzgr.create_time DESC
+    </select>
+
+    <select id="getCountByMemberId" resultType="int" parameterType="map">
+                              SELECT
+                    COUNT( 1 )
+                FROM
+                    marketing_zone_group_record mzgr
+                    LEFT JOIN marketing_zone_group_manage mzgm ON mzgr.marketing_zone_group_manage_id = mzgm.id
+                WHERE
+                    mzgr.member_list_id = #{paramMap.memberId}
+
+                    AND mzgm.marketing_zone_group_id =#{paramMap.marketingZoneGroupId}
+                    AND mzgr.`year` = YEAR (
+                    NOW())
+                    AND mzgr.`month` = MONTH (
+                    NOW())
+                    AND mzgr.`day` = DAY (
+                    NOW())
+
+    </select>
+
+
+    <select id="recordsLiquidation" resultType="map">
+            SELECT
+                m.id
+            FROM
+                marketing_zone_group_record m
+                LEFT JOIN  marketing_zone_group_manage mp ON m.marketing_zone_group_manage_id = mp.id
+            WHERE
+                m.distribution_rewards = '0'
+                AND mp.`status` = '1'
+            ORDER BY
+                m.create_time ASC
+                LIMIT 1000
+    </select>
+
+    <select id="getRecordCount" resultType="int">
+               SELECT
+                    count( 1 )
+                FROM
+                    marketing_zone_group_record m LEFT JOIN marketing_zone_group_manage mi ON m.marketing_zone_group_manage_id=mi.id
+                WHERE
+                    m.member_list_id = #{paramMap.memberId}
+                    AND mi.marketing_zone_group_id=#{paramMap.mgimi}
+                    AND m.`year` = YEAR ((
+                        SELECT
+                            create_time
+                        FROM
+                            marketing_zone_group_record
+                        WHERE
+                            id =#{paramMap.id}
+                        ))
+                    AND m.`month` = MONTH ((
+                        SELECT
+                            create_time
+                        FROM
+                            marketing_zone_group_record
+                        WHERE
+                            id = #{paramMap.id}
+                        ))
+                    AND m.`day` = DAY ((
+                        SELECT
+                            create_time
+                        FROM
+                            marketing_zone_group_record
+                        WHERE
+                        id =#{paramMap.id}
+                    ))
+    </select>
+
+    <select id="getWinning" resultType="map">
+
+        SELECT
+        (
+        SELECT
+        count( 1 )
+        FROM
+        marketing_zone_group_record m
+        LEFT JOIN marketing_zone_group_manage mm ON m.marketing_zone_group_manage_id = mm.id
+        WHERE
+        m.member_list_id = mzgr.member_list_id
+        AND mm.marketing_zone_group_id = mzgm.marketing_zone_group_id
+        AND m.`status` = '1'
+        AND m.`year` = YEAR ( mzgr.create_time )
+        AND m.`month` = MONTH ( mzgr.create_time )
+        AND m.`day` = DAY ( mzgr.create_time )) winningCount,
+        (
+        SELECT
+        count( 1 )
+        FROM
+        marketing_zone_group_record m
+        LEFT JOIN marketing_zone_group_manage mm ON m.marketing_zone_group_manage_id = mm.id
+        WHERE
+        m.member_list_id = mzgr.member_list_id
+        AND mm.marketing_zone_group_id = mzgm.marketing_zone_group_id
+        AND m.`status` = '1'
+        AND m.create_time &lt;= mzgr.create_time AND m.create_time &gt;= DATE_SUB( mzgr.create_time, INTERVAL 1 MONTH )) winningTotalCount,
+        mzgr.id
+        FROM
+        marketing_zone_group_record mzgr
+        LEFT JOIN marketing_zone_group_manage mzgm ON mzgr.marketing_zone_group_manage_id = mzgm.id
+        WHERE
+        mzgr.marketing_zone_group_manage_id =#{marketingZoneGroupManageId}
+        AND (
+        SELECT
+        count( 1 )
+        FROM
+        marketing_zone_group_record m
+        LEFT JOIN marketing_zone_group_manage mm ON m.marketing_zone_group_manage_id = mm.id
+        WHERE
+        m.member_list_id = mzgr.member_list_id
+        AND mm.marketing_zone_group_id = mzgm.marketing_zone_group_id
+        AND m.`status` = '1'
+        AND m.`year` = YEAR ( mzgr.create_time )
+        AND m.`month` = MONTH ( mzgr.create_time )
+        AND m.`day` = DAY ( mzgr.create_time ))&lt; 2
+        AND (
+        SELECT
+        count( 1 )
+        FROM
+        marketing_zone_group_record m
+        LEFT JOIN marketing_zone_group_manage mm ON m.marketing_zone_group_manage_id = mm.id
+        WHERE
+        m.member_list_id = mzgr.member_list_id
+        AND mm.marketing_zone_group_id = mzgm.marketing_zone_group_id
+        AND m.`status` = '1'
+        AND m.create_time &lt;= mzgr.create_time AND m.create_time &gt;= DATE_SUB( mzgr.create_time, INTERVAL 1 MONTH ))&lt; 50
+        ORDER BY
+        winningCount ASC,
+        winningTotalCount ASC
+        LIMIT 1
+    </select>
+</mapper>

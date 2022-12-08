@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreSeriesListMapper">
+
+    <select id="queryPageList" resultType="org.jeecg.modules.store.dto.StoreSeriesListDTO">
+        SELECT
+	ss.*,
+	( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE id = ss.store_manage_id ) AS storeName
+FROM
+	store_series_list ss
+	${ew.customSqlSegment}
+    </select>
+
+	<select id="getStoreSeriesListByStoreManageId" resultType="map">
+					SELECT
+				sm.id,
+			IF
+				(
+					LENGTH(
+					TRIM( sm.`sub_store_name` )) &gt; 0,
+					CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+					sm.`store_name`
+				) AS storeName,
+				sm.logo_addr AS logoAddr,
+				sm.sys_user_id AS sysUserId,
+				ss.store_abstract AS storeAbstract
+			FROM
+				store_series_list ss
+				LEFT JOIN `store_manage` sm ON ss.store_manage_id = sm.id
+			WHERE
+				sm.`status` = '1'
+				AND sm.attestation_status IN ( 1, 2 )
+				AND ss.del_flag = '0'
+				AND ss.store_series_manage_id = #{storeSeriesManageId}
+			ORDER BY
+				ss.sort
+	</select>
+</mapper>

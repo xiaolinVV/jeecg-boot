@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingWelfarePaymentsMapper">
+    <select id="findWelfarePaymentsTotal" resultType="org.jeecg.modules.marketing.vo.MarketingWelfarePaymentsVO">
+        SELECT
+          *
+        FROM
+        (SELECT
+        mwp.id,
+        mwp.`serial_number`,
+        mwp.`user_type`,
+        mwp.`del_flag`,
+        IF(
+        mwp.`user_type` = 0,
+        '商城会员',
+        '店铺管理员'
+        ) AS typeName,
+        IF(
+        mwp.`user_type` = 0,
+        (SELECT
+        ml.phone
+        FROM
+        member_list ml
+        WHERE ml.id = mwp.`member_list_id`),
+        (SELECT
+        sm.boss_phone
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = mwp.`sys_user_id`)
+        ) AS phoneP,
+        mwp.`bargain_payments`,
+        mwp.`give_explain`,
+        mwp.`bargain_time`,
+        mwp.`send_user`,
+        mwp.`operator`,
+        mwp.trade_type
+        FROM
+        marketing_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+        AND mwp.is_platform = 1
+        ORDER BY mwp.`create_time` DESC) mp
+        WHERE mp.`del_flag` = 0
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.serialNumber != null and marketingWelfarePaymentsVO.serialNumber != ''">
+            AND mp.serial_number LIKE concat('%',#{marketingWelfarePaymentsVO.serialNumber},'%')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.userType != null and marketingWelfarePaymentsVO.userType != ''">
+            AND mp.user_type = #{marketingWelfarePaymentsVO.userType}
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.phoneP != null and marketingWelfarePaymentsVO.phoneP != ''">
+            AND mp.phoneP LIKE concat('%',#{marketingWelfarePaymentsVO.phoneP},'%')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.tradeType != null and marketingWelfarePaymentsVO.tradeType != ''">
+            AND mp.trade_type = #{marketingWelfarePaymentsVO.tradeType}
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_begin != null and marketingWelfarePaymentsVO.bargainTime_begin != ''">
+            AND mp.bargain_time <![CDATA[>=]]> CONCAT(#{marketingWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_end != null and marketingWelfarePaymentsVO.bargainTime_end != ''">
+            AND mp.bargain_time <![CDATA[<=]]> CONCAT( #{marketingWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.sendUser != null and marketingWelfarePaymentsVO.sendUser != ''">
+            AND mp.send_user LIKE concat('%',#{marketingWelfarePaymentsVO.sendUser},'%')
+        </if>
+    </select>
+    <select id="findStoreWelfarePayments" resultType="org.jeecg.modules.marketing.vo.MarketingWelfarePaymentsVO">
+        SELECT * FROM (
+        SELECT
+        mwp.id,
+        mwp.`serial_number`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        su.`username`,
+        IF(mwp.`user_type` = 0 ,'商城会员','店铺管理员') AS userType,
+        (SELECT
+        s.item_text
+        FROM
+        sys_dict_item s
+        WHERE s.dict_id =
+        (SELECT
+        id
+        FROM
+        sys_dict
+        WHERE dict_code = 'welfare_deal_type')
+        AND s.`item_value` = mwp.`trade_type`) AS tradeType,
+        mwp.`bargain_payments`,
+        mwp.`welfare_pay`,
+        mwp.`balance_pay`,
+        mwp.`balance`,
+        mwp.`bargain_time`,
+        mwp.`operator`,
+        mwp.`give_explain`,
+        mwp.go_and_come
+        FROM
+        marketing_welfare_payments mwp
+        LEFT JOIN store_manage sm
+        ON mwp.`sys_user_id` = sm.`sys_user_id`
+        LEFT JOIN sys_user su ON sm.`sys_user_id` = su.`id`
+        WHERE mwp.`del_flag` = 0
+        AND mwp.is_platform = 0
+        AND sm.`del_flag` = 0
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.uId!=null and marketingWelfarePaymentsVO.uId!=''">
+              AND mwp.sys_user_id = #{marketingWelfarePaymentsVO.uId}
+          </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.serialNumber!=null and marketingWelfarePaymentsVO.serialNumber!=''">
+            AND mwp.serial_number LIKE concat('%',concat(#{marketingWelfarePaymentsVO.serialNumber},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.username!=null and marketingWelfarePaymentsVO.username!=''">
+            AND su.username LIKE concat('%',concat(#{marketingWelfarePaymentsVO.username},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.goAndCome!=null and marketingWelfarePaymentsVO.goAndCome!=''">
+            AND mwp.go_and_come LIKE concat('%',concat(#{marketingWelfarePaymentsVO.goAndCome},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_begin != null and marketingWelfarePaymentsVO.bargainTime_begin != ''">
+            AND mwp.bargain_time <![CDATA[>=]]> CONCAT(#{marketingWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_end != null and marketingWelfarePaymentsVO.bargainTime_end != ''">
+            AND mwp.bargain_time <![CDATA[<=]]> CONCAT( #{marketingWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.operator!=null and marketingWelfarePaymentsVO.operator!=''">
+            AND mwp.operator LIKE concat('%',concat(#{marketingWelfarePaymentsVO.operator},'%'))
+        </if>
+        ORDER BY mwp.`create_time` DESC) m
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.storeName!=null and marketingWelfarePaymentsVO.storeName!=''">
+            WHERE m.storeName LIKE concat('%',concat(#{marketingWelfarePaymentsVO.storeName},'%'))
+        </if>
+    </select>
+    <select id="findWelfarePaymentsBuy" resultType="org.jeecg.modules.marketing.vo.MarketingWelfarePaymentsVO">
+        SELECT
+          mwp.id,
+          mwp.`serial_number`,
+          mwp.`bargain_payments`,
+          mwp.`welfare_pay`,
+          mwp.`balance_pay`,
+          mwp.`pay_mode`,
+          (
+            CASE
+              mwp.`pay_mode`
+              WHEN 1
+              THEN '余额支付'
+              WHEN 2
+              THEN '福利金支付'
+              WHEN 3
+              THEN '混合支付'
+              ELSE '--'
+            END
+          ) payModeName,
+          mwp.`status`,
+          IF(
+            mwp.`status` = 1,
+            '交易成功',
+            ''
+          ) AS statusName,
+          sm.`boss_name`,
+          sm.`boss_phone`,
+            IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+            sm.`store_name`,
+            '(',
+            sm.`sub_store_name`,
+            ')'
+            ),
+            sm.`store_name`
+            ) AS storeName,
+          mwp.`create_time`
+        FROM
+          marketing_welfare_payments mwp
+          LEFT JOIN store_manage sm
+            ON mwp.`sys_user_id` = sm.`sys_user_id`
+        WHERE mwp.`is_platform` = 0
+          AND mwp.balance_pay <![CDATA[>]]> 0
+          AND mwp.`we_type` = 0
+          <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.serialNumber != null and marketingWelfarePaymentsVO.serialNumber!= ''">
+              AND mwp.serial_number LIKE concat('%',concat(#{marketingWelfarePaymentsVO.serialNumber},'%'))
+          </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bossPhone != null and marketingWelfarePaymentsVO.bossPhone!= ''">
+            AND sm.boss_phone LIKE concat('%',concat(#{marketingWelfarePaymentsVO.bossPhone},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.storeName != null and marketingWelfarePaymentsVO.storeName!= ''">
+            AND sm.store_name LIKE concat('%',concat(#{marketingWelfarePaymentsVO.storeName},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_begin != null and marketingWelfarePaymentsVO.bargainTime_begin != ''">
+            AND mwp.bargain_time <![CDATA[>=]]> CONCAT(#{marketingWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_end != null and marketingWelfarePaymentsVO.bargainTime_end != ''">
+            AND mwp.bargain_time <![CDATA[<=]]> CONCAT( #{marketingWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+        ORDER BY mwp.`create_time` DESC
+    </select>
+
+    <select id="findStoreWelfarePaymentsList" resultType="org.jeecg.modules.marketing.vo.MarketingWelfarePaymentsVO">
+        SELECT * FROM (
+        SELECT
+        mwp.id,
+        mwp.`serial_number`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        su.`username`,
+        (SELECT
+        s.item_text
+        FROM
+        sys_dict_item s
+        WHERE s.dict_id =
+        (SELECT
+        id
+        FROM
+        sys_dict
+        WHERE dict_code = 'welfare_deal_type')
+        AND s.`item_value` = mwp.`trade_type`) AS tradeType,
+        IF(mwp.`we_type` = 0,'支出','收入') AS weType,
+        mwp.`bargain_payments`,
+        mwp.`welfare_payments`,
+        mwp.`go_and_come`,
+        mwp.`bargain_time`,
+        mwp.`give_explain`
+        FROM
+        marketing_welfare_payments mwp
+        LEFT JOIN store_manage sm
+        ON mwp.`sys_user_id` = sm.`sys_user_id`
+        LEFT JOIN sys_user su ON sm.`sys_user_id` = su.`id`
+        WHERE mwp.`del_flag` = 0
+        AND sm.`del_flag` = 0
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.uId!=null and marketingWelfarePaymentsVO.uId!=''">
+            AND mwp.sys_user_id = #{marketingWelfarePaymentsVO.uId}
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.serialNumber!=null and marketingWelfarePaymentsVO.serialNumber!=''">
+            AND mwp.serial_number LIKE concat('%',concat(#{marketingWelfarePaymentsVO.serialNumber},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.username!=null and marketingWelfarePaymentsVO.username!=''">
+            AND su.username LIKE concat('%',concat(#{marketingWelfarePaymentsVO.username},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.tradeType!=null and marketingWelfarePaymentsVO.tradeType!=''">
+            AND mwp.trade_type = #{marketingWelfarePaymentsVO.tradeType}
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.weType!=null and marketingWelfarePaymentsVO.weType!=''">
+            AND mwp.we_type = #{marketingWelfarePaymentsVO.weType}
+        </if>
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.goAndCome!=null and marketingWelfarePaymentsVO.goAndCome!=''">
+            AND mwp.go_and_come LIKE concat('%',concat(#{marketingWelfarePaymentsVO.goAndCome},'%'))
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_begin != null and marketingWelfarePaymentsVO.bargainTime_begin != ''">
+            AND mwp.bargain_time <![CDATA[>=]]> CONCAT(#{marketingWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.bargainTime_end != null and marketingWelfarePaymentsVO.bargainTime_end != ''">
+            AND mwp.bargain_time <![CDATA[<=]]> CONCAT( #{marketingWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+        ORDER BY mwp.`create_time` DESC) m
+        <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.storeName!=null and marketingWelfarePaymentsVO.storeName!=''">
+            WHERE m.storeName LIKE concat('%',concat(#{marketingWelfarePaymentsVO.storeName},'%'))
+        </if>
+    </select>
+    <select id="findBackStoreWelfarePayments" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'welfare_deal_type')
+            AND s.`item_value` = mwp.`trade_type`) AS tradeType,
+          IF(
+            mwp.`we_type` = 0,
+            CONCAT('-￥', mwp.`bargain_payments`),
+            CONCAT('+￥', mwp.`bargain_payments`)
+          ) AS bargainPayments,
+          DATE_FORMAT(
+            mwp.`bargain_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS bargainTime,
+          CONCAT(
+            '福利金余额 ',
+            mwp.`welfare_payments`
+          ) AS welfarePayments,
+          mwp.`we_type` AS weType
+        FROM
+          marketing_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+          AND mwp.`sys_user_id` = #{sysUserId}
+          <if test="weType!= 2">
+              AND mwp.`we_type` = #{weType}
+          </if>
+        ORDER BY mwp.`bargain_time` DESC
+    </select>
+    <select id="everydaySendOutWelfare" resultType="org.jeecg.modules.marketing.vo.MarketingDisplayVO">
+        SELECT
+        SUM(a.totalPrice) AS totalPrice,
+        a.myDate AS myDate
+        FROM
+        (SELECT
+        SUM(mwp.`bargain_payments`) AS totalPrice,
+        mwp.`day` AS myDate
+        FROM
+        marketing_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+        AND mwp.`is_platform` = 1
+        AND mwp.`bargain_time` <![CDATA[<=]]> #{map.data_end}
+        AND mwp.`bargain_time` <![CDATA[>=]]> #{map.data_begin}
+        GROUP BY myDate
+        UNION
+        SELECT
+        SUM(mwp.`bargain_payments`) AS totalPrice,
+        mwp.`day` AS myDate
+        FROM
+        marketing_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+        AND mwp.`is_platform` = 0
+        AND mwp.`we_type` = 0
+        AND mwp.`balance_pay` > 0
+        AND mwp.`bargain_time` <![CDATA[<=]]> #{map.data_end}
+        AND mwp.`bargain_time` <![CDATA[>=]]> #{map.data_begin}
+        GROUP BY myDate) a
+        GROUP BY a.myDate
+        ORDER BY a.myDate DESC
+    </select>
+
+    <select id="storeComplimentary" resultType="map">
+        SELECT
+          SUM(mwp.`bargain_payments`) AS bargainPayments,
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName
+        FROM
+          marketing_welfare_payments mwp
+          LEFT JOIN store_manage sm
+            ON mwp.`sys_user_id` = sm.`sys_user_id`
+        WHERE mwp.`del_flag` = 0
+          AND mwp.`we_type` = 0
+          AND mwp.`is_platform` = 0
+        GROUP BY storeName
+        ORDER BY bargainPayments DESC
+        LIMIT 5
+    </select>
+
+</mapper>

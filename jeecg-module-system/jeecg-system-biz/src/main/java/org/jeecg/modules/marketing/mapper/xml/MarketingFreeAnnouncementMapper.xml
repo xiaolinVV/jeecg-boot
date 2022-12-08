@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingFreeAnnouncementMapper">
+
+    <select id="selectMarketingFreeAnnouncement" resultType="map">
+                SELECT
+          announcement_title AS announcementTitle,
+          create_time AS createTime,
+          id
+        FROM
+          `marketing_free_announcement`
+        WHERE del_flag = '0'
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="getMarketingFreeAnnouncementById" resultType="map">
+                    SELECT
+              announcement_title AS announcementTitle,
+              create_time AS createTime,
+              content,
+              id
+            FROM
+              `marketing_free_announcement` mfgt
+            WHERE del_flag = '0'
+            and id=#{marketingFreeAnnouncementId}
+    </select>
+</mapper>

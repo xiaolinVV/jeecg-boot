@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProvideSettleAccountsMapper">
+ <select id="getProvideSettleAccountsList" resultType="org.jeecg.modules.provider.dto.ProvideSettleAccountsDTO">
+      SELECT
+        psa.*,
+        su.realname AS userName,
+        pm.name AS providerName,
+         CONCAT(
+        psa.`bank_card`,
+         '(',
+        psa.`bank_name`,
+         ')'
+         ) AS jointName
+      FROM
+        provide_settle_accounts psa
+        LEFT JOIN sys_user su
+          ON psa.sys_user_id = su.id
+          LEFT JOIN provider_manage pm
+           ON su.id = pm.sys_user_id
+      WHERE psa.del_flag = 0
+        AND su.del_flag = 0
+         AND pm.del_flag = 0
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.orderNo!=null and provideSettleAccountsVO.orderNo!=''">
+         AND psa.order_no LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.orderNo}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.phone!=null and provideSettleAccountsVO.phone!=''">
+         AND psa.phone LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.phone}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.providerName!=null and provideSettleAccountsVO.providerName!=''">
+         AND pm.name LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.providerName}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.userName!=null and provideSettleAccountsVO.userName!=''">
+         AND su.username LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.userName}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.withdrawalType!=null and provideSettleAccountsVO.withdrawalType!=''">
+         AND psa.withdrawal_type =#{provideSettleAccountsVO.withdrawalType}
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.bankCard!=null and provideSettleAccountsVO.bankCard!=''">
+         AND CONCAT(
+         psa.`bank_card`,
+         '(',
+         psa.`bank_name`,
+         ')'
+         ) LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.bankCard}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.cardholder!=null and provideSettleAccountsVO.cardholder!=''">
+         AND psa.cardholder LIKE CONCAT(CONCAT('%',#{provideSettleAccountsVO.cardholder}), '%')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.timeApplication_begin != null and provideSettleAccountsVO.timeApplication_begin != ''">
+         and psa.time_application <![CDATA[>=]]> concat(#{provideSettleAccountsVO.timeApplication_begin},' 00:00:00')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.timeApplication_end != null and provideSettleAccountsVO.timeApplication_end != ''">
+         AND psa.time_application <![CDATA[<=]]> concat( #{provideSettleAccountsVO.timeApplication_end},' 23:59:59')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.status!=null and provideSettleAccountsVO.status!=''">
+         AND psa.withdrawal_type =#{provideSettleAccountsVO.status}
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.auditTime_begin != null and provideSettleAccountsVO.auditTime_begin != ''">
+         and psa.auditTime <![CDATA[>=]]> concat(#{provideSettleAccountsVO.auditTime_begin},' 00:00:00')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.auditTime_end != null and provideSettleAccountsVO.auditTime_end != ''">
+         AND psa.auditTime <![CDATA[<=]]> concat( #{provideSettleAccountsVO.auditTime_end},' 23:59:59')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.payTime_begin != null and provideSettleAccountsVO.payTime_begin != ''">
+         and psa.payTime <![CDATA[>=]]> concat(#{provideSettleAccountsVO.payTime_begin},' 00:00:00')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.payTime_end != null and provideSettleAccountsVO.payTime_end != ''">
+         AND psa.payTime <![CDATA[<=]]> concat( #{provideSettleAccountsVO.payTime_end},' 23:59:59')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.createTime_begin != null and provideSettleAccountsVO.createTime_begin != ''">
+         and psa.create_time <![CDATA[>=]]> concat(#{provideSettleAccountsVO.createTime_begin},' 00:00:00')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.createTime_end != null and provideSettleAccountsVO.createTime_end != ''">
+         AND psa.create_time <![CDATA[<=]]> concat( #{provideSettleAccountsVO.createTime_end},' 23:59:59')
+     </if>
+     <if test="provideSettleAccountsVO != null and provideSettleAccountsVO.sysUserId!=null and provideSettleAccountsVO.sysUserId!=''">
+         AND psa.sys_user_id =#{provideSettleAccountsVO.sysUserId}
+     </if>
+     ORDER BY psa.create_time DESC
+ </select>
+</mapper>

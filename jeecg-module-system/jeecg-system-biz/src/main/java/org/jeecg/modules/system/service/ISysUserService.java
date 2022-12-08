@@ -11,6 +11,7 @@ import org.jeecg.common.system.vo.SysUserCacheInfo;
 import org.jeecg.modules.system.entity.SysRoleIndex;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
+import org.jeecg.modules.system.vo.SysWorkbenchVO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -302,5 +303,14 @@ public interface ISysUserService extends IService<SysUser> {
 	 * @return
 	 */
 	LoginUser getEncodeUserInfo(String username);
+
+	/**
+	 * 判断用户角色跟审核状态
+	 * @param sysUserId
+	 * @return
+	 */
+	public Map<String, Object> getUserRoleCodeAndGoodAudit(String sysUserId);
+
+	SysWorkbenchVO totalSum();
 
 }

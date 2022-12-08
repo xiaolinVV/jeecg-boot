@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingBusinessGiftTeamRecordMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingBusinessGiftTeamRecordDTO">
+
+                SELECT
+            mbgr.serial_number AS serialNumber,
+            ml.id AS mid,
+            ml.head_portrait AS headPortrait,
+            ml.phone,
+            ml.nick_name AS nickName,
+            DATE_FORMAT( mbgr.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+            mbgr.member_number AS memberNumber,
+            mbgr.performance,
+            mbgr.STATUS as status,
+            DATE_FORMAT( mbgr.`funish_time`, '%Y-%m-%d %H:%i:%s' ) AS funishTime,
+            mbgr.id
+        FROM
+            marketing_business_gift_team_record mbgr
+            LEFT JOIN member_list ml ON mbgr.member_list_id = ml.id
+
+            where mbgr.del_flag='0'
+
+            <if test="marketingBusinessGiftTeamRecordDTO.serialNumber!='' and marketingBusinessGiftTeamRecordDTO.serialNumber!=null">
+
+                and  mbgr.serial_number=#{marketingBusinessGiftTeamRecordDTO.serialNumber}
+
+            </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.mid!='' and marketingBusinessGiftTeamRecordDTO.mid!=null">
+
+            and  ml.id=#{marketingBusinessGiftTeamRecordDTO.mid}
+
+        </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.phone!='' and marketingBusinessGiftTeamRecordDTO.phone!=null">
+
+            and  ml.phone=#{marketingBusinessGiftTeamRecordDTO.phone}
+
+        </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.createTimeStart!=null">
+
+            and  mbgr.funish_time &gt;=#{marketingBusinessGiftTeamRecordDTO.createTimeStart}
+
+        </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.createTimeEnd!=null">
+
+            and  mbgr.funish_time &lt;=#{marketingBusinessGiftTeamRecordDTO.createTimeEnd}
+
+        </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.performance!='' and marketingBusinessGiftTeamRecordDTO.performance!=null">
+
+            and mbgr.performance=#{marketingBusinessGiftTeamRecordDTO.performance}
+
+        </if>
+
+        <if test="marketingBusinessGiftTeamRecordDTO.status!='' and marketingBusinessGiftTeamRecordDTO.status!=null">
+
+            and  mbgr.STATUS=#{marketingBusinessGiftTeamRecordDTO.status}
+
+        </if>
+
+        ORDER BY
+            mbgr.create_time DESC
+
+    </select>
+
+</mapper>

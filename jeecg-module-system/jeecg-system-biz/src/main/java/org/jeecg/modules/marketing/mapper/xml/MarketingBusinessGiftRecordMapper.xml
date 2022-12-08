@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingBusinessGiftRecordMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mbgr.member_list_id AS memberListId,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          mbgl.`serial_number` AS serialNumber,
+          mbgr.`gift_name` AS giftName,
+          mbgr.`sales_price` AS salesPrice,
+          tml.`phone` AS tMemberPhone,
+          tml.`nick_name` AS tMemberNickName,
+          mbgr.`referral_bonuses` AS referralBonuses,
+          DATE_FORMAT(mbgr.`pay_time`,'%Y-%m-%d %H:%i:%s') AS payTime,
+          mbgr.`trade_no` AS tradeNo,
+          mbgr.id
+        FROM
+          (SELECT * FROM marketing_business_gift_record ${ew.customSqlSegment})mbgr
+          LEFT JOIN member_list ml
+            ON ml.`id` = mbgr.`member_list_id`
+          LEFT JOIN marketing_business_gift_list mbgl
+            ON mbgl.`id` = mbgr.`marketing_business_gift_list_id`
+          LEFT JOIN member_list tml
+            ON tml.`id` = mbgr.`t_member_id`
+        WHERE ml.del_flag = 0 
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.`nick_name` LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        <if test="requestMap.serialNumbers != null and requestMap.serialNumbers != ''">
+            AND mbgl.`serial_number` LIKE concat('%',#{requestMap.serialNumbers},'%')
+        </if>
+        <if test="requestMap.giftName != null and requestMap.giftName != ''">
+            AND mbgr.`gift_name` LIKE concat('%',#{requestMap.giftName},'%')
+        </if>
+        <if test="requestMap.tMemberPhone != null and requestMap.tMemberPhone != ''">
+            AND tml.`phone` LIKE concat('%',#{requestMap.tMemberPhone},'%')
+        </if>
+        <if test="requestMap.tMemberNickName != null and requestMap.tMemberNickName != ''">
+            AND tml.`nick_name` LIKE concat('%',#{requestMap.tMemberNickName},'%')
+        </if>
+        ORDER BY mbgr.pay_time DESC
+    </select>
+    <select id="getGiftRecordDetails" resultType="map">
+        SELECT
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`member_type` AS memberType,
+          IF(
+            ml.`member_grade_id` IS NULL,
+            '~',
+            (SELECT
+              mg.`grade_name`
+            FROM
+              member_grade mg
+            WHERE mg.`id` = ml.`member_grade_id`)
+          ) AS gradeName,
+          mbgr.`consignee`,
+          mbgr.`contact_number` AS contactNumber,
+          mbgr.`shipping_address` AS shippingAddress
+        FROM
+          marketing_business_gift_record mbgr
+          LEFT JOIN member_list ml
+            ON ml.`id` = mbgr.`member_list_id`
+        WHERE mbgr.`id` = #{id}
+    </select>
+
+    <select id="getSumByMemberId" resultType="double" >
+                SELECT
+            SUM( sales_price )
+        FROM
+            `marketing_business_gift_record`
+        WHERE
+            member_list_id = #{memberId}
+            AND del_flag = '0'
+    </select>
+</mapper>

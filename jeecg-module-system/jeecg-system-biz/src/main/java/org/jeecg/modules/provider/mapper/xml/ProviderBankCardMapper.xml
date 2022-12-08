@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderBankCardMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.provider.vo.ProviderBankCardVO">
+        SELECT
+        su.`avatar`,
+        su.`username`,
+        pm.`name`,
+        pbc.*
+        FROM
+        provider_bank_card pbc
+        LEFT JOIN provider_manage pm
+        ON pbc.`sys_user_id` = pm.`sys_user_id`
+        LEFT JOIN sys_user su
+        ON su.`id` = pm.`sys_user_id`
+        WHERE pbc.`del_flag` = 0
+        AND pm.`del_flag` = 0
+        AND su.`del_flag` = 0
+        AND pbc.car_type = 0
+        <if test="providerBankCardDTO.username != null and providerBankCardDTO.username != ''">
+            AND su.username LIKE concat('%',#{providerBankCardDTO.username},'%')
+        </if>
+        <if test="providerBankCardDTO.name != null and providerBankCardDTO.name != ''">
+            AND pm.name LIKE concat('%',#{providerBankCardDTO.name},'%')
+        </if>
+        <if test="providerBankCardDTO.phone != null and providerBankCardDTO.phone != ''">
+            AND pbc.phone LIKE concat('%',#{providerBankCardDTO.phone},'%')
+        </if>
+        <if test="providerBankCardDTO.bankName != null and providerBankCardDTO.bankName != ''">
+            AND pbc.bank_name LIKE concat('%',#{providerBankCardDTO.bankName},'%')
+        </if>
+        <if test="providerBankCardDTO.bankCard != null and providerBankCardDTO.bankCard != ''">
+            AND pbc.bank_card LIKE concat('%',#{providerBankCardDTO.bankCard},'%')
+        </if>
+        <if test="providerBankCardDTO.createTime_begin != null and providerBankCardDTO.createTime_begin != ''">
+            and pbc.create_time <![CDATA[>=]]> CONCAT(#{providerBankCardDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerBankCardDTO.createTime_end != null and providerBankCardDTO.createTime_end != ''">
+            AND pbc.create_time <![CDATA[<=]]> CONCAT( #{providerBankCardDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="providerBankCardDTO.updateTime_begin != null and providerBankCardDTO.updateTime_begin != ''">
+            and pbc.update_time <![CDATA[>=]]> CONCAT(#{providerBankCardDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="providerBankCardDTO.updateTime_end != null and providerBankCardDTO.updateTime_end != ''">
+            AND pbc.update_time <![CDATA[<=]]> CONCAT( #{providerBankCardDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY pbc.`create_time` DESC
+    </select>
+</mapper>

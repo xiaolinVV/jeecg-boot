@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreFunctionSetMapper">
+
+    <select id="getStore" resultType="map">
+              SELECT
+            sm.id,
+            CONCAT( sm.store_name, "(", sm.sub_store_name, ")" ) AS storeName
+        FROM
+            store_function_set sfs
+            LEFT JOIN store_manage sm ON sfs.store_manage_id = sm.id
+        WHERE
+            sfs.del_flag = '0'
+            AND sm.del_flag = '0'
+            <if test="type==1">
+              AND sfs.rooms_management = '1'
+            </if>
+    </select>
+</mapper>

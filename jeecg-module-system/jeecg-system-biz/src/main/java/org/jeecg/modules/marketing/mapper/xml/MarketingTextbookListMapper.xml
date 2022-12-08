@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingTextbookListMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingTextbookListVO">
+        SELECT
+          mtl.*,
+          mtc.`name`,
+          su.`realname`
+        FROM
+          marketing_textbook_list mtl
+          LEFT JOIN marketing_textbook_column mtc
+            ON mtl.`marketing_textbook_column_id` = mtc.`id`
+          LEFT JOIN sys_user su
+            ON mtl.`sys_user_id` = su.`id`
+        WHERE mtl.`del_flag` = 0
+          AND mtc.`del_flag` = 0
+          AND su.`del_flag` = 0
+          <if test="marketingTextbookListDTO.id != null and marketingTextbookListDTO.id != ''">
+              AND mtl.id LIKE concat('%',#{marketingTextbookListDTO.id},'%')
+          </if>
+        <if test="marketingTextbookListDTO.title != null and marketingTextbookListDTO.title != ''">
+            AND mtl.title LIKE concat('%',#{marketingTextbookListDTO.title},'%')
+        </if>
+        <if test="marketingTextbookListDTO.realname != null and marketingTextbookListDTO.realname != ''">
+            AND su.realname LIKE concat('%',#{marketingTextbookListDTO.realname},'%')
+        </if>
+        <if test="marketingTextbookListDTO.materialType != null and marketingTextbookListDTO.materialType != ''">
+            AND mtl.materialType = #{marketingTextbookListDTO.materialType}
+        </if>
+        <if test="marketingTextbookListDTO.isPublish != null and marketingTextbookListDTO.isPublish != ''">
+            AND mtl.is_publish = #{marketingTextbookListDTO.isPublish}
+        </if>
+        <if test="marketingTextbookListDTO.createTime_begin != null and marketingTextbookListDTO.createTime_begin != ''">
+            AND mtl.create_time <![CDATA[>=]]> CONCAT(#{marketingTextbookListDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingTextbookListDTO.createTime_end != null and marketingTextbookListDTO.createTime_end != ''">
+            AND mtl.create_time <![CDATA[<=]]> CONCAT( #{marketingTextbookListDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingTextbookListDTO.marketingTextbookColumnId != null and marketingTextbookListDTO.marketingTextbookColumnId != ''">
+            AND mtl.marketing_textbook_column_id = #{marketingTextbookListDTO.marketingTextbookColumnId}
+        </if>
+    </select>
+    <select id="findMarketingTextbookList" resultType="map">
+        SELECT
+          mtl.`id`,
+          DATE_FORMAT(mtl.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+          mtl.`title`,
+          mtl.`surface_plot` AS surfacePlot,
+          mtl.`keyword`,
+          mtl.content,
+          mtl.author,
+          mtl.abstract_digest AS abstractDigest
+        FROM
+          marketing_textbook_list mtl
+        WHERE mtl.`del_flag` = 0
+          AND mtl.`is_publish` = 1
+          AND mtl.marketing_textbook_column_id = #{id}
+          ORDER BY mtl.`sort`
+    </select>
+    <select id="findMarketingTextBookById" resultType="map">
+        SELECT
+          mtl.`id`,
+          mtl.`title`,
+          DATE_FORMAT(mtl.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+          mtl.`surface_plot` AS surfacePlot,
+          mtl.`keyword`,
+          mtl.`author`,
+          mtl.`abstract_digest` AS abstractDigest,
+          mtl.`posters` ,
+          mtl.`cover_plan` AS coverPlan,
+          mtl.`material_type` AS materialType,
+          mtl.`content` AS content,
+          mtl.`material_video` AS materialVideo,
+          mtl.`initial_views` AS initialViews,
+          mtl.`initial_praise` AS initialPraise
+        FROM
+          marketing_textbook_list mtl
+        WHERE mtl.`del_flag` = 0
+          AND mtl.`is_publish` = 1
+          AND mtl.id = #{id}
+    </select>
+    <select id="findMarketingTextBookByTitle" resultType="map">
+        SELECT
+          mtl.`id`,
+          DATE_FORMAT(mtl.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+          mtl.`title`,
+          mtl.`surface_plot` AS surfacePlot,
+          mtl.`keyword`,
+          mtl.author,
+          mtl.abstract_digest AS abstractDigest
+        FROM
+          marketing_textbook_list mtl
+        WHERE mtl.`del_flag` = 0
+          AND mtl.`is_publish` = 1
+          AND mtl.title LIKE concat('%',#{title},'%')
+          ORDER BY mtl.`sort`
+    </select>
+</mapper>

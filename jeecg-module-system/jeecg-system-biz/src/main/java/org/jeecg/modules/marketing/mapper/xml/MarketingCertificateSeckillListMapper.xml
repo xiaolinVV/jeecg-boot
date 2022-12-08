@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateSeckillListMapper">
+    <select id="pageListBySout" resultType="map">
+        SELECT
+          m.id,
+          m.mainPicture,
+          m.activityPrice,
+          m.name,
+          m.price,
+         0 + CAST( (
+            truncate(m.repertory / (
+              (select
+                count(1)
+              from
+                marketing_certificate_record mcr
+              where mcr.`del_flag` = 0
+                and mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
+            ),2) * 100
+          ) AS CHAR)AS residue
+        FROM
+          (SELECT
+            mcsl.`id`,
+            mc.`main_picture` AS mainPicture,
+            CONCAT('￥', mcsl.`activity_price`) AS activityPrice,
+            mc.`name`,
+            mc.`market_price` AS price,
+            (
+              mc.`total` - mc.`released_quantity`
+            ) AS repertory,
+            mcsl.`marketing_certificate_id`
+          FROM
+            marketing_certificate_seckill_list mcsl
+            LEFT JOIN marketing_certificate mc
+              ON mcsl.`marketing_certificate_id` = mc.`id`
+          WHERE mcsl.`del_flag` = 0
+            AND mcsl.status = 1
+            AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateSeckillActivityListId}
+            ORDER BY mcsl.sort
+          LIMIT #{sout}
+            ) m
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateSeckillListVO">
+      SELECT
+        *
+      FROM
+        (SELECT
+          mcsl.*,
+          mc.`name`,
+          mc.`main_picture`,
+          mc.`market_price`,
+          mc.`price`,
+          mc.`cost_price`,
+          (mc.`total` - mc.`released_quantity`) AS total,
+          0 + CAST((mcsl.activity_price / mc.`price` *100)AS CHAR) AS discountActivity
+        FROM
+          marketing_certificate_seckill_list mcsl
+          LEFT JOIN marketing_certificate mc
+            ON mcsl.`marketing_certificate_id` = mc.`id`
+        WHERE mcsl.`del_flag` = 0
+        ORDER BY mcsl.`sort`)m ${ew.customSqlSegment}
+    </select>
+    <select id="pageListByMarketingCertificateSeckillActivityListId" resultType="map">
+      SELECT
+        m.id,
+        m.mainPicture,
+        m.marketPrice,
+        m.activityPrice,
+        m.name,
+        0 + CAST((
+          TRUNCATE(m.repertory / (
+            (select
+                count(1)
+              from
+                marketing_certificate_record mcr
+              where mcr.`del_flag` = 0
+                and mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
+          ),2)* 100
+        ) AS CHAR)AS residue
+      FROM
+        (SELECT
+          mcsl.`id`,
+          mc.`main_picture` AS mainPicture,
+          mc.`market_price` AS marketPrice,
+          mc.`name`,
+          mcsl.`activity_price` AS activityPrice,
+          (
+            mc.`total` - mc.`released_quantity`
+          ) AS repertory,
+          mcsl.`marketing_certificate_id`
+        FROM
+          marketing_certificate_seckill_list mcsl
+          LEFT JOIN marketing_certificate mc
+            ON mcsl.`marketing_certificate_id` = mc.`id`
+        WHERE mcsl.`del_flag` = 0
+          AND mcsl.status = 1
+          AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateSeckillActivityListId}
+        ORDER BY mcsl.`sort`) m
+    </select>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingRushTypeMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mrt.`id`,
+          mrt.`create_by` AS createBy,
+          DATE_FORMAT(mrt.`create_time` ,'%Y-%m-%d %H:%i:%s')AS createTime,
+          mrt.`update_by` AS updateBy,
+          DATE_FORMAT(mrt.`update_time` ,'%Y-%m-%d %H:%i:%s') AS updateTime,
+          mrt.`rush_name` AS rushName,
+          mrt.`price`,
+          mrt.`purchase_limitation` AS purchaseLimitation,
+          mrt.`group_rewards` AS groupRewards,
+          mrt.`group_rewards_type` AS groupRewardsType,
+          mrt.recommend_group_rewards AS recommendGroupRewards,
+          mrt.recommend_group_rewards_type AS recommendGroupRewardsType,
+          mrt.`transformation_threshold` AS transformationThreshold,
+          mrt.`can_consignment` AS canConsignment,
+          mrt.`marketing_prefecture_id` AS marketingPrefectureId,
+          mrt.`marketing_prefecture_type_id` AS marketingPrefectureTypeId,
+          mrt.`status`,
+          mrt.`status_explain` AS statusExplain,
+          mrt.`sort`,
+          mrt.into_balance AS intoBalance,
+          mrt.into_shopping_credits AS intoShoppingCredits
+        FROM marketing_rush_type mrt
+        ${ew.customSqlSegment}
+    </select>
+</mapper>

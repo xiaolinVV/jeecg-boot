@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.vo.SysUserDepVo;
+import org.jeecg.modules.system.vo.SysWorkbenchVO;
 
 import java.util.List;
 
@@ -157,4 +158,12 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 * @return
 	 */
 	List<SysUser> queryByDepIds(@Param("departIds")List<String> departIds,@Param("username") String username);
+
+	/**
+	 * 根据sysUserId 查询 返回角色roleCode
+	 */
+
+	List<String> getUserRoleCode(@Param("sysUserId") String sysUserId);
+
+	SysWorkbenchVO totalSum();
 }

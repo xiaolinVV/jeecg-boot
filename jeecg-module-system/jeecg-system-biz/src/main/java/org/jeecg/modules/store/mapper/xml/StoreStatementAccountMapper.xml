@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreStatementAccountMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreStatementAccountVO">
+        SELECT * FROM (
+        SELECT
+        ssa.id,
+        ssa.`calendar_date`,
+        su.`username` AS userName,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        ssa.`earning`,
+        ssa.`income_number`,
+        ssa.`expenditure`,
+        ssa.`expenditure_number`,
+        ssa.`revenue`,
+        ssa.`start_balance`,
+        ssa.`end_balance`
+        FROM
+        store_statement_account ssa
+        LEFT JOIN store_manage sm
+        ON ssa.`store_manage_id` = sm.`id`
+        LEFT JOIN sys_user su
+        ON su.`id` = sm.`sys_user_id`
+        WHERE ssa.`del_flag` = 0
+        <if test="storeStatementAccountDTO != null and storeStatementAccountDTO.sysUserId != null and storeStatementAccountDTO.sysUserId != ''">
+            AND sm.`sys_user_id` = #{storeStatementAccountDTO.sysUserId}
+        </if>
+        <if test="storeStatementAccountDTO != null and storeStatementAccountDTO.calendarDate_begin != null and storeStatementAccountDTO.calendarDate_begin != ''">
+            and ssa.`calendar_date` <![CDATA[>=]]> concat(#{storeStatementAccountDTO.calendarDate_begin},' 00:00:00')
+        </if>
+        <if test="storeStatementAccountDTO != null and storeStatementAccountDTO.calendarDate_end != null and storeStatementAccountDTO.calendarDate_end != ''">
+            AND ssa.`calendar_date` <![CDATA[<=]]> concat( #{storeStatementAccountDTO.calendarDate_end},' 23:59:59')
+        </if>
+        <if test="storeStatementAccountDTO != null and storeStatementAccountDTO.userName != null and storeStatementAccountDTO.userName != ''">
+            AND su.username LIKE concat('%',concat(#{storeStatementAccountDTO.userName},'%'))
+        </if>
+        ORDER BY ssa.`calendar_date` DESC
+        ) m
+        <if test="storeStatementAccountDTO != null and storeStatementAccountDTO.storeName != null and storeStatementAccountDTO.storeName != ''">
+            WHERE m.storeName LIKE concat('%',concat(#{storeStatementAccountDTO.storeName},'%'))
+        </if>
+    </select>
+</mapper>

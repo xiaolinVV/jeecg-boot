@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGroupGoodListMapper">
+
+    <select id="selectMarketingGroupGoodList" resultType="map" parameterType="map">
+        SELECT
+        gl.good_no AS goodNo,
+        gl.main_picture AS mainPicture,
+        gl.good_name AS goodName,
+        gl.price,
+        gl.supply_price AS supplyPrice,
+        1 AS isPlatform,
+        gl.repertory,
+        (SELECT
+        CONCAT(
+        gtThree.name,
+        '-',
+        gtTwo.name,
+        '-',
+        gtOne.name
+        )
+        FROM
+        good_type gtOne
+        LEFT JOIN good_type gtTwo
+        ON gtTwo.id = gtOne.parent_id
+        LEFT JOIN good_type gtThree
+        ON gtThree.id = gtTwo.parent_id
+        WHERE gtOne.id = gl.`good_type_id`) AS goodTypeName,
+        gl.`market_price` AS marketPrice,
+        gl.is_specification AS isSpecification,
+        gl.`id` AS goodListId,
+        gl.`good_type_id` AS goodTypeId,
+        mfgl.`is_recommend` AS isRecommend,
+        (SELECT
+        type_name
+        FROM
+        `marketing_group_good_type`
+        WHERE id = mfgl.`marketing_group_good_type_id`) AS typeName,
+        mfgl.`status`,
+        mfgl.`status_explain` AS statusExplain,
+        DATE_FORMAT(mfgl.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+        mfgl.`id`,
+        mfgl.`create_by` AS createBy,
+        mfgl.`update_by` AS updateBy,
+        DATE_FORMAT(mfgl.`update_time`,'%Y-%m-%d %H:%i:%s') AS updateTime,
+        DATE_FORMAT(mfgl.start_time,'%Y-%m-%d %H:%i:%s') AS startTime,
+        DATE_FORMAT(mfgl.end_time,'%Y-%m-%d %H:%i:%s') AS endTime,
+        (SELECT
+        mfgs.group_price
+        FROM
+        `marketing_group_good_specification` mfgs
+        LEFT JOIN good_specification gs
+        ON gs.id = mfgs.`good_specification_id`
+        WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+        AND mfgs.del_flag = '0'
+        AND gs.`del_flag` = '0'
+        ORDER BY group_price ASC
+        LIMIT 1) groupPrice,
+        (SELECT
+        mfgs.group_price_proportion
+        FROM
+        `marketing_group_good_specification` mfgs
+        LEFT JOIN good_specification gs
+        ON gs.id = mfgs.`good_specification_id`
+        WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+        AND mfgs.del_flag = '0'
+        AND gs.`del_flag` = '0'
+        ORDER BY group_price ASC
+        LIMIT 1) groupPriceProportion,
+        mfgl.`number_tuxedo` AS numberTuxedo,
+        mfgl.`tuxedo_welfare_payments` AS tuxedoWelfarePayments,
+        mfgl.`return_proportion` AS returnProportion,
+        mfgl.`activity_time` AS activityTime,
+        mfgl.`activity_unit` AS activityUnit,
+        mfgl.sort,
+        mfgl.`marketing_group_good_type_id` AS marketingGroupGoodTypeId
+        FROM
+        `marketing_group_good_list` mfgl
+        LEFT JOIN good_list gl
+        ON gl.`id` = mfgl.`good_list_id`
+        WHERE mfgl.`del_flag` = '0'
+        AND gl.del_flag = '0'
+        AND gl.status = '1'
+        AND gl.frame_status = '1'
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+
+        <if test="paramMap.goodNo!=null and paramMap.goodNo!=''">
+            and gl.good_no=#{paramMap.goodNo}
+        </if>
+
+        <if test="paramMap.goodName!=null and paramMap.goodName!=''">
+            and gl.good_name  like concat('%',#{paramMap.goodName},'%')
+        </if>
+
+        <if test="paramMap.goodTypeId!=null and paramMap.goodTypeId!=''">
+            and gl.good_type_id=#{paramMap.goodTypeId}
+        </if>
+
+        <if test="paramMap.marketingGroupGoodTypeId!=null and paramMap.marketingGroupGoodTypeId!=''">
+            and mfgl.marketing_group_good_type_id=#{paramMap.marketingGroupGoodTypeId}
+        </if>
+
+        <if test="paramMap.createTimeStart!=null and paramMap.createTimeStart!=''">
+            and mfgl.create_time &gt;=#{paramMap.createTimeStart}
+        </if>
+
+
+        <if test="paramMap.createTimeEnd!=null and paramMap.createTimeEnd!=''">
+            and mfgl.create_time &lt;=#{paramMap.createTimeEnd}
+        </if>
+
+        <if test="paramMap.startTimeStart!=null and paramMap.startTimeStart!=''">
+            and mfgl.start_time &gt;=#{paramMap.startTimeStart}
+        </if>
+
+
+        <if test="paramMap.startTimeEnd!=null and paramMap.startTimeEnd!=''">
+            and mfgl.start_time &lt;=#{paramMap.startTimeEnd}
+        </if>
+
+        <if test="paramMap.endTimeStart!=null and paramMap.endTimeStart!=''">
+            and mfgl.end_time &gt;=#{paramMap.endTimeStart}
+        </if>
+
+
+        <if test="paramMap.endTimeEnd!=null and paramMap.endTimeEnd!=''">
+            and mfgl.end_time &lt;=#{paramMap.endTimeEnd}
+        </if>
+
+        <if test="paramMap.updateTimeStart!=null and paramMap.updateTimeStart!=''">
+            and mfgl.update_time &gt;=#{paramMap.updateTimeStart}
+        </if>
+
+
+        <if test="paramMap.updateTimeEnd!=null and paramMap.updateTimeEnd!=''">
+            and mfgl.update_time &lt;=#{paramMap.updateTimeEnd}
+        </if>
+
+        <if test="paramMap.isRecommend!=null and paramMap.isRecommend!=''">
+            and mfgl.is_recommend=#{paramMap.isRecommend}
+        </if>
+
+        <if test="paramMap.status!=null and paramMap.status!=''">
+            and mfgl.status=#{paramMap.status}
+        </if>
+
+        order by gl.small_price asc,
+        gl.sales_volume,
+        gl.update_time desc
+    </select>
+
+
+    <select id="selectMarketingGroupGoodListByIsRecommend" resultType="map">
+                    SELECT
+              gl.main_picture AS mainPicture,
+              gl.good_name AS goodName,
+              gl.`market_price` AS marketPrice,
+              gl.`id` AS goodListId,
+              1 AS isPlatform,
+              mfgl.`id`,
+              (SELECT
+                mfgs.group_price
+              FROM
+                `marketing_group_good_specification` mfgs
+                LEFT JOIN good_specification gs
+                  ON gs.id = mfgs.`good_specification_id`
+              WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+                AND mfgs.del_flag = '0'
+                AND gs.`del_flag` = '0'
+              ORDER BY group_price ASC
+              LIMIT 1) groupPrice,
+              (SELECT label FROM marketing_group_base_setting LIMIT 1) AS label
+            FROM
+              `marketing_group_good_list` mfgl
+              LEFT JOIN good_list gl
+                ON gl.`id` = mfgl.`good_list_id`
+            WHERE mfgl.`del_flag` = '0'
+            AND mfgl.`status`='1'
+              AND gl.del_flag = '0'
+              AND gl.status = '1'
+              AND gl.frame_status = '1'
+              AND gl.good_form = '0'
+              AND gl.audit_status = '2'
+              AND mfgl.`is_recommend`='1'
+              and (SELECT
+            mfgs.group_price
+          FROM
+            `marketing_group_good_specification` mfgs
+            LEFT JOIN good_specification gs
+              ON gs.id = mfgs.`good_specification_id`
+          WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+            AND mfgs.del_flag = '0'
+            AND gs.`del_flag` = '0'
+          ORDER BY group_price ASC
+          LIMIT 1) is not null
+            ORDER BY gl.small_price ASC,
+              gl.sales_volume,
+              gl.update_time DESC
+    </select>
+
+
+    <select id="selectMarketingGroupGoodListByMarketingGroupGoodTypeId" resultType="map" parameterType="map">
+                SELECT
+          gl.main_picture AS mainPicture,
+          gl.good_name AS goodName,
+          gl.`market_price` AS marketPrice,
+          gl.`id` AS goodListId,
+          1 AS isPlatform,
+          mfgl.`id`,
+          (SELECT
+            mfgs.group_price
+          FROM
+            `marketing_group_good_specification` mfgs
+            LEFT JOIN good_specification gs
+              ON gs.id = mfgs.`good_specification_id`
+          WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+            AND mfgs.del_flag = '0'
+            AND gs.`del_flag` = '0'
+          ORDER BY group_price ASC
+          LIMIT 1) groupPrice,
+          (select label from marketing_group_base_setting limit 1) AS label
+        FROM
+          `marketing_group_good_list` mfgl
+          LEFT JOIN good_list gl
+            ON gl.`id` = mfgl.`good_list_id`
+        WHERE mfgl.`del_flag` = '0'
+        AND mfgl.`status`='1'
+          AND gl.del_flag = '0'
+          AND gl.status = '1'
+          AND gl.frame_status = '1'
+          AND gl.good_form = '0'
+          AND gl.audit_status = '2'
+        and mfgl.start_time&lt;=NOW()
+        and mfgl.end_time&gt;=NOW()
+        and (SELECT
+            mfgs.group_price
+          FROM
+            `marketing_group_good_specification` mfgs
+            LEFT JOIN good_specification gs
+              ON gs.id = mfgs.`good_specification_id`
+          WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+            AND mfgs.del_flag = '0'
+            AND gs.`del_flag` = '0'
+          ORDER BY group_price ASC
+          LIMIT 1) is not null
+          AND mfgl.`marketing_group_good_type_id`=#{paramMap.marketingGroupGoodTypeId}
+        <if test='paramMap.pattern=="0"'>
+            ORDER BY gl.small_price ASC,
+            gl.sales_volume,
+            gl.update_time DESC
+        </if>
+        <if test='paramMap.pattern=="1"'>
+            ORDER BY mfgl.sort ASC
+        </if>
+    </select>
+
+
+    <select id="selectMarketingGroupGoodListBySearch" resultType="map" parameterType="map">
+        SELECT
+        gl.main_picture AS mainPicture,
+        gl.good_name AS goodName,
+        gl.`market_price` AS marketPrice,
+        gl.`id` AS goodListId,
+        1 AS isPlatform,
+        mfgl.`id`,
+        (SELECT
+        mfgs.group_price
+        FROM
+        `marketing_group_good_specification` mfgs
+        LEFT JOIN good_specification gs
+        ON gs.id = mfgs.`good_specification_id`
+        WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+        AND mfgs.del_flag = '0'
+        AND gs.`del_flag` = '0'
+        ORDER BY group_price ASC
+        LIMIT 1) groupPrice,
+        (select label from marketing_group_base_setting limit 1) AS label
+        FROM
+        `marketing_group_good_list` mfgl
+        LEFT JOIN good_list gl
+        ON gl.`id` = mfgl.`good_list_id`
+        WHERE mfgl.`del_flag` = '0'
+        AND mfgl.`status`='1'
+        AND gl.del_flag = '0'
+        AND gl.status = '1'
+        AND gl.frame_status = '1'
+        AND gl.good_form = '0'
+        AND gl.audit_status = '2'
+        and mfgl.start_time&lt;=NOW()
+        and mfgl.end_time&gt;=NOW()
+        and (SELECT
+        mfgs.group_price
+        FROM
+        `marketing_group_good_specification` mfgs
+        LEFT JOIN good_specification gs
+        ON gs.id = mfgs.`good_specification_id`
+        WHERE mfgs.marketing_group_good_list_id = mfgl.`id`
+        AND mfgs.del_flag = '0'
+        AND gs.`del_flag` = '0'
+        ORDER BY group_price ASC
+        LIMIT 1) is not null
+        <if test="paramMap.search!=null">and (gl.good_name like concat('%',#{paramMap.search},'%') or gl.good_describe like concat('%',#{paramMap.search},'%'))</if>
+        <if test="paramMap.pattern==0">order by gl.small_price asc,gl.sales_volume,gl.update_time desc </if>
+        <if test="paramMap.pattern==5">order by mfgl.sort asc </if>
+        <if test="paramMap.pattern==1">order by gl.sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by gl.update_time desc</if>
+        <if test="paramMap.pattern==3">order by gl.small_price</if>
+        <if test="paramMap.pattern==4">order by gl.small_price desc </if>
+    </select>
+</mapper>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberDesignationGroupMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.member.vo.MemberDesignationGroupVO">
+        SELECT
+          *
+        FROM (
+        SELECT
+          mdg.*,
+          ml.`nick_name`,
+          ml.`head_portrait`,
+          ml.`phone`,
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
+            CONCAT(
+            sm.`store_name`,
+            '(',
+            sm.`sub_store_name`,
+            ')'
+            ),
+            sm.`store_name`
+            ) AS storeName
+        FROM
+          member_designation_group mdg
+          LEFT JOIN member_list ml
+            ON mdg.`member_id` = ml.`id`
+          LEFT JOIN store_manage sm
+            ON mdg.store_manage_id = sm.id
+        WHERE mdg.`del_flag` = 0) m ${ew.customSqlSegment}
+    </select>
+    <select id="findMemberDesignationGroupByName" resultType="map">
+        SELECT
+        mdg.`id`,
+        mdg.`group_name` AS groupName,
+        IF(
+        (SELECT
+        COUNT(1)
+        FROM
+        member_designation md
+        WHERE md.`del_flag` = 0
+        AND md.`member_designation_group_id` = mdg.`id`) > 0,
+        (SELECT
+        md.sort
+        FROM
+        member_designation md
+        WHERE md.`del_flag` = 0
+        AND md.`member_designation_group_id` = mdg.`id`
+        ORDER BY md.sort DESC
+        LIMIT 1),
+        0
+        ) AS sort
+        FROM
+        member_designation_group mdg
+        WHERE mdg.`del_flag` = 0
+        <if test="name != null and name != ''">
+            AND mdg.`group_name` LIKE concat('%',#{name},'%')
+        </if>
+        limit 10
+    </select>
+    <select id="getToDayPartner" resultType="map">
+        SELECT
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          sm.id,
+        (SELECT
+          COUNT(1)
+        FROM
+          member_designation_member_list mdml
+        WHERE mdml.`member_designation_group_id` = mdg.id
+        AND DATE_FORMAT(
+            mdml.`member_join_time`,
+            '%Y-%m-%d'
+          ) = #{date})  AS countSum
+        FROM
+          member_designation_group mdg
+          LEFT JOIN store_manage sm
+            ON mdg.`store_manage_id` = sm.`id`
+        WHERE sm.`alliance_user_id` = #{id}
+        GROUP BY sm.`id`
+        ORDER BY countSum DESC
+    </select>
+    <select id="getNewPartner" resultType="map">
+        SELECT
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          md.`name`,
+          ml.`nick_name` AS nickName,
+          sm.id
+        FROM
+          member_designation_group mdg
+          LEFT JOIN store_manage sm
+            ON mdg.`store_manage_id` = sm.`id`
+          LEFT JOIN member_designation_member_list mdml
+            ON mdml.`member_designation_group_id` = mdg.`id`
+          LEFT JOIN member_designation md
+            ON md.`id` = mdml.`member_designation_id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mdml.`member_list_id`
+        WHERE sm.`alliance_user_id` = #{id}
+        ORDER BY mdml.`member_join_time` DESC
+        LIMIT 10
+    </select>
+    <select id="getPerformanceSum" resultType="map">
+        SELECT
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          sm.id,
+          (SELECT
+            IF(
+              SUM(mgbr.`price`) IS NULL,
+              0,
+              SUM(mgbr.`price`)
+            )
+          FROM
+            marketing_gift_bag_record mgbr
+            LEFT JOIN marketing_gift_bag mgb
+              ON mgbr.`marketing_gift_bag_id` = mgb.`id`
+          WHERE mgbr.`del_flag` = 0
+            AND mgbr.`pay_status` = 1
+            AND mgbr.distribution_channel = sm.`sys_user_id`
+            AND (
+              mgb.`member_designation_id` IS NOT NULL
+              OR LENGTH(
+                TRIM(mgb.`member_designation_id`)
+              ) > 0
+            )) AS priceSum
+        FROM
+          store_manage sm
+        WHERE sm.`alliance_user_id` = #{id}
+          AND sm.`del_flag` = 0
+          AND sm.`pay_status` IN (1, 2)
+        ORDER BY priceSum DESC
+    </select>
+    <select id="getToDayPerformance" resultType="map">
+        SELECT
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          sm.id,
+          (SELECT
+            IF(
+              SUM(mgbr.`price`) IS NULL,
+              0,
+              SUM(mgbr.`price`)
+            )
+          FROM
+            marketing_gift_bag_record mgbr
+            LEFT JOIN marketing_gift_bag mgb
+              ON mgbr.`marketing_gift_bag_id` = mgb.`id`
+          WHERE mgbr.`del_flag` = 0
+            AND mgbr.`pay_status` = 1
+            AND mgbr.distribution_channel = sm.`sys_user_id`
+            AND DATE_FORMAT(mgbr.`pay_time`, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
+            AND (
+              mgb.`member_designation_id` IS NOT NULL
+              OR LENGTH(
+                TRIM(mgb.`member_designation_id`)
+              ) > 0
+            )) AS priceSum
+        FROM
+          store_manage sm
+        WHERE sm.`alliance_user_id` = #{id}
+          AND sm.`del_flag` = 0
+          AND sm.`pay_status` IN (1, 2)
+        ORDER BY priceSum DESC
+    </select>
+</mapper>

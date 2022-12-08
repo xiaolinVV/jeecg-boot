@@ -24,6 +24,7 @@ public class PasswordUtil {
      * 加密算法
      */
 	public static final String ALGORITHM = "PBEWithMD5AndDES";
+	public static final String Salt = "63293188";//密钥
 
     /**
      * 定义使用的算法为:PBEWITHMD5andDES算法

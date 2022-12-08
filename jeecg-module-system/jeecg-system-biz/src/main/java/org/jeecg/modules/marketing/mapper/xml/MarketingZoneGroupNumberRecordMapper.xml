@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupNumberRecordMapper">
+    <select id="findMarketingZoneGroupNumberRecordByMarketingZoneGroupTimeId" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'create_group_add_lessen_type')
+            AND s.`item_value` = mzgnr.`trade_type`) AS tradeType,
+          mzgnr.`go_and_come` AS goAndCome,
+          mzgnr.`group_number` AS groupNumber,
+          mzgnr.`number_available` AS numberAvailable,
+          DATE_FORMAT(
+            mzgnr.`pay_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS payTime
+        FROM
+          marketing_zone_group_number_record mzgnr
+        WHERE mzgnr.marketing_zone_group_time_id = #{marketingZoneGroupTimeId}
+          AND mzgnr.`del_flag` = 0
+          <if test="goAndCome != null and goAndCome != ''">
+            AND mzgnr.`go_and_come` = #{goAndCome}
+          </if>
+        ORDER BY mzgnr.pay_time DESC
+    </select>
+</mapper>

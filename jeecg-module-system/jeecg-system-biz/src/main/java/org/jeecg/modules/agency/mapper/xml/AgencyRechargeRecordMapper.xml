@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.agency.mapper.AgencyRechargeRecordMapper">
+
+    <select id="getAgencyRechargeRecordList" resultType="org.jeecg.modules.agency.dto.AgencyRechargeRecordDTO">
+        SELECT
+        asa.*,
+        am.year AS createYear,
+        su.realname AS userName,
+        am.balance AS balance
+        FROM
+        agency_recharge_record asa
+        LEFT JOIN sys_user su
+        ON asa.sys_user_id = su.id
+        LEFT JOIN agency_manage am
+        ON su.id = am.sys_user_id
+        WHERE asa.del_flag = 0
+        AND su.del_flag = 0
+        AND am.del_flag = 0
+        <if test="agencyRechargeRecordVO != null and agencyRechargeRecordVO.createTime_begin != null and agencyRechargeRecordVO.createTime_begin != ''">
+            and asa.create_time <![CDATA[>=]]> concat(#{agencyRechargeRecordVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyRechargeRecordVO != null and agencyRechargeRecordVO.createTime_end != null and agencyRechargeRecordVO.createTime_end != ''">
+            AND asa.create_time <![CDATA[<=]]> concat( #{agencyRechargeRecordVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="agencyRechargeRecordVO != null and agencyRechargeRecordVO.payType!=null and agencyRechargeRecordVO.payType!=''">
+            AND asa.pay_type =#{agencyRechargeRecordVO.payType}
+        </if>
+        <if test="agencyRechargeRecordVO != null and agencyRechargeRecordVO.orderNo!=null and agencyRechargeRecordVO.orderNo!=''">
+            AND asa.order_no LIKE CONCAT(CONCAT('%',#{agencyRechargeRecordVO.orderNo}), '%')
+        </if>
+        <if test="agencyRechargeRecordVO != null and agencyRechargeRecordVO.sysUserId!=null and agencyRechargeRecordVO.sysUserId!=''">
+            AND asa.sys_user_id =#{agencyRechargeRecordVO.sysUserId}
+        </if>
+        ORDER BY asa.create_time DESC
+
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.agency.vo.AgencyRechargeRecordVO">
+        SELECT
+          arr.id,
+          arr.`order_no`,
+          arr.`trade_no`,
+          su.`username`AS userName,
+          su.`realname` AS NAME,
+          arr.`pay_type`,
+          arr.`go_and_come`,
+          arr.`amount`,
+          arr.`trade_status`,
+          arr.`create_time`,
+          arr.remark
+        FROM
+          agency_recharge_record arr
+          LEFT JOIN agency_manage am
+            ON arr.`sys_user_id` = am.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON su.`id` = am.`sys_user_id`
+        WHERE arr.`del_flag` = 0
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.sysUserId != null and agencyRechargeRecordDTO.sysUserId != ''">
+            AND arr.sys_user_id = #{agencyRechargeRecordDTO.sysUserId}
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.orderNo != null and agencyRechargeRecordDTO.orderNo != ''">
+            AND arr.order_no LIKE concat('%',#{agencyRechargeRecordDTO.orderNo},'%')
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.tradeNo != null and agencyRechargeRecordDTO.tradeNo != ''">
+            AND arr.trade_no LIKE concat('%',#{agencyRechargeRecordDTO.tradeNo},'%')
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.userName != null and agencyRechargeRecordDTO.userName != ''">
+            AND su.username LIKE concat('%',#{agencyRechargeRecordDTO.userName},'%')
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.name != null and agencyRechargeRecordDTO.name != ''">
+            AND su.realname LIKE concat('%',#{agencyRechargeRecordDTO.name},'%')
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.payType != null and agencyRechargeRecordDTO.payType != ''">
+            AND arr.pay_type = #{agencyRechargeRecordDTO.payType}
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.tradeStatus != null and agencyRechargeRecordDTO.tradeStatus != ''">
+            AND arr.trade_status = #{agencyRechargeRecordDTO.tradeStatus}
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.goAndCome != null and agencyRechargeRecordDTO.goAndCome != ''">
+            AND arr.go_and_come = #{agencyRechargeRecordDTO.goAndCome}
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.createTime_begin != null and agencyRechargeRecordDTO.createTime_begin != ''">
+            AND arr.create_time <![CDATA[>=]]> concat(#{agencyRechargeRecordDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.createTime_end != null and agencyRechargeRecordDTO.createTime_end != ''">
+            AND arr.create_time <![CDATA[<=]]> concat( #{agencyRechargeRecordDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY arr.`create_time` DESC,arr.`amount` DESC
+    </select>
+</mapper>

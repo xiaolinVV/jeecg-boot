@@ -1,0 +1,1021 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodListMapper">
+
+    <select id="getGoodListdelFlagOrAuditStatus" resultType="org.jeecg.modules.good.entity.GoodList">
+        select * from  good_list  where 1=1
+        <if test="delFlag!=null and delFlag!=''">
+         AND del_flag =#{delFlag}
+        </if>
+        <if test="auditStatus!=null and auditStatus!=''">
+            AND audit_status =#{auditStatus}
+        </if>
+    </select>
+    <select id="getGoodListById" resultType="org.jeecg.modules.good.entity.GoodList">
+        select * from  good_list  where
+        <if test="id!=null and id!=''">
+         id =#{id}
+        </if>
+    </select>
+    <update id="updateDelFalg">
+        UPDATE good_list SET del_flag=#{delFlag},update_by = #{goodList.updateBy},del_explain= #{goodList.delExplain} ,del_time= #{goodList.delTime} WHERE id=#{goodList.id}
+    </update>
+    <select id="getGoodListOK" resultType="org.jeecg.modules.good.entity.GoodList">
+        select * from  good_list  where del_flag =0 and status=1 and frame_status=1
+    </select>
+    <select id="getGoodListDto" resultType="org.jeecg.modules.good.dto.GoodListDto">
+        SELECT
+        gl.*,
+        goodTypes.goodTypeIdThree AS goodTypeIdThree,
+        goodTypes.goodTypeIdTwo AS goodTypeIdTwo,
+        goodTypes.goodTypeIdOne AS goodTypeIdOne,
+        goodTypes.goodTypeThreeName AS goodTypeThreeName,
+        goodTypes.goodTypeTwoName AS goodTypeTwoName,
+        goodTypes.goodTypeOneName AS goodTypeOneName,
+        CONCAT_WS(
+        '-',
+        goodTypes.goodTypeOneName,
+        goodTypes.goodTypeTwoName,
+        goodTypes.goodTypeThreeName
+        ) AS goodTypeNames,
+        su.realname AS realname,
+        (SELECT good_audit FROM  provider_manage WHERE sys_user_id =su.id AND del_flag = 0) AS goodAudit,
+        gss.discount AS discount,
+        gss.minDiscount AS minDiscount,
+        gss.maxDiscount AS maxDiscount
+        FROM
+        good_list gl
+        LEFT JOIN
+        (SELECT
+        gt.id,
+        gt.parent_id,
+        gt.id AS goodTypeIdThree,
+        gt.name AS goodTypeThreeName,
+        gttwo.id AS goodTypeIdTwo,
+        gttwo.name AS goodTypeTwoName,
+        gttwo.goodTypeIdOne AS goodTypeIdOne,
+        gttwo.goodTypeOneName AS goodTypeOneName
+        FROM
+        good_type gt
+        LEFT JOIN
+        (SELECT
+        gttwo.id,
+        gttwo.parent_id,
+        gttwo.name,
+        gtOne.id AS goodTypeIdOne,
+        gtOne.name AS goodTypeOneName
+        FROM
+        good_type gttwo
+        LEFT JOIN good_type gtOne
+        ON gttwo.parent_id = gtOne.id) gttwo
+        ON gt.parent_id = gttwo.id) goodTypes
+        ON gl.good_type_id = goodTypes.id
+        LEFT JOIN `sys_user` su ON  su.id = gl.sys_user_id
+        LEFT JOIN (SELECT gs.good_list_id AS good_list_id, IF(
+        MAX(CEIL(gs.cost_price/gs.price*10000)/100 ) = MIN(CEIL(gs.cost_price/gs.price*10000)/100),
+        CONCAT(ROUND(MIN(CEIL(gs.cost_price/gs.price*10000)/100 ),2),'%'),
+        CONCAT_WS(
+        '-',CONCAT(ROUND( MIN(CEIL(gs.cost_price/gs.price*10000)/100),2),'%') ,CONCAT(ROUND( MAX(CEIL(gs.cost_price/gs.price*10000)/100),2),'%'))
+        ) AS discount,
+        ROUND(MIN(CEIL(gs.cost_price/gs.price*10000)/100 ),2) AS minDiscount,
+        ROUND(MAX(CEIL(gs.cost_price/gs.price*10000)/100 ),2) AS maxDiscount FROM `good_specification` gs WHERE gs.del_flag = 0 GROUP BY gs.good_list_id) gss
+        ON gss.good_list_id = gl.`id`
+        WHERE gl.del_flag = 0
+        <!--不显示草稿箱信息-->
+        <if test="notauditStatus!=null and notauditStatus!=''">
+            AND gl.audit_status != 0
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeId!=null and goodListVo.goodTypeId!=''">
+            AND gl.good_type_id =#{goodListVo.goodTypeId}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodForm!=null and goodListVo.goodForm!=''">
+            AND gl.good_form =#{goodListVo.goodForm}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdThree!=null and goodListVo.goodTypeIdThree!=''">
+            AND goodTypeIdThree =#{goodListVo.goodTypeIdThree}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdTwo!=null and goodListVo.goodTypeIdTwo!=''">
+            AND goodTypeIdTwo =#{goodListVo.goodTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdOne!=null and goodListVo.goodTypeIdOne!=''">
+            AND goodTypeIdOne =#{goodListVo.goodTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gl.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.realname!=null and goodListVo.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{goodListVo.realname}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodNo!=null and goodListVo.goodNo!=''">
+            AND gl.good_no LIKE CONCAT(CONCAT('%',#{goodListVo.goodNo}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.sysUserId!=null and goodListVo.sysUserId!=''">
+            AND gl.sys_user_id =#{goodListVo.sysUserId}
+        </if>
+        <if test="goodListVo != null and goodListVo.frameStatus!=null and goodListVo.frameStatus!=''">
+        AND gl.frame_status =#{goodListVo.frameStatus}
+    </if>
+        <if test="goodListVo != null and goodListVo.auditStatus!=null and goodListVo.auditStatus!=''">
+            AND gl.audit_status =#{goodListVo.auditStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.status!=null and goodListVo.status!=''">
+            AND gl.status =#{goodListVo.status}
+        </if>
+        <if test="goodListVo != null and goodListVo.activitiesType!=null and goodListVo.activitiesType!=''">
+            AND gl.activities_type =#{goodListVo.activitiesType}
+        </if>
+        <if test="goodListVo != null and goodListVo.delFlag!=null and goodListVo.delFlag!=''">
+            AND gl.del_flag =#{goodListVo.delFlag}
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_begin != null and goodListVo.createTime_begin != ''">
+            and gl.create_time <![CDATA[>=]]> concat(#{goodListVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_end != null and goodListVo.createTime_end != ''">
+            AND gl.create_time <![CDATA[<=]]> concat( #{goodListVo.createTime_end},' 23:59:59')
+        </if>
+        <if test="goodListVo != null and goodListVo.minDiscount != null and goodListVo.minDiscount != ''">
+            and minDiscount <![CDATA[>=]]> #{goodListVo.minDiscount}
+        </if>
+        <if test="goodListVo != null and goodListVo.maxDiscount != null and goodListVo.maxDiscount != ''">
+            and maxDiscount <![CDATA[<]]> #{goodListVo.maxDiscount}
+        </if>
+      ORDER BY gl.create_time DESC
+
+    </select>
+    <select id="getGoodListDtoDelFlag" resultType="org.jeecg.modules.good.dto.GoodListDto">
+        SELECT
+            gl.*,
+            goodTypes.goodTypeIdThree AS goodTypeIdThree,
+            goodTypes.goodTypeIdTwo AS goodTypeIdTwo,
+            goodTypes.goodTypeIdOne AS goodTypeIdOne,
+            goodTypes.goodTypeThreeName AS goodTypeThreeName,
+            goodTypes.goodTypeTwoName AS goodTypeTwoName,
+            goodTypes.goodTypeOneName AS goodTypeOneName,
+            CONCAT_WS(
+            '-',
+            goodTypes.goodTypeOneName,
+            goodTypes.goodTypeTwoName,
+            goodTypes.goodTypeThreeName
+            ) AS goodTypeNames,
+           su.realname AS realname
+            FROM
+            good_list gl
+            LEFT JOIN
+            (SELECT
+            gt.id,
+            gt.parent_id,
+            gt.id AS goodTypeIdThree,
+            gt.name AS goodTypeThreeName,
+            gttwo.id AS goodTypeIdTwo,
+            gttwo.name AS goodTypeTwoName,
+            gttwo.goodTypeIdOne AS goodTypeIdOne,
+            gttwo.goodTypeOneName AS goodTypeOneName
+            FROM
+            good_type gt
+            LEFT JOIN
+            (SELECT
+            gttwo.id,
+            gttwo.parent_id,
+            gttwo.name,
+            gtOne.id AS goodTypeIdOne,
+            gtOne.name AS goodTypeOneName
+            FROM
+            good_type gttwo
+            LEFT JOIN good_type gtOne
+            ON gttwo.parent_id = gtOne.id) gttwo
+            ON gt.parent_id = gttwo.id) goodTypes
+            ON gl.good_type_id = goodTypes.id
+            LEFT JOIN `sys_user` su ON  su.id = gl.sys_user_id
+            WHERE gl.del_flag = 1
+        <if test="goodListVo != null and goodListVo.goodTypeId!=null and goodListVo.goodTypeId!=''">
+            AND goodTypeIdThree =#{goodListVo.goodTypeId}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdThree!=null and goodListVo.goodTypeIdThree!=''">
+            AND goodTypeIdThree =#{goodListVo.goodTypeIdThree}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdTwo!=null and goodListVo.goodTypeIdTwo!=''">
+            AND goodTypeIdTwo =#{goodListVo.goodTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdOne!=null and goodListVo.goodTypeIdOne!=''">
+            AND goodTypeIdOne =#{goodListVo.goodTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gl.good_name  LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodNo!=null and goodListVo.goodNo!=''">
+            AND gl.good_no LIKE CONCAT(CONCAT('%',#{goodListVo.goodNo}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.sysUserId!=null and goodListVo.sysUserId!=''">
+            AND gl.sys_user_id =#{goodListVo.sysUserId}
+        </if>
+        <if test="goodListVo != null and goodListVo.frameStatus!=null and goodListVo.frameStatus!=''">
+            AND gl.frame_status =#{goodListVo.frameStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.auditStatus!=null and goodListVo.auditStatus!=''">
+            AND gl.audit_status =#{goodListVo.auditStatus}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodForm!=null and goodListVo.goodForm!=''">
+            AND gl.good_form =#{goodListVo.goodForm}
+        </if>
+        <if test="goodListVo != null and goodListVo.status!=null and goodListVo.status!=''">
+            AND gl.status =#{goodListVo.status}
+        </if>
+        <if test="goodListVo != null and goodListVo.activitiesType!=null and goodListVo.activitiesType!=''">
+            AND gl.activities_type =#{goodListVo.activitiesType}
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_begin != null and goodListVo.createTime_begin != ''">
+            and gl.create_time <![CDATA[>=]]> concat(#{goodListVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="goodListVo != null and goodListVo.createTime_end != null and goodListVo.createTime_end != ''">
+            AND gl.create_time <![CDATA[<=]]> concat( #{goodListVo.createTime_end},' 23:59:59')
+        </if>
+        <if test="goodListVo!=null and goodListVo.strings!=null and goodListVo.strings.size > 0 ">
+            and  gl.id in
+            <foreach collection="goodListVo.strings" item="string" separator="," open="(" close=")">
+                #{string}
+            </foreach>
+        </if>
+        <if test="goodListVo != null and goodListVo.realname!=null and goodListVo.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{goodListVo.realname}), '%')
+        </if>
+         ORDER BY gl.create_time DESC
+    </select>
+
+
+    <select id="findGoodListByGoodType" resultType="map" parameterType="map">
+            SELECT
+            id AS id,
+            main_picture AS mainPicture,
+            1 AS isPlatform,
+            good_name AS goodName,
+            small_price AS smallPrice,
+            small_vip_price AS smallVipPrice,
+            activities_type AS activitiesType,
+            activity_price AS activityPrice,
+            (
+            SELECT
+            COUNT( 1 )
+            FROM
+            marketing_discount_good mg
+            LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+            WHERE
+            ms.STATUS = 1
+            AND ms.del_flag = 0
+            AND ms.total &gt; ms.released_quantity
+            AND mg.good_id = gl.id
+            AND mg.is_platform = '1'
+            ) AS discount,
+            1 AS isViewVipPrice,
+            source_type AS sourceType
+            FROM
+            good_list gl
+            WHERE
+            del_flag = 0
+            AND STATUS = 1
+            AND frame_status = 1
+            AND good_form = '0'
+            AND audit_status = '2'
+            AND main_picture IS NOT NULL
+        <if test='paramMap.isViewPrefecture=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_prefecture_good mpg
+            LEFT JOIN marketing_prefecture mp ON mpg.marketing_prefecture_id = mp.id
+            WHERE
+            mpg.del_flag = '0'
+            AND mpg.`status` = '1'
+            AND mp.del_flag = '0'
+            AND mp.`status` = '1'
+            AND (mp.start_time &lt;= NOW() AND mp.end_time &gt;= NOW()
+            OR mp.valid_time = '0')
+            AND mpg.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewfree=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_free_good_list mfgl
+            WHERE
+            mfgl.del_flag = '0'
+            AND mfgl.`status` = '1'
+            AND mfgl.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewgroup=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_group_good_list mrgl
+            WHERE
+            mrgl.del_flag = '0'
+            AND mrgl.`status` = '1'
+            AND mrgl.good_list_id = gl.id
+            )=0</if>
+        <if test="paramMap.goodTypeId!=null">and good_type_id=#{paramMap.goodTypeId}</if>
+        <if test="paramMap.pattern==0">order by small_price asc,sales_volume ,update_time desc </if>
+        <if test="paramMap.pattern==5">order by sort asc </if>
+        <if test="paramMap.pattern==1">order by sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by update_time desc</if>
+        <if test="paramMap.pattern==3">order by small_price</if>
+        <if test="paramMap.pattern==4">order by small_price desc </if>
+    </select>
+
+
+    <select id="searchGoodList" resultType="map" parameterType="map">
+                SELECT
+                id AS id,
+                main_picture AS mainPicture,
+                1 AS isPlatform,
+                good_name AS goodName,
+                small_price AS smallPrice,
+                small_vip_price AS smallVipPrice,
+                activities_type AS activitiesType,
+                activity_price AS activityPrice,
+                (
+                SELECT
+                COUNT( 1 )
+                FROM
+                marketing_discount_good mg
+                LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+                WHERE
+                ms.STATUS = 1
+                AND ms.del_flag = 0
+                AND ms.total &gt; ms.released_quantity
+                AND mg.good_id = gl.id
+                AND mg.is_platform = '1'
+                ) AS discount,
+                1 AS isViewVipPrice,
+                source_type AS sourceType,
+                gl.is_specification AS isSpecification
+                FROM
+                good_list gl
+                WHERE
+                del_flag = 0
+                AND STATUS = 1
+                AND frame_status = 1
+                AND good_form = '0'
+                AND audit_status = '2'
+                AND main_picture IS NOT NULL
+        <if test='paramMap.isViewPrefecture=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_prefecture_good mpg
+            LEFT JOIN marketing_prefecture mp ON mpg.marketing_prefecture_id = mp.id
+            WHERE
+            mpg.del_flag = '0'
+            AND mpg.`status` = '1'
+            AND mp.del_flag = '0'
+            AND mp.`status` = '1'
+            AND (mp.start_time &lt;= NOW() AND mp.end_time &gt;= NOW()
+            OR mp.valid_time = '0')
+            AND mpg.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewfree=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_free_good_list mfgl
+            WHERE
+            mfgl.del_flag = '0'
+            AND mfgl.`status` = '1'
+            AND mfgl.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewgroup=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_group_good_list mrgl
+            WHERE
+            mrgl.del_flag = '0'
+            AND mrgl.`status` = '1'
+            AND mrgl.good_list_id = gl.id
+            )=0</if>
+        <if test="paramMap.search!=null">and (good_name like concat('%',#{paramMap.search},'%') or good_describe like concat('%',#{paramMap.search},'%'))</if>
+        <if test="paramMap.pattern==0">order by small_price asc,sales_volume,update_time desc </if>
+        <if test="paramMap.pattern==5">order by sort asc </if>
+        <if test="paramMap.pattern==1">order by sales_volume desc</if>
+        <if test="paramMap.pattern==2">order by update_time desc</if>
+        <if test="paramMap.pattern==3">order by small_price</if>
+        <if test="paramMap.pattern==4">order by small_price desc </if>
+    </select>
+
+
+    <select id="chooseGoodList" resultType="map"  parameterType="map">
+
+                SELECT
+                *
+                FROM
+                (SELECT
+                gl.good_no AS goodNo,
+                gl.main_picture AS mainPicture,
+                gl.good_name AS goodName,
+                gl.price,
+                gl.supply_price AS supplyPrice,
+                gl.repertory,
+                (SELECT COUNT(1) FROM `marketing_free_good_list` mfgl WHERE mfgl.good_list_id=gl.`id` and mfgl.del_flag='0') AS marketingFreeGoodListCount,
+                (SELECT COUNT(1) FROM `marketing_league_good_list` mfgl WHERE mfgl.good_list_id=gl.`id` and mfgl.del_flag='0') AS marketingLeagueGoodListCount,
+                (SELECT
+                CONCAT(
+                gtThree.name,
+                '-',
+                gtTwo.name,
+                '-',
+                gtOne.name
+                )
+                FROM
+                good_type gtOne
+                LEFT JOIN good_type gtTwo
+                ON gtTwo.id = gtOne.parent_id
+                LEFT JOIN good_type gtThree
+                ON gtThree.id = gtTwo.parent_id
+                WHERE gtOne.id = gl.`good_type_id`) AS goodTypeName,
+                gl.`market_price` AS marketPrice,
+                gl.is_specification AS isSpecification,
+                gl.`id`,
+                (SELECT
+                NAME
+                FROM
+                `provider_manage`
+                WHERE sys_user_id = gl.`sys_user_id`
+                AND del_flag = '0'
+                AND STATUS = '1') AS sysUserName,
+                (SELECT
+                TRUNCATE(cost_price / price, 2) * 100 AS discount
+                FROM
+                `good_specification`
+                WHERE good_list_id = gl.`id`
+                ORDER BY discount ASC
+                LIMIT 1) AS discountStart,
+                (SELECT
+                TRUNCATE(cost_price / price, 2) * 100 AS discount
+                FROM
+                `good_specification`
+                WHERE good_list_id = gl.`id`
+                ORDER BY discount DESC
+                LIMIT 1) AS discountEnd,
+                gl.`good_type_id` AS goodTypeId
+                FROM
+                good_list gl
+                WHERE gl.del_flag = '0'
+                AND gl.status = '1'
+                AND gl.frame_status = '1'
+                AND gl.good_form = '0'
+                AND gl.audit_status = '2'
+                order by gl.small_price asc,gl.sales_volume,gl.update_time desc
+                ) gg
+                WHERE 1 = 1
+
+                 <if test="paramMap.goodNo!=null and paramMap.goodNo!=''">
+                     and  gg.goodNo=#{paramMap.goodNo}
+                 </if>
+
+                <if test="paramMap.goodName!=null and paramMap.goodName!=''">
+                    and  gg.goodName like concat('%',#{paramMap.goodName},'%')
+                </if>
+
+                <if test="paramMap.goodTypeId!=null and paramMap.goodTypeId!=''">
+                    and  gg.goodTypeId=#{paramMap.goodTypeId}
+                </if>
+                <if test="paramMap.discountStart!=null and paramMap.discountStart!=''">
+                    and  gg.discountStart &gt;=#{paramMap.discountStart}
+                </if>
+                <if test="paramMap.discountEnd!=null and paramMap.discountEnd!=''">
+                    and  gg.discountEnd &lt;=#{paramMap.discountEnd}
+                </if>
+                <if test="paramMap.sysUserName!=null and paramMap.sysUserName!=''">
+                    and  gg.sysUserName like concat('%',#{paramMap.sysUserName},'%')
+                </if>
+                <if test="paramMap.pattern==0">
+                    and gg.marketingFreeGoodListCount=0
+                </if>
+
+                <if test="paramMap.pattern==1">
+                    and gg.marketingFreeGoodListCount &gt;0
+                </if>
+
+                <if test="paramMap.pattern==2">
+                    and gg.marketingLeagueGoodListCount=0
+                </if>
+
+                <if test="paramMap.pattern==3">
+                    and gg.marketingLeagueGoodListCount &gt;0
+                </if>
+
+                <if test='paramMap.groupEqual=="1"'>
+                   and  gg.discountStart=gg.discountEnd
+                </if>
+
+    </select>
+
+    <select id="findGoodListByGoodId" resultType="map">
+        select id as id,main_picture as mainPicture,1 as isPlatform,good_name as goodName,small_price as  smallPrice,good_describe as goodDescribe,
+        market_price as marketPrice,small_vip_price as smallVipPrice,specification as specification,activity_price as activityPrice,good_form as goodForm,
+        good_video as goodVideo,details_goods as detailsGoods,repertory as repertory,frame_status as frameStatus,good_type_id as goodTypeId,activities_type as activitiesType,source_type as sourceType,sku_url as skuUrl,supply_price as supplyPrice
+        from  good_list  where del_flag =0 and status=1
+        and id=#{goodId}
+    </select>
+    
+    
+    <select id="findGoodListByGoodTypeAndlevel" resultType="map" parameterType="map">
+       SELECT
+        gl.id AS id,
+        gl.main_picture AS mainPicture,
+        1 AS isPlatform,
+        gl.good_name AS goodName,
+        gl.small_price AS smallPrice,
+        gl.small_vip_price AS smallVipPrice,
+        gl.activities_type AS activitiesType,
+        gl.activity_price AS activityPrice,
+        gl.market_price AS marketPrice,
+        1 AS isViewVipPrice,
+        (
+        SELECT
+        COUNT( 1 )
+        FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+        WHERE
+        ms.STATUS = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity
+        AND mg.good_id = gl.id
+        AND mg.is_platform = '1'
+        ) AS discount,
+        gl.source_type AS sourceType,
+        gt.`parent_id` AS typeTwo,
+        gtt.`parent_id` AS typeOne,
+        gl.`good_type_id` AS typeThree
+        FROM
+        `good_list` gl
+        LEFT JOIN `good_type` gt ON gl.`good_type_id` = gt.`id`
+        LEFT JOIN `good_type` gtt ON gt.`parent_id` = gtt.`id`
+        WHERE
+        gl.del_flag = '0'
+        AND gl.`status` = '1'
+        AND gl.frame_status = '1'
+        AND gl.audit_status = '2'
+        AND gl.main_picture IS NOT NULL
+        <if test='paramMap.isViewPrefecture=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_prefecture_good mpg
+            LEFT JOIN marketing_prefecture mp ON mpg.marketing_prefecture_id = mp.id
+            WHERE
+            mpg.del_flag = '0'
+            AND mpg.`status` = '1'
+            AND mp.del_flag = '0'
+            AND mp.`status` = '1'
+            AND (mp.start_time &lt;= NOW() AND mp.end_time &gt;= NOW()
+            OR mp.valid_time = '0')
+            AND mpg.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewfree=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_free_good_list mfgl
+            WHERE
+            mfgl.del_flag = '0'
+            AND mfgl.`status` = '1'
+            AND mfgl.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.isViewgroup=="0"'>and (
+            SELECT
+            count( 1 )
+            FROM
+            marketing_group_good_list mrgl
+            WHERE
+            mrgl.del_flag = '0'
+            AND mrgl.`status` = '1'
+            AND mrgl.good_list_id = gl.id
+            )=0</if>
+        <if test='paramMap.level=="1"'> and gtt.`parent_id`=#{paramMap.goodTypeId}</if>
+        <if test='paramMap.level=="2"'> and gt.`parent_id`=#{paramMap.goodTypeId}</if>
+        <if test='paramMap.level=="3"'> and gl.`good_type_id`=#{paramMap.goodTypeId}</if>
+
+        <if test='paramMap.pattern=="0"'>
+        ORDER BY
+        gl.small_price ASC,
+        gl.sales_volume,
+        gl.update_time DESC
+        </if>
+        <if test='paramMap.pattern=="1"'>
+            ORDER BY
+            gl.sort ASC
+        </if>
+    </select>
+
+
+    <select id="getEverydayGoodTypeId" resultType="map" >
+            SELECT
+              good_type_id as id,
+              COUNT(*) AS number
+            FROM
+              `good_list`
+            WHERE del_flag = 0
+              AND frame_status = '1'
+              AND STATUS = '1'
+              AND   good_form='0'
+              and audit_status ='2'
+        <if test="createTime != null and createTime!=''">
+            AND create_time  LIKE CONCAT(CONCAT('%',#{createTime}), '%')
+        </if>
+            GROUP BY good_type_id
+            ORDER BY number DESC
+        <if test="limit!=null and limit!=''">
+            LIMIT #{limit}
+        </if>
+    </select>
+    <select id="getEveryWeekPreferential" resultType="map" parameterType="map">
+        select id as id,main_picture as mainPicture,1 as isPlatform,good_name as goodName,small_price as  smallPrice,small_vip_price as smallVipPrice,activities_type as activitiesType,activity_price as activityPrice,
+        (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt;ms.released_quantity AND mg.good_id = gl.id AND mg.is_platform='1') AS discount
+         from  good_list gl where del_flag =0 and status=1 and frame_status=1 and good_form='0'
+        <if test="paramMap != null and paramMap.smallPriceMin != null and paramMap.smallPriceMin != ''">
+            and small_price <![CDATA[ >= ]]> #{paramMap.smallPriceMin}
+        </if>
+        <if test="paramMap != null and paramMap.smallPriceMax != null and paramMap.smallPriceMax != ''">
+            AND small_price <![CDATA[ <= ]]> #{paramMap.smallPriceMax}
+        </if>
+        <if test="paramMap != null and paramMap.dateBegin != null and paramMap.dateBegin != ''">
+            and create_time <![CDATA[>=]]> concat(#{paramMap.dateBegin},' 00:00:00')
+        </if>
+        <if test="paramMap != null and paramMap.dateEnd != null and paramMap.dateEnd != ''">
+            AND create_time <![CDATA[<=]]> concat( #{paramMap.dateEnd},' 23:59:59')
+        </if>
+        ORDER BY create_time desc
+    </select>
+
+
+    <select id="findGoodList" resultType="org.jeecg.modules.good.dto.GoodDiscountDTO">
+        SELECT
+        gl.`id`,
+        gl.`main_picture`,
+        gl.`good_name`,
+        CONCAT(
+        gtOne.`name`,
+        '-',
+        gtTwo.`name`,
+        '-',
+        gtTree.`name`
+        ) AS typeName,
+        gl.`market_price`,
+        gl.`price`,
+        gl.`cost_price`,
+        gl.`vip_price`,
+        gl.supply_price,
+        gl.`repertory`,
+        gl.`create_time`,
+        pm.`name`
+        FROM
+        good_list gl
+        LEFT JOIN good_type gtTree
+        ON gl.`good_type_id` = gtTree.`id`
+        LEFT JOIN good_type gtTwo
+        ON gtTree.`parent_id` = gtTwo.`id`
+        LEFT JOIN good_type gtOne
+        ON gtTwo.`parent_id` = gtOne.`id`
+        LEFT JOIN provider_manage pm
+        ON pm.`sys_user_id` = gl.`sys_user_id`
+        WHERE gl.`del_flag` = 0
+        AND gl.`status` = 1
+        AND gl.`frame_status` = 1
+        AND gl.`good_form` = 0
+        AND gtTree.`level` = 3
+        AND gtTwo.`level` = 2
+        AND gtOne.`level` = 1
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+          AND gl.good_name  LIKE CONCAT('%',#{goodListVo.goodName},'%')
+        </if>
+        <if test="goodListVo.goodTypeIdOne!=null and goodListVo.goodTypeIdOne!=''">
+            AND gtOne.id  LIKE CONCAT('%',#{goodListVo.goodTypeIdOne},'%')
+        </if>
+        <if test="goodListVo.goodTypeIdTwo!=null and goodListVo.goodTypeIdTwo!=''">
+            AND gtTwo.id  LIKE CONCAT('%',#{goodListVo.goodTypeIdTwo},'%')
+        </if>
+        <if test="goodListVo.goodTypeIdThree!=null and goodListVo.goodTypeIdThree!=''">
+            AND gtTree.id  LIKE CONCAT('%',#{goodListVo.goodTypeIdThree},'%')
+        </if>
+        <if test="goodListVo.realname!=null and goodListVo.realname!=''">
+            AND pm.`name`  LIKE CONCAT('%',#{goodListVo.realname},'%')
+        </if>
+        ORDER BY gl.`create_time` DESC
+    </select>
+
+    <select id="getMarketingPrefectureGood" resultType="map" >
+        SELECT
+        gl.id AS id,
+        gl.good_name AS goodName,
+        gl.price AS price,
+        gl.cost_price AS costPrice,
+        gl.market_price AS marketPrice,
+        gl.main_picture AS mainPicture,
+        gl.repertory AS repertory,
+        goodTypes.goodTypeIdThree AS goodTypeIdThree,
+        goodTypes.goodTypeIdTwo AS goodTypeIdTwo,
+        goodTypes.goodTypeIdOne AS goodTypeIdOne,
+        goodTypes.goodTypeThreeName AS goodTypeThreeName,
+        goodTypes.goodTypeTwoName AS goodTypeTwoName,
+        goodTypes.goodTypeOneName AS goodTypeOneName,
+        CONCAT_WS(
+        '-',
+        goodTypes.goodTypeOneName,
+        goodTypes.goodTypeTwoName,
+        goodTypes.goodTypeThreeName
+        ) AS goodTypeNames,
+        su.realname AS realname,
+        gl.frame_status AS frameStatus,
+        gl.status  AS status,
+        gss.discount AS discount,
+        gss.minDiscount AS minDiscount,
+        gss.maxDiscount AS maxDiscount
+        FROM
+        good_list gl
+        LEFT JOIN
+        (SELECT
+        gt.id,
+        gt.parent_id,
+        gt.id AS goodTypeIdThree,
+        gt.name AS goodTypeThreeName,
+        gttwo.id AS goodTypeIdTwo,
+        gttwo.name AS goodTypeTwoName,
+        gttwo.goodTypeIdOne AS goodTypeIdOne,
+        gttwo.goodTypeOneName AS goodTypeOneName,
+        gt.`status` AS goodTypeThreeStatus,
+        gttwo.goodTypeTwoStatus AS goodTypeTwoStatus,
+        gttwo.goodTypeOneStatus AS goodTypeOneStatus
+        FROM
+        good_type gt
+        LEFT JOIN
+        (SELECT
+        gttwo.id,
+        gttwo.parent_id,
+        gttwo.name,
+        gtOne.id AS goodTypeIdOne,
+        gtOne.name AS goodTypeOneName,
+        gttwo.`status` AS goodTypeTwoStatus,
+        gtOne.`status` AS goodTypeOneStatus
+        FROM
+        good_type gttwo
+        LEFT JOIN good_type gtOne
+        ON gttwo.parent_id = gtOne.id) gttwo
+        ON gt.parent_id = gttwo.id) goodTypes
+        ON gl.good_type_id = goodTypes.id
+        LEFT JOIN `sys_user` su ON  su.id = gl.sys_user_id
+        LEFT JOIN (SELECT gs.good_list_id AS good_list_id, IF(
+        MAX((gs.cost_price/gs.price*10000)/100 ) = MIN((gs.cost_price/gs.price*10000)/100),
+        CONCAT(ROUND(MIN(CEIL(gs.cost_price/gs.price*10000)/100 ),2),'%'),
+        CONCAT_WS(
+        '-',CONCAT(ROUND( MIN((gs.cost_price/gs.price*10000)/100),2),'%') ,CONCAT(ROUND( MAX((gs.cost_price/gs.price*10000)/100),2),'%'))
+        ) AS discount,
+        ROUND(MIN((gs.cost_price/gs.price*10000)/100 ),2) AS minDiscount,
+        ROUND(MAX((gs.cost_price/gs.price*10000)/100 ),2) AS maxDiscount FROM `good_specification` gs WHERE gs.del_flag = 0 GROUP BY gs.good_list_id) gss
+        ON gss.good_list_id = gl.`id`
+        WHERE gl.del_flag = 0
+        AND gl.frame_status = 1
+        AND gl.status= 1
+        AND gl.audit_status = 2
+        AND gl.good_form = 0
+        AND gl.main_picture IS NOT NULL
+        AND goodTypes.goodTypeThreeStatus = 1
+        AND goodTypes.goodTypeTwoStatus =1
+        AND goodTypes.goodTypeTwoStatus = 1
+        <if test="goodListVo != null and goodListVo.astrictPriceProportion!=null and goodListVo.astrictPriceProportion!=''">
+            AND  maxDiscount  <![CDATA[<]]> #{goodListVo.astrictPriceProportion}
+        </if>
+
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gl.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.realname!=null and goodListVo.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{goodListVo.realname}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdThree!=null and goodListVo.goodTypeIdThree!=''">
+            AND goodTypeIdThree =#{goodListVo.goodTypeIdThree}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdTwo!=null and goodListVo.goodTypeIdTwo!=''">
+            AND goodTypeIdTwo =#{goodListVo.goodTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdOne!=null and goodListVo.goodTypeIdOne!=''">
+            AND goodTypeIdOne =#{goodListVo.goodTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.marketingPrefectureGoodNotIds!=null and goodListVo.marketingPrefectureGoodNotIds.size > 0 ">
+            and  gl.id not in
+            <foreach collection="goodListVo.marketingPrefectureGoodNotIds" item="marketingPrefectureGoodNotId" separator="," open="(" close=")">
+                #{marketingPrefectureGoodNotId}
+            </foreach>
+        </if>
+        <if test="goodListVo != null and goodListVo.marketingPrefectureGoodIds!=null and goodListVo.marketingPrefectureGoodIds.size > 0 ">
+            and  gl.id in
+            <foreach collection="goodListVo.marketingPrefectureGoodIds" item="marketingPrefectureGoodId" separator="," open="(" close=")">
+                #{marketingPrefectureGoodId}
+            </foreach>
+        </if>
+        <if test="goodListVo != null and goodListVo.minDiscount != null and goodListVo.minDiscount != ''">
+            and minDiscount <![CDATA[>=]]> #{goodListVo.minDiscount}
+        </if>
+        <if test="goodListVo != null and goodListVo.maxDiscount != null and goodListVo.maxDiscount != ''">
+            and maxDiscount <![CDATA[<=]]> #{goodListVo.maxDiscount}
+        </if>
+        <if test="goodListVo != null and goodListVo.id!=null and goodListVo.id!=''">
+            AND gl.id =#{goodListVo.id}
+        </if>
+       ORDER  by gl.create_time desc
+    </select>
+
+
+    <select id="getMarketingMaterialGood"  resultType="map">
+        SELECT
+        gl.id AS goodListId,
+        gl.good_name AS goodName,
+        gl.price AS price,
+        gl.vip_price AS vipPrice,
+        gl.market_price AS marketPrice,
+        gl.main_picture AS mainPicture,
+        gl.repertory AS repertory,
+        goodTypes.goodTypeIdThree AS goodTypeIdThree,
+        goodTypes.goodTypeIdTwo AS goodTypeIdTwo,
+        goodTypes.goodTypeIdOne AS goodTypeIdOne,
+        goodTypes.goodTypeThreeName AS goodTypeThreeName,
+        goodTypes.goodTypeTwoName AS goodTypeTwoName,
+        goodTypes.goodTypeOneName AS goodTypeOneName,
+        CONCAT_WS(
+        '-',
+        goodTypes.goodTypeOneName,
+        goodTypes.goodTypeTwoName,
+        goodTypes.goodTypeThreeName
+        ) AS goodTypeNames,
+        su.realname AS realname,
+        gl.frame_status AS frameStatus,
+        gl.status  AS status
+        FROM
+        good_list gl
+        LEFT JOIN
+        (SELECT
+        gt.id,
+        gt.parent_id,
+        gt.id AS goodTypeIdThree,
+        gt.name AS goodTypeThreeName,
+        gttwo.id AS goodTypeIdTwo,
+        gttwo.name AS goodTypeTwoName,
+        gttwo.goodTypeIdOne AS goodTypeIdOne,
+        gttwo.goodTypeOneName AS goodTypeOneName,
+        gt.`status` AS goodTypeThreeStatus,
+        gttwo.goodTypeTwoStatus AS goodTypeTwoStatus,
+        gttwo.goodTypeOneStatus AS goodTypeOneStatus
+        FROM
+        good_type gt
+        LEFT JOIN
+        (SELECT
+        gttwo.id,
+        gttwo.parent_id,
+        gttwo.name,
+        gtOne.id AS goodTypeIdOne,
+        gtOne.name AS goodTypeOneName,
+        gttwo.`status` AS goodTypeTwoStatus,
+        gtOne.`status` AS goodTypeOneStatus
+        FROM
+        good_type gttwo
+        LEFT JOIN good_type gtOne
+        ON gttwo.parent_id = gtOne.id) gttwo
+        ON gt.parent_id = gttwo.id) goodTypes
+        ON gl.good_type_id = goodTypes.id
+        LEFT JOIN `sys_user` su ON  su.id = gl.sys_user_id
+
+        WHERE gl.del_flag = 0
+        AND gl.frame_status = 1
+        AND gl.status= 1
+        AND gl.audit_status = 2
+        AND gl.good_form = 0
+        AND gl.main_picture IS NOT NULL
+        AND goodTypes.goodTypeThreeStatus = 1
+        AND goodTypes.goodTypeTwoStatus =1
+        AND goodTypes.goodTypeTwoStatus = 1
+        <if test="goodListVo != null and goodListVo.goodName!=null and goodListVo.goodName!=''">
+            AND gl.good_name LIKE CONCAT(CONCAT('%',#{goodListVo.goodName}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.realname!=null and goodListVo.realname!=''">
+            AND realname LIKE CONCAT(CONCAT('%',#{goodListVo.realname}), '%')
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdThree!=null and goodListVo.goodTypeIdThree!=''">
+            AND goodTypeIdThree =#{goodListVo.goodTypeIdThree}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdTwo!=null and goodListVo.goodTypeIdTwo!=''">
+            AND goodTypeIdTwo =#{goodListVo.goodTypeIdTwo}
+        </if>
+        <if test="goodListVo != null and goodListVo.goodTypeIdOne!=null and goodListVo.goodTypeIdOne!=''">
+            AND goodTypeIdOne =#{goodListVo.goodTypeIdOne}
+        </if>
+        <if test="goodListVo != null and goodListVo.marketingPrefectureGoodNotIds!=null and goodListVo.marketingPrefectureGoodNotIds.size > 0 ">
+            and  gl.id not in
+            <foreach collection="goodListVo.marketingPrefectureGoodNotIds" item="marketingPrefectureGoodNotId" separator="," open="(" close=")">
+                #{marketingPrefectureGoodNotId}
+            </foreach>
+        </if>
+        <if test="goodListVo != null and goodListVo.marketingPrefectureGoodIds!=null and goodListVo.marketingPrefectureGoodIds.size > 0 ">
+            and  gl.id in
+            <foreach collection="goodListVo.marketingPrefectureGoodIds" item="marketingPrefectureGoodId" separator="," open="(" close=")">
+                #{marketingPrefectureGoodId}
+            </foreach>
+        </if>
+        ORDER BY gl.`create_time` DESC
+    </select>
+
+    <!--查询规格商品里有0库存的商品和目前总库存-->
+    <select id="getGoodListIdAndRepertory" resultType="map">
+        SELECT gls.id as id ,SUM(gss.repertory) AS repertory FROM `good_list` gls LEFT JOIN good_specification gss ON gls.id  = gss.`good_list_id` WHERE
+        gls.id IN (
+        SELECT
+        gs.good_list_id
+        FROM
+        `good_specification` gs
+        LEFT JOIN `good_list` gl
+        ON gl.id = gs.good_list_id
+        WHERE gs.del_flag = 0
+        AND gs.repertory <![CDATA[<=]]> 0
+        AND gl.`del_flag` = 0
+        AND gl.frame_status = 1
+        GROUP BY gs.`good_list_id`
+        )
+        AND gss.`del_flag` = 0
+        GROUP BY gss.good_list_id
+    </select>
+    <!--商家端普通商品列表查询-->
+    <select id="searchGoodListStore" resultType="map" >
+        SELECT gl.id AS id,gl.main_picture AS mainPicture,1 AS isPlatform,gl.good_name AS goodName,gl.small_price AS  smallPrice,gl.small_vip_price AS smallVipPrice,gl.activities_type AS activitiesType,gl.activity_price AS activityPrice,
+        (SELECT COUNT(1) FROM
+        marketing_discount_good mg
+        LEFT JOIN marketing_discount ms
+        ON mg.marketing_discount_id = ms.id
+        WHERE ms.status = 1
+        AND ms.del_flag = 0
+        AND ms.total &gt; ms.released_quantity AND mg.good_id = gl.id AND mg.is_platform='1') AS discount,
+        1 AS isViewVipPrice,
+        source_type AS sourceType,
+        mdgs.COUNT AS marketingDiscountGoodCount
+        FROM  good_list gl
+        LEFT JOIN
+        (SELECT
+        gt.id,
+        gt.parent_id,
+        gt.id AS goodTypeIdThree,
+        gt.name AS goodTypeThreeName,
+        gttwo.id AS goodTypeIdTwo,
+        gttwo.name AS goodTypeTwoName,
+        gttwo.goodTypeIdOne AS goodTypeIdOne,
+        gttwo.goodTypeOneName AS goodTypeOneName
+        FROM
+        good_type gt
+        LEFT JOIN
+        (SELECT
+        gttwo.id,
+        gttwo.parent_id,
+        gttwo.name,
+        gtOne.id AS goodTypeIdOne,
+        gtOne.name AS goodTypeOneName
+        FROM
+        good_type gttwo
+        LEFT JOIN good_type gtOne
+        ON gttwo.parent_id = gtOne.id) gttwo
+        ON gt.parent_id = gttwo.id) goodTypes
+        ON gl.good_type_id = goodTypes.id
+        LEFT JOIN (SELECT mdg.good_id,COUNT(0) AS COUNT FROM marketing_discount_good mdg WHERE mdg.`del_flag` = 0 AND  mdg.is_platform = 1 GROUP BY mdg.good_id) mdgs
+        ON mdgs.good_id = gl.id
+        WHERE del_flag =0 AND STATUS=1 AND frame_status=1 AND good_form='0' AND audit_status ='2' AND main_picture IS NOT NULL
+        <if test="searchTermsVO != null and searchTermsVO.search!=null and searchTermsVO.search!=''">and gl.good_name like concat('%',#{searchTermsVO.search},'%') or gl.good_describe like concat('%',#{searchTermsVO.search},'%')</if>
+        <if test="searchTermsVO != null and searchTermsVO.goodTypeId!=null and searchTermsVO.goodTypeId!=''">
+            and goodTypes.goodTypeIdOne =#{searchTermsVO.goodTypeId}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.goodTypeIdTwo!=null and searchTermsVO.goodTypeIdTwo!=''">
+            and goodTypes.goodTypeIdTwo =#{searchTermsVO.goodTypeIdTwo}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.goodTypeIdThree!=null and searchTermsVO.goodTypeIdThree!=''">
+            and goodTypes.goodTypeIdThree =#{searchTermsVO.goodTypeIdThree}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.minPrice!=null and searchTermsVO.minPrice!=''">
+            and gl.small_price <![CDATA[>=]]> #{searchTermsVO.minPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.maxPrice!=null and searchTermsVO.maxPrice!=''">
+            and gl.small_price <![CDATA[<=]]> #{searchTermsVO.maxPrice}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.marketingDiscountGoodCount!=null and searchTermsVO.marketingDiscountGoodCount!='' ">
+            and mdgs.COUNT <![CDATA[>=]]> #{searchTermsVO.marketingDiscountGoodCount}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.sourceType!=null and searchTermsVO.sourceType!=''">
+            and gl.source_type =#{searchTermsVO.sourceType}
+        </if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==0">order by gl.small_price asc,gl.sales_volume,gl.update_time desc </if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==1">order by gl.sales_volume desc</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==2">order by gl.update_time desc</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==3">order by gl.small_price</if>
+        <if test="searchTermsVO != null and searchTermsVO.pattern==4">order by gl.small_price desc </if>
+    </select>
+
+</mapper>

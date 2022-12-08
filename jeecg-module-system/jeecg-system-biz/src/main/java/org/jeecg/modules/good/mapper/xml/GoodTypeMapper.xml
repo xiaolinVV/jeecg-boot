@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodTypeMapper">
+    <select id="getGoodTypeOrParentIdList" resultType="org.jeecg.modules.good.entity.GoodType">
+		select * from  good_type  where status =1 and del_flag =0
+		 <if test="parentId!=null and parentId!=''">
+             and parent_id=#{parentId}
+         </if>
+         <if test="level!=null and level!= ''">
+             and level=#{level}
+         </if>
+		 order by sort desc
+	</select>
+    <update id="updateTreeNodeStatus" parameterType="java.lang.String">
+		update good_type set hasChild = #{status} where id = #{id}
+	</update>
+    <select id="getGoodTypeOrParentIdListtwo" resultType="org.jeecg.modules.good.entity.GoodType">
+        select * from  good_type  where del_flag =0 and status =1
+        <if test="parentId!=null and parentId!=''">
+            and parent_id=#{parentId}
+        </if>
+        <if test="level!=null and level!= ''">
+            and level=#{level}
+        </if>
+        order by sort desc
+    </select>
+  <select id="getgoodTypeListName" resultType="java.util.Map">
+    select id as id ,name as name,parent_id as parentId from  good_type  where del_flag =0 and status =1
+    <if test="nodeName!=null and nodeName!=''">
+      and name LIKE CONCAT('%',#{nodeName},'%')
+    </if>
+    <if test="level!=null and level!= ''">
+      and level=#{level}
+    </if>
+    order by sort desc
+    limit  10
+  </select>
+<select id="selectGoodTypeByParentId" resultType="org.jeecg.modules.good.entity.GoodType">
+  select * from  good_type  where del_flag =0
+    and parent_id=#{parentId}
+</select>
+  <select id="selectGoodTypeByParentIdAndName" resultType="java.util.Map">
+  select id as id,name as name from  good_type  where del_flag =0 and status =1
+    and name LIKE CONCAT('%',#{name},'%')
+    and parent_id=#{parentId}
+</select>
+
+
+    <select id="findTopGoodType" resultType="map">
+  select id as id,name as name,1 as isPlatform from  good_type  where del_flag =0 and status =1
+    and parent_id='0' order by sort
+</select>
+
+    <select id="findGoodTypeByParentId" resultType="map">
+  select id as id,name as name,1 as isPlatform,type_picture as typePicture from  good_type  where del_flag =0 and status =1
+    and parent_id=#{parentId}  order by sort
+</select>
+
+    <select id="getHotRecommended" resultType="map">
+        SELECT
+        gt.id AS id,gt.name AS NAME,1 AS isPlatform,gt.type_picture AS typePicture,
+        (SELECT
+        COUNT(*)
+        FROM
+        order_provider_good_record opgr
+        LEFT JOIN good_list gl
+        ON gl.id = opgr.good_list_id
+        WHERE gl.good_type_id = gt.id) AS number,
+        (SELECT
+        AVG(description_star)
+        FROM
+        `order_evaluate` oe
+        LEFT JOIN good_list gl
+        ON gl.id = oe.good_list_id
+        WHERE gl.good_type_id = gt.id) AS descriptionStar
+        FROM
+        `good_type` gt
+        LEFT JOIN good_list gl
+        ON gl.good_type_id = gt.id
+        WHERE gt.del_flag = 0
+        AND gt.STATUS = 1
+        AND gl.del_flag = 0
+        AND gl.frame_status = '1'
+        AND gl.STATUS = '1'
+        AND gl.good_form='0'
+        GROUP BY id
+        ORDER BY number DESC
+        <if test="limit!=null and limit!=''">
+            LIMIT #{limit}
+        </if>
+    </select>
+   <select id="getHotRecommendedAVG" resultType="map">
+       SELECT
+        gt.id as id,gt.name as name,1 as isPlatform,gt.type_picture as typePicture,
+        (SELECT
+        AVG(description_star)
+        FROM
+        `order_evaluate` oe
+        LEFT JOIN good_list gl
+        ON gl.id = oe.good_list_id
+        WHERE gl.good_type_id = gt.id) AS descriptionStar
+        FROM
+        `good_type` gt
+        WHERE gt.del_flag = 0
+        AND gt.STATUS = 1
+       <if test="goodTypeIds!=null and goodTypeIds.size > 0 ">
+           AND id IN
+           <foreach collection="goodTypeIds" item="goodTypeId" separator="," open="(" close=")">
+               #{goodTypeId}
+           </foreach>
+       </if>
+        ORDER BY descriptionStar DESC
+       <if test="limit!=null and limit!=''">
+           LIMIT #{limit}
+       </if>
+   </select>
+    <select id="getGoodTypeNumberDesc" resultType="map">
+        SELECT
+            gt.id AS id,gt.name as name,1 as isPlatform,gt.type_picture as typePicture,
+            COUNT(*) AS number
+            FROM
+             order_provider_good_record opgr LEFT JOIN good_list gl ON gl.id = opgr.good_list_id
+            LEFT JOIN `good_type` gt   ON gl.good_type_id = gt.id
+            WHERE gl.good_type_id = gt.id
+            AND gt.del_flag = 0
+            AND gt.STATUS = 1
+            AND gl.del_flag = 0
+            AND gl.frame_status = '1'
+            AND gl.STATUS = '1'
+            AND gl.good_form='0'
+            GROUP BY id
+            ORDER BY number DESC
+        <if test="limit!=null and limit!=''">
+            LIMIT #{limit}
+        </if>
+    </select>
+    <select id="getGoodTypeAvgDesc" resultType="map">
+        SELECT
+        gt.id AS id,gt.name AS NAME,1 AS isPlatform,gt.type_picture AS typePicture,
+        AVG(oe.description_star) AS descriptionStar
+        FROM
+        good_type gt LEFT JOIN good_list gl
+        ON gl.good_type_id = gt.id
+        LEFT JOIN `order_evaluate` oe
+        ON gl.id = oe.good_list_id
+        WHERE
+        gl.del_flag = 0
+        AND gl.frame_status = '1'
+        AND gl.STATUS = '1'
+        AND gl.good_form='0'
+        <if test="goodTypeIds!=null and goodTypeIds.size > 0 ">
+            AND gl.good_type_id IN
+            <foreach collection="goodTypeIds" item="goodTypeId" separator="," open="(" close=")">
+                #{goodTypeId}
+            </foreach>
+        </if>
+        GROUP BY id
+        ORDER BY descriptionStar DESC
+    </select>
+</mapper>

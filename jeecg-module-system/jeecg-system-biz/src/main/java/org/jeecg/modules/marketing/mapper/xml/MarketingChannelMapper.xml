@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingChannelMapper">
+    <select id="findMarkeingChannel" resultType="org.jeecg.modules.marketing.vo.MarketingChannelVO">
+        SELECT
+        mc.id,
+        mc.`name`,
+        mc.`english_name`,
+        mc.`status`,
+        (SELECT
+        SUM(md.`total`) AS tu
+        FROM
+        marketing_discount md
+        LEFT JOIN marketing_channel_discount mcd
+        ON md.`id` = mcd.`marketing_discount_id`
+        WHERE md.`del_flag` = 0
+        AND mcd.`del_flag` = 0
+        AND mcd.`marketing_channel_id` = mc.`id`) AS total,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`marketing_channel_id` = mc.`id`) AS discountGet,
+        IF(mc.`status` = 0, '停用', '启动') AS statusName,
+        mc.`status_explain`,
+        mc.`update_by`,
+        mc.`update_time`
+        FROM
+        marketing_channel mc
+        WHERE mc.`del_flag` = 0
+        <if test="marketingChannelVO!=null and marketingChannelVO.name!=null and marketingChannelVO.name!=''">
+            AND mc.name LIKE concat('%',concat(#{marketingChannelVO.name},'%'))
+        </if>
+        <if test="marketingChannelVO!=null and marketingChannelVO.status!=null and marketingChannelVO.status!=''">
+            AND mc.status = #{marketingChannelVO.status}
+        </if>
+        <if test="marketingChannelVO.updateTime_begin != null and marketingChannelVO.updateTime_begin != ''">
+            AND mc.update_time <![CDATA[>=]]> CONCAT(#{marketingChannelVO.updateTime_begin},'00:00:00')
+        </if>
+        <if test="marketingChannelVO.updateTime_end != null and marketingChannelVO.updateTime_end != ''">
+            AND mc.update_time <![CDATA[<=]]> CONCAT( #{marketingChannelVO.updateTime_end},'23:59:59')
+        </if>
+        ORDER BY mc.`create_time` DESC
+    </select>
+
+
+</mapper>

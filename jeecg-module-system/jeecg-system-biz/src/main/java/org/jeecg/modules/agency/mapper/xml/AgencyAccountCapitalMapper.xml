@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.agency.mapper.AgencyAccountCapitalMapper">
+
+    <select id="getAgencyAccountCapitalList" resultType="org.jeecg.modules.agency.dto.AgencyAccountCapitalDTO">
+         SELECT
+        aac.*,
+        su.phone AS phone,
+        su.realname AS realname,
+        su.username AS userName,
+        arr.remark
+        FROM
+        agency_account_capital aac
+        LEFT JOIN sys_user su
+        ON aac.sys_user_id = su.id
+        LEFT JOIN agency_recharge_record arr
+        ON arr.order_no = aac.order_no
+        WHERE aac.del_flag = 0
+        AND su.del_flag = 0
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.createTime_begin != null and agencyAccountCapitalVO.createTime_begin != ''">
+            and aac.create_time <![CDATA[>=]]> concat(#{agencyAccountCapitalVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.createTime_end != null and agencyAccountCapitalVO.createTime_end != ''">
+            AND aac.create_time <![CDATA[<=]]> concat( #{agencyAccountCapitalVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.payType!=null and agencyAccountCapitalVO.payType!=''">
+            AND aac.pay_type =#{agencyAccountCapitalVO.payType}
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.orderNo!=null and agencyAccountCapitalVO.orderNo!=''">
+            AND aac.order_no LIKE CONCAT(CONCAT('%',#{agencyAccountCapitalVO.orderNo}), '%')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.phone!=null and agencyAccountCapitalVO.phone!=''">
+            AND su.phone LIKE CONCAT(CONCAT('%',#{agencyAccountCapitalVO.phone}), '%')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.realname!=null and agencyAccountCapitalVO.realname!=''">
+            AND su.realname LIKE CONCAT(CONCAT('%',#{agencyAccountCapitalVO.realname}), '%')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.userName!=null and agencyAccountCapitalVO.userName!=''">
+            AND su.username LIKE CONCAT(CONCAT('%',#{agencyAccountCapitalVO.userName}), '%')
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.goAndCome!=null and agencyAccountCapitalVO.goAndCome!=''">
+            AND aac.go_and_come =#{agencyAccountCapitalVO.goAndCome}
+        </if>
+        <if test="agencyAccountCapitalVO != null and agencyAccountCapitalVO.sysUserId!=null and agencyAccountCapitalVO.sysUserId!=''">
+            AND aac.sys_user_id =#{agencyAccountCapitalVO.sysUserId}
+        </if>
+        ORDER BY aac.create_time DESC,
+        aac.`balance` DESC
+    </select>
+
+    <select id="findAccountCapitalSum" resultType="map">
+        SELECT
+        am.sys_user_id AS sysUserId,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS incomeNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS earning,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditureNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        agency_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditure
+        FROM
+        `agency_manage` am left join sys_user su on su.id = am.sys_user_id
+        WHERE am.del_flag = 0
+        AND am.status = 1
+        and su.del_flag = 0
+        and su.status = 1
+        AND am.start_time <![CDATA[ < ]]> NOW()
+        AND am.end_time <![CDATA[ >= ]]> NOW()
+    </select>
+    <select id="getEarningList" resultType="org.jeecg.modules.agency.dto.AgencyAccountCapitalDTO">
+        SELECT
+        IFNULL(SUM(aac.`amount`), '0') AS totalPrice,
+        DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') AS myDate
+        FROM
+        agency_account_capital aac
+        WHERE aac.`del_flag` = 0
+        and DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.earningTime_begin}
+        AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.earningTime_end}
+        AND aac.`go_and_come` = 0
+        AND aac.`sys_user_id` = #{agencyWorkbenchVO.sysUserId}
+        GROUP BY myDate
+        ORDER BY aac.`create_time` DESC
+    </select>
+    <select id="getAgencyAccountCapitalListList" resultType="org.jeecg.modules.agency.vo.AgencyAccountCapitalVO">
+        SELECT
+          m.*,
+          su.`realname`,
+          su.`username` AS userName
+        FROM
+          (SELECT
+            aac.*
+          FROM
+            agency_account_capital aac
+          WHERE aac.`del_flag` = 0
+            AND aac.`sys_user_id` = #{agencyStatementAccount.sysUserId}
+            AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{agencyStatementAccount.calendarDate}, '%Y-%m-%d')) m
+          LEFT JOIN sys_user su
+            ON m.sys_user_id = su.`id`
+    </select>
+</mapper>

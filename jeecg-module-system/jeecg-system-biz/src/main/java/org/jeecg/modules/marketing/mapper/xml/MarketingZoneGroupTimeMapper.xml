@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupTimeMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`member_type` AS memberType,
+          mzgt.member_list_id AS memberListId,
+          mzgt.`group_number` AS groupNumber,
+          mzgt.`spell_group` AS spellGroup,
+          mzgt.`id`
+        FROM
+          marketing_zone_group_time mzgt
+          LEFT JOIN member_list ml
+            ON mzgt.`member_list_id` = ml.`id`
+          WHERE mzgt.del_flag = 0
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.`nick_name` LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        <if test="requestMap.memberType != null and requestMap.memberType != ''">
+            AND ml.`member_type` = #{requestMap.memberType}
+        </if>
+        <if test="requestMap.memberListId != null and requestMap.memberListId != ''">
+            AND mzgt.`member_list_id` LIKE concat('%',#{requestMap.memberListId},'%')
+        </if>
+        ORDER BY mzgt.create_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberAccountCapitalMapper">
+
+
+    <select id="findMemberAccountCapitalByMemberId" parameterType="map" resultType="map">
+
+                    SELECT
+                    amount AS amount,
+                    go_and_come AS goAndCome,
+                    pay_type AS payType,
+                    DATE_FORMAT(create_time, '%Y-%m-%d %H:%i') AS createTime
+                    FROM
+                    `member_account_capital`
+                    WHERE member_list_id = #{paramMap.memberId}
+                    AND del_flag = '0' <if test = "paramMap.pattern==0">AND go_and_come = '0' </if>
+                    <if test = "paramMap.pattern==1" >AND go_and_come = '1' </if>
+                    ORDER BY create_time DESC,balance DESC
+    </select>
+    <select id="getMemberAccountCapitalList" resultType="org.jeecg.modules.member.dto.MemberAccountCapitalDTO">
+        SELECT
+        mac.id,
+        mac.member_list_id,
+        mac.pay_type,
+        mac.go_and_come,
+        mac.amount,
+        mac.order_no,
+        mac.balance,
+        ml.phone AS phone,
+        ml.nick_name AS nickName,
+        mac.create_time
+        FROM
+        (SELECT * FROM member_account_capital
+        WHERE member_list_id = #{memberAccountCapitalVO.memberListId}
+        <if test="memberAccountCapitalVO.id!=null and memberAccountCapitalVO.id!=''">
+            AND id LIKE CONCAT('%',#{memberAccountCapitalVO.id},'%')
+        </if>
+        )mac
+        LEFT JOIN member_list ml
+        ON mac.member_list_id = ml.id
+        WHERE mac.del_flag = 0
+        AND ml.del_flag = 0
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.createTime_begin != null and memberAccountCapitalVO.createTime_begin != ''">
+            and mac.create_time <![CDATA[>=]]> concat(#{memberAccountCapitalVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.createTime_end != null and memberAccountCapitalVO.createTime_end != ''">
+            AND mac.create_time <![CDATA[<=]]> concat( #{memberAccountCapitalVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.payType!=null and memberAccountCapitalVO.payType!=''">
+            AND mac.pay_type =#{memberAccountCapitalVO.payType}
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.orderNo!=null and memberAccountCapitalVO.orderNo!=''">
+            AND mac.order_no LIKE CONCAT(CONCAT('%',#{memberAccountCapitalVO.orderNo}), '%')
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.phone!=null and memberAccountCapitalVO.phone!=''">
+            AND ml.phone LIKE CONCAT(CONCAT('%',#{memberAccountCapitalVO.phone}), '%')
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.nickName!=null and memberAccountCapitalVO.nickName!=''">
+            AND ml.nick_name LIKE CONCAT(CONCAT('%',#{memberAccountCapitalVO.nickName}), '%')
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.goAndCome!=null and memberAccountCapitalVO.goAndCome!=''">
+            AND mac.go_and_come =#{memberAccountCapitalVO.goAndCome}
+        </if>
+        <if test="memberAccountCapitalVO != null and memberAccountCapitalVO.sysUserId!=null and memberAccountCapitalVO.sysUserId!=''">
+            AND ml.sys_user_id =#{memberAccountCapitalVO.sysUserId}
+        </if>
+        ORDER BY mac.create_time DESC,
+        mac.balance DESC
+    </select>
+    <select id="findAccountCapitalByMemberId" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'member_deal_type')
+            AND s.`item_value` = mac.`pay_type`) AS payType,
+          DATE_FORMAT(
+            mac.`create_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS createTime,
+          (
+            CASE
+              mac.`go_and_come`
+              WHEN 0
+              THEN CONCAT('+', mac.`amount`)
+              WHEN 1
+              THEN CONCAT('-', mac.`amount`)
+              ELSE '异常'
+            END
+          ) AS amount,
+          concat('余额 ',mac.`balance`) AS balance,
+          mac.`go_and_come` AS goAndCome
+        FROM
+          member_account_capital mac
+        WHERE mac.`del_flag` = 0
+          AND mac.`member_list_id` = #{map.memberId}
+          <if test="map.pattern!=2">
+              AND mac.`go_and_come` = #{map.pattern}
+          </if>
+        ORDER BY mac.`create_time` DESC ,mac.`amount` DESC
+    </select>
+    <select id="getEnterMoney" resultType="org.jeecg.modules.member.vo.MemberAccountCapitalVO">
+        SELECT
+          mac.id,
+          mac.`order_no`,
+          ml.`phone`,
+          ml.`nick_name`,
+          mac.`amount`
+        FROM
+          member_account_capital mac
+          LEFT JOIN member_list ml
+            ON mac.`member_list_id` = ml.`id`
+            LEFT JOIN member_recharge_record mrr
+            ON mrr.`order_no` = mac.`order_no`
+        WHERE mac.`del_flag` = 0
+          AND mac.`pay_type` = 8
+          AND mrr.`trade_no` = #{marketingEnterMoney.orderNo}
+    </select>
+</mapper>

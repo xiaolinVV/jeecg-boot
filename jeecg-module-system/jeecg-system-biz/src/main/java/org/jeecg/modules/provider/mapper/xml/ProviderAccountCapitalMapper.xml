@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderAccountCapitalMapper">
+    <select id="getProviderAccountCapitalList" resultType="org.jeecg.modules.provider.dto.ProviderAccountCapitalDTO">
+        SELECT
+        pac.*,
+        pm.linkphone AS linkphone,
+        pm.name AS providerName,
+        su.`username` AS userName
+        FROM
+        provider_account_capital pac
+        LEFT JOIN provider_manage pm
+        ON pac.sys_user_id = pm.sys_user_id
+        LEFT JOIN sys_user su
+        ON su.`id` = pm.`sys_user_id`
+        WHERE pac.del_flag = 0
+        AND pm.del_flag = 0
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.createTime_begin != null and providerAccountCapitalVO.createTime_begin != ''">
+            and pac.create_time <![CDATA[>=]]> concat(#{providerAccountCapitalVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.createTime_end != null and providerAccountCapitalVO.createTime_end != ''">
+            AND pac.create_time <![CDATA[<=]]> concat( #{providerAccountCapitalVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.payType!=null and providerAccountCapitalVO.payType!=''">
+            AND pac.pay_type =#{providerAccountCapitalVO.payType}
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.orderNo!=null and providerAccountCapitalVO.orderNo!=''">
+            AND pac.order_no LIKE CONCAT(CONCAT('%',#{providerAccountCapitalVO.orderNo}), '%')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.linkPhone!=null and providerAccountCapitalVO.linkPhone!=''">
+            AND pm.link_phone LIKE CONCAT(CONCAT('%',#{providerAccountCapitalVO.linkPhone}), '%')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.providerName!=null and providerAccountCapitalVO.providerName!=''">
+            AND pm.name LIKE CONCAT(CONCAT('%',#{providerAccountCapitalVO.providerName}), '%')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.goAndCome!=null and providerAccountCapitalVO.goAndCome!=''">
+            AND pac.go_and_come =#{providerAccountCapitalVO.goAndCome}
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.userName!=null and providerAccountCapitalVO.userName!=''">
+            AND su.username LIKE concat('%',#{providerAccountCapitalVO.userName},'%')
+        </if>
+        <if test="providerAccountCapitalVO != null and providerAccountCapitalVO.sysUserId!=null and providerAccountCapitalVO.sysUserId!=''">
+            AND pac.sys_user_id =#{providerAccountCapitalVO.sysUserId}
+        </if>
+        ORDER BY pac.create_time DESC,
+        pac.balance DESC
+    </select>
+
+    <select id="findAccountCapitalSum" resultType="map">
+        SELECT
+        pm.sys_user_id AS sysUserId,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS incomeNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS earning,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditureNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        provider_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = pm.sys_user_id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditure
+        FROM
+        provider_manage pm left join sys_user su on su.id = pm.sys_user_id
+        WHERE pm.del_flag = 0
+        AND pm.status = 1
+        and su.del_flag = 0
+        and su.status = 1
+        AND pm.start_time <![CDATA[ < ]]> NOW()
+        AND pm.end_time <![CDATA[ >= ]]> NOW()
+    </select>
+    <select id="getEarningList" resultType="org.jeecg.modules.provider.dto.ProviderAccountCapitalDTO">
+        SELECT
+          IFNULL(SUM(pac.`amount`), '0') AS totalPrice,
+          DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') AS myDate
+        FROM
+          provider_account_capital pac
+        WHERE pac.`del_flag` = 0
+          AND pac.`sys_user_id` = #{providerWorkbenchVO.sysUserId}
+          AND pac.`go_and_come` = 0
+          and DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{providerWorkbenchVO.earningTime_begin}
+        and DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{providerWorkbenchVO.earningTime_end}
+        GROUP BY myDate
+        ORDER BY pac.`create_time` DESC
+    </select>
+    <select id="getProviderAccountCapitalListList" resultType="org.jeecg.modules.provider.vo.ProviderAccountCapitalVO">
+        SELECT * FROM (
+        SELECT
+            pac.`id`,
+            pac.`create_time`,
+            pac.`pay_type`,
+            pac.`go_and_come`,
+            pac.`amount`,
+            pac.`order_no`,
+            pac.`sys_user_id`
+        FROM
+            provider_account_capital pac
+        WHERE pac.`del_flag` = 0
+              AND pac.`sys_user_id` = #{providerStatementAccount.sysUserId}
+              AND DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{providerStatementAccount.calendarDate}, '%Y-%m-%d')
+        ORDER BY pac.`create_time` DESC,
+            pac.`amount` DESC) m
+            LEFT JOIN provider_manage pm
+                ON pm.`sys_user_id` = m.sys_user_id
+            LEFT JOIN sys_user su
+                ON pm.`sys_user_id` = su.`id`
+    </select>
+</mapper>

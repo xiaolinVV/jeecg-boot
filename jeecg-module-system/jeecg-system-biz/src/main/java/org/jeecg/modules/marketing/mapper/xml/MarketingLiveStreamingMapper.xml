@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLiveStreamingMapper">
+
+    <select id="getMarketingLiveStreamingList" resultType="map">
+        SELECT
+        mls.room_name AS roomName,
+        mls.surface_plot AS surfacePlot,
+        mls.`status`,
+        ( mls.online_number + mls.virtual_online_number ) AS onlineNumber,
+        DATE_FORMAT( mls.start_time, '%Y-%m-%d %H:%i:%s' ) AS startTime,
+        mls.head_portrait AS headPortrait,
+        mls.wall_panel AS wallPanel,
+        mls.posters,
+	    mls.host_name AS hostName,
+	    mls.id,
+	    mls.group_id as groupId
+        FROM
+        marketing_live_streaming mls
+        WHERE
+        mls.`status` != '2'
+        AND mls.del_flag = '0'
+        AND NOW()&lt; mls.end_time
+        AND NOW()&gt;= mls.notice_time
+        ORDER BY
+	    mls.sort
+    </select>
+
+    <select id="getMarketingLiveStreamingListById" resultType="map">
+        SELECT
+        mls.room_name AS roomName,
+        mls.surface_plot AS surfacePlot,
+        mls.`status`,
+        ( mls.online_number + mls.virtual_online_number ) AS onlineNumber,
+        DATE_FORMAT( mls.start_time, '%Y-%m-%d %H:%i:%s' ) AS startTime,
+        mls.head_portrait AS headPortrait,
+        mls.wall_panel AS wallPanel,
+        mls.posters,
+        mls.host_name AS hostName,
+	    mls.id,
+        mls.rtmp_broadcast_address as rtmpBroadcastAddress,
+        mls.flv_broadcast_address as flvBroadcastAddress,
+        mls.hls_broadcast_address as hlsBroadcastAddress,
+        mls.udp_broadcast_address as udpBroadcastAddress,
+	    mls.group_id as groupId
+        FROM
+        marketing_live_streaming mls
+        WHERE
+        mls.del_flag = '0'
+        AND mls.id=#{id}
+    </select>
+
+</mapper>

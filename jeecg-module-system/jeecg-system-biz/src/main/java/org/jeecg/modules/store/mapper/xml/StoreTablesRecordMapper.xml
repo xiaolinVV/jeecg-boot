@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreTablesRecordMapper">
+    <select id="queryPageList" resultType="map" parameterType="map">
+                    SELECT
+                tbr.serial_number AS serialNumber,
+                tbr.id,
+                tb.serial_number AS tSerialNumber,
+                tb.qr_code AS qrCode,
+                tb.qr_code_name AS qrCodeName,
+                tbr.table_name AS tableName,
+                tb.id AS storeTablesId,
+                tbr.galleryful,
+                tbr.`status`,
+                ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE id = tbr.store_manage_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+                tbr.store_manage_id AS storeManageId
+            FROM
+                store_tables_record tbr
+                LEFT JOIN store_tables tb ON tbr.store_tables_id = tb.id
+
+                where tbr.del_flag='0'
+                <if test="paramMap.storeManageId!=null and paramMap.storeManageId!=''">
+                and tbr.store_manage_id=#{paramMap.storeManageId}
+                </if>
+        <if test="paramMap.tableName!=null and paramMap.tableName!=''">
+            and tbr.table_name=#{paramMap.tableName}
+        </if>
+        <if test="paramMap.qrCodeName!=null and paramMap.qrCodeName!=''">
+            and tb.qr_code_name=#{paramMap.qrCodeName}
+        </if>
+            ORDER BY
+                tbr.create_time DESC
+    </select>
+</mapper>

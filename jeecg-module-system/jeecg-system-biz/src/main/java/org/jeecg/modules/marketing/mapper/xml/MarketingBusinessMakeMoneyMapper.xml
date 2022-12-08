@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingBusinessMakeMoneyMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingBusinessMakeMoneyVO">
+        SELECT
+          mbmm.id,
+          mbmm.`serial_number`,
+          mbmm.`marketing_business_capital_id`,
+          mbmm.`trade_type`,
+          mbmm.`bonus_money`,
+          mbmm.`make_proportion`,
+          mbmm.`amount`,
+          mbmm.`total_balance`,
+          mbmm.`pay_time`,
+          mbmm.`trade_no`,
+          mbmm.`accounts_way`,
+          mbc.`capital_name`
+        FROM
+          (SELECT * FROM marketing_business_make_money ${ew.customSqlSegment})mbmm
+          LEFT JOIN marketing_business_capital mbc
+            ON mbmm.`marketing_business_capital_id` = mbc.`id`
+        WHERE mbmm.`del_flag` = 0
+    </select>
+</mapper>

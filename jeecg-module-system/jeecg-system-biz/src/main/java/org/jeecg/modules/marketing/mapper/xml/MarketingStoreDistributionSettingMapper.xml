@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingStoreDistributionSettingMapper">
+    <select id="findGiftBagStore" resultType="org.jeecg.modules.marketing.vo.MarketingStoreDistributionSettingVO">
+        SELECT
+        msds.id,
+        sm.`logo_addr`,
+        sm.`store_name`,
+        sm.`boss_name`,
+        sm.`boss_phone`,
+        msds.`status`,
+        IF(msds.`status` = 1,'启动','停用') AS statusName,
+        msds.`common_first`,
+        msds.`common_second`,
+        msds.`vip_first`,
+        msds.`vip_second`,
+        msds.`update_time`
+        FROM
+        marketing_store_distribution_setting msds
+        LEFT JOIN store_manage sm
+        ON msds.sys_user_id = sm.`sys_user_id`
+        WHERE msds.`del_flag` = 0
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.storeManage!=null and marketingStoreDistributionSettingVO.storeManage!=''">
+            AND sm.store_name LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.storeManage},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.bossName!=null and marketingStoreDistributionSettingVO.bossName!=''">
+            AND sm.boss_name LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.bossName},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.bossPhone!=null and marketingStoreDistributionSettingVO.bossPhone!=''">
+            AND sm.boss_phone LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.bossPhone},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.status!=null and marketingStoreDistributionSettingVO.status!=''">
+            AND msds.status = #{marketingStoreDistributionSettingVO.status}
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.updateTime_begin != null and marketingStoreDistributionSettingVO.updateTime_begin != ''">
+            AND msds.update_time <![CDATA[>=]]> CONCAT(#{marketingStoreDistributionSettingVO.updateTime_begin},'
+            00:00:00')
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.updateTime_end != null and marketingStoreDistributionSettingVO.updateTime_end != ''">
+            AND msds.update_time <![CDATA[<=]]> CONCAT( #{marketingStoreDistributionSettingVO.updateTime_end},'
+            23:59:59')
+        </if>
+        ORDER BY msds.`create_time` DESC
+    </select>
+        <select id="findStoreDistribution" resultType="org.jeecg.modules.marketing.vo.MarketingStoreDistributionSettingVO">
+        SELECT
+        ml.id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        ml.`member_type`,
+        ml.`total_commission`,
+        ml.`have_withdrawal`,
+        ml.account_frozen,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        mls.nick_name
+        FROM
+        member_list mls
+        WHERE mls.id = ml.`promoter`)
+        ELSE
+        '平台'
+        END
+        ) AS pName,
+        ss.address,
+        ml.create_time,
+        (
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mlone
+        WHERE mlone.promoter = ml.id
+        AND mlone.del_flag = 0) +
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mltwo
+        LEFT JOIN member_list mlone
+        ON mltwo.promoter = mlone.id
+        WHERE mlone.promoter = ml.id
+        AND mltwo.del_flag = 0)
+        ) AS mlSum,
+        IF(
+        ml.`sys_user_id` IS NOT NULL,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        '~'
+        ) AS storeName
+        FROM
+        member_list ml
+        LEFT JOIN sys_smallcode ss
+        ON ml.sys_smallcode_id = ss.id
+        LEFT JOIN store_manage sm
+        ON sm.sys_user_id = ml.sys_user_id
+        WHERE ml.`del_flag` = 0
+        AND ml.`status` = 1
+        <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.Uid != null and marketingStoreDistributionSettingVO.Uid != ''">
+            AND sm.sys_user_id = #{marketingStoreDistributionSettingVO.Uid}
+        </if>
+        <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.bossPhone != null and marketingStoreDistributionSettingVO.bossPhone != ''">
+            AND ml.phone LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.bossPhone},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.nickName != null and marketingStoreDistributionSettingVO.nickName != ''">
+            AND ml.nick_name LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.nickName},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.memberType != null and marketingStoreDistributionSettingVO.memberType != ''">
+            AND ml.member_type = #{marketingStoreDistributionSettingVO.memberType}
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.createTime_begin != null and marketingStoreDistributionSettingVO.createTime_begin != ''">
+            AND ml.create_time <![CDATA[>=]]> CONCAT(#{marketingStoreDistributionSettingVO.createTime_begin},'00:00:00')
+        </if>
+        <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.createTime_end != null and marketingStoreDistributionSettingVO.createTime_end != ''">
+            AND ml.create_time <![CDATA[<=]]> CONCAT( #{marketingStoreDistributionSettingVO.createTime_end},'23:59:59')
+        </if>
+        <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.storeName != null and marketingStoreDistributionSettingVO.storeName != ''">
+            AND CONCAT(
+            sm.`store_name`,
+            '(',
+            sm.`sub_store_name`,
+            ')'
+            ) LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.storeName},'%'))
+        </if>
+        <if test="marketingStoreDistributionSettingVO.pName != null and marketingStoreDistributionSettingVO.pName != ''">
+            AND (
+            CASE
+            ml.`promoter_type`
+            WHEN 0
+            THEN
+            (SELECT
+            IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+            sm.`store_name`,
+            '(',
+            sm.`sub_store_name`,
+            ')'
+            ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE sm.sys_user_id = ml.`promoter`)
+            WHEN 1
+            THEN
+            (SELECT
+            mls.nick_name
+            FROM
+            member_list mls
+            WHERE mls.id = ml.`promoter`)
+            ELSE
+            '平台'
+            END
+            ) LIKE concat('%',#{marketingStoreDistributionSettingVO.pName},'%')
+        </if>
+        ORDER BY ml.create_time DESC
+    </select>
+
+    <select id="findById" resultType="org.jeecg.modules.marketing.vo.MarketingStoreDistributionSettingVO">
+          SELECT
+            mlone.id,
+            mlone.phone,
+            mlone.nick_name,
+            mlone.promoter_type,
+            mlone.member_type,
+            CONCAT('一级')AS mType,
+            mlone.create_time,
+            ml.nick_name AS mName
+          FROM
+            member_list ml
+            LEFT JOIN member_list mlone
+              ON ml.id = mlone.promoter
+          WHERE ml.id = #{mId}
+          AND mlone.del_flag = 0
+          UNION
+          SELECT
+            mltwo.id,
+            mltwo.phone,
+            mltwo.nick_name,
+            mltwo.promoter_type,
+            mltwo.member_type,
+            CONCAT('二级')AS mType,
+            mltwo.create_time,
+            mlone.nick_name AS mName
+          FROM
+            member_list ml
+            LEFT JOIN member_list mlone
+              ON ml.id = mlone.promoter
+            LEFT JOIN member_list mltwo
+              ON mlone.id = mltwo.promoter
+          WHERE ml.id = #{mId}
+          AND mltwo.del_flag = 0
+          ORDER BY create_time DESC
+    </select>
+
+</mapper>

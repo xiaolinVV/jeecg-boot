@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingMaterialGoodMapper">
+   <select id="getMarketingMaterialGoodDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialGoodDTO">
+       SELECT
+              mmg.*,
+              gl.main_picture AS mainPicture,
+              gl.good_name AS goodName,
+              gl.market_price AS marketPrice,
+              gl.price AS price,
+              gl.vip_price AS vipPrice,
+              CONCAT_WS(
+                '-',
+                goodTypes.goodTypeOneName,
+                goodTypes.goodTypeTwoName,
+                goodTypes.goodTypeThreeName
+              ) AS goodTypeNames,
+              su.realname AS realname
+            FROM
+              `marketing_material_good` mmg
+              LEFT JOIN `good_list` gl
+                ON mmg.`good_list_id` = gl.`id`
+              LEFT JOIN
+                (SELECT
+                  gt.id,
+                  gt.parent_id,
+                  gt.id AS goodTypeIdThree,
+                  gt.name AS goodTypeThreeName,
+                  gttwo.id AS goodTypeIdTwo,
+                  gttwo.name AS goodTypeTwoName,
+                  gttwo.goodTypeIdOne AS goodTypeIdOne,
+                  gttwo.goodTypeOneName AS goodTypeOneName
+                FROM
+                  good_type gt
+                  LEFT JOIN
+                    (SELECT
+                      gttwo.id,
+                      gttwo.parent_id,
+                      gttwo.name,
+                      gtOne.id AS goodTypeIdOne,
+                      gtOne.name AS goodTypeOneName
+                    FROM
+                      good_type gttwo
+                      LEFT JOIN good_type gtOne
+                        ON gttwo.parent_id = gtOne.id) gttwo
+                    ON gt.parent_id = gttwo.id) goodTypes
+                ON gl.good_type_id = goodTypes.id
+              LEFT JOIN `sys_user` su
+                ON su.id = gl.sys_user_id
+            WHERE mmg.`del_flag` = 0
+              AND gl.del_flag = 0
+       <if test="marketingMaterialListId!=null and marketingMaterialListId!=''">
+           AND mmg.marketing_material_list_id = #{marketingMaterialListId}
+       </if>
+       ORDER BY mmg.create_time DESC
+   </select>
+   <select id="getMarketingMaterialGoodMap" resultType="map">
+       SELECT
+       mmg.id AS marketingMaterialGoodId,
+       gl.id AS goodId,
+       gl.main_picture AS mainPicture,
+       gl.small_price AS price,
+       gl.small_vip_price AS vipPrice,
+       gl.good_name AS goodName
+       FROM
+       `marketing_material_good` mmg
+       LEFT JOIN `good_list` gl
+       ON gl.id = mmg.`good_list_id`
+       LEFT JOIN `good_type` gt
+       ON  gt.id =  gl.good_type_id
+       WHERE mmg.del_flag = 0
+       AND gl.del_flag = 0
+       AND gl.status = 1
+       AND gl.frame_status = 1
+       AND gl.good_form = '0'
+       AND gl.audit_status = '2'
+       AND gl.main_picture IS NOT NULL
+       AND gt.`status` =1
+       <if test="marketingMaterialListId!=null and marketingMaterialListId!=''">
+           AND mmg.marketing_material_list_id = #{marketingMaterialListId}
+       </if>
+   </select>
+
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderEvaluateStoreMapper">
+
+    <select id="findOrderEvaluateByGoodId" resultType="map" parameterType="map">
+        SELECT
+        oe.id AS id,
+        oe.content AS content,
+        oe.pictures AS pictures,
+        oe.create_time AS createTime,
+        ml.nick_name AS nickName,
+        ml.head_portrait AS headPortrait,
+        gs.specification AS specification,
+        0 AS isPlatform,
+        oe.description_star AS descriptionStar
+        FROM
+        order_evaluate_store oe
+        LEFT JOIN member_list ml
+        ON oe.member_list_id = ml.id
+        LEFT JOIN good_store_specification gs
+        ON oe.good_store_specification_id = gs.id
+        WHERE oe.good_store_list_id = #{paraMap.goodId}
+        AND oe.status =1
+        <if test="paraMap.pattern==0">
+            order by oe.create_time,oe.description_star desc
+        </if>
+        <if test="paraMap.pattern==1">
+            order by oe.create_time desc
+        </if>
+        <if test="paraMap.pattern==2">
+            and oe.pictures is not null order by oe.create_time,oe.description_star desc
+        </if>
+    </select>
+    <select id="discussList" resultType="org.jeecg.modules.order.dto.OrderEvaluateDTO">
+        SELECT
+        oes.*,
+        gsl.main_picture AS mainPicture,
+        gsl.good_name AS goodName,
+        (SELECT
+        specification
+        FROM
+        good_store_specification
+        WHERE id = oes.good_store_specification_id) AS specification
+        FROM
+        order_evaluate_store oes
+        LEFT JOIN good_store_list gsl
+        ON oes.good_store_list_id = gsl.id
+        WHERE oes.del_flag =0
+        <if test="orderStoreListId != null and orderStoreListId != ''">
+            and oes.order_list_id =#{orderStoreListId}
+        </if>
+        ORDER BY oes.create_time DESC
+    </select>
+</mapper>

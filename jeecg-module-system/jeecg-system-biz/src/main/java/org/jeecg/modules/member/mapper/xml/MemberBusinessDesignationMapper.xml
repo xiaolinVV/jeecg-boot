@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberBusinessDesignationMapper">
+    <select id="findMemberBusinessDesignationBySuperiorMemberId" resultType="map">
+        SELECT
+          ml.id,
+          ml.`head_portrait` AS headPortrait,
+          IF(
+            LENGTH(TRIM(ml.`nick_name`)) > 0,
+            ml.`nick_name`,
+            ml.`phone`
+          ) AS nickName,
+          mb.`designation_name` AS designationName,
+          mb.`icon`,
+          mbd.`total_team` AS totalTeam
+        FROM
+          member_business_designation mbd
+          LEFT JOIN member_list ml
+            ON ml.`id` = mbd.`member_list_id`
+          LEFT JOIN marketing_business_designation mb
+            ON mbd.`marketing_business_designation_id` = mb.`id`
+        WHERE mbd.`t_member_id` = #{memberId}
+          AND mbd.`del_flag` = 0
+        ORDER BY mbd.`create_time` DESC
+    </select>
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mbd.`member_list_id` AS memberListId,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`promotion_code` AS promotionCode,
+          mb.`designation_name` AS designationName,
+          mbd.`create_time` AS createTime,
+          mbd.`total_team` AS totalTeam,
+        IF(
+        mbd.`t_member_id` IS NULL,
+        '-',
+        IF(
+        LENGTH(TRIM(mlt.`nick_name`)) > 0,
+        IF(
+        LENGTH(TRIM(mlt.`phone`)) > 0,
+        CONCAT(
+        mlt.`nick_name`,
+        '(',
+        mlt.`phone`,
+        ')'
+        ),
+        mlt.`phone`
+        ), mlt.`phone`
+        )
+        ) AS tMemberName
+        FROM
+          member_business_designation mbd
+          LEFT JOIN member_list ml
+            ON mbd.`member_list_id` = ml.`id`
+          LEFT JOIN marketing_business_designation mb
+            ON mb.`id` = mbd.`marketing_business_designation_id`
+          LEFT JOIN member_list mlt
+            ON mlt.id = mbd.`t_member_id`
+        WHERE mbd.`del_flag` = 0
+          <if test="requestMap.memberListId != null and requestMap.memberListId != ''">
+              AND mbd.`t_member_id` = #{requestMap.memberListId}
+          </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.phone LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.id != null and requestMap.id != ''">
+            AND ml.id LIKE concat('%',#{requestMap.id},'%')
+        </if>
+        <if test="requestMap.tPhone != null and requestMap.tPhone != ''">
+            AND mlt.phone LIKE concat('%',#{requestMap.tPhone},'%')
+        </if>
+        ORDER BY mbd.`create_time` DESC
+    </select>
+</mapper>

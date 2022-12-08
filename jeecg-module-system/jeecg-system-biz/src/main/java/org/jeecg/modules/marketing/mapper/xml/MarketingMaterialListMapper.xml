@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingMaterialListMapper">
+    <select id="getMarketingMaterialListDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialListDTO">
+        SELECT
+        mml.*,
+        mmc.name AS marketingMaterialColumnName,
+        (SELECT
+        COUNT(0)
+        FROM
+        `marketing_material_good`
+        WHERE del_flag = 0
+        AND marketing_material_list_id = mml.`id`) AS goodListCount,
+        (SELECT
+        COUNT(0)
+        FROM
+        `marketing_material_browse`
+        WHERE del_flag = 0
+        AND marketing_material_list_id = mml.`id`) AS browseCount,
+        (SELECT
+        COUNT(0)
+        FROM
+        `marketing_material_dianzan`
+        WHERE del_flag = 0
+        AND marketing_material_list_id = mml.`id`) AS dianzanCount,
+        (SELECT
+        COUNT(0)
+        FROM
+        `marketing_material_comment`
+        WHERE del_flag = 0
+        AND marketing_material_list = mml.`id`) AS commentCount
+        FROM
+        `marketing_material_list` mml
+        LEFT JOIN `marketing_material_column` mmc
+        ON mml.marketing_material_column_id = mmc.id
+        WHERE mml.del_flag = 0
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.id!=null and marketingMaterialListVO.id!=''">
+            AND mml.id LIKE CONCAT(CONCAT('%',#{marketingMaterialListVO.id}), '%')
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.title!=null and marketingMaterialListVO.title!=''">
+            AND mml.title LIKE CONCAT(CONCAT('%',#{marketingMaterialListVO.title}), '%')
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.author!=null and marketingMaterialListVO.author!=''">
+            AND mml.author LIKE CONCAT(CONCAT('%',#{marketingMaterialListVO.author}), '%')
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.marketingMaterialColumnId!=null and marketingMaterialListVO.marketingMaterialColumnId!=''">
+            AND mml.marketing_material_column_id = #{marketingMaterialListVO.marketingMaterialColumnId}
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.materialType!=null and marketingMaterialListVO.materialType!=''">
+            AND mml.material_type = #{marketingMaterialListVO.materialType}
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.isPublish!=null and marketingMaterialListVO.isPublish!=''">
+            AND mml.is_publish = #{marketingMaterialListVO.isPublish}
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.createTime_begin != null and marketingMaterialListVO.createTime_begin != ''">
+            and mml.create_time <![CDATA[>=]]> concat(#{marketingMaterialListVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingMaterialListVO != null and marketingMaterialListVO.createTime_end != null and marketingMaterialListVO.createTime_end != ''">
+            AND mml.create_time <![CDATA[<=]]> concat( #{marketingMaterialListVO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY mml.create_time DESC
+    </select>
+    <select id="findMarketingMaterial" resultType="map" parameterType="map">
+        SELECT
+        mml.id AS id,
+        mml.surface_plot AS surfacePlot,
+        mml.title AS title,
+        su.avatar AS avatar,
+        mml.author AS author,
+        mml.posters AS posters,
+        mml.material_type AS materialType,
+        mml.material_video AS materialVideo,
+        0 AS isDianzan,
+        IF(((SELECT COUNT(0) FROM `marketing_material_dianzan` WHERE del_flag = 0 AND marketing_material_list_id = mml.id) + initial_praise)>10000,
+        CONCAT(CONVERT(((SELECT COUNT(0) FROM `marketing_material_dianzan` WHERE del_flag = 0 AND marketing_material_list_id = mml.id) + initial_praise)/10000,DECIMAL(10,2)),'万'),
+        ((SELECT COUNT(0) FROM `marketing_material_dianzan` WHERE del_flag = 0 AND marketing_material_list_id = mml.id) + initial_praise))  AS dianzan
+        FROM
+        `marketing_material_list` mml
+        LEFT JOIN `sys_user` su
+        ON su.id = mml.sys_user_id
+        WHERE mml.del_flag = 0 AND mml.is_publish = 1
+         <if test="paramMap != null and paramMap.containsKey('marketingMaterialColumnId')">
+           and mml.marketing_material_column_id =#{paramMap.marketingMaterialColumnId}
+             Order by mml.sort asc
+         </if>
+        <if test="paramMap!=null and paramMap.containsKey('strings') ">
+            <choose>
+                <when test="paramMap!=null and paramMap.containsKey('strings') and paramMap.strings.size > 0 ">
+                    and  mml.id in
+                    <foreach collection="paramMap.strings" item="string" separator="," open="(" close=")">
+                        #{string}
+                    </foreach>
+                </when>
+                <otherwise>
+                    and  mml.id =" "
+                </otherwise>
+            </choose>
+
+            Order by (select sort from marketing_material_recommend where marketing_material_list_id=mml.id limit 1) asc
+
+        </if>
+
+    </select>
+
+    <select id="searchMarketingMaterial" resultType="map" parameterType="map">
+        SELECT
+        mml.id AS id,
+        mml.surface_plot AS surfacePlot,
+        mml.title AS title,
+        su.avatar AS avatar,
+        mml.author AS author,
+        mml.material_type AS materialType,
+        mml.material_video AS materialVideo,
+        mml.posters AS posters,
+        0 AS isDianzan,
+        IF(
+        mmd.mmdCount IS NULL,
+        IF(initial_praise>10000,CONCAT(CONVERT(initial_praise/10000,DECIMAL(10,2)),'万'),initial_praise) ,
+        IF((mmd.mmdCount + initial_praise)>10000,CONCAT(CONVERT((mmd.mmdCount + initial_praise)/10000,DECIMAL(10,2)),'万'),(mmd.mmdCount + initial_praise))
+        ) AS dianzan,
+        IF(
+        mmb.mmbCount IS NULL,
+        IF(initial_views>10000,CONCAT(CONVERT(initial_views/10000,DECIMAL(10,2)),'万'),initial_views),
+        IF((mmb.mmbCount + initial_views)>10000,CONCAT(CONVERT((mmb.mmbCount + initial_views)/10000,DECIMAL(10,2)),'万'),(mmb.mmbCount + initial_views))
+        ) AS browse
+        FROM
+        `marketing_material_list` mml
+        LEFT JOIN `sys_user` su
+        ON su.id = mml.sys_user_id
+        LEFT JOIN
+        (SELECT
+        marketing_material_list_id,
+        COUNT(0) AS mmdCount
+        FROM
+        marketing_material_dianzan
+        WHERE del_flag = 0
+        GROUP BY marketing_material_list_id) mmd
+        ON mmd.marketing_material_list_id = mml.id
+        LEFT JOIN
+        (SELECT
+        marketing_material_list_id,
+        COUNT(0) AS mmbCount
+        FROM
+        marketing_material_browse
+        WHERE del_flag = 0
+        GROUP BY marketing_material_list_id) mmb
+        ON mmb.marketing_material_list_id = mml.id
+        WHERE mml.del_flag = 0 AND mml.is_publish = 1
+        <if test="paramMap != null and paramMap.containsKey('search')  and paramMap.search!=''">
+          and mml.title like concat('%',#{paramMap.search},'%')
+        </if>
+        <if test="paramMap != null and paramMap.pattern==0">order by mml.sort asc,dianzan,browse,mml.create_time desc </if>
+        <if test="paramMap != null and paramMap.pattern==1">order by dianzan desc</if>
+        <if test="paramMap != null and paramMap.pattern==2">order by browse desc</if>
+        <if test="paramMap != null and paramMap.pattern==3">order by mml.create_time desc</if>
+    </select>
+
+    <select id="getMarketingMaterialById" resultType="map">
+        SELECT
+              mml.id AS id,
+              mml.surface_plot AS surfacePlot,
+              mml.title AS title,
+              mml.author AS author,
+              mml.abstract_digest AS abstractDigest,
+              DATE_FORMAT(mml.create_time,'%Y-%m-%d %H:%i:%s') AS createTime,
+              mml.material_type AS materialType,
+              mml.material_video AS materialVideo,
+              mml.posters AS posters,
+              mml.content AS content,
+              mml.cover_plan as coverPlan,
+              su.avatar AS avatar,
+
+              0 AS isDianzan,
+              IF(
+                mmd.mmdCount IS NULL,
+               IF(initial_praise>10000,CONCAT(CONVERT(initial_praise/10000,DECIMAL(10,2)),'万'),initial_praise) ,
+               IF((mmd.mmdCount + initial_praise)>10000,CONCAT(CONVERT((mmd.mmdCount + initial_praise)/10000,DECIMAL(10,2)),'万'),(mmd.mmdCount + initial_praise))
+              ) AS dianzan,
+              IF(
+                mmb.mmbCount IS NULL,
+                IF(initial_views>10000,CONCAT(CONVERT(initial_views/10000,DECIMAL(10,2)),'万'),initial_views),
+                IF((mmb.mmbCount + initial_views)>10000,CONCAT(CONVERT((mmb.mmbCount + initial_views)/10000,DECIMAL(10,2)),'万'),(mmb.mmbCount + initial_views))
+              ) AS browse
+            FROM
+              `marketing_material_list` mml
+              LEFT JOIN `sys_user` su
+                ON su.id = mml.sys_user_id
+              LEFT JOIN
+                (SELECT
+                  marketing_material_list_id,
+                  COUNT(0) AS mmdCount
+                FROM
+                  marketing_material_dianzan
+                WHERE del_flag = 0
+                GROUP BY marketing_material_list_id) mmd
+                ON mmd.marketing_material_list_id = mml.id
+              LEFT JOIN
+                (SELECT
+                  marketing_material_list_id,
+                  COUNT(0) AS mmbCount
+                FROM
+                  marketing_material_browse
+                WHERE del_flag = 0
+                GROUP BY marketing_material_list_id) mmb
+                ON mmb.marketing_material_list_id = mml.id
+            WHERE mml.del_flag = 0 AND mml.is_publish = 1
+             and mml.id =#{id}
+
+    </select>
+
+
+</mapper>

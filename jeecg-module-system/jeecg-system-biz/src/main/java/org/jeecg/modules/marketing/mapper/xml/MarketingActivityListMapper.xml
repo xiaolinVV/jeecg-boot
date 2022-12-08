@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingActivityListMapper">
+
+    <select id="getMarketingActivityList" resultType="map">
+            SELECT
+            mal.surface_plot AS surfacePlot,
+            mal.activity_name AS activityName,
+            mal.active_status AS activeStatus,
+            mal.id
+            FROM
+            marketing_activity_list mal
+            WHERE
+            mal.del_flag = '0'
+            AND mal.`status` = '1'
+            AND NOW()&lt;= mal.end_time
+            ORDER BY
+            sort
+    </select>
+    <select id="getMarketingActivityListById" resultType="map">
+
+                SELECT
+            mal.surface_plot AS surfacePlot,
+            mal.activity_name AS activityName,
+            mal.active_status AS activeStatus,
+            mal.id,
+            mal.content,
+            mal.posters,
+            mal.cover_plan AS coverPlan,
+            ( SELECT count( 1 ) FROM marketing_activity_list_record WHERE member_list_id = #{paramMap.memberListId} AND marketing_activity_list_id = mal.id ) AS recordCount,
+            DATE_FORMAT( mal.registration_time, '%Y-%m-%d %H:%i:%s' ) AS registrationTime,
+            DATE_FORMAT( mal.start_time, '%Y-%m-%d %H:%i:%s' ) AS startTime,
+            DATE_FORMAT( mal.end_time, '%Y-%m-%d %H:%i:%s' ) AS endTime,
+            mal.places,
+            mal.detailed_address AS detailedAddress,
+            mal.phone
+        FROM
+            marketing_activity_list mal
+        WHERE
+            mal.id = #{paramMap.id}
+
+    </select>
+</mapper>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.agency.mapper.AgencyStatementAccountMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.agency.vo.AgencyStatementAccountVO">
+        SELECT
+        asa.*,
+        su.`realname`,
+        su.`username`AS userName,
+        am.name
+        FROM
+        agency_statement_account asa
+        LEFT JOIN sys_user su
+        ON asa.`sys_user_id` = su.`id`
+        LEFT JOIN alliance_manage am
+        ON asa.`sys_user_id` = am.`sys_user_id`
+        WHERE asa.`del_flag` = 0
+        <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.sysUserId != null and agencyStatementAccountDTO.sysUserId != ''">
+            AND asa.sys_user_id = #{agencyStatementAccountDTO.sysUserId}
+        </if>
+        <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.calendarDate_begin != null and agencyStatementAccountDTO.calendarDate_begin != ''">
+            AND asa.calendar_date <![CDATA[>=]]> concat(#{agencyStatementAccountDTO.calendarDate_begin},' 00:00:00')
+        </if>
+        <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.calendarDate_end != null and agencyStatementAccountDTO.calendarDate_end != ''">
+            AND asa.calendar_date <![CDATA[<=]]> concat( #{agencyStatementAccountDTO.calendarDate_end},' 23:59:59')
+        </if>
+        <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.realname != null and agencyStatementAccountDTO.realname != ''">
+            AND su.realname LIKE concat('%',#{agencyStatementAccountDTO.realname},'%')
+        </if>
+        <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.userName != null and agencyStatementAccountDTO.userName != ''">
+            AND su.username LIKE concat('%',#{agencyStatementAccountDTO.userName},'%')
+        </if>
+      order by  asa.create_time desc
+    </select>
+</mapper>

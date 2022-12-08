@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateSeckillActivityListMapper">
+    <select id="getInfo" resultType="map">
+        SELECT
+          TIMESTAMPDIFF(SECOND,NOW(),STR_TO_DATE(DATE_FORMAT(END_TIME, '%Y-%m-%d %H:%i:%s'),'%Y-%m-%d %H:%i:%s')) AS surplusTime
+        FROM
+          marketing_certificate_seckill_activity_list mcsa
+        WHERE mcsa.`id` = #{id}
+    </select>
+</mapper>

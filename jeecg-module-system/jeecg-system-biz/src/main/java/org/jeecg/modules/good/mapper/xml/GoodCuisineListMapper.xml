@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodCuisineListMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.good.entity.GoodCuisineList">
+                SELECT
+            ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE id = gcl.store_manage_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+            gcl.serial_number AS serialNumber,
+            gcl.main_picture AS mainPicture,
+            gcl.good_name AS goodName,
+            ( SELECT type_name FROM good_cuisine_type WHERE id = gcl.good_cuisine_type_id ) AS typeName,
+            gcl.shop_info AS shopInfo,
+            gcl.store_manage_id AS storeManageId,
+            gcl.good_cuisine_type_id AS goodCuisineTypeId,
+            gcl.good_describe AS goodDescribe,
+            gcl.video,
+            gcl.details_figure AS detailsFigure,
+            gcl.id,
+            gcl.sort,
+            gcl.frame_status AS frameStatus,
+            gcl.specifications,
+            gcl.specifications_decribes AS specificationsDecribes
+        FROM
+            good_cuisine_list gcl
+        ORDER BY
+            gcl.sort ASC,
+            gcl.create_time DESC
+    </select>
+</mapper>

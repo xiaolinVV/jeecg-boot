@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.alliance.mapper.AllianceAccountCapitalMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceAccountCapitalVO">
+        SELECT
+          aac.*,
+          am.`name`,
+          su.`username`,
+          su.`realname`
+        FROM
+          alliance_account_capital aac
+          LEFT JOIN alliance_manage am
+            ON aac.`sys_user_id` = am.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON aac.`sys_user_id` = su.`id`
+        WHERE aac.`del_flag` = 0
+        <if test="allianceAccountCapitalDTO.sysUserId != null and allianceAccountCapitalDTO.sysUserId != ''">
+            AND aac.`sys_user_id` = #{allianceAccountCapitalDTO.sysUserId}
+        </if>
+        <if test="allianceAccountCapitalDTO.createTime_begin != null and allianceAccountCapitalDTO.createTime_begin != ''">
+            AND aac.create_time <![CDATA[>=]]> concat(#{allianceAccountCapitalDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceAccountCapitalDTO.createTime_end != null and allianceAccountCapitalDTO.createTime_end != ''">
+            AND aac.create_time <![CDATA[<=]]> concat( #{allianceAccountCapitalDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="allianceAccountCapitalDTO.username != null and allianceAccountCapitalDTO.username != ''">
+            AND su.username LIKE concat('%',#{allianceAccountCapitalDTO.username},'%')
+        </if>
+        <if test="allianceAccountCapitalDTO.realname != null and allianceAccountCapitalDTO.realname != ''">
+            AND su.realname LIKE concat('%',#{allianceAccountCapitalDTO.realname},'%')
+        </if>
+        <if test="allianceAccountCapitalDTO.name != null and allianceAccountCapitalDTO.name != ''">
+            AND am.name LIKE concat('%',#{allianceAccountCapitalDTO.name},'%')
+        </if>
+        <if test="allianceAccountCapitalDTO.payType != null and allianceAccountCapitalDTO.payType != ''">
+            AND aac.pay_type = #{allianceAccountCapitalDTO.payType}
+        </if>
+        <if test="allianceAccountCapitalDTO.goAndCome != null and allianceAccountCapitalDTO.goAndCome != ''">
+            AND aac.go_and_come = #{allianceAccountCapitalDTO.goAndCome}
+        </if>
+        <if test="allianceAccountCapitalDTO.orderNo != null and allianceAccountCapitalDTO.orderNo != ''">
+            AND aac.order_no LIKE concat('%',#{allianceAccountCapitalDTO.orderNo},'%')
+        </if>
+        ORDER BY aac.`create_time` DESC
+    </select>
+    <select id="getEarningList" resultType="org.jeecg.modules.alliance.dto.AllianceAccountCapitalDTO">
+        SELECT
+        IFNULL(SUM(aac.`amount`), '0') AS totalPrice,
+        DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') AS myDate
+        FROM
+        alliance_account_capital aac
+        WHERE aac.`del_flag` = 0
+        AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.earningTime_begin}
+        AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.earningTime_end}
+        AND aac.`go_and_come` = 0
+        AND aac.`sys_user_id` = #{workbench.sysUserId}
+        GROUP BY myDate
+        ORDER BY aac.`create_time` DESC
+    </select>
+    <select id="findAccountCapitalSum" resultType="map">
+        SELECT
+        am.sys_user_id AS sysUserId,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS incomeNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 0
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS earning,
+        IF(
+        (SELECT
+        COUNT(*)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        COUNT(*)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditureNumber,
+        IF(
+        (SELECT
+        SUM(amount)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id) IS NULL,
+        0,
+        (SELECT
+        SUM(amount)
+        FROM
+        alliance_account_capital sac
+        WHERE del_flag = 0
+        AND go_and_come = 1
+        AND sac.sys_user_id = am.sys_user_id
+        <if test="year != null and year!=''">  AND YEAR =#{year}</if>
+        <if test="month != null and month!=''">  AND MONTH =#{month}</if>
+        <if test="day != null and day!=''">  AND DAY =#{day}</if>
+        GROUP BY sac.sys_user_id)
+        ) AS expenditure
+        FROM
+        alliance_manage am left join sys_user su on su.id = am.sys_user_id
+        WHERE am.del_flag = 0
+        AND am.status = 1
+        and su.del_flag = 0
+        and su.status = 1
+        AND am.start_time <![CDATA[ < ]]> NOW()
+        AND am.end_time <![CDATA[ > ]]> NOW()
+    </select>
+
+    <select id="findAccountCapitalById" resultType="org.jeecg.modules.alliance.vo.AllianceAccountCapitalVO">
+        SELECT
+          m.*,
+          su.`username`,
+          su.`realname`
+        FROM
+          (SELECT
+            aac.*
+          FROM
+            alliance_account_capital aac
+          WHERE aac.`del_flag` = 0
+            AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{allianceStatementAccount.calendarDate}, '%Y-%m-%d')
+            AND aac.`sys_user_id` = #{allianceStatementAccount.sysUserId}
+            ) m
+          LEFT JOIN sys_user su
+            ON m.sys_user_id = su.`id`
+    </select>
+</mapper>

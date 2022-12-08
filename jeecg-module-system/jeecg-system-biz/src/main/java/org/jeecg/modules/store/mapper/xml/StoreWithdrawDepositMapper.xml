@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreWithdrawDepositMapper">
+    <select id="getStoreWithdrawDeposit" resultType="org.jeecg.modules.store.dto.StoreWithdrawDepositDTO">
+        SELECT * FROM (
+        SELECT
+        swd.*,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        CONCAT(
+        swd.`bank_card`,
+        '(',
+        swd.`bank_name`,
+        ')'
+        ) AS jointName,
+        (
+        CASE
+        swd.`withdrawal_type`
+        WHEN 0
+        THEN '微信'
+        WHEN 1
+        THEN '支付宝'
+        WHEN 2
+        THEN '银行卡'
+        ELSE '~'
+        END
+        ) AS typeName,
+        su.`username` AS userName
+        FROM
+        store_withdraw_deposit swd
+        LEFT JOIN store_manage sm
+        ON swd.store_manage_id = sm.id
+        LEFT JOIN sys_user su
+        ON sm.`sys_user_id` = su.`id`
+        WHERE swd.del_flag = 0
+        AND sm.del_flag = 0
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.orderNo!=null and storeWithdrawDepositVO.orderNo!=''">
+            AND swd.order_no LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.orderNo}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.phone!=null and storeWithdrawDepositVO.phone!=''">
+            AND swd.phone LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.phone}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.withdrawalType!=null and storeWithdrawDepositVO.withdrawalType!=''">
+            AND swd.withdrawal_type =#{storeWithdrawDepositVO.withdrawalType}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.bankCard!=null and storeWithdrawDepositVO.bankCard!=''">
+            AND swd.bank_card LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.bankCard}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.cardholder!=null and storeWithdrawDepositVO.cardholder!=''">
+            AND swd.cardholder LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.cardholder}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.status!=null and storeWithdrawDepositVO.status!=''">
+            AND swd.status =#{storeWithdrawDepositVO.status}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.timeApplication_begin != null and storeWithdrawDepositVO.timeApplication_begin != ''">
+            and swd.time_application <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.timeApplication_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.timeApplication_end != null and storeWithdrawDepositVO.timeApplication_end != ''">
+            AND swd.time_application <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.timeApplication_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.auditTime_begin != null and storeWithdrawDepositVO.auditTime_begin != ''">
+            and swd.auditTime <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.auditTime_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.auditTime_end != null and storeWithdrawDepositVO.auditTime_end != ''">
+            AND swd.auditTime <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.auditTime_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.payTime_begin != null and storeWithdrawDepositVO.payTime_begin != ''">
+            and swd.payTime <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.payTime_end != null and storeWithdrawDepositVO.payTime_end != ''">
+            AND swd.payTime <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.payTime_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.sysUserId!=null and storeWithdrawDepositVO.sysUserId!=''">
+            AND sm.sys_user_id =#{storeWithdrawDepositVO.sysUserId}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.userName!=null and storeWithdrawDepositVO.userName!=''">
+            AND su.username LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.userName}), '%')
+        </if>
+        ORDER BY swd.create_time DESC,swd.money DESC
+        ) m
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.storeName!=null and storeWithdrawDepositVO.storeName!=''">
+            WHERE m.storeName LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.storeName}), '%')
+        </if>
+    </select>
+    <select id="getStoreWithdrawDepositMap" resultType="map">
+        SELECT
+        swd.id,
+        (
+        CASE
+        swd.status
+        WHEN 0
+        THEN 0
+        WHEN 1
+        THEN 2
+        WHEN 2
+        THEN 2
+        ELSE 3
+        END
+        ) AS status,
+        swd.money,
+        swd.service_charge AS serviceCharge,
+        swd.amount,
+        swd.order_no AS orderNo,
+        DATE_FORMAT(swd.time_application,'%Y-%m-%d %H:%i:%s') AS timeApplication,
+        (
+        CASE
+        swd.`withdrawal_type`
+        WHEN 0
+        THEN '微信钱包'
+        WHEN 1
+        THEN
+        (SELECT
+        CONCAT_WS(',', bank_name, RIGHT(bank_card, 4))
+        FROM
+        store_bank_card
+        WHERE del_flag = "0"
+        AND store_manage_id = swd.store_manage_id
+        AND car_type = 1)
+        WHEN 2
+        THEN
+        (SELECT
+        CONCAT(bank_name,' (', RIGHT(bank_card, 4),')')
+        FROM
+        store_bank_card
+        WHERE del_flag = "0"
+        AND store_manage_id = swd.store_manage_id
+        AND car_type = 0)
+        ELSE ''
+        END
+        ) AS bankCard,
+        swd.close_explain AS closeExplain
+        FROM
+        store_withdraw_deposit swd
+        WHERE swd.del_flag = 0
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.orderNo!=null and storeWithdrawDepositVO.orderNo!=''">
+            AND swd.order_no LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.orderNo}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.phone!=null and storeWithdrawDepositVO.phone!=''">
+            AND swd.phone LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.phone}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.storeName!=null and storeWithdrawDepositVO.storeName!=''">
+            AND sm.store_name LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.storeName}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.withdrawalType!=null and storeWithdrawDepositVO.withdrawalType!=''">
+            AND swd.withdrawal_type =#{storeWithdrawDepositVO.withdrawalType}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.bankCard!=null and storeWithdrawDepositVO.bankCard!=''">
+            AND swd.bank_card LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.bankCard}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.cardholder!=null and storeWithdrawDepositVO.cardholder!=''">
+            AND swd.cardholder LIKE CONCAT(CONCAT('%',#{storeWithdrawDepositVO.cardholder}), '%')
+        </if>
+        <if test="storeWithdrawDepositVO.status != null and storeWithdrawDepositVO.status != '' and storeWithdrawDepositVO.status == 2">
+            AND swd.status IN ('1','2')
+        </if>
+        <if test="storeWithdrawDepositVO.status != null and storeWithdrawDepositVO.status != '' and storeWithdrawDepositVO.status != 2">
+            AND swd.status  = #{storeWithdrawDepositVO.status}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.timeApplication_begin != null and storeWithdrawDepositVO.timeApplication_begin != ''">
+            and swd.time_application <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.timeApplication_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.timeApplication_end != null and storeWithdrawDepositVO.timeApplication_end != ''">
+            AND swd.time_application <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.timeApplication_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.auditTime_begin != null and storeWithdrawDepositVO.auditTime_begin != ''">
+            and swd.auditTime <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.auditTime_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.auditTime_end != null and storeWithdrawDepositVO.auditTime_end != ''">
+            AND swd.auditTime <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.auditTime_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.payTime_begin != null and storeWithdrawDepositVO.payTime_begin != ''">
+            and swd.payTime <![CDATA[>=]]> concat(#{storeWithdrawDepositVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.payTime_end != null and storeWithdrawDepositVO.payTime_end != ''">
+            AND swd.payTime <![CDATA[<=]]> concat( #{storeWithdrawDepositVO.payTime_end},' 23:59:59')
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.storeManageId!=null and storeWithdrawDepositVO.storeManageId!=''">
+            AND swd.store_manage_id =#{storeWithdrawDepositVO.storeManageId}
+        </if>
+        <if test="storeWithdrawDepositVO != null and storeWithdrawDepositVO.id!=null and storeWithdrawDepositVO.id!=''">
+            AND swd.id =#{storeWithdrawDepositVO.id}
+        </if>
+        ORDER BY swd.create_time DESC,swd.money DESC
+    </select>
+
+</mapper>

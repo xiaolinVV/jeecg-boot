@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLiveLotteryRecordMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`head_portrait` AS headPortrait,
+          mllr.`id`,
+          mllr.`member_list_id` AS memberListId,
+          mllr.`lottery_no` AS lotteryNo,
+          mllr.`prize_type` AS prizeType,
+          mllr.`prize_name` AS prizeName,
+          mllr.`prize_image` AS prizeImage,
+          mllr.`quantity`,
+        mllr.marketing_discount_coupon_id AS marketingDiscountCouponId,
+        DATE_FORMAT(
+        mllr.`get_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS getTime,
+          mllr.`draw_status` AS drawStatus,
+        DATE_FORMAT(
+        mllr.`draw_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS drawTime,
+          mllr.`remark`,
+          mllr.`total_times` AS totalTimes,
+          mllr.`is_lottery` AS isLottery,
+          mllr.`consignee`,
+          mllr.`contact_number` AS contactNumber,
+          mllr.`shipping_address` AS shippingAddress
+        FROM
+          (SELECT
+            `id`,
+            `member_list_id`,
+            `lottery_no`,
+        marketing_discount_coupon_id,
+            `prize_type`,
+            `prize_name`,
+            `prize_image`,
+            `quantity`,
+            `get_time`,
+            `draw_status`,
+            `draw_time`,
+            `remark`,
+            `total_times`,
+            `is_lottery`,
+            `consignee`,
+            `contact_number`,
+            `shipping_address`
+          FROM
+            marketing_live_lottery_record ${ew.customSqlSegment}) mllr
+          LEFT JOIN member_list ml
+            ON mllr.`member_list_id` = ml.`id`
+          <where>
+              <if test="requestMap.phone != null and requestMap.phone != ''">
+                  AND ml.phone LIKE concat('%',#{requestMap.phone},'%')
+              </if>
+              <if test="requestMap.nickName != null and requestMap.nickName != ''">
+                  AND ml.nick_name LIKE concat('%',#{requestMap.nickName},'%')
+              </if>
+          </where>
+        ORDER BY mllr.`get_time` DESC
+    </select>
+    <select id="getMarketingLiveLotteryRecordList" resultType="map">
+        SELECT
+          mllr.`id` AS marketingLiveLotteryRecordId,
+          mllr.`prize_name` AS prizeName,
+          mllr.`prize_image` AS prizeImage,
+          mllr.`prize_type` AS prizeType,
+          mllr.`quantity`,
+          mllr.`draw_status` AS drawStatus,
+          mllr.`marketing_discount_coupon_id` AS marketingDiscountCouponId,
+          mllr.lottery_no AS streamNumber
+        FROM
+          marketing_live_lottery_record mllr
+        WHERE mllr.`member_list_id` = #{map.memberId}
+        <if test="map.marketingLiveStreamingId != null and map.marketingLiveStreamingId != ''">
+            AND mllr.`marketing_live_streaming_id` = #{map.marketingLiveStreamingId}
+        </if>
+        <if test="map.drawStatus != null and map.drawStatus != ''">
+            AND mllr.`draw_status` = #{map.drawStatus}
+        </if>
+        AND mllr.`del_flag` = 0
+        ORDER BY mllr.`get_time` DESC
+    </select>
+</mapper>

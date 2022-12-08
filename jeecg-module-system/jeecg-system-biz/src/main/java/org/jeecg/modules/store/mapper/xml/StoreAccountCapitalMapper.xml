@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreAccountCapitalMapper">
+
+<select id="getStoreAccountCapitalList" resultType="org.jeecg.modules.store.dto.StoreAccountCapitalDTO">
+    SELECT * FROM (
+    SELECT
+    sac.*,
+    sm.boss_phone AS bossPhone,
+    IF(
+    LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+    CONCAT(
+    sm.`store_name`,
+    '(',
+    sm.`sub_store_name`,
+    ')'
+    ),
+    sm.`store_name`
+    ) AS storeName,
+    su.`username` AS userName
+    FROM
+    store_account_capital sac
+    LEFT JOIN store_manage sm
+    ON sac.store_manage_id = sm.id
+    LEFT JOIN sys_user su
+    ON sm.`sys_user_id` = su.`id`
+    WHERE sac.del_flag = 0
+    AND sm.del_flag = 0
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.createTime_begin != null and storeAccountCapitalVO.createTime_begin != ''">
+        and sac.create_time <![CDATA[>=]]> concat(#{storeAccountCapitalVO.createTime_begin},' 00:00:00')
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.createTime_end != null and storeAccountCapitalVO.createTime_end != ''">
+        AND sac.create_time <![CDATA[<=]]> concat( #{storeAccountCapitalVO.createTime_end},' 23:59:59')
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.payType!=null and storeAccountCapitalVO.payType!=''">
+        AND sac.pay_type =#{storeAccountCapitalVO.payType}
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.orderNo!=null and storeAccountCapitalVO.orderNo!=''">
+        AND sac.order_no LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.orderNo}), '%')
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.bossPhone!=null and storeAccountCapitalVO.bossPhone!=''">
+        AND sm.boss_phone LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.bossPhone}), '%')
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.userName!=null and storeAccountCapitalVO.userName!=''">
+        AND su.username LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.userName}), '%')
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.goAndCome!=null and storeAccountCapitalVO.goAndCome!=''">
+        AND sac.go_and_come =#{storeAccountCapitalVO.goAndCome}
+    </if>
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.sysUserId!=null and storeAccountCapitalVO.sysUserId!=''">
+        AND sm.sys_user_id =#{storeAccountCapitalVO.sysUserId}
+    </if>
+    ORDER BY sac.create_time DESC,
+    sac.balance DESC
+    ) m
+    <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.storeName!=null and storeAccountCapitalVO.storeName!=''">
+        WHERE m.storeName LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.storeName}), '%')
+    </if>
+</select>
+
+    <select id="findAccountCapitalSum" resultType="map">
+       SELECT
+              sm.`id` AS storeManageId,
+              IF(
+                (SELECT
+                  COUNT(*)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND go_and_come = 0
+                  AND sac.store_manage_id = sm.id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id) IS NULL,
+                0,
+                (SELECT
+                  COUNT(*)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND go_and_come = 0
+                  AND sac.store_manage_id = sm.id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id)
+              ) AS incomeNumber,
+              IF(
+                (SELECT
+                  SUM(amount)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND go_and_come = 0
+                  AND sac.store_manage_id = sm.id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id) IS NULL,
+                0,
+                (SELECT
+                  SUM(amount)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND go_and_come = 0
+                  AND sac.store_manage_id = sm.id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id)
+              ) AS earning,
+              IF(
+                (SELECT
+                  COUNT(*)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND go_and_come = 1
+                  AND sac.store_manage_id = sm.id
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id) IS NULL,
+                0,
+                (SELECT
+                  COUNT(*)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND sac.store_manage_id = sm.id
+                  AND go_and_come = 1
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id)
+              ) AS expenditureNumber,
+              IF(
+                (SELECT
+                  SUM(amount)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND sac.store_manage_id = sm.id
+                  AND go_and_come = 1
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id) IS NULL,
+                0,
+                (SELECT
+                  SUM(amount)
+                FROM
+                  store_account_capital sac
+                WHERE del_flag = 0
+                  AND sac.store_manage_id = sm.id
+                  AND go_and_come = 1
+        <if test="year != null and year!=''">  AND year =#{year}</if>
+        <if test="month != null and month!=''">  AND month =#{month}</if>
+        <if test="day != null and day!=''">  AND day =#{day}</if>
+                GROUP BY sac.store_manage_id)
+              ) AS expenditure
+            FROM
+              store_manage sm
+            WHERE sm.del_flag = 0
+              AND sm.status = 1
+              AND (
+                sm.attestation_status = 1
+                OR sm.attestation_status = 2
+              )
+    </select>
+
+    <select id="storeAccountList" resultType="org.jeecg.modules.store.dto.StoreAccountCapitalDTO">
+        SELECT
+        sac.*,
+        sm.boss_phone AS bossPhone,
+        CONCAT_WS('-',
+        sm.store_name,
+        sm.sub_store_name)
+        AS storeName
+        FROM
+        store_account_capital sac
+        LEFT JOIN store_manage sm
+        ON sac.store_manage_id = sm.id
+        WHERE sac.del_flag = 0
+        AND sm.del_flag = 0
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.createTime_begin != null and storeAccountCapitalVO.createTime_begin != ''">
+            and sac.create_time <![CDATA[>=]]> concat(#{storeAccountCapitalVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.createTime_end != null and storeAccountCapitalVO.createTime_end != ''">
+            AND sac.create_time <![CDATA[<=]]> concat( #{storeAccountCapitalVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.payType!=null and storeAccountCapitalVO.payType!=''">
+            AND sac.pay_type =#{storeAccountCapitalVO.payType}
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.orderNo!=null and storeAccountCapitalVO.orderNo!=''">
+            AND sac.order_no LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.orderNo}), '%')
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.bossPhone!=null and storeAccountCapitalVO.bossPhone!=''">
+            AND sm.boss_phone LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.bossPhone}), '%')
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.storeName!=null and storeAccountCapitalVO.storeName!=''">
+            AND sm.store_name LIKE CONCAT(CONCAT('%',#{storeAccountCapitalVO.storeName}), '%')
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.goAndCome!=null and storeAccountCapitalVO.goAndCome!=''">
+            AND sac.go_and_come =#{storeAccountCapitalVO.goAndCome}
+        </if>
+        <if test="storeAccountCapitalVO != null and storeAccountCapitalVO.sysUserId!=null and storeAccountCapitalVO.sysUserId!=''">
+            AND sm.sys_user_id =#{storeAccountCapitalVO.sysUserId}
+        </if>
+        ORDER BY sac.create_time DESC
+    </select>
+    <select id="testForech" resultType="org.jeecg.modules.store.vo.StoreAccountCapitalVO">
+        SELECT
+          IFNULL(SUM(aac.amount),'0') AS totalPrice,
+          mm.mydate AS mydate
+        FROM
+          (SELECT
+            DATE_FORMAT(
+              DATE_SUB(NOW(), INTERVAL #{storeAccountCapitalVO.dataInt} DAY),
+              '%Y-%m-%d'
+            ) mydate) mm
+          LEFT JOIN
+            (SELECT
+              DATE_FORMAT(a.create_time, '%Y-%m-%d') mydate,
+              a.*
+            FROM
+              store_account_capital a
+            WHERE a.go_and_come = 0
+              AND a.del_flag = 0
+              AND a.store_manage_id = #{storeAccountCapitalVO.sysUserId}) aac
+            ON mm.mydate = aac.`mydate`
+        GROUP BY mm.mydate
+        ORDER BY mm.mydate DESC
+    </select>
+    <select id="forechX" resultType="org.jeecg.modules.store.vo.StoreAccountCapitalVO">
+        SELECT
+            IFNULL(SUM(sac.amount), '0') AS totalPrice,
+            DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') AS myDate
+          FROM
+            store_account_capital sac
+          WHERE sac.`del_flag` = 0
+        AND sac.`store_manage_id` = #{sysWorkbenchVO.id}
+        AND sac.`go_and_come` = 0
+        and DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.earningTime_begin}
+        and DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.earningTime_end}
+      GROUP BY myDate
+      ORDER BY sac.`create_time` DESC
+    </select>
+
+    <select id="getStoreIncomeSummation" resultType="java.math.BigDecimal">
+        SELECT
+            SUM(amount)
+          FROM
+            `store_account_capital`
+          WHERE del_flag = 0
+            AND go_and_come = 1
+        <if test="paramMap !=null and paramMap.storeManageId!=null and paramMap.storeManageId!='' ">
+            AND store_manage_id = #{paramMap.storeManageId}
+        </if>
+
+        <if test="paramMap !=null and paramMap.createTime != null and paramMap.createTime!=''">
+         AND create_time <![CDATA[>=]]> concat(#{paramMap.createTime},' 00:00:00')
+          </if>
+
+    </select>
+    <select id="findStoreAccountCapitalInfo" resultType="map">
+        SELECT
+          sac.`go_and_come` AS goAndCome,
+        (SELECT
+        s.item_text
+        FROM
+        sys_dict_item s
+        WHERE s.dict_id =
+        (SELECT
+        id
+        FROM
+        sys_dict
+        WHERE dict_code = 'store_deal_type')
+        AND s.`item_value` = sac.`pay_type`) AS payType,
+        DATE_FORMAT(sac.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+          (
+            CASE
+              sac.`go_and_come`
+              WHEN 0
+              THEN CONCAT('+', sac.`amount`)
+              WHEN 1
+              THEN CONCAT('-', sac.`amount`)
+              ELSE '异常'
+            END
+          ) AS amount,
+          CONCAT('余额 ', sac.`balance`) AS balance
+        FROM
+          store_account_capital sac
+        WHERE sac.`del_flag` = 0
+          AND sac.`store_manage_id` = #{map.id}
+          <if test="map.isPlatform != 2">
+              AND sac.`go_and_come` = #{map.isPlatform}
+          </if>
+        ORDER BY sac.`create_time` DESC,sac.`amount` DESC
+    </select>
+    <select id="getStoreAccountCapitalListList" resultType="org.jeecg.modules.store.vo.StoreAccountCapitalVO">
+        SELECT
+          m.*,
+          su.`username` AS userName,
+            IF(
+              LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+              CONCAT(
+                sm.`store_name`,
+                '(',
+                sm.`sub_store_name`,
+                ')'
+              ),
+              sm.`store_name`
+            ) AS storeName
+        FROM
+          (SELECT
+            sac.id,
+            sac.`create_time`,
+            sac.`pay_type`,
+            sac.`go_and_come`,
+            sac.`amount`,
+            sac.`order_no`,
+            sac.`store_manage_id`
+          FROM
+            store_account_capital sac
+          WHERE sac.`del_flag` = 0
+            AND DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{storeStatementAccount.calendarDate}, '%Y-%m-%d')
+            AND sac.`store_manage_id` = #{storeStatementAccount.storeManageId}
+          ORDER BY sac.`create_time` DESC,
+            sac.`amount` DESC) m
+          LEFT JOIN store_manage sm
+            ON m.`store_manage_id` = sm.`id`
+          LEFT JOIN sys_user su
+            ON sm.`sys_user_id` = su.`id`
+    </select>
+</mapper>

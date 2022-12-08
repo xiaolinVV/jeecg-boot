@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLiveLotteryMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mls.`room_name` AS roomName,
+          mls.`stream_number` AS streamingStreamNumber,
+          mll.`id`,
+          mll.`create_by` AS createBy,
+        DATE_FORMAT(
+        mll.`create_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS createTime,
+          mll.`lottery_name` AS lotteryName,
+          mll.`stream_number` AS streamNumber,
+          mll.`lottery_number` AS lotteryNumber,
+        DATE_FORMAT(
+        mll.`lottery_time`,
+        '%Y-%m-%d %H:%i:%s'
+        ) AS lotteryTime,
+          mll.`status`,
+          mll.`cancel_number` AS cancelNumber,
+          mll.`lottery_qualification` AS lotteryQualification,
+        mll.`lottery_prize_type` AS lotteryPrizeType,
+        mll.`lottery_prize_id` AS lotteryPrizeId,
+        mll.`lottery_prize_quantity` AS lotteryPrizeQuantity,
+        mll.`lottery_prize_total` AS lotteryPrizeTotal,
+        mll.`losing_lottery_prize_type` AS losingLotteryPrizeType,
+        mll.`losing_lottery_prize_id` AS losingLotteryPrizeId,
+        mll.`losing_lottery_prize_quantity` AS losingLotteryPrizeQuantity,
+        mll.`losing_lottery_prize_total` AS losingLotteryPrizeTotal
+        FROM
+          (SELECT
+          `id`,
+          `create_by`,
+          `create_time`,
+          `marketing_live_streaming_id`,
+          `lottery_name`,
+          `stream_number`,
+          `lottery_number`,
+          `lottery_time`,
+          `status`,
+          `cancel_number`,
+          `lottery_qualification`,
+          `lottery_prize_type`,
+          `lottery_prize_id`,
+          `lottery_prize_quantity`,
+          `lottery_prize_total`,
+          `losing_lottery_prize_type`,
+          `losing_lottery_prize_id`,
+          `losing_lottery_prize_quantity`,
+          `losing_lottery_prize_total`
+        FROM
+          marketing_live_lottery ${ew.customSqlSegment})mll
+          LEFT JOIN marketing_live_streaming mls
+            ON mll.`marketing_live_streaming_id` = mls.`id`
+          <where>
+              <if test="requestMap.roomName != null and requestMap.roomName != ''">
+                  AND mls.`room_name` LIKE concat('%',#{requestMap.roomName},'%')
+              </if>
+              <if test="requestMap.streamingStreamNumber != null and requestMap.streamingStreamNumber != ''">
+                  AND mls.`stream_number` LIKE concat('%',#{requestMap.streamingStreamNumber},'%')
+              </if>
+          </where>
+        ORDER BY mll.`create_time` DESC
+    </select>
+    <select id="getMarketingLiveLotteryListByStreamingId" resultType="map">
+        SELECT
+  *
+FROM
+  ((SELECT
+          mll.`id`,
+          mll.`lottery_prize_type` AS prizeType,
+          mll.`lottery_prize_id` AS prizeId,
+          mll.`lottery_prize_quantity` AS quantity,
+          '0' AS lotteryType,
+          mll.`lottery_name` AS lotteryName,
+          mll.`lottery_number` AS lotteryNumber
+        FROM
+          marketing_live_lottery mll
+        WHERE mll.`marketing_live_streaming_id` = #{marketingLiveStreamingId}
+        AND mll.del_flag = 0
+        ORDER BY mll.`lottery_number` DESC)
+        UNION
+        (SELECT
+          mll.`id`,
+          mll.`losing_lottery_prize_type` AS prizeType,
+          mll.`losing_lottery_prize_id` AS prizeId,
+          mll.`losing_lottery_prize_quantity` AS quantity,
+          '1' AS lotteryType,
+          mll.`lottery_name` AS lotteryName,
+          mll.`lottery_number` AS lotteryNumber
+        FROM
+          marketing_live_lottery mll
+        WHERE mll.`marketing_live_streaming_id` = #{marketingLiveStreamingId}
+        AND mll.losing_lottery_prize_type = 1
+        AND mll.del_flag = 0
+        ORDER BY mll.`lottery_number` DESC)) m
+ORDER BY m.lotteryNumber DESC
+    </select>
+    <select id="getTimeInfo" resultType="Long">
+        SELECT
+          TIMESTAMPDIFF(SECOND,NOW(),STR_TO_DATE(DATE_FORMAT(mll.`lottery_time`, '%Y-%m-%d %H:%i:%s'),'%Y-%m-%d %H:%i:%s'))
+        FROM
+          marketing_live_lottery mll
+        WHERE mll.id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGiftBagCertificateMapper">
+    <select id="findCertificateById" resultType="org.jeecg.modules.marketing.dto.MarketingGiftBagCertificateDTO">
+            SELECT
+              mc.`id`,
+              mc.`name`,
+              (
+                CASE
+                  mc.`vouchers_way`
+                  WHEN 0
+                  THEN CONCAT(
+                    mc.`start_time`,
+                    '~',
+                    mc.`end_time`
+                  )
+                  WHEN 1
+                  THEN CONCAT(
+                    '领券当日起',
+                    mc.`dis_data`,
+                    mc.`monad`
+                  )
+                  ELSE
+                   CONCAT(
+                    '领券次日起',
+                    mc.`dis_data`,
+                    mc.`monad`
+                  )
+                  END
+                ) AS usrTime,
+                mc.`user_restrict`,
+                (
+                mc.`total` - mc.`released_quantity`
+              ) AS discountSurplus,
+                CONCAT('适用商品', mc.goods, '件') AS goodQuantity,
+                (SELECT
+                  COUNT(1)
+                FROM
+                  marketing_certificate_store mcs
+                WHERE mcs.marketing_certificate_id = mc.id
+                  AND mcs.del_flag = 0) AS storeQuantity,
+                mc.the_reward,
+                mgbc.`distributed_amount`,
+                mgbc.`validity_type`,
+                IF(
+                    mgbc.`validity_type` = 0,
+                    '连续有效期',
+                    '相同有效期'
+                  ) AS validityTypeName,
+                  IF(
+                CHAR_LENGTH(mc.user_restrict) =3,
+                '普通会员,vip会员',
+                IF(
+                  STRCMP(mc.user_restrict,"0"),
+                  '普通会员',
+                  'vip会员'
+                )
+              ) AS memberTypeName,
+              mc.certificate_type
+            FROM
+              marketing_gift_bag_certificate mgbc
+              LEFT JOIN
+                (SELECT
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    marketing_certificate_good mcg
+                  WHERE mcg.marketing_certificate_id = m.`id`
+                    AND mcg.del_flag = 0) AS goods,
+                  m.*
+                FROM
+                  marketing_certificate m) mc
+                ON mgbc.`marketing_certificate_id` = mc.`id`
+            WHERE mgbc.`del_flag` = 0
+              AND mc.`del_flag` = 0
+          AND mgbc.`marketing_gift_bag_id` = #{marketingGiftBagId}
+    </select>
+</mapper>

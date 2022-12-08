@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StorePaymentMapper">
+    <select id="getStorePaymentVoList" resultType="org.jeecg.modules.store.dto.StorePaymentDto">
+        SELECT
+          sp.id,
+          sp.boss_phone,
+          sp.open_type,
+          sp.money,
+          sp.start_time,
+          sp.end_time,
+          sp.pay_type,
+          sp.pay_time,
+          sp.del_flag,
+          sm.boss_name
+        FROM
+          store_payment sp
+          LEFT OUTER JOIN store_manage sm
+            ON sp.`store_manage_id` = sm.`id`
+        WHERE sp.`del_flag` = 0
+        <if test="storePaymentVo != null and storePaymentVo.id != null and storePaymentVo.id != ''">
+            and  sp.id LIKE concat('%',concat(#{storePaymentVo.id},'%'))
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.bossName != null and storePaymentVo.bossName != ''">
+            and  sm.boss_name LIKE concat('%',concat(#{storePaymentVo.bossName},'%'))
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.bossPhone != null and storePaymentVo.bossPhone != ''">
+            and  sp.boss_phone LIKE concat('%',concat(#{storePaymentVo.bossPhone},'%'))
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.openType != null and storePaymentVo.openType != ''">
+            and  sp.open_type =#{storePaymentVo.openType}
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.startTime_begin != null and storePaymentVo.startTime_begin != ''">
+            and sp.start_time <![CDATA[>=]]> CONCAT(#{storePaymentVo.startTime_begin},' 00:00:00')
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.startTime_end != null and storePaymentVo.startTime_end != ''">
+            AND sp.start_time <![CDATA[<=]]> CONCAT( #{storePaymentVo.startTime_end},' 23:59:59')
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.endTime_begin != null and storePaymentVo.endTime_begin != ''">
+            and sp.end_time <![CDATA[>=]]> CONCAT(#{storePaymentVo.endTime_begin},' 00:00:00')
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.endTime_end != null and storePaymentVo.endTime_end != ''">
+            AND sp.end_time <![CDATA[<=]]> CONCAT( #{storePaymentVo.endTime_end},' 23:59:59')
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.payTime_begin != null and storePaymentVo.payTime_begin != ''">
+            and sp.pay_time <![CDATA[>=]]> CONCAT(#{storePaymentVo.payTime_begin},' 00:00:00')
+        </if>
+        <if test="storePaymentVo != null and storePaymentVo.payTime_end != null and storePaymentVo.payTime_end != ''">
+            AND sp.pay_time <![CDATA[<=]]> CONCAT( #{storePaymentVo.payTime_end},' 23:59:59')
+        </if>
+        ORDER BY sp.create_time DESC
+    </select>
+</mapper>

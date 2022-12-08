@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreBankCardMapper">
+    <select id="findBankCardById" resultType="org.jeecg.modules.store.dto.StoreBankCardDTO">
+        SELECT
+          CONCAT(
+            sbc.`bank_name`,
+            '(',
+            RIGHT(bank_card,4),
+            ',',
+            sbc.`cardholder`,
+            ')'
+          ) AS sbcName,
+          sbc.`bank_card`,
+          sbc.id AS storeBankCardId,
+          sbc.car_type,
+          sbc.identity_number,
+          sbc.citys,
+          sbc.citys_code
+        FROM
+          store_bank_card sbc
+        WHERE sbc.`store_manage_id` = #{id}
+          AND sbc.`del_flag` = 0
+          AND sbc.car_type = 0
+    </select>
+
+    <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreBankCardVO">
+        SELECT * FROM (
+        SELECT
+        su.`avatar`,
+        su.`username`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )AS NAME ,
+        sbc.*
+        FROM
+        store_bank_card sbc
+        LEFT JOIN store_manage sm
+        ON sbc.store_manage_id = sm.id
+        LEFT JOIN sys_user su
+        ON su.`id` = sm.`sys_user_id`
+        WHERE sbc.`del_flag` = 0
+        AND sm.`del_flag` = 0
+        AND su.`del_flag` = 0
+        AND sbc.car_type = 0
+        <if test="storeBankCardDTO.username != null and storeBankCardDTO.username != ''">
+            AND su.username LIKE concat('%',#{storeBankCardDTO.username},'%')
+        </if>
+        <if test="storeBankCardDTO.phone != null and storeBankCardDTO.phone != ''">
+            AND sbc.phone LIKE concat('%',#{storeBankCardDTO.phone},'%')
+        </if>
+        <if test="storeBankCardDTO.bankName != null and storeBankCardDTO.bankName != ''">
+            AND sbc.bank_name LIKE concat('%',#{storeBankCardDTO.bankName},'%')
+        </if>
+        <if test="storeBankCardDTO.bankCard != null and storeBankCardDTO.bankCard != ''">
+            AND sbc.bank_card LIKE concat('%',#{storeBankCardDTO.bankCard},'%')
+        </if>
+        <if test="storeBankCardDTO.createTime_begin != null and storeBankCardDTO.createTime_begin != ''">
+            and sbc.create_time <![CDATA[>=]]> CONCAT(#{storeBankCardDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="storeBankCardDTO.createTime_end != null and storeBankCardDTO.createTime_end != ''">
+            AND sbc.create_time <![CDATA[<=]]> CONCAT( #{storeBankCardDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="storeBankCardDTO.updateTime_begin != null and storeBankCardDTO.updateTime_begin != ''">
+            and sbc.update_time <![CDATA[>=]]> CONCAT(#{storeBankCardDTO.updateTime_begin},' 00:00:00')
+        </if>
+        <if test="storeBankCardDTO.updateTime_end != null and storeBankCardDTO.updateTime_end != ''">
+            AND sbc.update_time <![CDATA[<=]]> CONCAT( #{storeBankCardDTO.updateTime_end},' 23:59:59')
+        </if>
+        ORDER BY sbc.`create_time` DESC
+        )m
+        <if test="storeBankCardDTO.name != null and storeBankCardDTO.name != ''">
+            WHERE m.name LIKE concat('%',#{storeBankCardDTO.name},'%')
+        </if>
+    </select>
+</mapper>

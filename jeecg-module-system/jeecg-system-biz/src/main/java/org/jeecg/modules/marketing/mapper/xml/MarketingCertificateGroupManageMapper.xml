@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateGroupManageMapper">
+    <select id="dataList" resultType="map">
+        SELECT
+          mcgm.`id`,
+          mc.`main_picture` AS mainPicture,
+          mcgl.`activity_price` AS activityPrice
+        FROM
+          marketing_certificate_group_manage mcgm
+          LEFT JOIN marketing_certificate_group_list mcgl
+            ON mcgm.`marketing_certificate_group_list_id` = mcgl.`id`
+          LEFT JOIN marketing_certificate mc
+            ON mcgl.`marketing_certificate_id` = mc.`id`
+        WHERE mcgm.`del_flag` = 0
+          AND mcgm.status = 0
+          AND mcgl.`del_flag` = 0
+          AND mcgl.status = 1
+        ORDER BY mcgm.`create_time` DESC
+        LIMIT 18
+    </select>
+    <select id="myMarketingCertificateGroupManage" resultType="map">
+        SELECT
+          mcgr.`id`,
+          mcgr.`status`,
+          mcgr.`main_picture` AS mainPicture,
+          mcgr.`certificate_name` AS certificateName,
+          mcgr.`activity_price` AS activityPrice,
+          mcgr.`market_price` AS marketPrice
+        FROM
+          marketing_certificate_group_record mcgr
+          LEFT JOIN marketing_certificate_group_list mcgl
+            ON mcgr.`marketing_certificate_group_list_id` = mcgl.`id`
+        WHERE mcgr.`del_flag` = 0
+          AND mcgr.`member_list_id` = #{memberId}
+          <if test="status != null and status !=''">
+              AND mcgr.status = #{status}
+          </if>
+        ORDER BY mcgr.`create_time` DESC
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateGroupManageVO">
+        SELECT
+          *
+        FROM
+          (SELECT
+            mcgm.*,
+            mcgl.`marketing_certificate_id`
+          FROM
+            marketing_certificate_group_manage mcgm
+            LEFT JOIN marketing_certificate_group_list mcgl
+              ON mcgm.`marketing_certificate_group_list_id` = mcgl.`id`
+          WHERE mcgm.`del_flag` = 0
+          ORDER BY mcgm.`create_time` DESC) m ${ew.customSqlSegment}
+    </select>
+    <select id="getInfo" resultType="map">
+        SELECT
+          TIMESTAMPDIFF(SECOND,NOW(),STR_TO_DATE(DATE_FORMAT(mcgm.`end_time`, '%Y-%m-%d %H:%i:%s'),'%Y-%m-%d %H:%i:%s')) AS surplusTime
+        FROM
+          marketing_certificate_group_manage mcgm
+        WHERE mcgm.id = #{id}
+    </select>
+</mapper>

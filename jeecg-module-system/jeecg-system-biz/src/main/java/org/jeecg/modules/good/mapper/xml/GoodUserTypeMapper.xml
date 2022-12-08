@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodUserTypeMapper">
+  <select id="getBySysUserId"  resultType="org.jeecg.modules.good.dto.GoodUserTypeDto">
+    SELECT
+	      DISTINCT
+	      a.`name` AS goodTypeName,
+	      a.id AS id,
+	      c.id AS sysUserId
+    FROM
+	      good_user_type b
+	  LEFT JOIN good_type a ON a.id = b.good_type_id
+	  LEFT join sys_user c ON b.sys_user_id = c.id
+	  where b.sys_user_id=#{sysUserId}
+	  order by b.create_time desc
+	limit 10
+  </select>
+
+	<select id="getGoodUserType" resultType="org.jeecg.modules.good.entity.GoodUserType">
+		SELECT * FROM `good_user_type` gut LEFT JOIN `good_type` gt ON  gut.good_type_id =gt.id  WHERE gut.del_flag = 0 AND gt.del_flag =  0
+		AND  gt.status = 1
+		<if test="sysUserId != null and sysUserId!=''">
+			AND gut.sys_user_id =#{sysUserId}
+		</if>
+        ORDER BY gut.create_time DESC
+		limit 8
+	</select>
+
+
+</mapper>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupOrderMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mzgm.`zone_name` AS zoneName,
+          mzgg.`serial_number` AS groupingSerialNumber,
+          mzgr.`serial_number` AS recordSerialNumber,
+          mzgo.`serial_number` AS serialNumber,
+          ml.`phone`,
+          mzgo.`message`,
+          mzgo.`goods_total` AS goodsTotal,
+          mzgo.`ship_fee` AS shipFee,
+          mzgo.`customary_dues` AS customaryDues,
+          mzgo.`actual_payment` AS actualPayment,
+          mzgo.`status`,
+          DATE_FORMAT(mzgo.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+          DATE_FORMAT(mzgo.`pay_time`,'%Y-%m-%d %H:%i:%s') AS payTime,
+          DATE_FORMAT(mzgo.`consignment_time`,'%Y-%m-%d %H:%i:%s') AS consignmentTime,
+          ol.`order_no` AS orderNo,
+          DATE_FORMAT(ol.`shipments_time`,'%Y-%m-%d %H:%i:%s') AS shipmentsTime,
+          DATE_FORMAT(ol.`delivery_time`,'%Y-%m-%d %H:%i:%s') AS deliveryTime,
+          mzgo.id,
+          mzgo.pay_zone_group_log_id AS payZoneGroupLogId
+        FROM
+          marketing_zone_group_order mzgo
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgm.`id` = mzgo.`marketing_zone_group_manage_id`
+          LEFT JOIN marketing_zone_group_grouping mzgg
+            ON mzgo.`marketing_zone_group_grouping_id` = mzgg.`id`
+          LEFT JOIN marketing_zone_group_record mzgr
+            ON mzgr.`id` = mzgo.`marketing_zone_group_record_id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mzgo.`member_list_id`
+          LEFT JOIN order_list ol
+            ON ol.`id` = mzgo.`order_list_id`
+          WHERE mzgo.del_flag = 0
+          <if test="requestMap.zoneName != null and requestMap.zoneName != ''">
+              AND mzgm.`zone_name` LIKE concat('%',#{requestMap.zoneName},'%')
+          </if>
+        <if test="requestMap.groupingSerialNumber != null and requestMap.groupingSerialNumber != ''">
+            AND mzgg.`serial_number` LIKE concat('%',#{requestMap.groupingSerialNumber},'%')
+        </if>
+        <if test="requestMap.recordSerialNumber != null and requestMap.recordSerialNumber != ''">
+            AND mzgr.`serial_number` LIKE concat('%',#{requestMap.recordSerialNumber},'%')
+        </if>
+        <if test="requestMap.serialNumber != null and requestMap.serialNumber != ''">
+            AND mzgo.`serial_number` LIKE concat('%',#{requestMap.serialNumber},'%')
+        </if>
+        <if test="requestMap.orderNo != null and requestMap.orderNo != ''">
+            AND ol.`order_no` LIKE concat('%',#{requestMap.orderNo},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.status != null and requestMap.status != ''">
+            AND mzgo.`status`  = #{requestMap.status}
+        </if>
+        ORDER BY mzgo.create_time DESC
+    </select>
+    <select id="marketingZoneGroupOrderRecord" resultType="map">
+        SELECT
+          mzgm.`zone_name` AS zoneName,
+          mzgg.`serial_number` AS groupingSerialNumber,
+          mzgr.`serial_number` AS recordSerialNumber,
+          mzgo.`serial_number` AS serialNumber,
+          ml.`head_portrait` AS headPortrait,
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          mzgr.`good_no` AS goodNo,
+          mzgr.`main_picture` AS mainPicture,
+          mzgr.`good_name` AS goodName,
+          mzgr.`specification`,
+          mzgm.`price`,
+          mzgo.`quantity`,
+          mzgo.`goods_total` AS goodsTotal,
+          mzgo.`status`,
+          DATE_FORMAT(
+            mzgo.`consignment_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS consignmentTime,
+          DATE_FORMAT(
+            mzgo.`consignment_end_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS consignmentEndTime
+        FROM
+        (SELECT * FROM marketing_zone_group_order ${ew.customSqlSegment})mzgo
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgm.`id` = mzgo.`marketing_zone_group_manage_id`
+          LEFT JOIN marketing_zone_group_grouping mzgg
+            ON mzgo.`marketing_zone_group_grouping_id` = mzgg.`id`
+          LEFT JOIN marketing_zone_group_record mzgr
+            ON mzgr.`id` = mzgo.`marketing_zone_group_record_id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mzgo.`member_list_id`
+        WHERE mzgo.del_flag = 0
+          AND mzgo.status IN (3,4)
+        <if test="requestMap.zoneName != null and requestMap.zoneName != ''">
+            AND mzgm.`zone_name` LIKE concat('%',#{requestMap.zoneName},'%')
+        </if>
+        <if test="requestMap.groupingSerialNumber != null and requestMap.groupingSerialNumber != ''">
+            AND mzgg.`serial_number` LIKE concat('%',#{requestMap.groupingSerialNumber},'%')
+        </if>
+        <if test="requestMap.recordSerialNumber != null and requestMap.recordSerialNumber != ''">
+            AND mzgr.`serial_number` LIKE concat('%',#{requestMap.recordSerialNumber},'%')
+        </if>
+        <if test="requestMap.serialNumber != null and requestMap.serialNumber != ''">
+            AND mzgo.`serial_number` LIKE concat('%',#{requestMap.serialNumber},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.`phone` LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.`nick_name` LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        <if test="requestMap.goodNo != null and requestMap.goodNo != ''">
+            AND mzgr.`good_no` LIKE concat('%',#{requestMap.goodNo},'%')
+        </if>
+        <if test="requestMap.goodName != null and requestMap.goodName != ''">
+            AND mzgr.`good_name` LIKE concat('%',#{requestMap.goodName},'%')
+        </if>
+        ORDER BY mzgo.create_time DESC
+    </select>
+    <select id="memberRecord" resultType="map">
+        SELECT
+          ml.`phone`,
+          ml.`nick_name` AS nickName,
+          ml.`member_type` AS memberType,
+          IF(
+            ml.`member_grade_id` IS NULL,
+            '~',
+            (SELECT
+              mg.`grade_name`
+            FROM
+              member_grade mg
+            WHERE mg.`del_flag` = 0
+              AND mg.id = ml.`member_grade_id`)
+          ) AS gradeName,
+          mzgo.`consignee`,
+          mzgo.`contact_number` AS contactNumber,
+          mzgo.`shipping_address` AS shippingAddress
+        FROM
+          marketing_zone_group_order mzgo
+          LEFT JOIN member_list ml
+            ON mzgo.`member_list_id` = ml.`id`
+        WHERE mzgo.`id` = #{id}
+    </select>
+    <select id="goodInfo" resultType="map">
+        SELECT
+          pm.`name`,
+          gl.`good_no` AS goodNo,
+          gl.`main_picture` AS mainPicture,
+          gl.`good_name` AS goodName,
+          gs.`specification`,
+          mzgm.`price`,
+          mzgo.`quantity`,
+          mzgo.`goods_total` AS goodsTotal,
+          gs.`weight`
+        FROM
+          marketing_zone_group_order mzgo
+          LEFT JOIN good_specification gs
+            ON mzgo.`good_specification_id` = gs.`id`
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgm.`id` = mzgo.`marketing_zone_group_manage_id`
+          LEFT JOIN good_list gl
+            ON gl.`id` = gs.`good_list_id`
+          LEFT JOIN provider_manage pm
+            ON gl.`sys_user_id` = pm.`sys_user_id`
+        WHERE mzgo.`id` = #{id}
+    </select>
+    <select id="listByGroupingId" resultType="map">
+        SELECT
+          mzgo.`status`,
+          mzgr.`main_picture` AS mainPicture,
+          DATE_FORMAT(mzgr.`tuxedo_time`,'%Y-%m-%d %H:%i:%s') AS tuxedoTime
+        FROM
+          marketing_zone_group_order mzgo
+          LEFT JOIN marketing_zone_group_record mzgr
+            ON mzgo.`marketing_zone_group_record_id` = mzgr.`id`
+        WHERE mzgo.`marketing_zone_group_grouping_id` = #{id}
+        ORDER BY mzgr.`tuxedo_time` ASC
+    </select>
+    <select id="getMarketingZoneGroupOrderPageByGroupingId" resultType="map">
+        SELECT
+          mzgo.id,
+          DATE_FORMAT(
+            mzgo.`create_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS createTime,
+          mzgo.`serial_number` AS serialNumber,
+          (
+            CASE
+              mzgo.`status`
+              WHEN 1
+              THEN '已付款'
+              WHEN 2
+              THEN '待发货'
+              WHEN 3
+              THEN '已寄售'
+              ELSE '已完成'
+            END
+          ) AS statusDeclare,
+          mzgo.`status`,
+          mzgr.`main_picture` AS mainPicture,
+          mzgr.`specification`,
+          mzgm.`price`,
+          mzgo.`quantity`,
+          gl.market_price AS marketPrice,
+          mzgr.good_name AS goodName
+        FROM
+          marketing_zone_group_order mzgo
+          LEFT JOIN marketing_zone_group_record mzgr
+            ON mzgo.`marketing_zone_group_record_id` = mzgr.`id`
+          LEFT JOIN marketing_zone_group_manage mzgm
+            ON mzgm.`id` = mzgo.`marketing_zone_group_manage_id`
+          LEFT JOIN good_specification gs
+            ON gs.`id` = mzgr.`good_specification_id`
+          LEFT JOIN good_list gl
+            ON gl.id = gs.good_list_id
+        WHERE mzgo.`marketing_zone_group_grouping_id` = #{id}
+          AND mzgo.`del_flag` = 0
+        ORDER BY mzgo.`create_time` DESC
+    </select>
+</mapper>

@@ -1,0 +1,1751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberListMapper">
+
+    <select id="findMemberList" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+        ml.id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        ml.`sex`,
+        ml.`area_addr`,
+        ml.`member_type`,
+        ml.`welfare_payments`,
+        ml.`balance`,
+        ml.account_frozen,
+        ml.unusable_frozen,
+        ml.welfare_payments_frozen,
+        ml.promotion_code,
+        ml.welfare_payments_unusable,
+        CONCAT('1') AS isPlatform,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`status` = 1
+        AND mdc.`member_list_id` = ml.`id`) AS discount,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_goods_collection mgc
+        WHERE mgc.`del_flag` = 0
+        AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_attention_store mas
+        WHERE mas.`del_flag` = 0
+        AND mas.`member_list_id` = ml.`id`) AS attentionStore,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_browsing_history mbh
+        WHERE mbh.`del_flag` = 0
+        AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
+        IF(
+        ml.`is_open_store` = 0,
+        '否',
+        '是'
+        ) AS isOpenStores,
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`del_flag` = 0
+        AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
+        ml.`create_time`,
+        ml.`vip_time`,
+        IF(ml.`status` = 0, '停用', '启用') statusName,
+        ml.`status`,
+        ml.`stop_remark`,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`sys_user_id` = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        IF(
+        mls.`nick_name` IS NULL,
+        mls.`phone`,
+        IF(
+        mls.`phone` IS NULL,
+        mls.`nick_name`,
+        CONCAT(
+        mls.`nick_name`,
+        '(',
+        mls.`phone`,
+        ')'
+        )
+        )
+        )
+        FROM
+        member_list mls
+        WHERE mls.`del_flag` = 0
+        AND mls.`id` = ml.`promoter`)
+        WHEN 2
+        THEN '平台'
+        ELSE '平台'
+        END
+        ) AS promoterName,
+        ml.qrcode_addr,
+        IF(
+        ml.`member_grade_id` IS NULL,
+        '~',
+        (SELECT
+        mg.`grade_name`
+        FROM
+        member_grade mg
+        WHERE mg.`del_flag` = 0
+        AND mg.id = ml.`member_grade_id`)
+        ) AS gradeName,
+        ml.`del_flag` AS delFlag,
+        (SELECT
+        GROUP_CONCAT(md.`name`)
+        FROM
+        member_designation md
+        LEFT JOIN
+        member_designation_member_list mdml
+        ON md.`id` = mdml.`member_designation_id`
+        WHERE mdml.`del_flag` = 0
+        AND mdml.`member_list_id` = ml.`id`
+        ORDER BY mdml.`create_time`,
+        mdml.`update_time` DESC
+        ) AS designationName,
+        ss.address AS ssAddress
+        FROM
+        member_list ml
+        LEFT JOIN sys_smallcode ss
+        ON ss.id = ml.sys_smallcode_id
+        WHERE ml.`del_flag` = 0
+        <if test="memberListVO!=null and memberListVO.sysUserId!=null and memberListVO.sysUserId!=''">
+            AND ml.sys_user_id = #{memberListVO.sysUserId}
+        </if>
+        <if test="memberListVO!=null and memberListVO.id!=null and memberListVO.id!=''">
+            AND ml.id LIKE concat('%',concat(#{memberListVO.id},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.promotionCode!=null and memberListVO.promotionCode!=''">
+            AND ml.promotion_code LIKE concat('%',concat(#{memberListVO.promotionCode},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.phone!=null and memberListVO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{memberListVO.phone},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.nickName!=null and memberListVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{memberListVO.nickName},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.sex!=null and memberListVO.sex!=''">
+            AND ml.sex = #{memberListVO.sex}
+        </if>
+        <if test="memberListVO!=null and memberListVO.memberType!=null and memberListVO.memberType!=''">
+            AND ml.member_type = #{memberListVO.memberType}
+        </if>
+        <if test="memberListVO!=null and memberListVO.isOpenStore!=null and memberListVO.isOpenStore!=''">
+            AND ml.is_open_store = #{memberListVO.isOpenStore}
+        </if>
+        <if test="memberListVO != null and memberListVO.createTime_begin != null and memberListVO.createTime_begin != ''">
+            and ml.create_time <![CDATA[>=]]> CONCAT(#{memberListVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListVO != null and memberListVO.createTime_end != null and memberListVO.createTime_end != ''">
+            AND ml.create_time <![CDATA[<=]]> CONCAT( #{memberListVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberListVO != null and memberListVO.vipTime_begin != null and memberListVO.vipTime_begin != ''">
+            and ml.vip_time <![CDATA[>=]]> CONCAT(#{memberListVO.vipTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListVO != null and memberListVO.vipTime_end != null and memberListVO.vipTime_end != ''">
+            AND ml.vip_time <![CDATA[<=]]> CONCAT( #{memberListVO.vipTime_end},' 23:59:59')
+        </if>
+        <if test="memberListVO!=null and memberListVO.memberGradeId!=null and memberListVO.memberGradeId!=''">
+            AND ml.member_grade_id = #{memberListVO.memberGradeId}
+        </if>
+        <if test="memberListVO!=null and memberListVO.memberDesignationId!=null and memberListVO.memberDesignationId!=''">
+            AND (SELECT
+            GROUP_CONCAT(md.`id`)
+            FROM
+            member_designation md
+            LEFT JOIN
+            member_designation_member_list mdml
+            ON md.`id` = mdml.`member_designation_id`
+            WHERE mdml.`del_flag` = 0
+            AND mdml.`member_list_id` = ml.`id`
+            ORDER BY mdml.`create_time`,
+            mdml.`update_time` DESC
+            ) LIKE concat('%',#{memberListVO.memberDesignationId},'%')
+        </if>
+
+        <if test="memberListVO!=null and memberListVO.promoterName!=null and memberListVO.promoterName!=''">
+            AND (
+            CASE
+            ml.`promoter_type`
+            WHEN 0 THEN
+            (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`sys_user_id` = ml.`promoter`
+            )
+            WHEN 1 THEN
+            (
+            SELECT
+            IF
+            (
+            mls.`nick_name` IS NULL,
+            mls.`phone`,
+            IF
+            ( mls.`phone` IS NULL, mls.`nick_name`, CONCAT( mls.`nick_name`, '(', mls.`phone`, ')' ) )
+            )
+            FROM
+            member_list mls
+            WHERE
+            mls.`del_flag` = 0
+            AND mls.`id` = ml.`promoter`
+            )
+            WHEN 2 THEN
+            '平台' ELSE '平台'
+            END
+            ) LIKE concat('%',#{memberListVO.promoterName},'%')
+        </if>
+        <if test="memberListVO!=null and memberListVO.storeName!=null and memberListVO.storeName!=''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`sys_user_id` = ml.`sys_user_id`
+            ) LIKE concat('%',#{memberListVO.storeName},'%')
+        </if>
+        ORDER BY ml.`create_time` DESC
+    </select>
+
+    <select id="findAgencyMemberList" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+        ml.id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        ml.`sex`,
+        ml.`area_addr`,
+        ml.`member_type`,
+        ml.`welfare_payments`,
+        ml.`balance`,
+        CONCAT('1') AS isPlatform,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`status` = 1
+        AND mdc.`member_list_id` = ml.`id`) AS discount,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_goods_collection mgc
+        WHERE mgc.`del_flag` = 0
+        AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_attention_store mas
+        WHERE mas.`del_flag` = 0
+        AND mas.`member_list_id` = ml.`id`) AS attentionStore,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_browsing_history mbh
+        WHERE mbh.`del_flag` = 0
+        AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
+        IF(
+        ml.`is_open_store` = 0,
+        '否',
+        '是'
+        ) AS isOpenStores,
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`del_flag` = 0
+        AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
+        ml.`create_time`,
+        ml.`vip_time`,
+        IF(ml.`status` = 0, '停用', '启动') statusName,
+        ml.`status`,
+        ml.`stop_remark`,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        sm.store_name
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        mls.nick_name
+        FROM
+        member_list mls
+        WHERE mls.id = ml.`promoter`)
+        WHEN 2
+        THEN '平台'
+        ELSE
+        (SELECT
+        username
+        FROM
+        sys_user su
+        WHERE su.id = ml.`sys_user_id`)
+        END
+        ) AS promoterName,
+        ss.`address` AS ssAddress
+        FROM
+        member_list ml
+        LEFT JOIN sys_smallcode ss
+        ON ml.`sys_smallcode_id` = ss.`id`
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        <if test="memberListVO!=null and memberListVO.phone!=null and memberListVO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{memberListVO.phone},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.nickName!=null and memberListVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{memberListVO.nickName},'%'))
+        </if>
+        <if test="memberListVO!=null and memberListVO.sex!=null and memberListVO.sex!=''">
+            AND ml.sex = #{memberListVO.sex}
+        </if>
+        <if test="memberListVO!=null and memberListVO.memberType!=null and memberListVO.memberType!=''">
+            AND ml.member_type = #{memberListVO.memberType}
+        </if>
+        <if test="memberListVO!=null and memberListVO.isOpenStore!=null and memberListVO.isOpenStore!=''">
+            AND ml.is_open_store = #{memberListVO.isOpenStore}
+        </if>
+        <if test="memberListVO != null and memberListVO.createTime_begin != null and memberListVO.createTime_begin != ''">
+            and ml.create_time <![CDATA[>=]]> CONCAT(#{memberListVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListVO != null and memberListVO.createTime_end != null and memberListVO.createTime_end != ''">
+            AND ml.create_time <![CDATA[<=]]> CONCAT( #{memberListVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberListVO != null and memberListVO.vipTime_begin != null and memberListVO.vipTime_begin != ''">
+            and ml.vip_time <![CDATA[>=]]> CONCAT(#{memberListVO.vipTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListVO != null and memberListVO.vipTime_end != null and memberListVO.vipTime_end != ''">
+            AND ml.vip_time <![CDATA[<=]]> CONCAT( #{memberListVO.vipTime_end},' 23:59:59')
+        </if>
+        <if test="memberListVO != null and memberListVO.ProvincialAreaId != null and memberListVO.ProvincialAreaId != ''">
+            AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),(SELECT
+            am.`sys_area_id`
+            FROM
+            agency_manage am
+            WHERE am.`sys_user_id` = #{memberListVO.ProvincialAreaId}))
+        </if>
+        <if test="memberListVO != null and memberListVO.municipalAreaId != null and memberListVO.municipalAreaId != ''">
+            AND FIND_IN_SET(SUBSTRING_INDEX(
+            SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+            ',',
+            - 1
+            ) ,
+            (SELECT
+            am.`sys_area_id`
+            FROM
+            agency_manage am
+            WHERE am.`sys_user_id` = #{memberListVO.municipalAreaId}))
+        </if>
+        <if test="memberListVO != null and memberListVO.countyAreaId != null and memberListVO.countyAreaId != ''">
+            AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', -1) , (SELECT
+            am.`sys_area_id`
+            FROM
+            agency_manage am
+            WHERE am.`sys_user_id` = #{memberListVO.countyAreaId}))
+        </if>
+        <if test="memberListVO.storePromoter != null and memberListVO.storePromoter != ''">
+            AND sm.promoter = #{memberListVO.storePromoter}
+        </if>
+        <if test="memberListVO!=null and memberListVO.storeName!=null and memberListVO.storeName!=''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`sys_user_id` = ml.`sys_user_id`
+            ) LIKE concat('%',#{memberListVO.storeName},'%')
+        </if>
+        <if test="memberListVO!=null and memberListVO.promoterName!=null and memberListVO.promoterName!=''">
+            AND (
+            CASE
+            ml.`promoter_type`
+            WHEN 0 THEN
+            (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`sys_user_id` = ml.`promoter`
+            )
+            WHEN 1 THEN
+            (
+            SELECT
+            IF
+            (
+            mls.`nick_name` IS NULL,
+            mls.`phone`,
+            IF
+            ( mls.`phone` IS NULL, mls.`nick_name`, CONCAT( mls.`nick_name`, '(', mls.`phone`, ')' ) )
+            )
+            FROM
+            member_list mls
+            WHERE
+            mls.`del_flag` = 0
+            AND mls.`id` = ml.`promoter`
+            )
+            WHEN 2 THEN
+            '平台' ELSE '平台'
+            END
+            ) LIKE concat('%',#{memberListVO.promoterName},'%')
+        </if>
+        ORDER BY ml.`create_time` DESC
+    </select>
+
+
+    <select id="selectMemberListById" resultType="org.jeecg.modules.member.entity.MemberList">
+      SELECT * FROM member_list WHERE id = #{memberListId}
+    </select>
+    <select id="getMemberListById" resultType="org.jeecg.modules.member.entity.MemberList">
+      SELECT * FROM member_list WHERE id = #{memberListId}
+    </select>
+
+    <select id="findMemberDiscount" resultType="org.jeecg.modules.marketing.vo.MarketingDiscountCouponVO">
+        SELECT
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name` AS niName,
+        mdc.`id`,
+        mdc.`qqzixuangu`,
+        mdc.status,
+        mdc.`name`,
+        IF(
+        mdc.`is_threshold` = 0,
+        '无门槛',
+        CONCAT('满', mdc.`completely`, '元')
+        ) AS usingThreshold,
+        CONCAT('减', mdc.`price`, '元') AS preferentialContent,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_good mdg
+        WHERE mdg.`marketing_discount_id` = mdc.`marketing_discount_id`
+        AND mdg.`del_flag` = 0)AS applyGood,
+        IF(
+        mdc.`is_platform` = 0,
+        (SELECT
+        sm.store_name
+        FROM
+        store_manage sm
+        WHERE mdc.`sys_user_id` = sm.sys_user_id),
+        '平台'
+        ) AS issuer,
+        CONCAT(
+        mdc.`start_time`,
+        '~',
+        mdc.`end_time`
+        ) AS indate,
+        mdc.`create_time`,
+        mdc.user_time,
+        mdc.`marketing_discount_id`,
+        mdc.is_platform
+        FROM
+        (SELECT * FROM marketing_discount_coupon WHERE del_flag = 0 ORDER BY create_time DESC LIMIT #{memberDiscountVO.pageNo},#{memberDiscountVO.pageSize}) mdc
+        LEFT JOIN member_list ml
+        ON mdc.`member_list_id` = ml.id
+        LEFT JOIN marketing_discount md
+        ON mdc.`marketing_discount_id` = md.`id`
+        WHERE ml.`del_flag` = 0
+        <if test="memberDiscountVO!=null and memberDiscountVO.phone!=null and memberDiscountVO.phone!=''">
+            AND ml.phone LIKE CONCAT(CONCAT('%',#{memberDiscountVO.phone}),'%')
+        </if>
+        <if test="memberDiscountVO!=null and memberDiscountVO.niName!=null and memberDiscountVO.niName!=''">
+            AND ml.nick_name LIKE CONCAT(CONCAT('%',#{memberDiscountVO.niName}),'%')
+        </if>
+        <if test="memberDiscountVO!=null and memberDiscountVO.qqzixuangu!=null and memberDiscountVO.qqzixuangu!=''">
+            AND mdc.qqzixuangu LIKE CONCAT(CONCAT('%',#{memberDiscountVO.qqzixuangu}),'%')
+        </if>
+        <if test="memberDiscountVO!=null and memberDiscountVO.name!=null and memberDiscountVO.name!=''">
+            AND mdc.name LIKE CONCAT(CONCAT('%',#{memberDiscountVO.name}),'%')
+        </if>
+        <if test="memberDiscountVO!=null and memberDiscountVO.issuer!=null and memberDiscountVO.issuer!=''">
+            AND issuer LIKE CONCAT(CONCAT('%',#{memberDiscountVO.issuer}),'%')
+        </if>
+        <if test="memberDiscountVO!=null and memberDiscountVO.status!=null and memberDiscountVO.status!=''">
+            AND  mdc.status = #{memberDiscountVO.status}
+        </if>
+        <if test="memberDiscountVO != null and memberDiscountVO.createTime_begin != null and memberDiscountVO.createTime_begin != ''">
+            and mdc.create_time <![CDATA[>=]]> CONCAT(#{memberDiscountVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberDiscountVO != null and memberDiscountVO.createTime_end != null and memberDiscountVO.createTime_end != ''">
+            AND mdc.create_time <![CDATA[<=]]> CONCAT( #{memberDiscountVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberDiscountVO != null and memberDiscountVO.userTime_begin != null and memberDiscountVO.userTime_begin != ''">
+            and mdc.user_time <![CDATA[>=]]> CONCAT(#{memberDiscountVO.userTime_begin},' 00:00:00')
+        </if>
+        <if test="memberDiscountVO != null and memberDiscountVO.userTime_end != null and memberDiscountVO.userTime_end != ''">
+            AND mdc.user_time <![CDATA[<=]]> CONCAT( #{memberDiscountVO.userTime_end},' 23:59:59')
+        </if>
+    </select>
+    <select id="findMemberCertificate" resultType="org.jeecg.modules.member.vo.MemberCertificateVO">
+        SELECT
+          ml.id,
+          ml.`head_portrait`,
+          ml.`phone`,
+          ml.`nick_name`,
+          mcr.`qqzixuangu`,
+          mc.`name`,
+          CONCAT(
+            '兑换商品',
+            mc.`shop_total`,
+            '件'
+          ) AS applyGood,
+          (SELECT
+            COUNT(1)
+          FROM
+            marketing_certificate_store mcs
+          WHERE mcs.`del_flag` = 0
+            AND mcs.`marketing_certificate_id` = mc.`id`) AS storeQuantity,
+          mcr.`status`,
+          mcr.`the_channel`,
+          CONCAT(
+            mcr.`start_time`,
+            '~',
+            mcr.`end_time`
+          ) AS indate,
+          mcr.`create_time`,
+          IF(
+            mcr.`verification_people` = 0,
+            (SELECT
+              su.realname
+            FROM
+              sys_user su
+            WHERE id = mcr.`sys_user_id`),
+            (SELECT
+              sm.store_name
+            FROM
+              store_manage sm
+            WHERE sm.sys_user_id = mcr.`sys_user_id`)
+          ) AS cancel,
+          IF(
+            mcr.`status` = 2,
+            mcr.`user_time`,
+            '`'
+          ) AS useTime,
+          mcr.marketing_certificate_id
+
+        FROM
+          member_list ml
+          LEFT JOIN marketing_certificate_record mcr
+            ON ml.`id` = mcr.`member_list_id`
+          LEFT JOIN marketing_certificate mc
+            ON mcr.`marketing_certificate_id` = mc.`id`
+        WHERE ml.`del_flag` = 0
+          AND mcr.`del_flag` = 0
+        <if test="memberCertificateVO!=null and memberCertificateVO.phone!=null and memberCertificateVO.phone!=''">
+            AND ml.phone LIKE CONCAT(CONCAT('%',#{memberCertificateVO.phone}),'%')
+        </if>
+        <if test="memberCertificateVO!=null and memberCertificateVO.nickName!=null and memberCertificateVO.nickName!=''">
+            AND ml.nick_name LIKE CONCAT(CONCAT('%',#{memberCertificateVO.nickName}),'%')
+        </if>
+        <if test="memberCertificateVO!=null and memberCertificateVO.qqzixuangu!=null and memberCertificateVO.qqzixuangu!=''">
+            AND mcr.qqzixuangu LIKE CONCAT(CONCAT('%',#{memberCertificateVO.qqzixuangu}),'%')
+        </if>
+        <if test="memberCertificateVO!=null and memberCertificateVO.name!=null and memberCertificateVO.name!=''">
+            AND mcr.name LIKE CONCAT(CONCAT('%',#{memberCertificateVO.name}),'%')
+        </if>
+        <if test="memberCertificateVO != null and memberCertificateVO.status!=null and memberCertificateVO.status !=''">
+            AND mcr.status = #{memberCertificateVO.status}
+        </if>
+        <if test="memberCertificateVO != null and memberCertificateVO.createTime_begin != null and memberCertificateVO.createTime_begin != ''">
+            AND mcr.create_time <![CDATA[>=]]> CONCAT(#{memberCertificateVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberCertificateVO != null and memberCertificateVO.createTime_end != null and memberCertificateVO.createTime_end != ''">
+            AND mcr.create_time <![CDATA[<=]]> CONCAT( #{memberCertificateVO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY ml.`create_time` DESC
+    </select>
+
+    <select id="findMemberDistributionCount" resultType="org.jeecg.modules.member.vo.MemberListVO">
+              SELECT
+              (
+                (SELECT
+                  COUNT(1)
+                FROM
+                  member_list mlone
+                WHERE mlone.promoter = ml.`id`
+                  AND mlone.del_flag = 0) +
+                (SELECT
+                  COUNT(1)
+                FROM
+                  member_list mltwo
+                  LEFT JOIN member_list mlone
+                    ON mltwo.promoter = mlone.id
+                WHERE mlone.promoter = ml.`id`
+                  AND mltwo.del_flag = 0)
+              ) AS mlSum
+            FROM
+              member_list ml
+            WHERE ml.`del_flag` = 0
+              AND ml.`id` = #{memberId}
+    </select>
+
+    <select id="findMemberDistributionCountByMemberType" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+        (
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mlone
+        WHERE mlone.promoter = ml.`id`
+        AND mlone.del_flag = 0
+        AND mlone.member_type = 1
+        ) +
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mltwo
+        LEFT JOIN member_list mlone
+        ON mltwo.promoter = mlone.id
+        WHERE mlone.promoter = ml.`id`
+        AND mltwo.del_flag = 0
+        AND mlone.member_type = 1
+        )
+        ) AS mlSum
+        FROM
+        member_list ml
+        WHERE ml.`del_flag` = 0
+        AND ml.`id` = #{id}
+    </select>
+    <select id="findMemberVipByMarketingGiftBag" resultType="long">
+        SELECT
+          COUNT(1)
+        FROM
+          (SELECT
+            (SELECT
+              COUNT(1)
+            FROM
+              marketing_gift_bag_record mgbr
+            WHERE mgbr.`del_flag` = 0
+              AND mgbr.`vip_privilege` = 1
+              AND mgbr.`member_list_id` = ml.`id`) AS mlB
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`member_type` = 1
+            AND ml.`promoter_type` = 1
+            AND ml.`promoter` = #{id}
+            ) m
+        WHERE m.mlB > 0
+    </select>
+    <select id="findMemberLevelList" resultType="map">
+
+                    SELECT
+              mm.head_portrait AS headPortrait,
+              mm.nick_name AS nickName,
+              DATE_FORMAT(
+                mm.create_time,
+                '%Y-%m-%d %H:%i'
+              ) AS createTime,
+              mm.total_commission AS totalCommission,
+              mm.member_type AS memberType,
+              mm.memberLevel
+            FROM
+              (SELECT
+                mi.*,
+                2 AS memberLevel
+              FROM
+                (SELECT
+                  *
+                FROM
+                  `member_list`
+                WHERE promoter = #{memberId}
+                  AND del_flag = '0') ml
+                LEFT JOIN member_list mi
+                  ON ml.id = mi.promoter
+              WHERE mi.`del_flag` = '0'
+              UNION
+              SELECT
+                *,
+                1 AS memberLevel
+              FROM
+                `member_list`
+              WHERE promoter =#{memberId}
+                AND del_flag = '0') mm
+            ORDER BY mm.create_time DESC
+    </select>
+    <select id="getStoreSexSum" resultType="map">
+        SELECT
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`member_type` = 0
+            AND ml.`sys_user_id` = sm.`sys_user_id`
+            <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
+                AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+            </if>
+            <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!=''">
+                AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+            </if>
+            ) AS asordinarySum,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`member_type` = 1
+            AND ml.`sys_user_id` = sm.`sys_user_id`
+            <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
+                AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+            </if>
+            <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!=''">
+                AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+            </if>
+          ) AS vipSum,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`sys_user_id` = sm.`sys_user_id`
+            AND ml.`sex` = 1
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+          ) AS memberMan,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`sys_user_id` = sm.`sys_user_id`
+            AND ml.`sex` = 2
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+          ) AS memberWoMan,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+          WHERE (ml.`sex` = 0
+                OR ml.`sex` IS NULL)
+            AND ml.`del_flag` = 0
+            AND ml.`sys_user_id` = sm.`sys_user_id`
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+        ) AS memberUnknown
+        FROM
+          store_manage sm
+        WHERE sm.`del_flag` = 0
+          AND sm.`sys_user_id` = #{sysWorkbenchVO.sysUserId}
+    </select>
+    <select id="getAgencySexSum" resultType="map">
+        SELECT
+          (
+            CASE
+              sr.`role_code`
+              WHEN 'Provincial_agents'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+                )
+              WHEN 'Municipal_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(
+                  SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                  ',',
+                  - 1
+                ),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'County_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              ELSE '0'
+            END
+          ) AS asordinarySum,
+          (
+            CASE
+              sr.`role_code`
+              WHEN 'Provincial_agents'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'Municipal_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(
+                  SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                  ',',
+                  - 1
+                ),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'County_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`member_type` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              ELSE '0'
+            END
+          ) AS vipSum,
+          (
+            CASE
+              sr.`role_code`
+              WHEN 'Provincial_agents'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'Municipal_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(
+                  SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                  ',',
+                  - 1
+                ),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'County_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 1
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              ELSE '0'
+            END
+          ) AS memberMan,
+          (
+            CASE
+              sr.`role_code`
+              WHEN 'Provincial_agents'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 2
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'Municipal_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 2
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(
+                  SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                  ',',
+                  - 1
+                ),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'County_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE ml.`del_flag` = 0
+                AND ml.`sex` = 2
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              ELSE '0'
+            END
+          ) AS memberWoMan,
+          (
+            CASE
+              sr.`role_code`
+              WHEN 'Provincial_agents'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE (ml.`sex` = 0
+                  OR ml.`sex` IS NULL)
+                AND ml.`del_flag` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'Municipal_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE (ml.`sex` = 0
+                  OR ml.`sex` IS NULL)
+                AND ml.`del_flag` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(
+                  SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
+                  ',',
+                  - 1
+                ),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              WHEN 'County_agent'
+              THEN
+              (SELECT
+                COUNT(1)
+              FROM
+                member_list ml
+                LEFT JOIN store_manage sm
+                  ON ml.`sys_user_id` = sm.`sys_user_id`
+              WHERE (ml.`sex` = 0
+                  OR ml.`sex` IS NULL)
+                AND ml.`del_flag` = 0
+                AND sm.`del_flag` = 0
+                AND sm.`attestation_status` IN (1, 2)
+                AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_end!=null and agencyWorkbenchVO.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.memberTime_end}
+        </if>
+        )
+              ELSE '0'
+            END
+          ) AS memberUnknown
+        FROM
+          agency_manage am
+          LEFT JOIN sys_user su
+            ON am.`sys_user_id` = su.`id`
+          LEFT JOIN sys_user_role sur
+            ON sur.`user_id` = su.`id`
+          LEFT JOIN sys_role sr
+            ON sur.`role_id` = sr.`id`
+        WHERE am.`del_flag` = 0
+          AND am.`sys_user_id` = #{agencyWorkbenchVO.sysUserId}
+    </select>
+    <select id="getSysSexSum" resultType="map">
+        SELECT
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        WHERE ml.`del_flag` = 0
+        AND ml.`member_type` = 0
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+        ) AS asordinarySum,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        WHERE ml.`del_flag` = 0
+        AND ml.`member_type` = 1
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if> ) AS vipSum,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        WHERE ml.`del_flag` = 0
+        AND ml.`sex` = 1
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+        ) AS memberMan,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        WHERE ml.`del_flag` = 0
+        AND ml.`sex` = 2
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+        ) AS memberWoMan,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        WHERE (ml.`sex` = 0
+        OR ml.`sex` IS NULL)
+        AND ml.`del_flag` = 0
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
+        </if>
+        <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_end!=null and sysWorkbenchVO.memberTime_end!= ''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{sysWorkbenchVO.memberTime_end}
+        </if>
+        ) AS memberUnknown
+        FROM
+        sys_user su
+        WHERE su.`del_flag` = 0
+        AND su.id = #{sysWorkbenchVO.id}
+    </select>
+
+    <select id="getMyMemberList" resultType="map" parameterType="map">
+     SELECT
+              ml.id AS id,
+              ml.head_portrait AS headPortrait,
+              ml.member_type AS memberType,
+              ml.sex AS sex,
+              ml.nick_name AS nickName,
+              IF(ml.phone IS NULL,ml.nick_name,
+                CONCAT(
+                      ml.nick_name,
+                      '(',
+                     INSERT(ml.phone, 4, 4, '****'),
+                      ')'
+                    )
+              ) AS nickNamePhone,
+              ml.phone AS phone,
+        DATE_FORMAT(ml.create_time, '%Y-%m-%d %H:%i:%s')  AS createTime,
+              (
+                CASE
+                  ml.`promoter_type`
+                  WHEN 0
+                  THEN
+                  (SELECT
+                    sm.store_name
+                  FROM
+                    store_manage sm
+                  WHERE sm.sys_user_id = ml.`promoter`)
+                  WHEN 1
+                  THEN
+                  (SELECT
+                    mls.nick_name
+                  FROM
+                    member_list mls
+                  WHERE mls.id = ml.`promoter`)
+                  WHEN 2
+                  THEN '平台'
+                  ELSE
+                  (SELECT
+                    username
+                  FROM
+                    sys_user su
+                  WHERE su.id = ml.`sys_user_id`)
+                END
+              ) AS promoterName
+            FROM
+              `member_list` ml
+            WHERE ml.del_flag = 0
+
+        <if test="sysUserId !=null and sysUserId!=''">
+         and   ml.sys_user_id = #{sysUserId}
+        </if>
+        <if test="searchNickNamePhone !=null and searchNickNamePhone!=''">
+          and ( ml.nick_name LIKE concat('%',concat(#{searchNickNamePhone},'%'))) or ( ml.phone LIKE concat('%',concat(#{searchNickNamePhone},'%')))
+        </if>
+        ORDER BY ml.`create_time` DESC
+    </select>
+    <select id="getFranchiseeSexSum" resultType="map">
+        SELECT
+          (SELECT
+          COUNT(1)
+        FROM
+          member_list ml
+          LEFT JOIN store_manage sm
+            ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+          AND sm.`alliance_user_id` = am.sys_user_id
+          AND ml.`member_type` = 0
+        <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.memberTime_begin}
+        </if>
+        <if test="workbench!=null and workbench.memberTime_end!=null and workbench.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{workbench.memberTime_end}
+        </if>
+          ) AS asordinarySum,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        AND sm.`alliance_user_id` = am.sys_user_id
+        AND ml.`member_type` = 1
+        <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.memberTime_begin}
+        </if>
+        <if test="workbench!=null and workbench.memberTime_end!=null and workbench.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{workbench.memberTime_end}
+        </if>
+        ) AS vipSum,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        AND sm.`alliance_user_id` = am.sys_user_id
+        AND ml.`sex` = 1
+        <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.memberTime_begin}
+        </if>
+        <if test="workbench!=null and workbench.memberTime_end!=null and workbench.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{workbench.memberTime_end}
+        </if>
+        ) AS memberMan,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        AND sm.`alliance_user_id` = am.sys_user_id
+        AND ml.`sex` = 2
+        <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.memberTime_begin}
+        </if>
+        <if test="workbench!=null and workbench.memberTime_end!=null and workbench.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{workbench.memberTime_end}
+        </if>
+        ) AS memberWoMan,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        AND sm.`alliance_user_id` = am.sys_user_id
+        AND ml.`sex` = 0
+        <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{workbench.memberTime_begin}
+        </if>
+        <if test="workbench!=null and workbench.memberTime_end!=null and workbench.memberTime_end!=''">
+            AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{workbench.memberTime_end}
+        </if>
+        ) AS memberUnknown
+        FROM
+          alliance_manage am
+        WHERE am.`id` = #{workbench.id}
+    </select>
+
+    <select id="findAllianceMemberlist" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+        ml.id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        ml.`sex`,
+        ml.`area_addr`,
+        ml.`member_type`,
+        ml.`welfare_payments`,
+        ml.`balance`,
+        CONCAT('1') AS isPlatform,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_discount_coupon mdc
+        WHERE mdc.`del_flag` = 0
+        AND mdc.`status` = 1
+        AND mdc.`member_list_id` = ml.`id`) AS discount,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_goods_collection mgc
+        WHERE mgc.`del_flag` = 0
+        AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_attention_store mas
+        WHERE mas.`del_flag` = 0
+        AND mas.`member_list_id` = ml.`id`) AS attentionStore,
+        (SELECT
+        COUNT(1)
+        FROM
+        member_browsing_history mbh
+        WHERE mbh.`del_flag` = 0
+        AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
+        IF(
+        ml.`is_open_store` = 0,
+        '否',
+        '是'
+        ) AS isOpenStores,
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`del_flag` = 0
+        AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
+        ml.`create_time`,
+        ml.`vip_time`,
+        IF(ml.`status` = 0, '停用', '启动') statusName,
+        ml.`status`,
+        ml.`stop_remark`,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        )
+        FROM
+        store_manage sm
+        WHERE sm.`sys_user_id` = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        IF(
+        mls.`nick_name` IS NULL,
+        mls.`phone`,
+        IF(
+        mls.`phone` IS NULL,
+        mls.`nick_name`,
+        CONCAT(
+        mls.`nick_name`,
+        '(',
+        mls.`phone`,
+        ')'
+        )
+        )
+        )
+        FROM
+        member_list mls
+        WHERE mls.`del_flag` = 0
+        AND mls.`id` = ml.`promoter`)
+        WHEN 2
+        THEN '平台'
+        ELSE '平台'
+        END
+        ) AS promoterName,
+        ml.qrcode_addr
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON ml.`sys_user_id` = sm.`sys_user_id`
+        WHERE ml.`del_flag` = 0
+        AND LENGTH(TRIM(sm.`alliance_user_id`)) > 0
+        <if test="memberListDTO!=null and memberListDTO.promoter!=null and memberListDTO.promoter!=''">
+            AND sm.alliance_user_id = #{memberListDTO.promoter}
+        </if>
+        <if test="memberListDTO!=null and memberListDTO.phone!=null and memberListDTO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{memberListDTO.phone},'%'))
+        </if>
+        <if test="memberListDTO!=null and memberListDTO.nickName!=null and memberListDTO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{memberListDTO.nickName},'%'))
+        </if>
+        <if test="memberListDTO!=null and memberListDTO.sex!=null and memberListDTO.sex!=''">
+            AND ml.sex = #{memberListDTO.sex}
+        </if>
+        <if test="memberListDTO!=null and memberListDTO.memberType!=null and memberListDTO.memberType!=''">
+            AND ml.member_type = #{memberListDTO.memberType}
+        </if>
+        <if test="memberListDTO!=null and memberListDTO.isOpenStore!=null and memberListDTO.isOpenStore!=''">
+            AND ml.is_open_store = #{memberListDTO.isOpenStore}
+        </if>
+        <if test="memberListDTO != null and memberListDTO.createTime_begin != null and memberListDTO.createTime_begin != ''">
+            and ml.create_time <![CDATA[>=]]> CONCAT(#{memberListDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListDTO != null and memberListDTO.createTime_end != null and memberListDTO.createTime_end != ''">
+            AND ml.create_time <![CDATA[<=]]> CONCAT( #{memberListDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="memberListDTO != null and memberListDTO.vipTime_begin != null and memberListDTO.vipTime_begin != ''">
+            and ml.vip_time <![CDATA[>=]]> CONCAT(#{memberListDTO.vipTime_begin},' 00:00:00')
+        </if>
+        <if test="memberListDTO != null and memberListDTO.vipTime_end != null and memberListDTO.vipTime_end != ''">
+            AND ml.vip_time <![CDATA[<=]]> CONCAT( #{memberListDTO.vipTime_end},' 23:59:59')
+        </if>
+        ORDER BY ml.`create_time` DESC
+    </select>
+    <select id="likeMemberByPhone" resultType="map">
+        SELECT
+          ml.`id`,
+          CONCAT(
+            ml.`nick_name`,
+            '(',
+            ml.`phone`,
+            ')'
+          ) AS NAME,
+          ml.head_portrait,
+          ml.phone,
+          ml.nick_name
+        FROM
+          member_list ml
+        WHERE ml.`del_flag` = 0
+          AND ml.`phone` LIKE CONCAT('%',#{phone},'%')
+          LIMIT 10
+    </select>
+    <select id="getmemberListByTManageId" resultType="map">
+        SELECT
+          ml.id AS levelDownId,
+          ml.`head_portrait` AS levelDownLogo,
+          ml.`nick_name` AS levelDownName,
+          md.`name` AS levelDownDesignationName,
+          md.`logo_addr` AS levelDownDesignationLogo,
+          mdml.`total_members` AS levelDownTotalMembers,
+          mdml.t_manage_id AS levelDownTManageId,
+          ml.phone AS levelDownPhone,
+          (SELECT
+          COUNT(1)
+        FROM
+          member_designation_member_list mdmls
+        WHERE mdmls.`del_flag` = 0
+          AND mdmls.`t_manage_id` = ml.id
+          AND mdmls.`member_designation_group_id` = #{memberDesignationGroupId}) AS levelDownMlSum,
+          mdml.is_change AS levelDownIsChange,
+          mdml.total_gift_sales AS levelTotalGiftSales
+        FROM
+        member_designation_member_list mdml
+        LEFT JOIN member_list ml
+        ON mdml.`member_list_id` = ml.`id`
+          LEFT JOIN member_designation md
+            ON mdml.`member_designation_id` = md.`id`
+        WHERE ml.`del_flag` = 0
+          AND md.`del_flag` = 0
+          AND mdml.`t_manage_id` = #{id}
+          AND mdml.`member_designation_group_id` = #{memberDesignationGroupId}
+    </select>
+    <select id="memberDesignationPageList" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+          ml.* ,
+          md.`name` AS designationName,
+          IF
+          ((SELECT
+            COUNT(1)
+          FROM
+            member_list mls
+          WHERE mls.`del_flag` = 0
+            AND mls.`t_manage_id` = ml.`id`) > 0,
+            '1',
+            '0') AS isViewUnderling,
+            (SELECT
+            COUNT(1)
+          FROM
+            member_list mls
+          WHERE mls.`del_flag` = 0
+            AND mls.`t_manage_id` = ml.`id`) AS memberSum,
+        IF(
+        ml.`t_manage_id` IS NULL,
+        '无',
+        (SELECT
+        mlw.`nick_name`
+        FROM
+        member_list mlw
+        WHERE mlw.`id` = ml.`t_manage_id`)
+        ) AS superiorName,
+        mdg.group_name
+        FROM
+          member_list ml
+          LEFT JOIN member_designation md
+            ON ml.`member_designation_id` = md.`id`
+        LEFT JOIN member_designation_group mdg
+        ON md.member_designation_group_id = mdg.`id`
+        WHERE ml.`del_flag` = 0
+        AND md.`del_flag` = 0
+        AND ml.member_designation_group_id IS NOT NULL
+        AND LENGTH(TRIM(ml.member_designation_group_id)) > 0
+        <if test="memberListDTO.phone != null and memberListDTO.phone != ''">
+            AND ml.phone LIKE concat('%',#{memberListDTO.phone},'%')
+        </if>
+        ORDER BY ml.member_join_time DESC
+    </select>
+    <select id="getUnderlingList" resultType="org.jeecg.modules.member.vo.MemberListVO">
+        SELECT
+          ml.* ,
+          md.`name` AS designationName,
+          IF
+          ((SELECT
+            COUNT(1)
+          FROM
+            member_list mls
+          WHERE mls.`del_flag` = 0
+            AND mls.`t_manage_id` = ml.`id` )> 0,
+            '1',
+            '0') AS isViewUnderling,
+            (SELECT
+            COUNT(1)
+          FROM
+            member_list mls
+          WHERE mls.`del_flag` = 0
+            AND mls.`t_manage_id` = ml.`id`) AS memberSum,
+        IF(
+        ml.`t_manage_id` IS NULL,
+        '无',
+        (SELECT
+        mlw.`nick_name`
+        FROM
+        member_list mlw
+        WHERE mlw.`id` = ml.`t_manage_id`)
+        ) AS superiorName,
+        mdg.group_name
+        FROM
+          member_list ml
+          LEFT JOIN member_designation md
+            ON ml.`member_designation_id` = md.`id`
+            LEFT JOIN member_designation_group mdg
+        ON md.member_designation_group_id = mdg.`id`
+        WHERE ml.`del_flag` = 0
+        AND md.`del_flag` = 0
+        AND ml.`t_manage_id` = #{id}
+    </select>
+
+    <select id="getDesignateMemberListByPhone" resultType="map">
+        SELECT
+          ml.`id`,
+          CONCAT(
+            ml.`nick_name`,
+            '(',
+            ml.`phone`,
+            ')'
+          ) AS NAME
+        FROM
+          member_list ml
+        WHERE ml.`del_flag` = 0
+          AND ml.`phone` LIKE CONCAT('%',#{phone},'%')
+          LIMIT 10
+    </select>
+
+    <select id="getMemberDesignationListById" resultType="org.jeecg.modules.member.entity.MemberList">
+        SELECT
+          *
+        FROM
+          (SELECT
+            ml.*,
+            (SELECT
+              COUNT(1)
+            FROM
+              marketing_gift_bag_record mgbr
+            WHERE mgbr.`del_flag` = 0
+              AND mgbr.`pay_status` = 1
+              AND mgbr.`marketing_gift_bag_id` = #{marketingGiftBagId}
+              AND mgbr.`member_list_id` = ml.`id`) AS mlGibtSum
+          FROM
+            member_list ml
+          WHERE ml.`del_flag` = 0
+            AND ml.`member_designation_id` = #{memberDesignationId}) m
+        WHERE m.mlGibtSum > 0
+    </select>
+
+    <select id="pushingNumber" resultType="map" >
+            SELECT
+            ml.nick_name AS  nickName,
+            ml.head_portrait AS headPortrait,
+            ml.sys_user_id AS sysUserId,
+            ml.member_type AS memberType,
+            ml.id,
+            ml.promoter_type AS promoterType,
+            ml.promoter,
+            DATE_FORMAT(ml.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+            ml.member_grade_id AS memberGradeId
+        FROM
+            member_list ml
+        WHERE
+            ml.del_flag = '0'
+            AND ml.promoter = #{memberId}
+            ORDER BY create_time DESC
+    </select>
+
+    <select id="betweenPush" resultType="int">
+        SELECT
+            count( 1 )
+        FROM
+            member_list ml
+            LEFT JOIN member_list mlp ON ml.id = mlp.promoter
+        WHERE
+            ml.del_flag = '0'
+            AND ml.promoter = #{memberId}
+            AND mlp.id IS NOT NULL
+    </select>
+</mapper>

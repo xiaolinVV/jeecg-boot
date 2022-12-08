@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateRecordMapper">
+    <select  id="couponVerification" resultType="org.jeecg.modules.marketing.dto.MarketingCertificateRecordDTO">
+        SELECT
+        mdcMl.*,
+        mdcMl.phone AS phone,
+        mdcMl.nickName AS nickName,
+        mc.discount_explain AS discountExplain,
+        1 AS isDiscount,
+        CONCAT_WS( '~', mdcMl.start_time, mdcMl.end_time ) AS startEndTime,
+        (SELECT COUNT(*) FROM marketing_certificate_good mdg WHERE mdcMl.marketing_certificate_id = mdg.marketing_certificate_id) AS mdgCount
+        FROM
+        (SELECT
+        mcr.*,
+        ml.phone AS phone,
+        ml.nick_name AS nickName
+        FROM
+        marketing_certificate_record mcr
+        LEFT JOIN member_list ml
+        ON mcr.member_list_id = ml.id)   mdcMl
+        LEFT JOIN `marketing_certificate_store`  mcs
+        ON  mcs.marketing_certificate_id = mdcMl.marketing_certificate_id
+        LEFT JOIN marketing_certificate mc
+        ON mdcMl.marketing_certificate_id = mc.id
+        WHERE mdcMl.del_flag = 0 and mcs.del_flag = 0
+        <if test="qqzixuangu != null and qqzixuangu != ''">
+            AND mdcMl.qqzixuangu = #{ qqzixuangu }
+        </if>
+        <if test=" sysUserId != null and sysUserId != ''">
+            AND mcs.sys_user_id = #{ sysUserId }
+        </if>
+
+    </select>
+
+    <select id="findMarketingCertificateRecordByMemberId" resultType="map">
+        SELECT
+        id,
+        NAME,
+        DATE_FORMAT(start_time, '%Y-%m-%d') AS startTime,
+        DATE_FORMAT(end_time, '%Y-%m-%d') AS endTime,
+        is_give AS isGive,
+        qqzixuangu,
+        is_platform AS isPlatform,
+        IF(m.sys_user_id IS NULL,'',(SELECT logo_addr FROM `store_manage` WHERE sys_user_id=m.sys_user_id AND STATUS='1' LIMIT 1) ) AS logoAddr,
+        STATUS,
+        main_picture AS mainPicture,
+        cover_plan as coverPlan,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.`del_flag` = 0
+        AND mcg.`marketing_certificate_id` = m.`marketing_certificate_id`) AS goods,
+        IF(record_type = 0,IF(is_nomal = 0,0,4),record_type) AS recordType,
+        IF(record_type = 0,price,active_price) AS price
+        FROM
+        `marketing_certificate_record` m
+        WHERE del_flag = '0'
+        and member_list_id=#{paramMap.memberId}
+        <if test="paramMap.pattern==1">and (status ='0' or status='1') </if>
+        <if test="paramMap.pattern!=1">and status = #{paramMap.pattern}  </if>
+        order by create_time desc
+    </select>
+
+    <select id="findMarketingCertificateRecordInfo" resultType="map">
+
+        SELECT
+          id,
+          NAME,
+           DATE_FORMAT(start_time, '%Y-%m-%d %H:%i:%s') AS startTime,
+          DATE_FORMAT(end_time, '%Y-%m-%d %H:%i:%s') AS endTime,
+          is_give AS isGive,
+          is_platform AS isPlatform,
+          sys_user_id AS sysUserId,
+          user_restrict AS userRestrict,
+          discount_explain AS discountExplain,
+          qqzixuangu,
+          status,
+          marketing_certificate_id as marketingCertificateId,
+          main_picture as mainPicture,
+          cover_plan as coverPlan,
+          1 as isViewStore,
+          qr_addr as qrAddr,
+          posters as posters,
+          reward_store AS rewardStore,
+          is_buy_platform AS isBuyPlatform,
+          sell_reward_store AS sellRewardStore,
+          certificate_type as certificateType,
+          IF(record_type = 0,price,active_price) AS price,
+          market_price AS marketPrice,
+          record_type AS recordType,
+          is_nomal AS isNomal
+        FROM
+          marketing_certificate_record
+        WHERE
+          id=#{id}
+    </select>
+    <select id="findCertificateRecord" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateRecordVO">
+                SELECT
+                  mcr.id,
+                  ml.`head_portrait`,
+                  ml.`phone`,
+                  ml.`nick_name`,
+                  mcr.`qqzixuangu`,
+                  mcr.`name`,
+                  (SELECT
+                    COUNT(1)
+                  FROM
+                    marketing_certificate_good mcg
+                  WHERE mcg.marketing_certificate_id = mcr.`marketing_certificate_id`
+                    AND mcg.del_flag = 0) AS goods,
+                  (SELECT
+                    COUNT(1)
+                    FROM
+                    marketing_certificate_store mcs LEFT JOIN store_manage sm ON sm.sys_user_id = mcs.sys_user_id
+                    WHERE mcs.marketing_certificate_id = mcr.marketing_certificate_id
+                    AND mcs.del_flag = 0
+                    AND sm.del_flag = 0) AS stores,
+                  mcr.the_reward,
+                  mcr.`status`,
+                  mcr.`the_channel`,
+                  CONCAT(
+                    mcr.`start_time`,
+                    mcr.`end_time`
+                  ) AS indate,
+                  mcr.`create_time`,
+                  (SELECT
+                    mlf.nick_name
+                  FROM
+                    member_list mlf
+                  WHERE mlf.id = mcr.`give_member_list_id`) AS giveName,
+                  IF(
+                    mcr.`status` = 2,
+                    mcr.`user_time`,
+                    ''
+                  ) AS ctime,
+                mcr.`send_time`,
+                IF(
+                mcr.`status` != 2,'~',
+                IF(
+                mcr.`verification_people` = 1,
+                (SELECT
+                IF(
+                LENGTH(TRIM(sms.`sub_store_name`)) > 0,
+                CONCAT(
+                sms.`store_name`,
+                '(',
+                sms.`sub_store_name`,
+                ')'
+                ),
+                sms.`store_name`
+                ) AS storeName
+                FROM
+                store_manage sms
+                WHERE sms.sys_user_id = mcr.`sys_user_id`),
+                (SELECT
+                su.username
+                FROM
+                sys_user su
+                WHERE su.id = mcr.`sys_user_id`)
+                )) AS delName,
+                    mcr.marketing_certificate_id,
+                    mcr.certificate_type
+                FROM
+                  marketing_certificate_record mcr
+                  LEFT JOIN member_list ml
+                    ON mcr.`member_list_id` = ml.`id`
+                WHERE mcr.`del_flag` = 0
+                <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.phone!=null and marketingCertificateRecordVO.phone!=''">
+                    AND ml.phone LIKE concat('%',concat(#{marketingCertificateRecordVO.phone},'%'))
+                </if>
+                <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.nickName!=null and marketingCertificateRecordVO.nickName!=''">
+                    AND ml.nick_name LIKE concat('%',concat(#{marketingCertificateRecordVO.nickName},'%'))
+                </if>
+                <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.qqzixuangu!=null and marketingCertificateRecordVO.qqzixuangu!=''">
+                    AND mcr.qqzixuangu = #{marketingCertificateRecordVO.qqzixuangu}
+                </if>
+                <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.name!=null and marketingCertificateRecordVO.name!=''">
+                    AND mcr.name LIKE CONCAT('%',CONCAT(#{marketingCertificateRecordVO.name},'%'))
+                </if>
+                <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.status!=null and marketingCertificateRecordVO.status!=''">
+                    AND mcr.status = #{marketingCertificateRecordVO.status}
+                </if>
+                <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.createTime_begin != null and marketingCertificateRecordVO.createTime_begin != ''">
+                    AND mcr.create_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.createTime_begin},' 00:00:00')
+                </if>
+                <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.createTime_end != null and marketingCertificateRecordVO.createTime_end != ''">
+                    AND mcr.create_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.createTime_end},' 23:59:59')
+                </if>
+                <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.userTime_begin != null and marketingCertificateRecordVO.userTime_begin != ''">
+                    AND mcr.user_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.userTime_begin},' 00:00:00')
+                    AND mcr.verification = 1
+                </if>
+                <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.userTime_end != null and marketingCertificateRecordVO.userTime_end != ''">
+                    AND mcr.user_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.userTime_end},' 23:59:59')
+                    AND mcr.verification = 1
+                </if>
+
+                ORDER BY mcr.`create_time` DESC
+    </select>
+    <!--<if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.useTime_begin != null and marketingCertificateRecordVO.useTime_begin != ''">
+        AND mcr.user_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.useTime_begin},' 00:00:00')
+        AND mcr.verification = 0
+    </if>
+    <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.useTime_end != null and marketingCertificateRecordVO.useTime_end != ''">
+        AND mcr.user_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.useTime_end},' 23:59:59')
+        AND mcr.verification = 0
+    </if>-->
+    <select id="findStoreCertificateRecord" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateRecordVO">
+        SELECT
+        mcr.id,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        mcr.`qqzixuangu`,
+        mcr.`name`,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_good mcg
+        WHERE mcg.marketing_certificate_id = mcr.`marketing_certificate_id`
+        AND mcg.del_flag = 0) AS goods,
+        (SELECT
+        COUNT(1)
+        FROM
+        marketing_certificate_store mcs
+        WHERE mcs.marketing_certificate_id = mcr.`marketing_certificate_id`
+        AND mcs.del_flag = 0) AS stores,
+        mcr.`status`,
+        mcr.`the_channel`,
+        CONCAT(
+        mcr.`start_time`,
+        '~',
+        mcr.`end_time`
+        ) AS indate,
+        mcr.`create_time`,
+        IF(
+        mcr.`give_member_list_id` IS NOT NULL,
+        (SELECT
+        mlf.nick_name
+        FROM
+        member_list mlf
+        WHERE mlf.id = mcr.`give_member_list_id`),
+        '~'
+        ) AS giveName,
+        IF(
+        mcr.`status` = 2,
+        mcr.`user_time`,
+        '~'
+        ) AS cTime,
+        mcr.marketing_certificate_id,
+        (
+        CASE
+        mcr.`verification_people`
+        WHEN 0
+        THEN
+        (SELECT
+        su.username
+        FROM
+        sys_user su
+        WHERE su.id = mcr.`sys_user_id`)
+        WHEN 1
+        THEN
+        (SELECT
+        sms.store_name
+        FROM
+        store_manage sms
+        WHERE sms.sys_user_id = mcr.`sys_user_id`)
+        ELSE '~'
+        END
+        ) AS delName,
+        mcr.`send_time`,
+        IF(
+        mcr.`sys_user_id` IS NOT NULL,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        '~'
+        ) AS storeName
+        FROM
+        marketing_certificate_record mcr
+        LEFT JOIN member_list ml
+        ON mcr.`member_list_id` = ml.`id`
+        LEFT JOIN store_manage sm
+        ON sm.`sys_user_id` = mcr.`sys_user_id`
+        WHERE mcr.`del_flag` = 0
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.storeUId!=null and marketingCertificateRecordVO.storeUId!=''">
+            AND mcr.sys_user_id = #{marketingCertificateRecordVO.storeUId}
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.phone!=null and marketingCertificateRecordVO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{marketingCertificateRecordVO.phone},'%'))
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.nickName!=null and marketingCertificateRecordVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{marketingCertificateRecordVO.nickName},'%'))
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.qqzixuangu!=null and marketingCertificateRecordVO.qqzixuangu!=''">
+            AND mcr.qqzixuangu LIKE concat('%',concat(#{marketingCertificateRecordVO.qqzixuangu},'%'))
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.name!=null and marketingCertificateRecordVO.name!=''">
+            AND mcr.name LIKE concat('%',concat(#{marketingCertificateRecordVO.name},'%'))
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.status!=null and marketingCertificateRecordVO.status!=''">
+            AND mcr.status = #{marketingCertificateRecordVO.status}
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.delName!=null and marketingCertificateRecordVO.delName!=''">
+            AND ml.delName = #{marketingCertificateRecordVO.delName}
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.createTime_begin != null and marketingCertificateRecordVO.createTime_begin != ''">
+            AND mcr.create_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.createTime_end != null and marketingCertificateRecordVO.createTime_end != ''">
+            AND mcr.create_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.userTime_begin != null and marketingCertificateRecordVO.userTime_begin != ''">
+            AND mcr.status = 2
+            AND mcr.user_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.userTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.userTime_end != null and marketingCertificateRecordVO.userTime_end != ''">
+            AND mcr.status = 2
+            AND mcr.user_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.userTime_end},' 23:59:59')
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.useTime_begin1 != null and marketingCertificateRecordVO.useTime_begin1 != ''">
+            AND mcr.status = 5
+            AND mcr.user_time <![CDATA[>=]]> CONCAT(#{marketingCertificateRecordVO.useTime_begin1},' 00:00:00')
+        </if>
+        <if test="marketingCertificateRecordVO != null and marketingCertificateRecordVO.useTime_end1 != null and marketingCertificateRecordVO.useTime_end1 != ''">
+            AND mcr.status = 5
+            AND mcr.user_time <![CDATA[<=]]> CONCAT( #{marketingCertificateRecordVO.useTime_end1},' 23:59:59')
+        </if>
+        <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.storeName!=null and marketingCertificateRecordVO.storeName!=''">
+            AND sm.store_name LIKE concat('%',concat(#{marketingCertificateRecordVO.storeName},'%'))
+        </if>
+        ORDER BY mcr.`create_time` DESC
+    </select>
+
+    <update id="updateMarketingCertificateTakeEffect">
+        UPDATE
+          marketing_certificate_record mcr
+        SET
+          mcr.`status` = 1
+        WHERE mcr.`del_flag` = 0
+          AND NOW() > mcr.`start_time`
+          AND mcr.`status` = 0
+    </update>
+    <update id="updateMarketingCertificatePastDue">
+        UPDATE
+          marketing_certificate_record mcr
+        SET
+          mcr.`status` = 3
+        WHERE mcr.`del_flag` = 0
+          AND NOW() > mcr.`end_time`
+          AND mcr.`status` = 1
+    </update>
+</mapper>

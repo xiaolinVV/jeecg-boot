@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberRechargeRecordMapper">
+
+    <select id="findMemberRechargeRecordProtomerCount" resultType="int" >
+                    SELECT
+              COUNT(1)
+            FROM
+              `member_recharge_record`
+            WHERE member_list_id =#{memberId}
+              AND pay_type IN ('0','3','4','5','6','7')
+              AND trade_status IN ('0', '2', '5')
+              AND del_flag = '0'
+    </select>
+
+    <select id="findMemberRechargeRecordProtomerList" resultType="map" parameterType="map">
+                             SELECT
+                  ml.`head_portrait` AS headPortrait,
+                  ml.`nick_name` AS nickName,
+                  mrr.member_level AS memberLevel,
+                  mrr.trade_no AS tradeNo,
+                  DATE_FORMAT(
+                    mrr.create_time,
+                    '%Y-%m-%d %H:%i'
+                  ) AS createTime,
+                  mrr.amount,
+                  mrr.id,
+                  mrr.trade_type as tradeType,
+                  mrr.trade_status as tradeStatus
+                FROM
+                  (SELECT
+                    *
+                  FROM
+                    `member_recharge_record`
+                  WHERE member_list_id =#{objectMap.memberId}
+                    AND pay_type IN ('0','3', '4', '5', '6')
+
+                    <if test="objectMap.pattern == -1">
+                    AND trade_status IN ('0', '1', '5','2','3','4')
+                    </if>
+                    <if test="objectMap.pattern == 0">
+                        AND trade_status = 0
+                    </if>
+                    <if test="objectMap.pattern == 1">
+                        AND trade_status = 2
+                    </if>
+                    <if test="objectMap.pattern == 5">
+                        AND trade_status = 5
+                    </if>
+                    AND del_flag = '0'
+                    ORDER BY create_time DESC,amount DESC
+                  ) mrr
+                  LEFT JOIN `member_list` ml
+                    ON mrr.`t_member_list_id` = ml.`id`
+        ORDER BY createTime DESC
+    </select>
+
+
+    <select id="findMemberRechargeRecordDepositCount" resultType="int" >
+                    SELECT
+              COUNT(1)
+            FROM
+              `member_recharge_record`
+            WHERE member_list_id =#{memberId}
+              AND pay_type ='1'
+              AND del_flag = '0'
+    </select>
+
+
+    <select id="findMemberRechargeRecordByMemberWithdrawDepositId" resultType="map">
+        SELECT
+        ml.`head_portrait` AS headPortrait,
+        ml.`nick_name` AS nickName,
+        mrr.member_level AS memberLevel,
+        mrr.trade_no AS tradeNo,
+        DATE_FORMAT(
+        mrr.create_time,
+        '%Y-%m-%d %H:%i'
+        ) AS createTime,
+        mrr.amount,
+        mrr.id,
+        mrr.trade_type as tradeType
+        FROM
+        (SELECT
+        *
+        FROM
+        `member_recharge_record`
+        WHERE
+        member_withdraw_deposit_id=#{memberWithdrawDepositId}
+        AND del_flag = '0') mrr
+        LEFT JOIN `member_list` ml
+        ON mrr.`member_list_id` = ml.`id`
+
+    </select>
+
+    <select id="findMemberRechargeRecordSum" resultType="double" parameterType="map">
+
+        SELECT
+        IFNULL(SUM(amount),0)
+        FROM
+        `member_recharge_record`
+        WHERE member_list_id =#{objectMap.memberId}
+        AND pay_type IN ('0','3', '4', '5', '6','7')
+            AND trade_status =#{objectMap.pattern}
+        AND del_flag = '0'
+
+    </select>
+
+
+    <select id="findMemberRechargeRecordWithdrawSum" resultType="double" parameterType="map">
+
+        SELECT
+        IFNULL(SUM(amount),0)
+        FROM
+        `member_recharge_record`
+        WHERE member_list_id =#{objectMap.memberId}
+        AND pay_type='1'
+            AND trade_status =#{objectMap.pattern}
+        AND del_flag = '0'
+
+    </select>
+
+    <select id="findMemberRechargeRecordPage" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'member_deal_type')
+            AND s.`item_value` = mrr.`pay_type`) AS payType,
+          DATE_FORMAT(
+            mrr.`create_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS createTime,
+          mrr.`amount`,
+          mrr.`go_and_come`AS goAndCome
+        FROM
+          member_recharge_record mrr
+        WHERE mrr.`del_flag` = 0
+          AND mrr.`member_list_id` = #{map.id}
+        <if test="map.isPlatform == 1">
+            AND mrr.`pay_type` IN (0, 3, 4, 5, 6, 7, 8, 9)
+            AND mrr.`trade_status` IN (1, 2, 3, 4)
+        </if>
+        <if test="map.isPlatform == 2">
+            AND mrr.`pay_type` IN (1,2)
+            AND mrr.`trade_status` IN (1, 2, 3, 4)
+        </if>
+        ORDER BY mrr.`create_time` DESC,mrr.`amount` DESC
+    </select>
+
+    <select id="queryPageList" resultType="org.jeecg.modules.member.vo.MemberRechargeRecordVO">
+        SELECT
+          mrr.id,
+          mrr.`order_no`,
+          mrr.`trade_no`,
+          ml.`phone`,
+          ml.`nick_name`,
+          mrr.`pay_type`,
+          mrr.`go_and_come`,
+          mrr.`amount`,
+          mrr.`trade_status`,
+          mrr.`create_time`,
+          mrr.remark
+        FROM
+          member_recharge_record mrr
+          LEFT JOIN member_list ml
+            ON mrr.`member_list_id` = ml.`id`
+        WHERE mrr.`del_flag` = 0
+        <if test="memberRechargeRecordDTO.orderNo != null and memberRechargeRecordDTO.orderNo!=''">
+            AND mrr.order_no LIKE concat('%',#{memberRechargeRecordDTO.orderNo},'%')
+        </if>
+        <if test="memberRechargeRecordDTO.tradeNo != null and memberRechargeRecordDTO.tradeNo!=''">
+            AND mrr.trade_no LIKE concat('%',#{memberRechargeRecordDTO.tradeNo},'%')
+        </if>
+        <if test="memberRechargeRecordDTO.phone != null and memberRechargeRecordDTO.phone!=''">
+            AND ml.phone LIKE concat('%',#{memberRechargeRecordDTO.phone},'%')
+        </if>
+        <if test="memberRechargeRecordDTO.nickName != null and memberRechargeRecordDTO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',#{memberRechargeRecordDTO.nickName},'%')
+        </if>
+        <if test="memberRechargeRecordDTO.payType != null and memberRechargeRecordDTO.payType!=''">
+            AND mrr.pay_type = #{memberRechargeRecordDTO.payType}
+        </if>
+        <if test="memberRechargeRecordDTO.tradeStatus != null and memberRechargeRecordDTO.tradeStatus!=''">
+            AND mrr.trade_status = #{memberRechargeRecordDTO.tradeStatus}
+        </if>
+        <if test="memberRechargeRecordDTO.goAndCome != null and memberRechargeRecordDTO.goAndCome!=''">
+            AND mrr.go_and_come = #{memberRechargeRecordDTO.goAndCome}
+        </if>
+        <if test="memberRechargeRecordDTO != null and memberRechargeRecordDTO.createTime_begin != null and memberRechargeRecordDTO.createTime_begin != ''">
+            and mrr.create_time <![CDATA[>=]]> concat(#{memberRechargeRecordDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberRechargeRecordDTO != null and memberRechargeRecordDTO.createTime_end != null and memberRechargeRecordDTO.createTime_end != ''">
+            AND mrr.create_time <![CDATA[<=]]> concat( #{memberRechargeRecordDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY mrr.`create_time` DESC
+    </select>
+</mapper>

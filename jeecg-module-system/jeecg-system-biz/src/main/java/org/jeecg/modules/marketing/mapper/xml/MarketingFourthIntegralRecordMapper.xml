@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingFourthIntegralRecordMapper">
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingFourthIntegralRecordDTO">
+        SELECT
+        mtir.serial_number AS serialNumber,
+        ml.phone,
+        ml.nick_name AS nickName,
+        (
+        SELECT
+        s.item_text
+        FROM
+        sys_dict_item s
+        WHERE
+        s.dict_id = ( SELECT id FROM sys_dict WHERE dict_code = 'fourth_integral_deal_type' )
+        AND s.`item_value` = mtir.trade_type
+        ) AS tradeType,
+        ( CASE mtir.go_and_come WHEN '0' THEN '收入' WHEN '1' THEN '支出' ELSE '其他' END ) AS goAndCome,
+        mtir.integral AS integral,
+        mtir.integral_balance AS integralBalance,
+        mtir.trade_no AS tradeNo,
+        DATE_FORMAT( mtir.pay_time, '%Y-%m-%d %H:%i:%s' ) AS payTime
+        FROM
+        marketing_fourth_integral_record mtir
+        LEFT JOIN member_list ml ON mtir.member_list_id = ml.id
+        WHERE
+        mtir.del_flag = '0'
+        <if test="marketingFourthIntegralRecordDTO.serialNumber!=null and marketingFourthIntegralRecordDTO.serialNumber!=''">
+            and mtir.serial_number=#{marketingFourthIntegralRecordDTO.serialNumber}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.phone!=null and marketingFourthIntegralRecordDTO.phone!=''">
+            and ml.phone=#{marketingThirdIntegralRecordDTO.phone}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.nickName!=null and marketingFourthIntegralRecordDTO.nickName!=''">
+            and ml.nick_name=#{marketingFourthIntegralRecordDTO.nickName}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.tradeType!=null and marketingFourthIntegralRecordDTO.tradeType!=''">
+            and mtir.trade_type=#{marketingFourthIntegralRecordDTO.tradeType}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.goAndCome!=null and marketingFourthIntegralRecordDTO.goAndCome!=''">
+            and mtir.go_and_come=#{marketingFourthIntegralRecordDTO.goAndCome}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.tradeNo!=null and marketingFourthIntegralRecordDTO.tradeNo!=''">
+            and mtir.trade_no=#{marketingThirdIntegralRecordDTO.tradeNo}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.payTimeStart!=null">
+            and mtir.pay_time &gt;=#{marketingThirdIntegralRecordDTO.payTimeStart}
+        </if>
+        <if test="marketingFourthIntegralRecordDTO.payTimeEnd!=null">
+            and mtir.pay_time &lt;=#{marketingThirdIntegralRecordDTO.payTimeEnd}
+        </if>
+        ORDER BY
+        mtir.pay_time DESC, mtir.integral_balance DESC
+    </select>
+</mapper>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.alliance.mapper.AllianceRechargeRecordMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceRechargeRecordVO">
+        SELECT
+          arr.*,
+          am.`name`,
+          su.`username`,
+          su.`realname`
+        FROM
+          alliance_recharge_record arr
+          LEFT JOIN alliance_manage am
+            ON arr.`sys_user_id` = am.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON arr.`sys_user_id` = su.`id`
+        WHERE arr.`del_flag` = 0
+        <if test="allianceRechargeRecordDTO.sysUserId != null and allianceRechargeRecordDTO.sysUserId != ''">
+            AND arr.sys_user_id = #{allianceRechargeRecordDTO.sysUserId}
+        </if>
+        <if test="allianceRechargeRecordDTO.orderNo != null and allianceRechargeRecordDTO.orderNo != ''">
+            AND arr.order_no LIKE concat('%',#{allianceRechargeRecordDTO.orderNo},'%')
+        </if>
+        <if test="allianceRechargeRecordDTO.tradeNo != null and allianceRechargeRecordDTO.tradeNo != ''">
+            AND arr.order_no LIKE concat('%',#{allianceRechargeRecordDTO.tradeNo},'%')
+        </if>
+        <if test="allianceRechargeRecordDTO.username != null and allianceRechargeRecordDTO.username != ''">
+            AND su.username LIKE concat('%',#{allianceRechargeRecordDTO.username},'%')
+        </if>
+        <if test="allianceRechargeRecordDTO.realname != null and allianceRechargeRecordDTO.realname != ''">
+            AND su.realname LIKE concat('%',#{allianceRechargeRecordDTO.realname},'%')
+        </if>
+        <if test="allianceRechargeRecordDTO.name != null and allianceRechargeRecordDTO.name != ''">
+            AND am.name LIKE concat('%',#{allianceRechargeRecordDTO.name},'%')
+        </if>
+        <if test="allianceRechargeRecordDTO.payType != null and allianceRechargeRecordDTO.payType != ''">
+            AND arr.pay_type = #{allianceRechargeRecordDTO.payType}
+        </if>
+        <if test="allianceRechargeRecordDTO.tradeStatus != null and allianceRechargeRecordDTO.tradeStatus != ''">
+            AND arr.trade_status = #{allianceRechargeRecordDTO.tradeStatus}
+        </if>
+        <if test="allianceRechargeRecordDTO.goAndCome != null and allianceRechargeRecordDTO.goAndCome != ''">
+            AND arr.go_and_come = #{allianceRechargeRecordDTO.goAndCome}
+        </if>
+        <if test="allianceRechargeRecordDTO.createTime_begin != null and allianceRechargeRecordDTO.createTime_begin != ''">
+            AND arr.create_time <![CDATA[>=]]> concat(#{allianceRechargeRecordDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceRechargeRecordDTO.createTime_end != null and allianceRechargeRecordDTO.createTime_end != ''">
+            AND arr.create_time <![CDATA[<=]]> concat( #{allianceRechargeRecordDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY arr.`create_time` DESC
+    </select>
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.agency.mapper.AgencySettleAccountsMapper">
+
+    <select id="getAgencySettleAccountsList" resultType="org.jeecg.modules.agency.dto.AgencySettleAccountsDTO">
+        SELECT
+        asa.id,
+        asa.`order_no`,
+        asa.`phone`,
+        su.username AS userName,
+        su.`realname` AS NAME,
+        asa.`money`,
+        asa.`withdrawal_type`,
+        CONCAT(
+        asa.`bank_card`,
+        '(',
+        asa.`bank_name`,
+        ')'
+        ) AS jointName,
+        asa.`cardholder`,
+        asa.`service_charge`,
+        asa.`amount`,
+        asa.`time_application`,
+        asa.`status`,
+        asa.`audit_time`,
+        asa.`pay_time`,
+        asa.`close_explain`,
+        asa.`remark`,
+        asa.sys_user_id
+        FROM
+        agency_settle_accounts asa
+        LEFT JOIN sys_user su
+        ON asa.sys_user_id = su.id
+        LEFT JOIN agency_manage am
+        ON su.id = am.sys_user_id
+        WHERE asa.del_flag = 0
+        AND su.del_flag = 0
+        AND am.del_flag = 0
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.orderNo!=null and agencySettleAccountsVO.orderNo!=''">
+            AND asa.order_no LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.orderNo}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.phone!=null and agencySettleAccountsVO.phone!=''">
+            AND su.phone LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.phone}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.userName!=null and agencySettleAccountsVO.userName!=''">
+            AND su.username LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.userName}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.name!=null and agencySettleAccountsVO.name!=''">
+            AND su.realname LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.name}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.withdrawalType!=null and agencySettleAccountsVO.withdrawalType!=''">
+            AND asa.withdrawal_type =#{agencySettleAccountsVO.withdrawalType}
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.bankCard!=null and agencySettleAccountsVO.bankCard!=''">
+            AND asa.bank_card LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.bankCard}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.cardholder!=null and agencySettleAccountsVO.cardholder!=''">
+            AND asa.cardholder LIKE CONCAT(CONCAT('%',#{agencySettleAccountsVO.cardholder}), '%')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.timeApplication_begin != null and agencySettleAccountsVO.timeApplication_begin != ''">
+            and asa.time_application <![CDATA[>=]]> concat(#{agencySettleAccountsVO.timeApplication_begin},' 00:00:00')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.timeApplication_end != null and agencySettleAccountsVO.timeApplication_end != ''">
+            AND asa.time_application <![CDATA[<=]]> concat( #{agencySettleAccountsVO.timeApplication_end},' 23:59:59')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.status!=null and agencySettleAccountsVO.status!=''">
+            AND asa.withdrawal_type =#{agencySettleAccountsVO.status}
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.auditTime_begin != null and agencySettleAccountsVO.auditTime_begin != ''">
+            and asa.auditTime <![CDATA[>=]]> concat(#{agencySettleAccountsVO.auditTime_begin},' 00:00:00')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.auditTime_end != null and agencySettleAccountsVO.auditTime_end != ''">
+            AND asa.auditTime <![CDATA[<=]]> concat( #{agencySettleAccountsVO.auditTime_end},' 23:59:59')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.payTime_begin != null and agencySettleAccountsVO.payTime_begin != ''">
+            and asa.payTime <![CDATA[>=]]> concat(#{agencySettleAccountsVO.payTime_begin},' 00:00:00')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.payTime_end != null and agencySettleAccountsVO.payTime_end != ''">
+            AND asa.payTime <![CDATA[<=]]> concat( #{agencySettleAccountsVO.payTime_end},' 23:59:59')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.createTime_begin != null and agencySettleAccountsVO.createTime_begin != ''">
+            and asa.create_time <![CDATA[>=]]> concat(#{agencySettleAccountsVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.createTime_end != null and agencySettleAccountsVO.createTime_end != ''">
+            AND asa.create_time <![CDATA[<=]]> concat( #{agencySettleAccountsVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="agencySettleAccountsVO != null and agencySettleAccountsVO.sysUserId!=null and agencySettleAccountsVO.sysUserId!=''">
+            AND asa.sys_user_id =#{agencySettleAccountsVO.sysUserId}
+        </if>
+        ORDER BY asa.create_time DESC
+
+    </select>
+</mapper>

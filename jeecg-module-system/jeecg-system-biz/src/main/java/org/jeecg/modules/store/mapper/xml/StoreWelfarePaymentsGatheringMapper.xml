@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreWelfarePaymentsGatheringMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreWelfarePaymentsGatheringVO">
+        SELECT
+        swpg.*,
+        su.`username`,
+        sm.`boss_name`,
+        sm.`boss_phone`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.`area_address` AS areaAddress,
+        sm.`store_address` AS storeAddress,
+        sm.`main_type`,
+        sm.store_type_id,
+        concat(stOne.type_name,'-',st.type_name) AS storeTypeName,
+        stOne.id AS storeTypeIdOne
+        FROM
+        store_welfare_payments_gathering swpg
+        LEFT JOIN store_manage sm
+        ON swpg.`store_manage_id` = sm.`id`
+        LEFT JOIN sys_user su
+        ON su.`id` = sm.`sys_user_id`
+        LEFT JOIN store_type st
+        ON st.id = sm.store_type_id
+        LEFT JOIN store_type stOne
+        ON stOne.id = st.pid
+        WHERE swpg.`del_flag` = 0
+        <if test="storeWelfarePaymentsGatheringDTO.storeManageId != null and storeWelfarePaymentsGatheringDTO.storeManageId != ''">
+            AND swpg.store_manage_id LIKE concat('%',#{storeWelfarePaymentsGatheringDTO.storeManageId},'%')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO.username != null and storeWelfarePaymentsGatheringDTO.username != ''">
+            AND su.username LIKE concat('%',#{storeWelfarePaymentsGatheringDTO.username},'%')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO.bossName != null and storeWelfarePaymentsGatheringDTO.bossName != ''">
+            AND sm.boss_name LIKE concat('%',#{storeWelfarePaymentsGatheringDTO.bossName},'%')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO.storeAddress != null and storeWelfarePaymentsGatheringDTO.storeAddress != ''">
+            AND sm.store_address LIKE concat('%',#{storeWelfarePaymentsGatheringDTO.storeAddress},'%')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO.mainType != null and storeWelfarePaymentsGatheringDTO.mainType != ''">
+            AND sm.main_type = #{storeWelfarePaymentsGatheringDTO.mainType}
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO.status != null and storeWelfarePaymentsGatheringDTO.status != ''">
+            AND swpg.status = #{storeWelfarePaymentsGatheringDTO.status}
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO != null and storeWelfarePaymentsGatheringDTO.createTime_begin != null and storeWelfarePaymentsGatheringDTO.createTime_begin != ''">
+            and swpg.create_time <![CDATA[>=]]> CONCAT(#{storeWelfarePaymentsGatheringDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO != null and storeWelfarePaymentsGatheringDTO.createTime_end != null and storeWelfarePaymentsGatheringDTO.createTime_end != ''">
+            AND swpg.create_time <![CDATA[<=]]> CONCAT( #{storeWelfarePaymentsGatheringDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO != null and storeWelfarePaymentsGatheringDTO.areaAddress != null and storeWelfarePaymentsGatheringDTO.areaAddress != ''">
+            AND sm.area_address LIKE CONCAT('%',#{storeWelfarePaymentsGatheringDTO.areaAddress},'%')
+        </if>
+        <if test="storeWelfarePaymentsGatheringDTO != null and storeWelfarePaymentsGatheringDTO.storeTypeId != null and storeWelfarePaymentsGatheringDTO.storeTypeId != ''">
+            AND sm.store_type_id = #{storeWelfarePaymentsGatheringDTO.storeTypeId}
+        </if>
+        ORDER BY swpg.`create_time` DESC
+    </select>
+</mapper>

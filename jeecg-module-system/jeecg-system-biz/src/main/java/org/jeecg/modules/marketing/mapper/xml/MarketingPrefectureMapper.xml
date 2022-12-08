@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingPrefectureMapper">
+    <select id="getMarketingPrefectureIdName" resultType="map" parameterType="map">
+        SELECT
+          id,
+          prefecture_name AS prefectureName,
+          logo_addr AS logoAddr,
+          buy_limit AS buyLimit,
+        IF((SELECT
+        COUNT(1)
+        FROM
+        marketing_prefecture_recommend mpr
+        WHERE mpr.`del_flag` = 0
+        AND mpr.`marketing_prefecture_id` = mp.id) > 0,'1','0') AS isViewRecommend
+        FROM
+          `marketing_prefecture` mp
+        WHERE del_flag = 0
+        <if test="paramMap!= null and paramMap.isViewType != null and  paramMap.isViewType != ''">
+            AND is_view_type = 1
+        </if>
+        <if test="paramMap!= null and paramMap.isViewPrefectureRecommended != null and  paramMap.isViewPrefectureRecommended != ''">
+            AND prefecture_recommended = 1
+        </if>
+        <if test="paramMap!= null and paramMap.prefectureName != null and  paramMap.prefectureName != ''">
+            AND prefecture_name LIKE CONCAT(CONCAT('%',#{paramMap.prefectureName}), '%')
+        </if>
+        ORDER BY create_time DESC
+	</select>
+
+    <select id="findPrefectureIndex" resultType="map">
+
+        SELECT
+        id,
+        logo_addr AS logoAddr,
+        prefecture_name AS prefectureName,
+        sort
+        FROM
+        `marketing_prefecture`
+        WHERE del_flag = '0'
+        AND STATUS = '1'
+        AND ((NOW() &gt;= start_time
+        AND NOW() &lt;= end_time)
+        OR valid_time = '0')
+        <if test='softModel=="0"'>
+          and (points_display='1' or points_display='0')
+        </if>
+        <if test='softModel=="1" or softModel="2"'>
+            and (points_display='2' or points_display='0')
+        </if>
+        and is_designation='0'
+        ORDER BY sort
+
+    </select>
+
+
+    <select id="getFiltrationGoodId" resultType="map">
+        SELECT
+        mpg.good_list_id,
+        mp.valid_time,
+        mp.start_time,
+        mp.end_time
+        FROM
+        `marketing_prefecture_good` mpg
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE mp.del_flag = '0'
+        AND mpg.del_flag = '0'
+        <if test="paramMap != null and paramMap.validTime == 1 ">
+            <if test="paramMap != null  and paramMap.startTime !=null  and paramMap.endTime !=null ">
+                <!--短短时间-->
+                AND ((mp.valid_time = 1
+                AND mp.start_time BETWEEN #{paramMap.startTime}
+                AND #{paramMap.startTime}
+                OR mp.end_time BETWEEN #{paramMap.startTime}
+                AND #{paramMap.startTime} )
+                <!--短长时间-->
+                or (mp.valid_time = 0
+                AND mp.start_time <![CDATA[<]]> #{paramMap.endTime} ))
+            </if>
+        </if>
+        <if test="paramMap != null and paramMap.validTime == 0 ">
+            <if test="paramMap != null  and paramMap.startTime !=null ">
+                <!--长短时间-->
+                and ((mp.valid_time = 1
+                AND mp.end_time   <![CDATA[>]]>  #{paramMap.startTime}   )
+                <!--长长时间-->
+                or (mp.valid_time = 0 ))
+            </if>
+        </if>
+        <!--修改时间使用-->
+        <if test="paramMap != null and paramMap.containsKey('goodListId')">
+         and   mpg.good_list_id = #{paramMap.goodListId}
+        </if>
+        <if test="paramMap != null and paramMap.containsKey('marketingPrefectureId')">
+         and  mpg.marketing_prefecture_id != #{paramMap.marketingPrefectureId}
+        </if>
+        GROUP BY mpg.good_list_id
+    </select>
+
+    <select id="getFiltrationGoodIds" resultType="map">
+        SELECT
+        mpg.good_list_id,
+        mp.valid_time,
+        mp.start_time,
+        mp.end_time
+        FROM
+        `marketing_prefecture_good` mpg
+        LEFT JOIN `marketing_prefecture` mp
+        ON mp.id = mpg.marketing_prefecture_id
+        WHERE mp.del_flag = '0'
+        AND mpg.del_flag = '0'
+        <if test="paramMap != null and paramMap.validTime == 1 ">
+
+            <if test="paramMap != null  and paramMap.startTime !=null  and paramMap.endTime !=null ">
+                <!--短短时间-->
+                AND ((mp.valid_time = 1
+                AND mp.start_time BETWEEN #{paramMap.startTime}
+                AND #{paramMap.startTime}
+                OR mp.end_time BETWEEN #{paramMap.startTime}
+                AND #{paramMap.startTime} )
+                <!--短长时间-->
+                or (mp.valid_time = 0
+                AND mp.start_time <![CDATA[<]]> #{paramMap.endTime} ))
+            </if>
+        </if>
+        <if test="paramMap != null and paramMap.validTime == 0 ">
+            <if test="paramMap != null  and paramMap.startTime !=null ">
+
+                <!--长短时间-->
+                and ((mp.valid_time = 1
+                AND mp.end_time   <![CDATA[>]]>  #{paramMap.startTime}   )
+                <!--长长时间-->
+                or (mp.valid_time = 0 ))
+            </if>
+        </if>
+        <!--修改时间使用-->
+        <if test="paramMap != null and paramMap.containsKey('goodListId')">
+            and   mpg.good_list_id = #{paramMap.goodListId}
+        </if>
+        <if test="paramMap != null and paramMap.containsKey('marketingPrefectureId')">
+            and  mpg.marketing_prefecture_id = #{paramMap.marketingPrefectureId}
+        </if>
+        GROUP BY mpg.good_list_id
+    </select>
+    <select id="getMarketingPrefectureByRecommend" resultType="map">
+        SELECT
+          mp.id,
+          mp.prefecture_name AS prefectureName,
+          mp.logo_addr AS logoAddr,
+        IF((SELECT
+        COUNT(1)
+        FROM
+        marketing_prefecture_recommend mpr
+        WHERE mpr.`del_flag` = 0
+        AND mpr.`marketing_prefecture_id` = mp.id) > 0,'1','0') AS isViewRecommend
+        FROM
+          `marketing_prefecture` mp
+        WHERE mp.del_flag = 0
+        AND mp.prefecture_recommended = 1
+        ORDER BY mp.create_time DESC
+    </select>
+</mapper>

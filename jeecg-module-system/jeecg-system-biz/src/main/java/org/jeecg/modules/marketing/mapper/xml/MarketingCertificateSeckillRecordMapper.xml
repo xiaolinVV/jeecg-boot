@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateSeckillRecordMapper">
+    <select id="dataList" resultType="map">
+        SELECT
+          ml.`head_portrait` AS headPortrait,
+          ml.`nick_name` AS nickName,
+          (mcsr.market_price - mcsr.activity_price) AS price
+        FROM
+          marketing_certificate_seckill_record mcsr
+          LEFT JOIN member_list ml
+            ON mcsr.`member_list_id` = ml.`id`
+        WHERE mcsr.`del_flag` = 0
+        ORDER BY mcsr.`create_time` DESC
+        limit 20
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateSeckillRecordVO">
+        SELECT
+          *
+        FROM
+          (SELECT
+            mcsr.*,
+            ml.`nick_name`,
+            ml.`head_portrait`,
+            ml.phone
+          FROM
+            marketing_certificate_seckill_record mcsr
+            LEFT JOIN member_list ml
+              ON mcsr.`member_list_id` = ml.`id`
+          WHERE mcsr.`del_flag` = 0
+          ORDER BY mcsr.`create_time` DESC) m ${ew.customSqlSegment}
+    </select>
+    <select id="lookQqzixuanguByPayId" resultType="map">
+        SELECT
+          mcr.`qqzixuangu`,
+          mcr.`marketing_certificate_id` AS marketingCertificateId,
+          mcr.`name`
+        FROM
+          marketing_certificate_record mcr
+        WHERE mcr.`del_flag` = 0
+          AND mcr.`pay_certificate_log_id` = #{payId}
+    </select>
+</mapper>

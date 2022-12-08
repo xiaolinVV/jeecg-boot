@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberShoppingCartMapper">
+    <select id="getMemberShoppingCartVo" resultType="org.jeecg.modules.member.dto.MemberShoppingCartDto">
+        SELECT
+        mgc.id AS id,
+        mgc.good_type AS good_type,
+        mgc.add_price AS add_price,
+        mgc.add_time AS add_time,
+        mgc.del_flag AS del_flag,
+        ml.head_portrait AS head_portrait,
+        ml.phone AS phone,
+        ml.nick_name AS nick_name,
+        IF(mgc.good_type = 0,gsl.`good_name`,gl.good_name) AS good_name,
+        IF(mgc.good_type = 0,gsl.price,gl.price) AS price,
+        IF(mgc.good_type = 0,gsl.frame_status,gl.frame_status) AS frame_status,
+        IF(mgc.good_type = 0,gsl.activities_type,gl.activities_type) AS activities_type
+        FROM (member_shopping_cart mgc  LEFT JOIN  member_list ml ON mgc.`member_list_id`=ml.`id`) LEFT JOIN good_list gl ON  mgc.`good_list_id`=gl.id
+        LEFT JOIN good_store_list gsl ON mgc.`good_store_list_id`=gsl.id
+        WHERE 1=1
+        <if test="memberShoppingCartVo != null and memberShoppingCartVo.phone != null and memberShoppingCartVo.phone != ''">
+            and  ml.phone =#{memberShoppingCartVo.phone}
+        </if>
+        <if test="memberShoppingCartVo != null and memberShoppingCartVo.nickName != null and memberShoppingCartVo.nickName != ''">
+            and   ml.nick_name =#{memberShoppingCartVo.nickName}
+        </if>
+        <if test="memberShoppingCartVo != null and memberShoppingCartVo.createTime_begin != null and memberShoppingCartVo.createTime_begin != ''">
+            and mgc.add_time <![CDATA[>=]]> concat(#{memberShoppingCartVo.createTime_begin},' 00:00:00')
+        </if>
+        <if test="memberShoppingCartVo != null and memberShoppingCartVo.createTime_end != null and memberShoppingCartVo.createTime_end != ''">
+            AND mgc.add_time <![CDATA[<=]]> concat( #{memberShoppingCartVo.createTime_end},' 23:59:59')
+        </if>
+        order by mgc.add_time desc
+    </select>
+</mapper>

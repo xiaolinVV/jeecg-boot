@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingDistributionSettingMapper">
+    <select id="findDistributionSettingList" resultType="org.jeecg.modules.marketing.vo.MarketingDistributionSettingVO">
+        SELECT
+        *
+        FROM
+        (
+        SELECT
+        ml.`id`,
+        ml.`head_portrait`,
+        ml.`phone`,
+        ml.`nick_name`,
+        ml.`member_type`,
+        ml.`total_commission`,
+        ml.`have_withdrawal`,
+        ml.account_frozen,
+        (
+        CASE
+        ml.`promoter_type`
+        WHEN 0
+        THEN
+        (SELECT
+        sm.store_name
+        FROM
+        store_manage sm
+        WHERE sm.sys_user_id = ml.`promoter`)
+        WHEN 1
+        THEN
+        (SELECT
+        mls.nick_name
+        FROM
+        member_list mls
+        WHERE mls.id = ml.`promoter`)
+        ELSE
+        (SELECT
+        username
+        FROM
+        sys_user su
+        WHERE su.id = ml.`sys_user_id`)
+        END
+        ) AS promoterName,
+        ml.qrcode_addr,
+        sm.`store_name`,
+        ml.`create_time`,
+        (
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mlone
+        WHERE mlone.promoter = ml.id
+        AND mlone.del_flag = 0) +
+        (SELECT
+        COUNT(1)
+        FROM
+        member_list mltwo
+        LEFT JOIN member_list mlone
+        ON mltwo.promoter = mlone.id
+        WHERE mlone.promoter = ml.id
+        AND mltwo.del_flag = 0)
+        ) AS mlSum,
+        ss.address
+        FROM
+        member_list ml
+        LEFT JOIN store_manage sm
+        ON sm.`sys_user_id` = ml.`sys_user_id`
+        LEFT JOIN sys_smallcode ss
+        ON ss.id = ml.sys_smallcode_id
+        WHERE ml.`del_flag` = 0
+        AND ml.`status` = 1
+        <if test="marketingDistributionSettingVO!=null and marketingDistributionSettingVO.phone!=null and marketingDistributionSettingVO.phone!=''">
+            AND ml.phone LIKE concat('%',concat(#{marketingDistributionSettingVO.phone},'%'))
+        </if>
+          <if test="marketingDistributionSettingVO!=null and marketingDistributionSettingVO.nickName!=null and marketingDistributionSettingVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',concat(#{marketingDistributionSettingVO.nickName},'%'))
+          </if>
+          <if test="marketingDistributionSettingVO!=null and marketingDistributionSettingVO.memberType!=null and marketingDistributionSettingVO.memberType!=''">
+            AND ml.member_type = #{marketingDistributionSettingVO.memberType}
+          </if>
+          <if test="marketingDistributionSettingVO != null and marketingDistributionSettingVO.createTime_begin != null and marketingDistributionSettingVO.createTime_begin != ''">
+            AND ml.create_time <![CDATA[>=]]> CONCAT(#{marketingDistributionSettingVO.createTime_begin},' 00:00:00')
+          </if>
+          <if test="marketingDistributionSettingVO != null and marketingDistributionSettingVO.createTime_end != null and marketingDistributionSettingVO.createTime_end != ''">
+            AND ml.create_time <![CDATA[<=]]> CONCAT( #{marketingDistributionSettingVO.createTime_end},' 23:59:59')
+          </if>
+        ORDER BY ml.`create_time` DESC
+          ) m
+        <if test="marketingDistributionSettingVO!=null and marketingDistributionSettingVO.promoterName!=null and marketingDistributionSettingVO.promoterName!= ''">
+            WHERE m.promoterName LIKE concat('%',concat(#{marketingDistributionSettingVO.promoterName},'%'))
+        </if>
+    </select>
+</mapper>

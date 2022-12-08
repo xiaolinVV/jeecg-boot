@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingStoreGiftCardRecordMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          msgcl.`serial_number` AS cardSerialNumber,
+          msgcml.serial_number AS serialNumber,
+          (SELECT
+            IF(
+              LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+              CONCAT(
+                sm.`store_name`,
+                '(',
+                sm.`sub_store_name`,
+                ')'
+              ),
+              sm.`store_name`
+            )
+          FROM
+            store_manage sm
+          WHERE sm.`del_flag` = 0
+            AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
+          msgcml.car_name AS carName,
+          msgcr.go_and_come AS goAndCome,
+          msgcr.amount,
+          msgcr.balance,
+          DATE_FORMAT(msgcr.pay_time,'%Y-%m-%d %H:%i:%s') AS payTime,
+          msgcr.trade_no AS tradeNo,
+          ml.phone,
+          ml.nick_name AS nickName,
+          ml.head_portrait AS headPortrait
+        FROM
+          (SELECT
+            *
+          FROM
+            marketing_store_gift_card_record ${ew.customSqlSegment}) msgcr
+          LEFT JOIN marketing_store_gift_card_member_list msgcml
+            ON msgcr.marketing_store_gift_card_member_list_id = msgcml.`id`
+          LEFT JOIN marketing_store_gift_card_list msgcl
+            ON msgcl.`id` = msgcml.`marketing_store_gift_card_list_id`
+          LEFT JOIN member_list ml
+            ON ml.id = msgcml.member_list_id
+          WHERE msgcr.del_flag = 0
+        <if test="requestMap.cardSerialNumber != null and requestMap.cardSerialNumber != ''">
+            AND msgcl.`serial_number` LIKE concat('%',#{requestMap.cardSerialNumber},'%')
+        </if>
+        <if test="requestMap.serialNumber != null and requestMap.serialNumber != ''">
+            AND msgcml.serial_number LIKE concat('%',#{requestMap.serialNumber},'%')
+        </if>
+        <if test="requestMap.storeName != null and requestMap.storeName != ''">
+            AND (
+            SELECT
+            IF
+            (
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            )
+            FROM
+            store_manage sm
+            WHERE
+            sm.`del_flag` = 0
+            AND sm.`id` = msgcml.`store_manage_id`
+            ) LIKE concat('%',#{requestMap.storeName},'%')
+        </if>
+        <if test="requestMap.carName != null and requestMap.carName != ''">
+            AND msgcml.car_name LIKE concat('%',#{requestMap.carName},'%')
+        </if>
+        <if test="requestMap.phone != null and requestMap.phone != ''">
+            AND ml.phone LIKE concat('%',#{requestMap.phone},'%')
+        </if>
+        <if test="requestMap.nickName != null and requestMap.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{requestMap.nickName},'%')
+        </if>
+        ORDER BY msgcr.create_time DESC
+    </select>
+    <select id="findMarketingStoreGiftCardRecordList" resultType="map">
+        SELECT
+          msgcr.`id`,
+          DATE_FORMAT(msgcr.pay_time,'%Y-%m-%d %H:%i:%s') AS payTime,
+          msgcr.`go_and_come` AS goAndCome,
+          msgcr.`amount`,
+          msgcr.`balance`,
+        (SELECT
+        s.item_text
+        FROM
+        sys_dict_item s
+        WHERE s.dict_id =
+        (SELECT
+        id
+        FROM
+        sys_dict
+        WHERE dict_code = 'gift_card_deal_type')
+        AND s.`item_value` = msgcr.`trade_type`) AS tradeType
+        FROM
+          marketing_store_gift_card_record msgcr
+        WHERE msgcr.`del_flag` = 0
+          AND msgcr.`marketing_store_gift_card_member_list_id` = #{map.marketingStoreGiftCardMemberListId}
+          <if test="map.goAndCome != null and map.goAndCome !=''">
+              AND msgcr.`go_and_come` = #{map.goAndCome}
+          </if>
+        order by msgcr.create_time desc
+    </select>
+    <select id="findMarketingStoreGiftCardRecordParticulars" resultType="map">
+        SELECT
+          DATE_FORMAT(msgcr.pay_time,'%Y-%m-%d %H:%i:%s') AS payTime,
+          msgcr.`go_and_come` AS goAndCome,
+          msgcr.`amount`,
+          sm.logo_addr AS logoAddr,
+          IF(
+            LENGTH(
+            TRIM( sm.`sub_store_name` )) > 0,
+            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+            sm.`store_name`
+            ) AS storeName,
+            msgcml.car_name AS carName,
+            msgcml.serial_number AS serialNumber,
+            (SELECT
+            s.item_text
+            FROM
+            sys_dict_item s
+            WHERE s.dict_id =
+            (SELECT
+            id
+            FROM
+            sys_dict
+            WHERE dict_code = 'gift_card_deal_type')
+            AND s.`item_value` = msgcr.`trade_type`) AS tradeType,
+            msgcr.trade_no AS tradeNo
+        FROM
+           marketing_store_gift_card_record msgcr
+          LEFT JOIN marketing_store_gift_card_member_list msgcml
+            ON msgcr.`marketing_store_gift_card_member_list_id` = msgcml.`id`
+          LEFT JOIN store_manage sm
+            ON sm.`id` = msgcml.`store_manage_id`
+        WHERE msgcr.id = #{id}
+    </select>
+</mapper>

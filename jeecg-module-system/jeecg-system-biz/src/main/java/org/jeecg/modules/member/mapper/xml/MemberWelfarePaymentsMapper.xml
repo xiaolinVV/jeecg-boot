@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberWelfarePaymentsMapper">
+
+    <select id="findMemberWelfarePaymentsByMemberId" resultType="map" parameterType="map">
+
+        SELECT
+        bargain_payments AS bargainPayments,
+        we_type AS weType,
+        wp_explain AS wpExplain,
+        DATE_FORMAT(create_time,'%Y-%m-%d %H:%i') AS createTime
+        FROM
+        `member_welfare_payments`
+        WHERE member_list_id = #{paramMap.memberId}
+        AND del_flag = '0'
+        <if test="paramMap.pattern==0">and we_type='0'</if>
+        <if test="paramMap.pattern==1">and we_type='1'</if>
+        ORDER BY create_time DESC
+    </select>
+    <select id="findMemberWelfarePayments" resultType="org.jeecg.modules.member.vo.MemberWelfarePaymentsVO">
+        SELECT
+        ml.`phone`,
+        ml.nick_name,
+        mwp.*,
+        IF(
+        mwp.`we_type` = 0,
+        '支出',
+        '收入'
+        ) AS typeName
+        FROM
+        member_list ml
+        LEFT JOIN member_welfare_payments mwp
+        ON ml.`id` = mwp.`member_list_id`
+        WHERE ml.`del_flag` = 0
+        AND mwp.`del_flag` = 0
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.serialNumber != null and memberWelfarePaymentsVO.serialNumber != ''">
+            AND mwp.serial_number LIKE concat('%',#{memberWelfarePaymentsVO.serialNumber},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.phone != null and memberWelfarePaymentsVO.phone != ''">
+            AND ml.phone LIKE concat('%',#{memberWelfarePaymentsVO.phone},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.nickName != null and memberWelfarePaymentsVO.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{memberWelfarePaymentsVO.nickName},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.tradeType != null and memberWelfarePaymentsVO.tradeType != ''">
+            AND mwp.trade_type = #{memberWelfarePaymentsVO.tradeType}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.tradeStatus != null and memberWelfarePaymentsVO.tradeStatus != ''">
+            AND mwp.trade_status = #{memberWelfarePaymentsVO.tradeStatus}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.weType != null and memberWelfarePaymentsVO.weType != ''">
+            AND mwp.we_type = #{memberWelfarePaymentsVO.weType}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.goAndCome != null and memberWelfarePaymentsVO.goAndCome != ''">
+            AND mwp.go_and_come = #{memberWelfarePaymentsVO.goAndCome}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.memberListId != null and memberWelfarePaymentsVO.memberListId != ''">
+            AND mwp.member_list_id = #{memberWelfarePaymentsVO.memberListId}
+        </if>
+        <if test="memberWelfarePaymentsVO != null and memberWelfarePaymentsVO.bargainTime_begin != null and memberWelfarePaymentsVO.bargainTime_begin != ''">
+            and mwp.bargain_time <![CDATA[>=]]> CONCAT(#{memberWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="memberWelfarePaymentsVO != null and memberWelfarePaymentsVO.bargainTime_end != null and memberWelfarePaymentsVO.bargainTime_end != ''">
+            AND mwp.bargain_time <![CDATA[<=]]> CONCAT( #{memberWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+
+        ORDER BY mwp.`create_time` DESC
+    </select>
+    <select id="findMemberPayRecord" resultType="org.jeecg.modules.member.vo.MemberWelfarePaymentsVO">
+        SELECT
+        mwp.`id`,
+        mwp.`serial_number`,
+        mwp.`bargain_payments`,
+        ml.`phone`,
+        ml.`nick_name`,
+        mwp.`wp_explain`,
+        mwp.`bargain_time`,
+        ml.`member_type`,
+        mwp.trade_no
+        FROM
+        member_welfare_payments mwp
+        LEFT JOIN member_list ml
+        ON mwp.`member_list_id` = ml.`id`
+        WHERE mwp.`we_type` = 0
+        AND mwp.trade_type = 6
+        AND mwp.`del_flag` = 0
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.serialNumber!=null and memberWelfarePaymentsVO.serialNumber!=''">
+            AND mwp.serial_number LIKE concat('%',#{memberWelfarePaymentsVO.serialNumber},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.weType!=null and memberWelfarePaymentsVO.weType!=''">
+            AND mwp.we_type = #{memberWelfarePaymentsVO.weType}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.memberType!=null and memberWelfarePaymentsVO.memberType!=''">
+            AND ml.member_type = #{memberWelfarePaymentsVO.memberType}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.tradeNo!=null and memberWelfarePaymentsVO.tradeNo!=''">
+            AND mwp.trade_no LIKE concat('%',#{memberWelfarePaymentsVO.tradeNo},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.nickName!=null and memberWelfarePaymentsVO.nickName!=''">
+            AND ml.nick_name LIKE concat('%',#{memberWelfarePaymentsVO.nickName},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.phone!=null and memberWelfarePaymentsVO.phone!=''">
+            AND ml.phone LIKE concat('%',#{memberWelfarePaymentsVO.phone},'%')
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.memberListId!=null and memberWelfarePaymentsVO.memberListId!=''">
+            AND mwp.member_list_id = #{memberWelfarePaymentsVO.memberListId}
+        </if>
+        <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.goAndCome!=null and memberWelfarePaymentsVO.goAndCome!=''">
+            AND mwp.go_and_come = #{memberWelfarePaymentsVO.goAndCome}
+        </if>
+        <if test="memberWelfarePaymentsVO != null and memberWelfarePaymentsVO.bargainTime_begin != null and memberWelfarePaymentsVO.bargainTime_begin != ''">
+            and mwp.bargain_time <![CDATA[>=]]> CONCAT(#{memberWelfarePaymentsVO.bargainTime_begin},' 00:00:00')
+        </if>
+        <if test="memberWelfarePaymentsVO != null and memberWelfarePaymentsVO.bargainTime_end != null and memberWelfarePaymentsVO.bargainTime_end != ''">
+            AND mwp.bargain_time <![CDATA[<=]]> CONCAT( #{memberWelfarePaymentsVO.bargainTime_end},' 23:59:59')
+        </if>
+        ORDER BY mwp.`create_time` DESC
+    </select>
+    <select id="findMemberWelfarePaymentsPageByMemberId" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'member_welfare_deal_type')
+            AND s.`item_value` = mwp.`trade_type`) AS tradeType,
+          DATE_FORMAT(
+            mwp.`bargain_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS bargainTime,
+          (
+            CASE
+              mwp.`we_type`
+              WHEN 0
+              THEN CONCAT('-', mwp.`bargain_payments`)
+              WHEN 1
+              THEN CONCAT('+', mwp.`bargain_payments`)
+              ELSE '异常'
+            END
+          ) AS bargainPayments,
+          CONCAT(
+        (SELECT
+        mwps.`nick_name`
+        FROM
+        marketing_welfare_payments_setting mwps
+        WHERE mwps.`del_flag` = 0
+        LIMIT 1 ),
+            mwp.`welfare_payments`
+          ) AS welfarePayments,
+        mwp.we_type AS weType
+        FROM
+          member_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+          AND mwp.`is_freeze` = 0
+          AND mwp.`member_list_id` = #{paramObjectMap.memberId}
+        <if test="paramObjectMap.pattern != -1">
+            AND mwp.`we_type` = #{paramObjectMap.pattern}
+        </if>
+        ORDER BY mwp.`bargain_time` DESC,
+          mwp.`bargain_payments` DESC
+    </select>
+    <select id="findfrozenAandUnusableById" resultType="map">
+        SELECT
+          (SELECT
+            s.item_text
+          FROM
+            sys_dict_item s
+          WHERE s.dict_id =
+            (SELECT
+              id
+            FROM
+              sys_dict
+            WHERE dict_code = 'member_welfare_deal_type')
+            AND s.`item_value` = mwp.`trade_type`) AS tradeType,
+          DATE_FORMAT(
+            mwp.`create_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS bargainTime,
+          mwp.`bargain_payments` AS bargainPayments,
+          mwp.`we_type` AS weType
+        FROM
+          member_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+        AND mwp.member_list_id = #{paramObjectMap.memberId}
+        <if test="paramObjectMap.pattern != 0">
+            AND mwp.is_freeze = #{paramObjectMap.pattern}
+        </if>
+        order by mwp.create_time desc
+    </select>
+    <select id="getAbnormalWelfarePam" resultType="org.jeecg.modules.member.entity.MemberWelfarePayments">
+        SELECT
+          *
+        FROM
+          member_welfare_payments mwp
+        WHERE mwp.`del_flag` = 0
+          AND mwp.`trade_type` = 5
+          AND mwp.`go_and_come` LIKE CONCAT('%',mwp.`operator`,'%')
+          AND mwp.`create_time` > #{map.time}
+        ORDER BY mwp.`create_time` DESC
+    </select>
+</mapper>

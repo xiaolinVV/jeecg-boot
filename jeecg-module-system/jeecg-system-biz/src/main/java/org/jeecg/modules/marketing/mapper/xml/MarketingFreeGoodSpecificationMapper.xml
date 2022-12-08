@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingFreeGoodSpecificationMapper">
+
+    <select id="selectMarketingFreeGoodSpecificationByMarketingFreeGoodListId" resultType="map">
+                SELECT
+          mfgs.free_price AS freePrice,
+          mfgs.`free_price_proportion` AS freePriceProportion,
+          mfgs.`id`,
+          gs.`specification`
+        FROM
+          `marketing_free_good_specification` mfgs
+          LEFT JOIN good_specification gs
+            ON gs.id = mfgs.`good_specification_id`
+        WHERE mfgs.marketing_free_good_list_id = #{marketingFreeGoodListId}
+          AND mfgs.del_flag = '0'
+          AND gs.`del_flag` = '0'
+
+          ORDER BY free_price ASC
+    </select>
+
+    <select id="selectMarketingFreeGoodSpecificationBySmallprice" resultType="map">
+                SELECT
+            mfgs.free_price as freePrice,
+            gs.`specification`
+          FROM
+            `marketing_free_good_specification` mfgs
+            LEFT JOIN good_specification gs
+              ON gs.id = mfgs.`good_specification_id`
+          WHERE mfgs.marketing_free_good_list_id = #{marketingFreeGoodListId}
+            AND mfgs.del_flag = '0'
+            AND gs.`del_flag` = '0'
+            AND gs.repertory &gt;0
+          ORDER BY free_price ASC
+          LIMIT 1
+    </select>
+</mapper>

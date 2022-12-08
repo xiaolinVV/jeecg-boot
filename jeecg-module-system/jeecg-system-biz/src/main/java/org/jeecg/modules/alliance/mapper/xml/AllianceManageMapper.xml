@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.alliance.mapper.AllianceManageMapper">
+    <select id="findAllianceManageInfo" resultType="org.jeecg.modules.alliance.vo.AllianceManageVO">
+        SELECT
+          am.`id`,
+          su.`username`,
+          su.`avatar`,
+          am.`name`,
+          su.`realname`,
+          su.`phone`,
+          am.`agency_area_id`,
+          am.`area_address`,
+          am.`company_phone`,
+          am.`remark_explian`,
+          ss.`address`,
+          am.sys_user_id
+        FROM
+          alliance_manage am
+          LEFT JOIN sys_user su
+            ON am.`sys_user_id` = su.`id`
+          LEFT JOIN sys_smallcode ss
+            ON am.`sys_smallcode_id` = ss.`id`
+        WHERE am.`del_flag` = 0
+          AND am.sys_user_id = #{id}
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceManageVO">
+        SELECT
+        am.*,
+        su.`username`,
+        su.`phone`,
+        su.`realname`,
+        ss.`address`
+        FROM
+        alliance_manage am
+        LEFT JOIN sys_user su
+        ON am.`sys_user_id` = su.`id`
+        LEFT JOIN sys_smallcode ss
+        ON am.`sys_smallcode_id` = ss.`id`
+        WHERE am.`del_flag` = 0
+        <if test="allianceManageDTO.username != null and allianceManageDTO.username!= ''">
+            AND su.`username` LIKE concat('%',#{allianceManageDTO.username},'%')
+        </if>
+        <if test="allianceManageDTO.phone != null and allianceManageDTO.phone!= ''">
+            AND su.`phone` LIKE concat('%',#{allianceManageDTO.phone},'%')
+        </if>
+        <if test="allianceManageDTO.realname != null and allianceManageDTO.realname!= ''">
+            AND su.`realname` LIKE concat('%',#{allianceManageDTO.realname},'%')
+        </if>
+        <if test="allianceManageDTO.name != null and allianceManageDTO.name!= ''">
+            AND am.name LIKE concat('%',#{allianceManageDTO.name},'%')
+        </if>
+        <if test="allianceManageDTO.profitType != null and allianceManageDTO.profitType!= ''">
+            AND am.profit_type = #{allianceManageDTO.profitType}
+        </if>
+        <if test="allianceManageDTO.startTime != null and allianceManageDTO.startTime != ''">
+            AND am.start_time <![CDATA[>=]]> concat(#{allianceManageDTO.startTime},' 00:00:00')
+        </if>
+        <if test="allianceManageDTO.endTime != null and allianceManageDTO.endTime != ''">
+            AND am.end_time <![CDATA[<=]]> concat( #{allianceManageDTO.endTime},' 23:59:59')
+        </if>
+        <if test="allianceManageDTO.status != null and allianceManageDTO.status!= ''">
+            AND am.status = #{allianceManageDTO.status}
+        </if>
+        <if test="allianceManageDTO.createTime_begin != null and allianceManageDTO.createTime_begin != ''">
+            AND am.create_time <![CDATA[>=]]> concat(#{allianceManageDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="allianceManageDTO.createTime_end != null and allianceManageDTO.createTime_end != ''">
+            AND am.create_time <![CDATA[<=]]> concat( #{allianceManageDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY am.`create_time` DESC
+    </select>
+    <select id="findWorkbench" resultType="org.jeecg.modules.alliance.vo.AllianceWorkbenchVO">
+        SELECT
+          am.id,
+          am.sys_user_id,
+          su.`avatar`,
+          su.`realname`,
+          am.`name`,
+          sr.`role_name`,
+          IF(am.`status` = 0, '停用', '启用') AS statusName,
+          (SELECT
+            COUNT(1)
+          FROM
+            order_store_list osl
+            LEFT JOIN store_manage sm
+              ON osl.`sys_user_id` = sm.`sys_user_id`
+          WHERE osl.`del_flag` = 0
+            AND osl.`status` = 5
+            AND sm.`alliance_user_id` = am.`sys_user_id`) AS orderSum,
+          (SELECT
+            SUM(aac.`amount`)
+          FROM
+            alliance_account_capital aac
+          WHERE aac.`del_flag` = 0
+            AND aac.`go_and_come` = 0
+            AND aac.`sys_user_id` = am.`sys_user_id`) AS earnings,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_list ml
+            LEFT JOIN store_manage sm
+              ON ml.`sys_user_id` = sm.`sys_user_id`
+          WHERE ml.`del_flag` = 0
+            AND sm.`del_flag` = 0
+            AND sm.`alliance_user_id` = am.`sys_user_id`) AS memberSum,
+          (SELECT
+            COUNT(1)
+          FROM
+            store_manage sm
+          WHERE sm.`del_flag` = 0
+            AND sm.`attestation_status` IN (1, 2)
+            AND sm.`pay_status` IN (1, 2)
+            AND sm.`alliance_user_id` = am.`sys_user_id`) AS storeSum,
+          (SELECT
+            COUNT(1)
+          FROM
+            order_store_list osl
+            LEFT JOIN store_manage sm
+              ON osl.`sys_user_id` = sm.`sys_user_id`
+          WHERE osl.`del_flag` = 0
+            AND osl.`status` = 1
+            AND sm.`alliance_user_id` = am.`sys_user_id`) AS waitDeliverGoods
+        FROM
+          sys_user su
+          LEFT JOIN alliance_manage am
+            ON su.`id` = am.`sys_user_id`
+          LEFT JOIN sys_user_role sur
+            ON sur.`user_id` = su.`id`
+          LEFT JOIN sys_role sr
+            ON sur.`role_id` = sr.`id`
+        WHERE su.`del_flag` = 0
+          AND su.`id` = #{userId}
+    </select>
+    <select id="findAllianceManageByphone" resultType="map">
+    SELECT
+      am.id,
+      CONCAT(
+        su.`phone`,
+        ' (',
+        am.`name`,
+        ',',
+        su.`realname`,
+        ')'
+      ) AS allianceName,
+      am.`name`,
+      su.`phone`,
+      su.`realname`
+    FROM
+      alliance_manage am
+      LEFT JOIN sys_user su
+        ON am.`sys_user_id` = su.`id`
+    WHERE am.`del_flag` = 0
+      AND su.`del_flag` = 0
+      AND su.`phone` LIKE concat('%',#{phone},'%')
+      LIMIT 10
+    </select>
+    <select id="getAllianceStoreManage" resultType="map">
+        SELECT
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          IF(
+            (SELECT
+              COUNT(1)
+            FROM
+              member_designation_group mdg
+            WHERE mdg.`store_manage_id` = sm.id) > 0,
+            (SELECT
+              mdg.`total_members`
+            FROM
+              member_designation_group mdg
+            WHERE mdg.`store_manage_id` = sm.id
+            LIMIT 1),
+            0
+          ) AS totalMembers,
+          (SELECT
+            IF(
+              SUM(mgbr.`price`) IS NULL,
+              0,
+              SUM(mgbr.`price`)
+            )
+          FROM
+            marketing_gift_bag_record mgbr
+            LEFT JOIN marketing_gift_bag mgb
+              ON mgbr.`marketing_gift_bag_id` = mgb.`id`
+          WHERE mgbr.`del_flag` = 0
+            AND mgbr.`pay_status` = 1
+            AND mgbr.distribution_channel = sm.`sys_user_id`
+            AND (
+              mgb.`member_designation_id` IS NOT NULL
+              OR LENGTH(
+                TRIM(mgb.`member_designation_id`)
+              ) > 0
+            )) AS priceSum,
+          DATE_FORMAT(sm.`create_time`, '%Y-%m-%d') AS createTime,
+          (SELECT
+            COUNT(1)
+          FROM
+            member_designation_group mdg
+            LEFT JOIN member_designation_member_list mdml
+              ON mdg.`id` = mdml.`member_designation_group_id`
+          WHERE DATE_FORMAT(
+              mdml.`member_join_time`,
+              '%Y-%m-%d'
+            ) = DATE_FORMAT(NOW(), '%Y-%m-%d')
+            AND mdg.`store_manage_id` = sm.`id`) AS toDayMemberSum,
+          (SELECT
+            IF(
+              SUM(mgbr.`price`) IS NULL,
+              0,
+              SUM(mgbr.`price`)
+            )
+          FROM
+            marketing_gift_bag_record mgbr
+            LEFT JOIN marketing_gift_bag mgb
+              ON mgbr.`marketing_gift_bag_id` = mgb.`id`
+          WHERE mgbr.`del_flag` = 0
+            AND mgbr.`pay_status` = 1
+            AND DATE_FORMAT(mgbr.`pay_time`, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
+            AND mgbr.distribution_channel = sm.`sys_user_id`
+            AND (
+              mgb.`member_designation_id` IS NOT NULL
+              OR LENGTH(
+                TRIM(mgb.`member_designation_id`)
+              ) > 0
+            )) AS toDayPriceSum
+        FROM
+          store_manage sm
+        WHERE sm.`alliance_user_id` =#{id}
+        AND sm.`del_flag` = 0
+        AND sm.`pay_status` IN (1,2)
+    </select>
+</mapper>

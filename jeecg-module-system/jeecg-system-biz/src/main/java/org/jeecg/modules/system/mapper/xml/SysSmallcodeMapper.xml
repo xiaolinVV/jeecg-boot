@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.system.mapper.SysSmallcodeMapper">
+
+
+    <select id="getShareAddress" resultType="string" parameterType="map">
+            SELECT
+                ss.address
+            FROM
+                `sys_smallcode` ss
+            WHERE
+                ss.page = 'userAction/pages/vipMember/vipMember'
+                AND ss.param -> '$.id' = #{paramMap.marketingGiftBagId}
+                AND ss.t_member_id = #{paramMap.memberListId}
+            ORDER BY
+                create_time DESC
+                LIMIT 1
+    </select>
+</mapper>

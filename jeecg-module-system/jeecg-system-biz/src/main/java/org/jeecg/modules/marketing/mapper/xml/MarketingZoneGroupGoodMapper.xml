@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingZoneGroupGoodMapper">
+    <select id="queryPageList" resultType="map">
+        SELECT
+          mzgg.`id`,
+          gl.`good_no` AS goodNo,
+          gl.`main_picture` AS mainPicture,
+          gl.`good_name` AS goodName,
+          CONCAT(
+            gtOne.`name`,
+            '-',
+            gtTwo.`name`,
+            '-',
+            gtThree.`name`
+          ) AS typeName,
+          gl.`market_price` AS marketPrice,
+          gl.`price`,
+          gl.`repertory`,
+          mzg.`price` AS groupPrice,
+          mzgg.`sort`,
+          mzgg.`status`,
+          mzgg.`status_explain` AS statusExplain,
+          mzgg.`create_by` AS createBy,
+          DATE_FORMAT(
+            mzgg.`create_time`,
+            '%Y-%m-%d %H:%i:%s'
+          ) AS createTime
+        FROM
+          (SELECT * FROM marketing_zone_group_good ${ew.customSqlSegment})mzgg
+          LEFT JOIN good_list gl
+            ON mzgg.`good_list_id` = gl.`id`
+          LEFT JOIN good_type gtThree
+            ON gtThree.`id` = gl.`good_type_id`
+          LEFT JOIN good_type gtTwo
+            ON gtTwo.`id` = gtThree.`parent_id`
+          LEFT JOIN good_type gtOne
+            ON gtOne.`id` = gtTwo.`parent_id`
+          LEFT JOIN marketing_zone_group mzg
+            ON mzg.`id` = mzgg.`marketing_zone_group_id`
+        WHERE mzgg.`del_flag` = 0
+        <if test="requestMap.goodNo != null and requestMap.goodNo != ''">
+            AND gl.`good_no` LIKE concat('%',#{requestMap.goodNo},'%')
+        </if>
+        <if test="requestMap.goodName != null and requestMap.goodName != ''">
+            AND gl.`good_name` LIKE concat('%',#{requestMap.goodName},'%')
+        </if>
+        <if test="requestMap.gtOneId != null and requestMap.gtOneId != ''">
+            AND gtOne.id = #{requestMap.gtOneId}
+        </if>
+        <if test="requestMap.gtTwoId != null and requestMap.gtTwoId != ''">
+            AND gtTwo.id = #{requestMap.gtTwoId}
+        </if>
+        <if test="requestMap.gtThreeId != null and requestMap.gtThreeId != ''">
+            AND gtThree.id = #{requestMap.gtThreeId}
+        </if>
+    </select>
+
+    <select id="getByMarketingZoneGroupId" resultType="map">
+                SELECT
+            gl.main_picture AS mainPicture,
+            gl.good_name AS goodName,
+            gl.`market_price` AS marketPrice,
+            gl.`id` AS goodListId,
+            1 AS isPlatform,
+            mzgg.id,
+            mzg.zone_name AS label,
+            mzg.price AS zonePrice,
+            mzg.id AS marketingZoneGroupId,
+	        mzg.virtual_group_members AS virtualGroupMembers
+        FROM
+            marketing_zone_group_good mzgg
+            LEFT JOIN good_list gl ON mzgg.good_list_id = gl.id
+            LEFT JOIN marketing_zone_group mzg ON mzgg.marketing_zone_group_id = mzg.id
+        WHERE
+            mzgg.del_flag = '0'
+            AND mzgg.`status` = '1'
+            AND gl.del_flag = '0'
+            AND gl.`status` = '1'
+            AND gl.frame_status = '1'
+            AND gl.good_form = '0'
+            AND gl.audit_status = '2'
+            and mzg.id=#{marketingZoneGroupId}
+        ORDER BY
+            mzgg.sort
+    </select>
+</mapper>

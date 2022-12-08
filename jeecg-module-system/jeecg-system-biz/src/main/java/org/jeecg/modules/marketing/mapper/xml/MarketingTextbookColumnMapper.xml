@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingTextbookColumnMapper">
+    <select id="findMarketingTextbookColumn" resultType="map">
+        SELECT
+          mtc.`id`,
+          mtc.`name`
+        FROM
+          marketing_textbook_column mtc
+        WHERE mtc.`del_flag` = 0
+          AND mtc.`status` = 1
+          ORDER BY mtc.sort
+    </select>
+</mapper>

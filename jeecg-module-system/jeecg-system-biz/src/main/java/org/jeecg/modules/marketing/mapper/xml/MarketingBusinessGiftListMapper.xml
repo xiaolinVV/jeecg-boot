@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingBusinessGiftListMapper">
+    <select id="findMarketingBusinessGiftList" resultType="map">
+        SELECT
+          mbgl.`id`,
+          mbgl.`main_picture` AS mainPicture
+        FROM
+          marketing_business_gift_list mbgl
+        WHERE mbgl.`del_flag` = 0
+          AND mbgl.status = 1
+        ORDER BY mbgl.`sort` ASC,
+          mbgl.`create_time` DESC
+    </select>
+    <select id="getIsMarketingBusinessGiftList" resultType="map">
+        SELECT
+          mbgr.`id`,
+          mbgl.`main_picture` AS mainPicture
+        FROM
+          marketing_business_gift_record mbgr
+          LEFT JOIN
+          marketing_business_gift_list mbgl
+          ON mbgl.id = mbgr.marketing_business_gift_list_id
+        WHERE mbgr.`del_flag` = 0
+          AND mbgr.member_list_id = #{memberId}
+        ORDER BY mbgr.pay_time DESC
+    </select>
+</mapper>

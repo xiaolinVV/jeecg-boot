@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLeagueAwardMapper">
+
+    <select id="cumulativeRewards" resultType="double" >
+            SELECT
+                SUM(award) AS  total
+            FROM
+                marketing_league_award
+            WHERE
+                member_list_id =#{memberId}
+    </select>
+
+    <select id="getMarketingLeagueAwardBymarketingLeagueTypeId" resultType="map">
+            SELECT
+                mla.marketing_league_type_id AS marketingLeagueTypeId,
+                ( SELECT type_name FROM marketing_league_type WHERE id = mla.marketing_league_type_id ) AS typeName
+            FROM
+                marketing_league_award mla
+            WHERE
+                mla.member_list_id =#{memberId}
+            GROUP BY
+                mla.marketing_league_type_id
+
+
+    </select>
+
+    <select id="getMarketingLeagueAwardList" resultType="map" parameterType="map">
+                SELECT
+            mla.reward_type AS rewardType,
+            mla.award,
+            ( SELECT order_no FROM order_list WHERE id = mlbr.order_list_id ) AS orderNo,
+            ( SELECT phone FROM member_list WHERE id = mla.member_list_id ) AS phone,
+            DATE_FORMAT( mla.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime
+        FROM
+            marketing_league_award mla
+            LEFT JOIN marketing_league_buyer_record mlbr ON mla.marketing_league_buyer_record_id = mlbr.id
+        WHERE
+            mla.del_flag = '0'
+            AND mla.member_list_id = #{paramMap.memberId}
+            AND mla.marketing_league_type_id=#{paramMap.marketingLeagueTypeId}
+        ORDER BY
+            mla.create_time DESC
+    </select>
+
+    <select id="getMarketingLeagueAwardListById" resultType="map">
+
+
+            SELECT ml.phone, ml.nick_name AS nickName, ( SELECT GROUP_CONCAT(( SELECT identity_name FROM marketing_league_identity WHERE id = marketing_league_identity_id ))
+                FROM
+                    marketing_league_member
+                WHERE
+                    del_flag = '0'
+                    AND member_list_id = ml.id
+                ) AS identityName,
+                mla.reward_type AS rewardType,
+                mla.award
+            FROM
+                marketing_league_award mla
+                LEFT JOIN member_list ml ON mla.member_list_id = ml.id
+            WHERE
+                mla.del_flag = '0'
+                AND ml.id IS NOT NULL
+                AND mla.marketing_league_buyer_record_id = #{marketingLeagueBuyerRecordId}
+
+
+    </select>
+</mapper>

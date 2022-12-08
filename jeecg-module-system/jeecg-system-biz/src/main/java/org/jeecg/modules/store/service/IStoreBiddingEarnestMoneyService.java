@@ -1,0 +1,14 @@
+package org.jeecg.modules.store.service;
+
+import org.jeecg.modules.store.entity.StoreBiddingEarnestMoney;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+/**
+ * @Description: 竞价-保证金记录
+ * @Author: jeecg-boot
+ * @Date:   2022-05-24
+ * @Version: V1.0
+ */
+public interface IStoreBiddingEarnestMoneyService extends IService<StoreBiddingEarnestMoney> {
+
+}

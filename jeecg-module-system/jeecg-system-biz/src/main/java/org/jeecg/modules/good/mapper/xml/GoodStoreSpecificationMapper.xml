@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.good.mapper.GoodStoreSpecificationMapper">
+    <select id="getGoodStoreSpecificationByGoodListId" resultType="org.jeecg.modules.good.entity.GoodStoreSpecification">
+        select * from  good_store_specification  where
+        <if test="goodStoreListId!=null and goodStoreListId!=''">
+            good_store_list_id =#{goodStoreListId}
+        </if>
+    </select>
+    <select id="selectByGoodId" resultType="String">
+        select specification from  good_store_specification  where
+            del_flag=0 and good_store_list_id =#{goodStoreListId}
+    </select>
+    <update id="delpecification" >
+        update
+        good_store_specification set del_flag=1
+        where good_store_list_id =#{goodStoreListId} and del_flag=0
+        <if test="specifications!=null and specifications.size > 0 ">
+            and  specification not in
+            <foreach collection="specifications" item="specification" separator="," open="(" close=")">
+                #{specification}
+            </foreach>
+        </if>
+    </update>
+    <select id="selectByspecificationPicture" resultType="org.jeecg.modules.good.dto.SpecificationsPicturesDTO">
+        SELECT specification_picture as url, SUBSTRING_INDEX(specification,',',1) name FROM `good_store_specification` WHERE del_flag=0
+        <if test="goodStoreId!=null and goodStoreId!=''">
+            and good_store_list_id=#{goodStoreId}
+        </if>
+        GROUP BY name
+    </select>
+
+    <update id="updateGoodSpecificationOne" >
+        UPDATE good_store_specification
+        <trim prefix="set" suffixOverrides=",">
+
+            <if test="goodStoreListSpecificationVO != null and goodStoreListSpecificationVO.price!=null and goodStoreListSpecificationVO.price!='' ">
+                price=#{goodStoreListSpecificationVO.price},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.vipPrice!=null and goodStoreListSpecificationVO.vipPrice!=''">
+                vip_price=#{goodStoreListSpecificationVO.vipPrice},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.costPrice!=null and goodStoreListSpecificationVO.costPrice!=''">
+                cost_price=#{goodStoreListSpecificationVO.costPrice},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.repertory!=null and goodStoreListSpecificationVO.repertory!=''">
+                repertory=#{goodStoreListSpecificationVO.repertory},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.specification!=null and goodStoreListSpecificationVO.specification!=''">
+                specification=#{goodStoreListSpecificationVO.specification},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.skuNo!=null and goodStoreListSpecificationVO.skuNo!=''">
+                sku_no=#{goodStoreListSpecificationVO.skuNo},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.weight!=null and goodStoreListSpecificationVO.weight!=''">
+                weight=#{goodStoreListSpecificationVO.weight},
+            </if>
+            <if test="goodStoreListSpecificationVO!=null and goodStoreListSpecificationVO.specificationPicture!=null and goodStoreListSpecificationVO.specificationPicture!=''">
+                specification_picture=#{goodStoreListSpecificationVO.specificationPicture},
+            </if>
+        </trim>
+        WHERE id=#{goodStoreListSpecificationVO.id}
+    </update>
+    <update id="updateGoodSpecification" >
+        update
+        good_store_specification set del_flag=1
+        where good_store_list_id =#{goodListId} and del_flag=0
+
+    </update>
+    <select id="getGoodStoreSkuCount" resultType="java.lang.Long">
+       SELECT
+          COUNT(0)
+        FROM
+          `good_store_specification` gs
+          LEFT JOIN `good_store_list` gl
+            ON gl.id = gs.good_store_list_id
+        WHERE gl.del_flag = 0
+          AND gs.del_flag = 0
+    </select>
+</mapper>

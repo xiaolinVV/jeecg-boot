@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingMaterialRecommendMapper">
+  <select id="getMarketingMaterialRecommendDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialRecommendDTO">
+    SELECT
+      mmr.*,
+      mml.title,
+      mml.author
+    FROM
+      `marketing_material_recommend` mmr
+      LEFT JOIN `marketing_material_list` mml
+        ON mmr.marketing_material_list_id = mml.id
+    WHERE mmr.del_flag = 0
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.marketingMaterialListId!=null and marketingMaterialRecommendVO.marketingMaterialListId!=''">
+          AND mmr.marketing_material_list_id LIKE CONCAT(CONCAT('%',#{marketingMaterialRecommendVO.marketingMaterialListId}), '%')
+      </if>
+
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.title!=null and marketingMaterialRecommendVO.title!=''">
+          AND mml.title LIKE CONCAT(CONCAT('%',#{marketingMaterialRecommendVO.title}), '%')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.author!=null and marketingMaterialRecommendVO.author!=''">
+          AND mml.author LIKE CONCAT(CONCAT('%',#{marketingMaterialRecommendVO.author}), '%')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.status!=null and marketingMaterialRecommendVO.status!=''">
+          AND mmr.status =#{marketingMaterialRecommendVO.status}
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.createTime_begin != null and marketingMaterialRecommendVO.createTime_begin != ''">
+          and mmr.create_time <![CDATA[>=]]> concat(#{marketingMaterialRecommendVO.createTime_begin},' 00:00:00')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.createTime_end != null and marketingMaterialRecommendVO.createTime_end != ''">
+          AND mmr.create_time <![CDATA[<=]]> concat( #{marketingMaterialRecommendVO.createTime_end},' 23:59:59')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.startTime_begin != null and marketingMaterialRecommendVO.startTime_begin != ''">
+          and mmr.start_time <![CDATA[>=]]> concat(#{marketingMaterialRecommendVO.startTime_begin},' 00:00:00')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.startTime_end != null and marketingMaterialRecommendVO.startTime_end != ''">
+          AND mmr.start_time <![CDATA[<=]]> concat( #{marketingMaterialRecommendVO.startTime_end},' 23:59:59')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.endTime_begin != null and marketingMaterialRecommendVO.endTime_begin != ''">
+          and mmr.end_time <![CDATA[>=]]> concat(#{marketingMaterialRecommendVO.endTime_begin},' 00:00:00')
+      </if>
+      <if test="marketingMaterialRecommendVO != null and marketingMaterialRecommendVO.endTime_end != null and marketingMaterialRecommendVO.endTime_end != ''">
+          AND mmr.end_time <![CDATA[<=]]> concat( #{marketingMaterialRecommendVO.endTime_end},' 23:59:59')
+      </if>
+      ORDER BY mmr.create_time DESC
+  </select>
+
+ <select id="getMarketingMaterialListIdList" resultType = "string">
+     SELECT
+     mmr.marketing_material_list_id AS marketingMaterialListId
+     FROM
+     `marketing_material_recommend` mmr
+     LEFT JOIN `marketing_material_list` mml
+     ON mmr.marketing_material_list_id = mml.`id`
+     WHERE mmr.del_flag = 0
+     AND mml.del_flag = 0
+     AND mml.is_publish = 1
+     AND mmr.status = 1
+     AND mmr.start_time <![CDATA[<]]> NOW()
+     AND mmr.end_time <![CDATA[>]]> NOW()
+     GROUP BY mmr.marketing_material_list_id
+ </select>
+</mapper>

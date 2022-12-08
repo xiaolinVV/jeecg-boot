@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingStoreGiftCardListMapper">
+
+
+    <select id="selectStoreGoods" resultType="map" parameterType="map">
+            SELECT
+                gsl.id,
+                            gsl.main_picture AS mainPicture,
+                            gsl.good_name AS goodName,
+                            gsl.market_price AS marketPrice,
+                            gsl.price AS price,
+                            gsl.cost_price AS costPrice,
+                            gsl.vip_price AS vipPrice,
+                            gsl.repertory AS repertory,
+                gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
+                gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
+                gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
+                gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
+                CONCAT_WS(
+                '-',
+                gsts.goodStoreTypeOneName,
+                gsts.goodStoreTypeTwoName
+                ) AS goodStoreTypeNames
+                FROM
+                good_store_list gsl
+                LEFT JOIN
+                (SELECT
+                gst.*,
+                gst.id AS goodStoreTypeIdTwo,
+                gst.name AS goodStoreTypeTwoName,
+                gstOne.id AS goodStoreTypeIdOne,
+                gstOne.name AS goodStoreTypeOneName
+                FROM
+                good_store_type gst
+                LEFT JOIN good_store_type gstOne
+                ON gst.parent_id = gstOne.id) gsts
+                ON gsl.good_store_type_id = gsts.id
+                WHERE gsl.del_flag = 0
+                            AND gsl.`status` = 1
+                            AND gsl.frame_status = 1
+                            AND gsl.audit_status = 2
+                            AND gsl.repertory &gt;0
+                <if test="paramMap.sysUserId!='' and paramMap.sysUserId!=null">
+                    and  gsl.sys_user_id=#{paramMap.sysUserId}
+                </if>
+                <if test="paramMap.goodName!='' and paramMap.goodName!=null">
+                    and  gsl.good_name=LIKE concat('%',concat(#{paramMap.goodName},'%'))
+                </if>
+                <if test="paramMap.goodStoreTypeIdOne!='' and paramMap.goodStoreTypeIdOne!=null">
+                    and  gsts.goodStoreTypeIdOne=#{paramMap.goodStoreTypeIdOne}
+                </if>
+                <if test="paramMap.goodStoreTypeIdTwo!='' and paramMap.goodStoreTypeIdTwo!=null">
+                    and  gsts.goodStoreTypeIdTwo=#{paramMap.goodStoreTypeIdTwo}
+                </if>
+                            ORDER BY gsl.create_time DESC
+    </select>
+
+    <select id="getSelectGoods" resultType="map">
+
+        SELECT
+                gsl.id,
+                            gsl.main_picture AS mainPicture,
+                            gsl.good_name AS goodName,
+                            gsl.market_price AS marketPrice,
+                            gsl.price AS price,
+                            gsl.cost_price AS costPrice,
+                            gsl.vip_price AS vipPrice,
+                            gsl.repertory AS repertory,
+                gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
+                gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
+                gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
+                gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
+                CONCAT_WS(
+                '-',
+                gsts.goodStoreTypeOneName,
+                gsts.goodStoreTypeTwoName
+                ) AS goodStoreTypeNames
+                FROM
+								marketing_store_gift_card_good_list msgcgl
+
+								LEFT JOIN
+
+                good_store_list gsl
+
+								ON msgcgl.good_store_list_id=gsl.id
+                LEFT JOIN
+                (SELECT
+                gst.*,
+                gst.id AS goodStoreTypeIdTwo,
+                gst.name AS goodStoreTypeTwoName,
+                gstOne.id AS goodStoreTypeIdOne,
+                gstOne.name AS goodStoreTypeOneName
+                FROM
+                good_store_type gst
+                LEFT JOIN good_store_type gstOne
+                ON gst.parent_id = gstOne.id) gsts
+                ON gsl.good_store_type_id = gsts.id
+                WHERE gsl.del_flag = 0
+                            AND gsl.`status` = 1
+                            AND gsl.frame_status = 1
+                            AND gsl.audit_status = 2
+                            AND gsl.repertory &gt;0
+                  and  msgcgl.marketing_store_gift_card_list_id=#{marketingStoreGiftCardListId}
+
+    </select>
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingStoreGiftCardListDTO">
+            SELECT
+                msgcl.serial_number AS serialNumber,
+            IF
+                (
+                    LENGTH(
+                    TRIM( sm.`sub_store_name` )) &gt; 0,
+                    CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+                    sm.`store_name`
+                ) AS storeName,
+                msgcl.car_name AS carName,
+                msgcl.denomination,
+                ( SELECT count( 1 ) FROM marketing_store_gift_card_good_list WHERE marketing_store_gift_card_list_id = msgcl.id ) AS goodCount ,
+                DATE_FORMAT(msgcl.start_time,'%Y-%m-%d %H:%i:%s') AS startTime,
+                DATE_FORMAT(msgcl.end_time,'%Y-%m-%d %H:%i:%s') AS endTime,
+                DATE_FORMAT(msgcl.create_time,'%Y-%m-%d %H:%i:%s') AS createTime,
+                msgcl.time_way AS timeWay,
+                msgcl.time_digital AS timeDigital,
+                msgcl.time_unit AS timeUnit,
+                msgcl.`status`,
+                msgcl.status_explain AS statusExplain,
+                msgcl.create_by AS createBy,
+                msgcl.store_manage_id as storeManageId,
+                msgcl.car_explain as carExplain,
+                msgcl.id
+            FROM
+                marketing_store_gift_card_list msgcl
+                LEFT JOIN store_manage sm ON msgcl.store_manage_id = sm.id
+            WHERE
+                msgcl.del_flag = '0'
+              <if test="marketingStoreGiftCardListDTO.serialNumber!='' and marketingStoreGiftCardListDTO.serialNumber!=null">
+                  and msgcl.serial_number=#{marketingStoreGiftCardListDTO.serialNumber}
+              </if>
+            <if test="marketingStoreGiftCardListDTO.carName!='' and marketingStoreGiftCardListDTO.carName!=null">
+                and msgcl.car_name=#{marketingStoreGiftCardListDTO.carName}
+            </if>
+            <if test="marketingStoreGiftCardListDTO.status!='' and marketingStoreGiftCardListDTO.status!=null">
+                and msgcl.`status`=#{marketingStoreGiftCardListDTO.status}
+            </if>
+            <if test="marketingStoreGiftCardListDTO.storeName!='' and marketingStoreGiftCardListDTO.storeName!=null">
+                and sm.`store_name`r LIKE concat('%',concat(#{marketingStoreGiftCardListDTO.storeName},'%'))
+            </if>
+            <if test="marketingStoreGiftCardListDTO.createTimeStart!=null">
+                and msgcl.create_time &gt;=#{marketingStoreGiftCardListDTO.createTimeStart}
+            </if>
+            <if test="marketingStoreGiftCardListDTO.createTimeEnd!=null">
+                and msgcl.create_time &lt;=#{marketingStoreGiftCardListDTO.createTimeEnd}
+            </if>
+
+                ORDER BY msgcl.create_time DESC
+
+    </select>
+
+    <select id="getGiftCarList" resultType="map">
+          SELECT
+                    msgcl.serial_number AS serialNumber,
+                IF
+                    (
+                        LENGTH(
+                        TRIM( sm.`sub_store_name` )) > 0,
+                        CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+                        sm.`store_name`
+                    ) AS storeName,
+                    msgcl.car_name AS carName,
+                    msgcl.denomination,
+                    ( SELECT count( 1 ) FROM marketing_store_gift_card_good_list WHERE marketing_store_gift_card_list_id = msgcl.id ) AS goodCount ,
+                    DATE_FORMAT(msgcl.start_time,'%Y-%m-%d %H:%i:%s') AS startTime,
+                    DATE_FORMAT(msgcl.end_time,'%Y-%m-%d %H:%i:%s') AS endTime,
+                    DATE_FORMAT(msgcl.create_time,'%Y-%m-%d %H:%i:%s') AS createTime,
+                    msgcl.time_way AS timeWay,
+                    msgcl.time_digital AS timeDigital,
+                    msgcl.time_unit AS timeUnit,
+                    msgcl.`status`,
+                    msgcl.status_explain AS statusExplain,
+                    msgcl.create_by AS createBy,
+                    msgcl.id,
+                                    mgbcl.quantity
+                FROM
+                                    marketing_gift_bag_car_list mgbcl
+                                    LEFT JOIN
+                    marketing_store_gift_card_list msgcl
+                                    ON mgbcl.marketing_store_gift_card_list_id=msgcl.id
+                    LEFT JOIN store_manage sm ON msgcl.store_manage_id = sm.id
+                WHERE mgbcl.del_flag = '0'
+                    AND msgcl.del_flag = '0'
+                                    AND mgbcl.marketing_gift_bag_id=#{marketingGiftBagId}
+
+                  ORDER BY mgbcl.create_time DESC
+    </select>
+</mapper>

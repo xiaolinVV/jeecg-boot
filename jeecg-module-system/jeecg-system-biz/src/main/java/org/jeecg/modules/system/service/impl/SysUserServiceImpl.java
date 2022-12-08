@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CacheConstant;
@@ -17,15 +18,21 @@ import org.jeecg.common.util.PasswordUtil;
 import org.jeecg.common.util.UUIDGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.base.service.BaseCommonService;
+import org.jeecg.modules.provider.entity.ProviderManage;
+import org.jeecg.modules.provider.service.IProviderManageService;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.system.entity.*;
 import org.jeecg.modules.system.mapper.*;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.service.ISysUserService;
 import org.jeecg.modules.system.vo.SysUserDepVo;
+import org.jeecg.modules.system.vo.SysWorkbenchVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +62,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private SysUserDepartMapper sysUserDepartMapper;
 	@Autowired
 	private SysDepartMapper sysDepartMapper;
+	@Autowired
+	@Lazy
+	private IStoreManageService iStoreManageService;
+	@Autowired
+	@Lazy
+	private IProviderManageService iProviderManageService;
 	@Autowired
 	private SysRoleMapper sysRoleMapper;
 	@Autowired
@@ -610,5 +623,61 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		}
 		BeanUtils.copyProperties(sysUser, loginUser);
 		return loginUser;
+	}
+
+	/**
+	 * 根据sysUserId 查询 返回角色roleCode
+	 */
+
+	public String getUserRoleCode(String sysUserId){
+		List<String> list = userMapper.getUserRoleCode(sysUserId);
+		if(list.size()>0){
+			return	list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 判断用户角色跟审核状态
+	 * @param sysUserId
+	 * @return
+	 */
+	@Override
+	public Map<String, Object> getUserRoleCodeAndGoodAudit(String sysUserId) {
+		String role = getUserRoleCode(sysUserId);
+		Map<String, Object> map = Maps.newHashMap();
+		if ("Supplier".equals(role)) {
+			//供应商管理员信息
+			QueryWrapper<ProviderManage> queryWrapperProviderManage = new QueryWrapper();
+			queryWrapperProviderManage.eq("sys_user_id", sysUserId);
+			queryWrapperProviderManage.eq("status", "1");
+			ProviderManage providerManage = iProviderManageService.getOne(queryWrapperProviderManage);
+			if (oConvertUtils.isNotEmpty(providerManage)) {
+				map.put("roleCode", "2");
+				map.put("goodAudit", providerManage.getGoodAudit());
+			}
+
+		} else if ("Merchant".equals(role)) {
+			//店铺管理员信息
+			QueryWrapper<StoreManage> queryWrapperProviderManage = new QueryWrapper();
+			queryWrapperProviderManage.eq("sys_user_id", sysUserId);
+			queryWrapperProviderManage.eq("status", "1");
+			StoreManage storeManage = iStoreManageService.getOne(queryWrapperProviderManage);
+			if (oConvertUtils.isNotEmpty(storeManage)) {
+				map.put("roleCode", "3");
+				map.put("goodAudit", storeManage.getGoodAudit());
+			}
+		} else {
+			//平台管理员
+			map.put("roleCode", "1");
+			map.put("goodAudit", "1");
+		}
+
+		return map;
+	}
+
+	@Override
+	public SysWorkbenchVO totalSum() {
+		return baseMapper.totalSum();
 	}
 }

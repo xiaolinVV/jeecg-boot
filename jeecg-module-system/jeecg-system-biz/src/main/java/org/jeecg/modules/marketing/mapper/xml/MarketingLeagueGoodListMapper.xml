@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingLeagueGoodListMapper">
+
+
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingLeagueGoodListDTO">
+                SELECT
+            gl.good_no AS goodNo,
+            gl.main_picture AS mainPicture,
+            gl.good_name AS goodName,
+            gl.price,
+            gl.supply_price AS supplyPrice,
+            1 AS isPlatform,
+            gl.repertory,
+            (
+            SELECT
+                CONCAT( gtThree.NAME, '-', gtTwo.NAME, '-', gtOne.NAME )
+            FROM
+                good_type gtOne
+                LEFT JOIN good_type gtTwo ON gtTwo.id = gtOne.parent_id
+                LEFT JOIN good_type gtThree ON gtThree.id = gtTwo.parent_id
+            WHERE
+                gtOne.id = gl.`good_type_id`
+            ) AS goodTypeName,
+            gl.`market_price` AS marketPrice,
+            gl.is_specification AS isSpecification,
+            gl.`id` AS goodListId,
+            gl.`good_type_id` AS goodTypeId,
+            mlgl.`status`,
+            mlgl.`status_explain` AS statusExplain,
+            DATE_FORMAT( mlgl.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+            mlgl.`id`,
+            mlgl.`create_by` AS createBy,
+            mlgl.`update_by` AS updateBy,
+            DATE_FORMAT( mlgl.`update_time`, '%Y-%m-%d %H:%i:%s' ) AS updateTime,
+            (
+            SELECT
+                mlgs.league_price
+            FROM
+                `marketing_league_good_specification` mlgs
+                LEFT JOIN good_specification gs ON gs.id = mlgs.`good_specification_id`
+            WHERE
+                mlgs.marketing_league_good_list_id = mlgl.`id`
+                AND mlgs.del_flag = '0'
+                AND gs.`del_flag` = '0'
+            ORDER BY
+                league_price ASC
+                LIMIT 1
+            ) leaguePriceStart,
+            (
+            SELECT
+                mlgs.league_price
+            FROM
+                `marketing_league_good_specification` mlgs
+                LEFT JOIN good_specification gs ON gs.id = mlgs.`good_specification_id`
+            WHERE
+                mlgs.marketing_league_good_list_id = mlgl.`id`
+                AND mlgs.del_flag = '0'
+                AND gs.`del_flag` = '0'
+            ORDER BY
+                league_price DESC
+                LIMIT 1
+            ) leaguePriceEnd,
+            mlgl.sort
+        FROM
+            `marketing_league_good_list` mlgl
+            LEFT JOIN good_list gl ON gl.`id` = mlgl.`good_list_id`
+        WHERE
+            mlgl.`del_flag` = '0'
+            AND gl.del_flag = '0'
+            AND gl.STATUS = '1'
+            AND gl.frame_status = '1'
+            AND gl.good_form = '0'
+            AND gl.audit_status = '2'
+            <if test="marketingLeagueGoodListDTO.marketingLeagueTypeId!=null and marketingLeagueGoodListDTO.marketingLeagueTypeId!=''">
+                and mlgl.marketing_league_type_id=#{marketingLeagueGoodListDTO.marketingLeagueTypeId}
+            </if>
+        ORDER BY
+            mlgl.`create_time` DESC
+
+    </select>
+
+    <select id="getMarketingLeagueGoodListByTypeId" resultType="map">
+        SELECT
+	gl.main_picture AS mainPicture,
+	gl.good_name AS goodName,
+	gl.`market_price` AS marketPrice,
+	gl.`id` AS goodListId,
+	1 AS isPlatform,
+	mlgl.`id`,
+	(
+	SELECT
+		mfgs.league_price
+	FROM
+		`marketing_league_good_specification` mfgs
+		LEFT JOIN good_specification gs ON gs.id = mfgs.`good_specification_id`
+	WHERE
+		mfgs.marketing_league_good_list_id = mlgl.`id`
+		AND mfgs.del_flag = '0'
+		AND gs.`del_flag` = '0'
+	ORDER BY
+		league_price ASC
+		LIMIT 1
+	) leaguePrice,
+	( SELECT label FROM marketing_league_setting WHERE `status`='1'	limit 1 ) AS label
+FROM
+	`marketing_league_good_list` mlgl
+	LEFT JOIN good_list gl ON gl.`id` = mlgl.`good_list_id`
+WHERE
+	mlgl.`del_flag` = '0'
+	AND mlgl.`status` = '1'
+	AND gl.del_flag = '0'
+	AND gl.STATUS = '1'
+	AND gl.frame_status = '1'
+	AND gl.good_form = '0'
+	AND gl.audit_status = '2'
+	AND mlgl.marketing_league_type_id=#{typeId}
+ORDER BY
+	mlgl.sort ASC
+
+    </select>
+
+
+</mapper>

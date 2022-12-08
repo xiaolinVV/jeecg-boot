@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.provider.mapper.ProviderRechargeRecordMapper">
+    <select id="getProviderRechargeRecord" resultType="org.jeecg.modules.provider.dto.ProviderRechargeRecordDTO">
+        SELECT
+        swd.*,
+        sm.linkphone AS linkphone,
+        sm.linkman AS linkman,
+        sm.year AS createYear,
+        (SELECT
+        CONCAT_WS(',',
+        RIGHT(bank_card,4),
+        cardholder)
+        FROM provider_bank_card  WHERE
+        del_flag = "0" AND sys_user_id = swd.sys_user_id) AS bankCard,
+        sm.name AS providerName
+        FROM
+        `provider_recharge_record` swd
+        LEFT JOIN provider_manage sm
+        ON swd.sys_user_id = sm.sys_user_id
+        WHERE swd.del_flag = 0
+        AND sm.del_flag = 0
+        <if test="providerRechargeRecordVO != null and providerRechargeRecordVO.createTime_begin != null and providerRechargeRecordVO.createTime_begin != ''">
+            and swd.create_time <![CDATA[>=]]> concat(#{providerRechargeRecordVO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerRechargeRecordVO != null and providerRechargeRecordVO.createTime_end != null and providerRechargeRecordVO.createTime_end != ''">
+            AND swd.create_time <![CDATA[<=]]> concat( #{providerRechargeRecordVO.createTime_end},' 23:59:59')
+        </if>
+        <if test="providerRechargeRecordVO != null and providerRechargeRecordVO.payType!=null and providerRechargeRecordVO.payType!=''">
+            AND swd.pay_type = #{providerRechargeRecordVO.payType}
+        </if>
+        <if test="providerRechargeRecordVO != null and providerRechargeRecordVO.orderNo!=null and providerRechargeRecordVO.orderNo!=''">
+            AND swd.order_no LIKE CONCAT(CONCAT('%',#{providerRechargeRecordVO.orderNo}), '%')
+        </if>
+        <if test="providerRechargeRecordVO != null and providerRechargeRecordVO.sysUserId!=null and providerRechargeRecordVO.sysUserId!=''">
+            AND sm.sys_user_id = #{providerRechargeRecordVO.sysUserId}
+        </if>
+        ORDER BY swd.create_time DESC
+    </select>
+    <select id="queryPageList" resultType="org.jeecg.modules.provider.vo.ProviderRechargeRecordVO">
+        SELECT
+          prr.`id`,
+          prr.`order_no`,
+          prr.`trade_no`,
+          su.`username` AS userName,
+          pm.`name` AS providerName,
+          prr.`pay_type`,
+          prr.`go_and_come`,
+          prr.`amount`,
+          prr.`trade_status`,
+          prr.`create_time`,
+          prr.remark
+        FROM
+          provider_recharge_record prr
+          LEFT JOIN provider_manage pm
+            ON prr.`sys_user_id` = pm.`sys_user_id`
+          LEFT JOIN sys_user su
+            ON pm.`sys_user_id` = su.`id`
+        WHERE prr.`del_flag` = 0
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.sysUserId != null and providerRechargeRecordDTO.sysUserId != ''">
+            AND prr.sys_user_id = #{providerRechargeRecordDTO.sysUserId}
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.orderNo != null and providerRechargeRecordDTO.orderNo != ''">
+            AND prr.order_no LIKE concat('%',#{providerRechargeRecordDTO.orderNo},'%')
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.tradeNo != null and providerRechargeRecordDTO.tradeNo != ''">
+            AND prr.trade_no LIKE concat('%',#{providerRechargeRecordDTO.tradeNo},'%')
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.userName != null and providerRechargeRecordDTO.userName != ''">
+            AND su.username LIKE concat('%',#{providerRechargeRecordDTO.userName},'%')
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.providerName != null and providerRechargeRecordDTO.providerName != ''">
+            AND pm.name LIKE concat('%',#{providerRechargeRecordDTO.providerName},'%')
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.payType != null and providerRechargeRecordDTO.payType != ''">
+            AND pm.pay_type = #{providerRechargeRecordDTO.payType}
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.tradeStatus != null and providerRechargeRecordDTO.tradeStatus != ''">
+            AND prr.trade_status = #{providerRechargeRecordDTO.tradeStatus}
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.goAndCome != null and providerRechargeRecordDTO.goAndCome != ''">
+            AND prr.go_and_come = #{providerRechargeRecordDTO.goAndCome}
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.createTime_begin != null and providerRechargeRecordDTO.createTime_begin != ''">
+            AND prr.`create_time` <![CDATA[>=]]> concat(#{providerRechargeRecordDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.createTime_end != null and providerRechargeRecordDTO.createTime_end != ''">
+            AND prr.`create_time` <![CDATA[<=]]> concat( #{providerRechargeRecordDTO.createTime_end},' 23:59:59')
+        </if>
+        ORDER BY prr.`create_time` DESC,
+          prr.`amount` DESC
+    </select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.member.mapper.MemberDesignationCountMapper">
+    <select id="findListByMemberId" resultType="org.jeecg.modules.member.vo.MemberDesignationCountVO">
+        SELECT
+          mdc.`id`,
+          mdc.`total_members`,
+          md.`name`
+        FROM
+          member_designation_count mdc
+          LEFT JOIN member_designation md
+            ON mdc.`member_designation_id` = md.`id`
+        WHERE mdc.`del_flag` = 0
+          AND md.`del_flag` = 0
+          AND md.member_designation_group_id = #{memberDesignationGroupId}
+          AND mdc.`member_list_id` = #{id}
+    </select>
+    <select id="getListByMap" resultType="org.jeecg.modules.member.vo.MemberDesignationCountVO">
+        SELECT
+          mdc.*
+        FROM
+          member_list ml
+          LEFT JOIN member_designation_count mdc
+            ON ml.`id` = mdc.`member_list_id`
+        WHERE ml.`del_flag` = 0
+          AND mdc.`del_flag` = 0
+          AND ml.`t_manage_id` = #{map.tManageId}
+          AND mdc.`member_designation_id` = #{map.memberDesignationId}
+          AND mdc.`total_members` >= #{map.totalMembers}
+    </select>
+    <select id="findMemberDesignationCountPageListByMemberId" resultType="org.jeecg.modules.member.vo.MemberDesignationCountVO">
+        SELECT
+          md.`name`,
+          mdc.`total_members`
+        FROM
+          member_designation_count mdc
+          LEFT JOIN member_designation md
+            ON md.`id` = mdc.`member_designation_id`
+        WHERE mdc.`del_flag` = 0
+        <if test="memberDesignationCountDTO.memberListId!= null and memberDesignationCountDTO.memberListId">
+            AND mdc.`member_list_id` = #{memberDesignationCountDTO.memberListId}
+        </if>
+        <if test="memberDesignationCountDTO.memberDesignationGroupId!= null and memberDesignationCountDTO.memberDesignationGroupId">
+            AND md.`member_designation_group_id` = #{memberDesignationCountDTO.memberDesignationGroupId}
+        </if>
+    </select>
+    <select id="findMemberdesignationCountListById" resultType="map">
+        SELECT
+          mdc.`total_members` AS totalMembers,
+          md.`name`
+        FROM
+          member_designation_count mdc
+          LEFT JOIN member_designation md
+            ON mdc.`member_designation_id` = md.`id`
+            WHERE mdc.`del_flag` = 0
+            AND mdc.`member_list_id` = #{id}
+            AND md.`member_designation_group_id` = #{memberDesignationGroupId}
+          ORDER BY md.sort
+    </select>
+</mapper>

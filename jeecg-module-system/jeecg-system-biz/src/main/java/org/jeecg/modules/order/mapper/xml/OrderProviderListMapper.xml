@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.order.mapper.OrderProviderListMapper">
+    <select id="selectorderListId" resultType="org.jeecg.modules.order.dto.OrderProviderListDTO">
+        select * from order_provider_list where del_flag = 0
+        <if test="orderListId!=null and orderListId!=''">
+            and order_list_id = #{orderListId}
+        </if>
+        <if test="sysUserId!=null and sysUserId!=''">
+            and sys_user_id = #{sysUserId}
+        </if>
+        <if test="parentId!=null and parentId!=''">
+            and parent_id = #{parentId}
+        </if>
+        <if test="notParentId!=null and notParentId!=''">
+            and parent_id != #{notParentId}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="getOrderProviderLisById" resultType="map">
+                 SELECT
+            opl.id AS id,
+            ol.`shipping_address` AS shippingAddress,
+            ol.`consignee` AS consignee,
+            ol.`contact_number` AS contactNumber,
+            ol.`house_number` AS houseNumber,
+            ol.`message` AS message,
+            ( SELECT NAME FROM `sys_area` WHERE id = ol.`sys_area_id` ) AS provice,
+            opl.goods_total AS goodsTotal,
+            opl.create_time
+        FROM
+            `order_provider_list` opl
+            LEFT JOIN `order_list` ol ON opl.order_list_id = ol.`id`
+        WHERE
+            opl.id = #{id}
+            AND opl.del_flag = 0
+            AND opl.`status` = '1'
+            AND opl.is_send = '0'
+    </select>
+
+
+    <select id="queryPageList" resultType="org.jeecg.modules.order.dto.OrderProviderListDTO">
+
+        select  opl.*,ol.message,ol.is_sender from order_provider_list opl left JOIN order_list ol on opl.order_list_id=ol.id
+        <where>
+            <if test="orderProviderListVO.sysUserId != null and orderProviderListVO.sysUserId != ''">
+                and opl.sys_user_id=#{orderProviderListVO.sysUserId}
+            </if>
+
+            <if test="orderProviderListVO.status != null and orderProviderListVO.status != ''">
+                and opl.status=#{orderProviderListVO.status}
+            </if>
+
+            <if test="orderProviderListVO.delFlag != null and orderProviderListVO.delFlag != ''">
+                and opl.del_flag=#{orderProviderListVO.delFlag}
+            </if>
+
+            <if test="orderProviderListVO.parentId != null and orderProviderListVO.parentId != ''">
+                and opl.parent_id=#{orderProviderListVO.parentId}
+            </if>
+
+            <if test="orderProviderListVO.orderNo != null and orderProviderListVO.orderNo != ''">
+                and opl.order_no=#{orderProviderListVO.orderNo}
+            </if>
+
+            <if test="orderProviderListVO.closeTime_begin != null and orderProviderListVO.closeTime_begin != ''">
+                and ol.close_time <![CDATA[>=]]> concat(#{orderProviderListVO.closeTime_begin},' 00:00:00')
+            </if>
+            <if test="orderProviderListVO.closeTime_end != null and orderProviderListVO.closeTime_end != ''">
+                AND ol.close_time <![CDATA[<=]]> concat( #{orderProviderListVO.closeTime_end},' 23:59:59')
+            </if>
+            <if test="orderProviderListVO.createTime_begin != null and orderProviderListVO.createTime_begin != ''">
+                and ol.create_time <![CDATA[>=]]> concat(#{orderProviderListVO.createTime_begin},' 00:00:00')
+            </if>
+            <if test="orderProviderListVO.createTime_end != null and orderProviderListVO.createTime_end != ''">
+                AND ol.create_time <![CDATA[<=]]> concat( #{orderProviderListVO.createTime_end},' 23:59:59')
+            </if>
+
+            <if test="orderProviderListVO.payTime_begin != null and orderProviderListVO.payTime_begin != ''">
+                and ol.pay_time <![CDATA[>=]]> concat(#{orderProviderListVO.payTime_begin},' 00:00:00')
+            </if>
+            <if test="orderProviderListVO.payTime_end != null and orderProviderListVO.payTime_end != ''">
+                AND ol.pay_time <![CDATA[<=]]> concat( #{orderProviderListVO.payTime_end},' 23:59:59')
+            </if>
+
+            <if test="orderProviderListVO.shipmentsTime_begin != null and orderProviderListVO.shipmentsTime_begin != ''">
+                and ol.shipments_time <![CDATA[>=]]> concat(#{orderProviderListVO.shipmentsTime_begin},' 00:00:00')
+            </if>
+            <if test="orderProviderListVO.shipmentsTime_end != null and orderProviderListVO.shipmentsTime_end != ''">
+                AND ol.shipments_time <![CDATA[<=]]> concat( #{orderProviderListVO.shipmentsTime_end},' 23:59:59')
+            </if>
+
+            <if test="orderProviderListVO.deliveryTime_begin != null and orderProviderListVO.deliveryTime_begin != ''">
+                and ol.delivery_time <![CDATA[>=]]> concat(#{orderProviderListVO.deliveryTime_begin},' 00:00:00')
+            </if>
+            <if test="orderProviderListVO.deliveryTime_end != null and orderProviderListVO.deliveryTime_end != ''">
+                AND ol.delivery_time <![CDATA[<=]]> concat( #{orderProviderListVO.deliveryTime_end},' 23:59:59')
+            </if>
+             ORDER BY opl.create_time DESC
+        </where>
+    </select>
+
+</mapper>

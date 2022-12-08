@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreRechargeRecordMapper">
+  <select id="getStoreRechargeRecord" resultType="org.jeecg.modules.store.dto.StoreRechargeRecordDTO">
+    SELECT
+    swd.*,
+    sm.boss_phone AS bossPhone,
+    sm.boss_name AS bossName,
+    sm.year AS createYear,
+    (SELECT
+    CONCAT_WS(',',
+    RIGHT(bank_card,4),
+    cardholder)
+    FROM store_bank_card  WHERE
+    del_flag = "0" AND store_manage_id = swd.store_manage_id  GROUP BY store_manage_id ORDER BY create_time) AS bankCard,
+    CONCAT_WS('-',
+    sm.store_name,
+    sm.sub_store_name)
+    AS storeName
+    FROM
+    `store_recharge_record` swd
+    LEFT JOIN store_manage sm
+    ON swd.store_manage_id = sm.id
+    WHERE swd.del_flag = 0
+    AND sm.del_flag = 0
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.createTime_begin != null and storeRechargeRecordVO.createTime_begin != ''">
+      and swd.create_time <![CDATA[>=]]> concat(#{storeRechargeRecordVO.createTime_begin},' 00:00:00')
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.createTime_end != null and storeRechargeRecordVO.createTime_end != ''">
+      AND swd.create_time <![CDATA[<=]]> concat( #{storeRechargeRecordVO.createTime_end},' 23:59:59')
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.payType!=null and storeRechargeRecordVO.payType!=''">
+      AND swd.pay_type =#{storeRechargeRecordVO.payType}
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.id!=null and storeRechargeRecordVO.id!=''">
+      AND swd.id =#{storeRechargeRecordVO.id}
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.tradeStatus!=null and storeRechargeRecordVO.tradeStatus!=''">
+      AND swd.trade_status =#{storeRechargeRecordVO.tradeStatus}
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.orderNo!=null and storeRechargeRecordVO.orderNo!=''">
+      AND swd.order_no LIKE CONCAT(CONCAT('%',#{storeRechargeRecordVO.orderNo}), '%')
+    </if>
+    <if test="storeRechargeRecordVO != null and storeRechargeRecordVO.sysUserId!=null and storeRechargeRecordVO.sysUserId!=''">
+      AND sm.sys_user_id =#{storeRechargeRecordVO.sysUserId}
+    </if>
+    ORDER BY swd.create_time DESC
+  </select>
+  <select id="findStoreRechargeRecordInfo" resultType="map">
+    SELECT
+    (SELECT
+    s.item_text
+    FROM
+    sys_dict_item s
+    WHERE s.dict_id =
+    (SELECT
+    id
+    FROM
+    sys_dict
+    WHERE dict_code = 'store_deal_type')
+    AND s.`item_value` = srr.`pay_type`) AS payType,
+    DATE_FORMAT(srr.`create_time`,'%Y-%m-%d %H:%i:%s') AS createTime,
+      srr.`amount`,
+    srr.go_and_come AS goAndCome
+    FROM
+      store_recharge_record srr
+    WHERE srr.`del_flag` = 0
+      AND srr.`store_manage_id` = #{map.id}
+      <if test="map.state == 2">
+        AND srr.`pay_type` IN (0, 3, 4, 5, 6, 7, 8, 9)
+        AND srr.`trade_status` IN (1, 2, 3, 4)
+      </if>
+    <if test="map.state == 3">
+      AND srr.`pay_type` IN (1,2)
+      AND srr.`trade_status` IN (1, 2, 3, 4)
+    </if>
+    ORDER BY srr.`create_time` DESC,srr.`amount` DESC
+  </select>
+  <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreRechargeRecordVO">
+    SELECT * FROM (
+    SELECT
+    srr.`id`,
+    srr.`order_no`,
+    srr.`trade_no`,
+    su.`username` AS userName,
+    IF(
+    LENGTH(TRIM(sm.`sub_store_name`)) > 0 ,
+    CONCAT(
+    sm.`store_name`,
+    '(',
+    sm.`sub_store_name`,
+    ')'
+    ),
+    sm.`store_name`
+    ) AS storeName,
+    srr.`pay_type`,
+    srr.`go_and_come`,
+    srr.`amount`,
+    srr.`trade_status`,
+    srr.`create_time`,
+    srr.remark
+    FROM
+    store_recharge_record srr
+    LEFT JOIN store_manage sm
+    ON srr.`store_manage_id` = sm.`id`
+    LEFT JOIN sys_user su
+    ON sm.`sys_user_id` = su.`id`
+    WHERE srr.`del_flag` = 0
+      AND srr.`trade_status` != 0
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.sysUserId != null and storeRechargeRecordDTO.sysUserId != ''">AND
+      sm.`sys_user_id` = #{storeRechargeRecordDTO.sysUserId}
+    </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.orderNo != null and storeRechargeRecordDTO.orderNo != ''">
+        AND srr.`order_no` LIKE concat('%',concat(#{storeRechargeRecordDTO.orderNo},'%'))
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.tradeNo != null and storeRechargeRecordDTO.tradeNo != ''">
+        AND srr.`trade_no` LIKE concat('%',concat(#{storeRechargeRecordDTO.tradeNo},'%'))
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.userName != null and storeRechargeRecordDTO.userName != ''">
+        AND su.`username` LIKE concat('%',concat(#{storeRechargeRecordDTO.userName},'%'))
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.payType != null and storeRechargeRecordDTO.payType != ''">
+        AND srr.`pay_type` = #{storeRechargeRecordDTO.payType}
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.tradeStatus != null and storeRechargeRecordDTO.tradeStatus != ''">
+        AND srr.`trade_status` = #{storeRechargeRecordDTO.tradeStatus}
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.goAndCome != null and storeRechargeRecordDTO.goAndCome != ''">
+        AND srr.`go_and_come` = #{storeRechargeRecordDTO.goAndCome}
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.createTime_begin != null and storeRechargeRecordDTO.createTime_begin != ''">
+        AND srr.create_time <![CDATA[>=]]> CONCAT(#{storeRechargeRecordDTO.createTime_begin},' 00:00:00')
+      </if>
+      <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.createTime_end != null and storeRechargeRecordDTO.createTime_end != ''">
+        AND srr.create_time <![CDATA[<=]]> CONCAT( #{storeRechargeRecordDTO.createTime_end},' 23:59:59')
+      </if>
+    ORDER BY srr.create_time DESC,srr.amount DESC
+    ) m
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.storeName != null and storeRechargeRecordDTO.storeName != ''">
+      WHERE m.storeName LIKE concat('%',concat(#{storeRechargeRecordDTO.storeName},'%'))
+    </if>
+
+  </select>
+  <select id="findRechargeRecord" resultType="org.jeecg.modules.store.vo.StoreRechargeRecordVO">
+    SELECT * from (
+    SELECT
+    srr.id,
+    srr.`create_time`,
+    su.`username` AS userName,
+    IF(
+    LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+    CONCAT(
+    sm.`store_name`,
+    '(',
+    sm.`sub_store_name`,
+    ')'
+    ),
+    sm.`store_name`
+    ) AS storeName,
+    srr.`pay_type`,
+    srr.`order_no`,
+    srr.`amount`,
+    srr.`trade_status`,
+    srr.`payment`,
+    srr.`operator`,
+    srr.`remark`
+    FROM
+    store_recharge_record srr
+    LEFT JOIN store_manage sm
+    ON srr.`store_manage_id` = sm.`id`
+    LEFT JOIN sys_user su
+    ON sm.`sys_user_id` = su.`id`
+    WHERE srr.`del_flag` = 0
+    AND srr.`pay_type` = 4
+    AND srr.`trade_status` = 5
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.sysUserId != null and storeRechargeRecordDTO.sysUserId != ''">
+      AND sm.`sys_user_id` = #{storeRechargeRecordDTO.sysUserId}
+    </if>
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.userName != null and storeRechargeRecordDTO.userName != ''">
+      AND su.`username` LIKE concat('%',concat(#{storeRechargeRec+ordDTO.userName},'%'))
+    </if>
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.orderNo != null and storeRechargeRecordDTO.orderNo != ''">
+      AND srr.order_no = #{storeRechargeRecordDTO.orderNo}
+    </if>
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.payment != null and storeRechargeRecordDTO.payment != ''">
+      AND srr.payment = #{storeRechargeRecordDTO.payment}
+    </if>
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.createTime_begin != null and storeRechargeRecordDTO.createTime_begin != ''">
+      AND srr.create_time <![CDATA[>=]]> CONCAT(#{storeRechargeRecordDTO.createTime_begin},' 00:00:00')
+    </if>
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.createTime_end != null and storeRechargeRecordDTO.createTime_end != ''">
+      AND srr.create_time <![CDATA[<=]]> CONCAT( #{storeRechargeRecordDTO.createTime_end},' 23:59:59')
+    </if>
+    ORDER BY srr.create_time DESC,srr.amount DESC
+    ) m
+    <if test="storeRechargeRecordDTO != null and storeRechargeRecordDTO.storeName != null and storeRechargeRecordDTO.storeName != ''">
+      WHERE m.storeName LIKE concat('%',concat(#{storeRechargeRecordDTO.storeName},'%'))
+    </if>
+  </select>
+</mapper>

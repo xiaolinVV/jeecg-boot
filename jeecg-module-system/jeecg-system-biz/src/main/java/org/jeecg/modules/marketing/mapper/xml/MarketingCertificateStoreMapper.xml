@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateStoreMapper">
+     <resultMap id="resulMarketingCertificate" type="org.jeecg.modules.marketing.entity.MarketingCertificateStore">
+       <result property="id" column="id"/><!--主键ID-->
+       <result property="createBy" column="createBy"/><!--创建人-->
+       <result property="createTime" column="createTime"/><!--创建时间-->
+       <result property="updateBy" column="updateBy"/><!--修改人-->
+       <result property="updateTime" column="updateTime"/><!--修改时间-->
+       <result property="year" column="year"/><!--创建年-->
+       <result property="month" column="month"/><!--创建月-->
+       <result property="day" column="day"/><!--创建日-->
+       <result property="delFlag" column="delFlag"/><!--删除状态-->
+       <result property="name" column="name"/><!--优惠券名称-->
+       <result property="vouchersWay" column="vouchersWay"/><!--用券时间方式-->
+       <result property="startTime" column="startTime"/><!--开始时间-->
+       <result property="endTime" column="endTime"/><!--结束时间-->
+       <result property="disData" column="disData"/><!--多少天、周、月-->
+       <result property="monad" column="monad"/><!--单位；天、周、月-->
+       <result property="shopTotal" column="shopTotal"/><!--商品数量-->
+       <result property="total" column="total"/><!--发放总量-->
+       <result property="userRestrict" column="userRestrict"/><!--使用人限制-->
+       <result property="isGive" column="isGive"/><!--赠送设置-->
+       <result property="isWarn" column="isWarn"/><!--是否过期提醒-->
+       <result property="warnDays" column="warnDays"/><!--过期前多少天提醒-->
+       <result property="discountExplain" column="discountExplain"/><!--券说明-->
+       <result property="releasedQuantity" column="releasedQuantity"/><!--已发放数量-->
+       <result property="status" column="status"/><!--状态-->
+       <result property="stopExplain" column="stopExplain"/><!--停用说明-->
+       <result property="delExplain" column="delExplain"/><!--删除说明-->
+       <result property="theReward" column="theReward"/><!--核销奖励-->
+   </resultMap>
+   <select id="getMarketingCertificateByGoodListId" resultMap="resulMarketingCertificate">
+
+   </select>
+  
+  
+  
+  <select id="findStoreByCertificateId" resultType="org.jeecg.modules.marketing.dto.MarketingCertificateStoreDTO">
+    SELECT
+      sm.`logo_addr`,
+      sm.`store_name`,
+      sm.`sub_store_name`,
+      sm.`area_address`,
+      sm.`store_address`,
+      mcs.`marketing_certificate_id`,
+      mcs.`sys_user_id`,
+      sm.id
+    FROM
+      marketing_certificate_store mcs
+      LEFT JOIN store_manage sm
+        ON sm.`sys_user_id` = mcs.`sys_user_id`
+    WHERE mcs.`marketing_certificate_id` = #{marketingCertificateId}
+    AND mcs.del_flag = 0
+    AND sm.del_flag = 0
+    ORDER BY sm.create_time DESC
+  </select>
+  <select id="findstoreById" resultType="map">
+    SELECT
+    *
+    FROM
+    (SELECT
+    IF(
+    LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+    CONCAT(
+    sm.`store_name`,
+    '(',
+    sm.`sub_store_name`,
+    ')'
+    ),
+    sm.`store_name`
+    ) AS storeName,
+    sm.`store_address` AS storeAddress,
+    sm.`longitude`,
+    sm.`latitude`,
+    sm.`take_out_phone` AS takeOutPhone,
+    sm.sys_user_id AS sysUserId,
+    sm.logo_addr AS logoAddr,
+      POWER(
+      POWER(sm.longitude - #{map.longitude}, 2) + POWER(sm.latitude - #{map.latitude}, 2),
+      1 / 2
+      ) AS extent
+    FROM
+    `store_manage` sm
+    WHERE sm.del_flag = '0'
+    AND sm.`status` = "1"
+    AND sm.`attestation_status` IN (1,2)
+    <if test="map.id!=null and map.id!=''">
+      AND sm.sys_user_id IN (SELECT
+      mcs.`sys_user_id`
+      FROM
+      marketing_certificate_store mcs
+      WHERE mcs.`del_flag` = 0
+      AND mcs.`marketing_certificate_id` = #{map.id})
+    </if>
+    ) m
+    <if test="map.sysUserId!=null and map.sysUserId!= ''">
+      WHERE m.sysUserId = #{map.sysUserId}
+    </if>
+    ORDER BY m.extent ASC
+  </select>
+  <select id="findMarketingCertificateSeckillListStoreByCertificateId" resultType="map">
+    SELECT
+      sm.`id`,
+      sm.`logo_addr` AS logoAddr
+    FROM
+      marketing_certificate_store mcs
+      LEFT JOIN store_manage sm
+        ON mcs.`sys_user_id` = sm.`sys_user_id`
+    WHERE mcs.`del_flag` = 0
+      AND mcs.`marketing_certificate_id` = #{id}
+      AND sm.`status` = 1
+    ORDER BY sm.`create_time` DESC
+    LIMIT 10
+  </select>
+  <select id="findMarketingCertificateSeckillPageListStoreByCertificateId" resultType="map">
+    SELECT
+      sm.`id`,
+      sm.`logo_addr` AS logoAddr,
+      sm.sys_user_id AS sysUserId,
+      sm.longitude,
+      sm.latitude,
+      POWER(
+      POWER(sm.longitude - #{longitude}, 2) + POWER(sm.latitude - #{latitude}, 2),
+      1 / 2
+      ) AS extent,
+      IF(
+      LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+      CONCAT(
+      sm.`store_name`,
+      '(',
+      sm.`sub_store_name`,
+      ')'
+      ),
+      sm.`store_name`
+      ) AS storeName,
+      sm.if_view_welfare_payments AS ifViewWelfarePayments,
+      sm.is_open_welfare_payments AS isOpenWelfarePayments,
+      sm.area_address AS areaAddress,
+      sm.store_address AS storeAddress,
+      sm.take_out_phone AS takeOutPhone
+    FROM
+      marketing_certificate_store mcs
+      LEFT JOIN store_manage sm
+        ON mcs.`sys_user_id` = sm.`sys_user_id`
+    WHERE mcs.`del_flag` = 0
+      AND mcs.`marketing_certificate_id` = #{id}
+      AND sm.`status` = 1
+    ORDER BY extent ASC
+  </select>
+</mapper>

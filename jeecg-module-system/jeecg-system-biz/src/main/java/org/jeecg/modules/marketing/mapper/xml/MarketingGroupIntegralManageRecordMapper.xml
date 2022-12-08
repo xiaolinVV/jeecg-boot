@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingGroupIntegralManageRecordMapper">
+    <select id="queryPageList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingGroupIntegralManageRecordDTO">
+              SELECT
+            mgimr.serial_number AS serialNumber,
+            ( SELECT serial_number FROM marketing_group_integral_manage_list WHERE id = mgimr.marketing_group_integral_manage_list_id ) AS groupSerialNumber,
+            DATE_FORMAT( mgimr.participation_time, '%Y-%m-%d %H:%i:%s' ) AS participationTime,
+            mgimr.main_picture AS mainPicture,
+            mgimr.another_name AS anotherName,
+            mgimr.payment,
+            mgimr.payment_amount AS paymentAmount,
+            mgimr.purchase_quantity AS purchaseQuantity,
+            ml.head_portrait AS headPortrait,
+            ml.nick_name AS nickName,
+            ml.phone,
+            mgimr.identity,
+            mgimr.winning_state AS winningState,
+            mgimr.reward_type AS rewardType,
+            mgimr.missed_rewards AS missedRewards
+        FROM
+            marketing_group_integral_manage_record mgimr
+            LEFT JOIN member_list ml ON mgimr.member_list_id = ml.id
+        WHERE
+            mgimr.del_flag = '0'
+            <if test="marketingGroupIntegralManageRecordDTO.serialNumber!=null and marketingGroupIntegralManageRecordDTO.serialNumber!=''">
+                and mgimr.serial_number=#{marketingGroupIntegralManageRecordDTO.serialNumber}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.groupSerialNumber!=null and marketingGroupIntegralManageRecordDTO.groupSerialNumber!=''">
+                and (SELECT serial_number FROM marketing_group_integral_manage_list WHERE id = mgimr.marketing_group_integral_manage_list_id )=#{marketingGroupIntegralManageRecordDTO.groupSerialNumber}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.participationTimeStart!=null">
+                and mgimr.participation_time &gt;=#{marketingGroupIntegralManageRecordDTO.participationTimeStart}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.participationTimeEnd!=null">
+                and mgimr.participation_time &lt;=#{marketingGroupIntegralManageRecordDTO.participationTimeEnd}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.anotherName!=null and marketingGroupIntegralManageRecordDTO.anotherName!=''">
+                and mgimr.another_name=#{marketingGroupIntegralManageRecordDTO.anotherName}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.phone!=null and marketingGroupIntegralManageRecordDTO.phone!=''">
+                and ml.phone=#{marketingGroupIntegralManageRecordDTO.phone}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.nickName!=null and marketingGroupIntegralManageRecordDTO.nickName!=''">
+                and ml.nick_name=#{marketingGroupIntegralManageRecordDTO.nickName}
+            </if>
+            <if test="marketingGroupIntegralManageRecordDTO.winningState!=null and marketingGroupIntegralManageRecordDTO.winningState!=''">
+            and mgimr.winning_state=#{marketingGroupIntegralManageRecordDTO.winningState}
+            </if>
+        ORDER BY
+            mgimr.participation_time DESC
+
+    </select>
+
+    <select id="getByMarketingGroupIntegralManageListId" resultType="map">
+          SELECT
+            mgimr.serial_number AS serialNumber,
+            ( SELECT serial_number FROM marketing_group_integral_manage_list WHERE id = mgimr.marketing_group_integral_manage_list_id ) AS groupSerialNumber,
+            DATE_FORMAT( mgimr.participation_time, '%Y-%m-%d %H:%i:%s' ) AS participationTime,
+            mgimr.main_picture AS mainPicture,
+            mgimr.another_name AS anotherName,
+            mgimr.payment,
+            mgimr.payment_amount AS paymentAmount,
+            mgimr.purchase_quantity AS purchaseQuantity,
+            ml.head_portrait AS headPortrait,
+            ml.nick_name AS nickName,
+            ml.phone,
+            mgimr.identity,
+            mgimr.winning_state AS winningState,
+            mgimr.reward_type AS rewardType,
+            mgimr.missed_rewards AS missedRewards
+        FROM
+            marketing_group_integral_manage_record mgimr
+            LEFT JOIN member_list ml ON mgimr.member_list_id = ml.id
+        WHERE
+            mgimr.del_flag = '0'
+            and mgimr.marketing_group_integral_manage_list_id=#{marketingGroupIntegralManageListId}
+         ORDER BY
+        mgimr.participation_time DESC
+    </select>
+
+    <select id="getWinningState" resultType="map">
+                SELECT
+            mgimr.serial_number AS serialNumber,
+            ( SELECT serial_number FROM marketing_group_integral_manage_list WHERE id = mgimr.marketing_group_integral_manage_list_id ) AS groupSerialNumber,
+            DATE_FORMAT( mgimr.participation_time, '%Y-%m-%d %H:%i:%s' ) AS participationTime,
+            mgimr.main_picture AS mainPicture,
+            mgimr.another_name AS anotherName,
+            mgimr.payment,
+            mgimr.payment_amount AS paymentAmount,
+            mgimr.purchase_quantity AS purchaseQuantity,
+            ml.head_portrait AS headPortrait,
+            ml.nick_name AS nickName,
+            ml.phone,
+            mgimr.identity,
+            mgimr.winning_state AS winningState,
+            mgimr.reward_type AS rewardType,
+            mgimr.missed_rewards AS missedRewards
+        FROM
+            marketing_group_integral_manage_record mgimr
+            LEFT JOIN member_list ml ON mgimr.member_list_id = ml.id
+        WHERE
+            mgimr.del_flag = '0'
+            AND mgimr.winning_state='1'
+        ORDER BY
+            mgimr.participation_time DESC
+        LIMIT 10
+    </select>
+
+    <select id="getDistributionRewards" resultType="int">
+                SELECT
+            count( 1 )
+        FROM
+            marketing_group_integral_manage_record mgimr
+            LEFT JOIN marketing_group_integral_manage_list mgiml ON mgimr.marketing_group_integral_manage_list_id = mgiml.id
+        WHERE
+            mgimr.member_list_id =#{memberId}
+            AND mgimr.distribution_rewards = '0'
+            AND mgiml.`status` = '1'
+    </select>
+
+
+    <select id="getWinning" resultType="map">
+
+                SELECT
+                (
+                SELECT
+                count( 1 )
+                FROM
+                marketing_group_integral_manage_record m
+                WHERE
+                m.member_list_id = mgimr.member_list_id
+                 AND m.marketing_group_integral_manage_id=mgimr.marketing_group_integral_manage_id
+                AND m.winning_state = '1'
+                AND m.`year` = YEAR (
+                mgimr.create_time)
+                AND m.`month` = MONTH (
+                mgimr.create_time)
+                AND m.`day` = DAY (
+                mgimr.create_time)) winningCount,
+                (
+                SELECT
+                count( 1 )
+                FROM
+                marketing_group_integral_manage_record m
+                WHERE
+                m.member_list_id = mgimr.member_list_id
+                AND m.marketing_group_integral_manage_id=mgimr.marketing_group_integral_manage_id
+                AND m.winning_state = '1'
+                AND m.create_time &lt;=mgimr.create_time
+                and m.create_time &gt;=DATE_SUB(mgimr.create_time,interval 1 MONTH)) winningTotalCount,
+                mgimr.id
+                FROM
+                marketing_group_integral_manage_record mgimr
+                WHERE
+                mgimr.marketing_group_integral_manage_list_id = #{marketingGroupIntegralManageListId}
+                and (
+                SELECT
+                count( 1 )
+                FROM
+                marketing_group_integral_manage_record m
+                WHERE
+                m.member_list_id = mgimr.member_list_id
+                AND m.marketing_group_integral_manage_id=mgimr.marketing_group_integral_manage_id
+                AND m.winning_state = '1'
+                AND m.create_time &lt;=mgimr.create_time
+                and m.create_time &gt;=DATE_SUB(mgimr.create_time,interval 1 MONTH))&lt;50
+                AND (
+                SELECT
+                count( 1 )
+                FROM
+                marketing_group_integral_manage_record m
+                WHERE
+                m.member_list_id = mgimr.member_list_id
+                AND m.marketing_group_integral_manage_id=mgimr.marketing_group_integral_manage_id
+                AND m.winning_state = '1'
+                AND m.`year` = YEAR (
+                mgimr.create_time)
+                AND m.`month` = MONTH (
+                mgimr.create_time)
+                AND m.`day` = DAY (
+                mgimr.create_time)) &lt;3
+                ORDER BY winningCount ASC,winningTotalCount ASC limit 1
+    </select>
+
+    <select id="recordsLiquidation" resultType="map">
+                SELECT
+            m.id
+        FROM
+            marketing_group_integral_manage_record m
+            LEFT JOIN marketing_group_integral_manage_list mp ON m.marketing_group_integral_manage_list_id = mp.id
+        WHERE
+            m.distribution_rewards = '0'
+            AND mp.`status` = '1'
+        ORDER BY
+            m.participation_time ASC
+            LIMIT 1000
+    </select>
+
+    <select id="getRecordCount" resultType="int" parameterType="map">
+                       SELECT
+            count( 1 )
+        FROM
+            marketing_group_integral_manage_record m
+        WHERE
+            m.member_list_id = #{paramMap.memberId}
+            AND m.marketing_group_integral_manage_id=#{paramMap.mgimi}
+            AND m.`year` = YEAR ((
+                SELECT
+                    create_time
+                FROM
+                    marketing_group_integral_manage_record
+                WHERE
+                    id =#{paramMap.id}
+                ))
+            AND m.`month` = MONTH ((
+                SELECT
+                    create_time
+                FROM
+                    marketing_group_integral_manage_record
+                WHERE
+                    id = #{paramMap.id}
+                ))
+            AND m.`day` = DAY ((
+                SELECT
+                    create_time
+                FROM
+                    marketing_group_integral_manage_record
+                WHERE
+                id =#{paramMap.id}
+            ))
+    </select>
+</mapper>

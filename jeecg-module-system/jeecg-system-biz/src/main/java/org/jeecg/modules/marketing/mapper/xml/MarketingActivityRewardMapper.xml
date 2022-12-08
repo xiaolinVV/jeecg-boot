@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingActivityRewardMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingActivityRewardVO">
+        SELECT * FROM (
+        SELECT
+          mar.*,
+          mcs.`title`,
+          IF(
+            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+            CONCAT(
+              sm.`store_name`,
+              '(',
+              sm.`sub_store_name`,
+              ')'
+            ),
+            sm.`store_name`
+          ) AS storeName,
+          ml.`phone`,
+          ml.`nick_name`
+        FROM
+          marketing_activity_reward mar
+          LEFT JOIN store_manage sm
+            ON mar.`store_manage_id` = sm.`id`
+          LEFT JOIN member_list ml
+            ON ml.`id` = mar.`member_list_id`
+          LEFT JOIN marketing_comming_store mcs
+            ON mar.`marketing_comming_store_id` = mcs.`id`
+        WHERE mar.`del_flag` = 0
+          AND sm.`del_flag` = 0
+          AND ml.`del_flag` = 0
+          AND mcs.`del_flag` = 0
+          <if test="marketingActivityRewardDTO.sysUserId != null and marketingActivityRewardDTO.sysUserId != ''">
+              AND sm.sys_user_id = #{marketingActivityRewardDTO.sysUserId}
+          </if>
+          <if test="marketingActivityRewardDTO.id != null and marketingActivityRewardDTO.id != ''">
+              AND mar.id LIKE concat('%',#{marketingActivityRewardDTO.id},'%')
+          </if>
+        <if test="marketingActivityRewardDTO.marketingCommingStoreId != null and marketingActivityRewardDTO.marketingCommingStoreId != ''">
+            AND mar.marketing_comming_store_id LIKE concat('%',#{marketingActivityRewardDTO.marketingCommingStoreId},'%')
+        </if>
+        <if test="marketingActivityRewardDTO.title != null and marketingActivityRewardDTO.title != ''">
+            AND mcs.title LIKE concat('%',#{marketingActivityRewardDTO.title},'%')
+        </if>
+        <if test="marketingActivityRewardDTO.phone != null and marketingActivityRewardDTO.phone != ''">
+            AND ml.phone LIKE concat('%',#{marketingActivityRewardDTO.phone},'%')
+        </if>
+        <if test="marketingActivityRewardDTO.nickName != null and marketingActivityRewardDTO.nickName != ''">
+            AND ml.nick_name LIKE concat('%',#{marketingActivityRewardDTO.nickName},'%')
+        </if>
+        <if test="marketingActivityRewardDTO.createTime_begin != null and marketingActivityRewardDTO.createTime_begin != ''">
+            AND mcs.create_time <![CDATA[>=]]> CONCAT(#{marketingActivityRewardDTO.createTime_begin},' 00:00:00')
+        </if>
+        <if test="marketingActivityRewardDTO.createTime_end != null and marketingActivityRewardDTO.createTime_end != ''">
+            AND mcs.create_time <![CDATA[<=]]> CONCAT( #{marketingActivityRewardDTO.createTime_end},' 23:59:59')
+        </if>
+        <if test="marketingActivityRewardDTO.awardType != null and marketingActivityRewardDTO.awardType != ''">
+            AND mcs.award_type = #{marketingActivityRewardDTO.awardType}
+        </if>
+        <if test="marketingActivityRewardDTO.status != null and marketingActivityRewardDTO.status != ''">
+            AND mcs.status = #{marketingActivityRewardDTO.status}
+        </if>
+        ORDER BY mar.create_time DESC)m 
+        <if test="marketingActivityRewardDTO.storeName != null and marketingActivityRewardDTO.storeName != ''">
+            WHERE m.storeName LIKE concat('%',#{marketingActivityRewardDTO.storeName},'%')
+        </if>
+    </select>
+</mapper>

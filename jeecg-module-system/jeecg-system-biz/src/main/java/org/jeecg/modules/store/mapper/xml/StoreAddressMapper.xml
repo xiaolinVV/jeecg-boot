@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.store.mapper.StoreAddressMapper">
+    <update id="updateIsDeliverById">
+        UPDATE
+          store_address
+        SET
+          is_deliver = "0"
+        WHERE store_manage_id = #{id}
+    </update>
+    <update id="updateIsReturnById">
+        UPDATE
+        store_address
+        SET
+        is_return = "0"
+        WHERE store_manage_id = #{id}
+    </update>
+
+    <select id="getlistStoreAddress" resultType="org.jeecg.modules.store.dto.StoreAddressDTO" parameterType="map">
+        SELECT pa.*,sa.name AS sysAreaName FROM `store_address` pa  LEFT JOIN `sys_area` sa ON pa.sys_area_id = sa.id
+        where pa.del_flag = 0
+        <if test="paramMap!=null and paramMap.id!=null and paramMap.id!=''">
+            and  pa.id =#{paramMap.id}
+        </if>
+        <if test="paramMap!=null and paramMap.sysUserId!=null and paramMap.sysUserId!=''">
+            and  pa.sys_user_id =#{paramMap.sysUserId}
+        </if>
+        <if test="paramMap!=null and paramMap.isDeliver!=null and paramMap.isDeliver!=''">
+            and pa.is_deliver = #{paramMap.isDeliver}
+        </if>
+        <if test="paramMap!=null and paramMap.isReturn!=null and paramMap.isReturn!=''">
+            and  pa.is_return = #{paramMap.isReturn}
+        </if>
+    </select>
+
+</mapper>

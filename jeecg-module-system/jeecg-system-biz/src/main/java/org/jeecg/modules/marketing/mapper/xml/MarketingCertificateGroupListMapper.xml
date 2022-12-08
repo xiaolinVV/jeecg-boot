@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateGroupListMapper">
+    <select id="queryPageList" resultType="org.jeecg.modules.marketing.vo.MarketingCertificateGroupListVO">
+        SELECT
+          *
+          FROM
+          (SELECT
+              mcgl.*,
+              mc.`name`,
+              mc.`main_picture`,
+              mc.`market_price`,
+              mc.`price`,
+              mc.`cost_price`,
+              (mc.`total` - mc.released_quantity) AS total,
+              0 + CAST((mcgl.activity_price / mc.`price` * 100) AS CHAR) AS discountActivity
+            FROM
+              marketing_certificate_group_list mcgl
+              LEFT JOIN marketing_certificate mc
+                ON mcgl.`marketing_certificate_id` = mc.`id`
+            WHERE mcgl.`del_flag` = 0
+            ORDER BY mcgl.sort ASC ,mcgl.create_time DESC
+            ) m ${ew.customSqlSegment}
+    </select>
+    <select id="pageListBySout" resultType="map">
+        SELECT
+          mcgl.`id`,
+          mc.`main_picture`AS mainPicture,
+          CONCAT(
+            '￥',
+            0 + CAST(mcgl.`activity_price` AS CHAR)
+          ) AS activityPrice,
+          CONCAT(
+            mcgl.`number_clusters`,
+            '人拼'
+          ) AS numberClusters
+        FROM
+          marketing_certificate_group_list mcgl
+          LEFT JOIN marketing_certificate mc
+            ON mcgl.`marketing_certificate_id` = mc.`id`
+        WHERE mcgl.`del_flag` = 0
+          AND mcgl.status = 1
+          AND mc.`del_flag` = 0
+        ORDER BY mcgl.sort
+        LIMIT #{sout}
+    </select>
+    <select id="pageListByMarketingCertificateGroupList" resultType="map">
+        SELECT
+          m.id,
+          m.activity_price AS activityPrice,
+          m.main_picture AS mainPicture,
+          m.name,
+          m.market_price AS marketPrice,
+          0 + CAST((
+            TRUNCATE(m.repertory / (
+              (SELECT
+                  COUNT(1)
+                FROM
+                  marketing_certificate_record mcr
+                WHERE mcr.`del_flag` = 0
+                  AND mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
+            ),2) * 100
+          )AS CHAR) AS residue
+        FROM
+          (SELECT
+            mcgl.`id`,
+            mcgl.`activity_price`,
+            mc.`main_picture`,
+            mc.`name`,
+            mc.`market_price`,
+            (
+              mc.`total` - mc.`released_quantity`
+            ) AS repertory,
+            mcgl.`marketing_certificate_id`
+          FROM
+            marketing_certificate_group_list mcgl
+            LEFT JOIN marketing_certificate mc
+              ON mcgl.`marketing_certificate_id` = mc.`id`
+          WHERE mcgl.`del_flag` = 0
+            AND mcgl.status = 1
+          ORDER BY mcgl.sort ASC, mcgl.create_time DESC
+          ) m
+    </select>
+</mapper>

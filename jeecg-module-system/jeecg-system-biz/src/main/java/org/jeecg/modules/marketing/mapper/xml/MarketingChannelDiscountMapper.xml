@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingChannelDiscountMapper">
+    <!--根据优惠券id查询查找所有优惠券的投放渠道-->
+    <resultMap id="resulMarketingDiscountMap" type="org.jeecg.modules.marketing.entity.MarketingDiscount">
+        <result property="id" column="id"/><!--主键ID-->
+        <result property="createBy" column="createBy"/><!--创建人-->
+        <result property="createTime" column="createTime"/><!--创建时间-->
+        <result property="updateBy" column="updateBy"/><!--修改人-->
+        <result property="updateTime" column="updateTime"/><!--修改时间-->
+        <result property="year" column="year"/><!--创建年-->
+        <result property="month" column="month"/><!--创建月-->
+        <result property="day" column="day"/><!--创建日-->
+        <result property="delFlag" column="delFlag"/><!--删除状态-->
+        <result property="name" column="name"/><!--优惠券名称-->
+        <result property="sysUserId" column="sysUserId"/><!--店铺id-->
+        <result property="isThreshold" column="isThreshold"/><!--有无门槛-->
+        <result property="completely" column="completely"/><!--满多少钱-->
+        <result property="subtract" column="subtract"/><!--减多少钱-->
+        <result property="vouchersWay" column="vouchersWay"/><!--用券时间方式-->
+        <result property="startTime" column="startTime"/><!--开始时间-->
+        <result property="endTime" column="endTime"/><!--结束时间-->
+        <result property="disData" column="disData"/><!--多少天、周、月-->
+        <result property="monad" column="monad"/><!--单位；天、周、月-->
+        <result property="shopTotal" column="shopTotal"/><!--商品数量-->
+        <result property="total" column="total"/><!--发放总量-->
+        <result property="userRestrict" column="userRestrict"/><!--使用人限制-->
+        <result property="isGive" column="isGive"/><!--赠送设置-->
+        <result property="isWarn" column="isWarn"/><!--是否过期提醒-->
+        <result property="isWarn" column="warnDays"/><!--过期前多少天提醒-->
+        <result property="isGetThe" column="isGetThe"/><!--无券可再领取-->
+        <result property="discountExplain" column="discountExplain"/><!--券说明-->
+        <result property="releasedQuantity" column="releasedQuantity"/><!--已发放数量-->
+        <result property="status" column="status"/><!--状态-->
+        <result property="stopExplain" column="stopExplain"/><!--停用说明-->
+        <result property="delExplain" column="delExplain"/><!--删除说明-->
+    </resultMap>
+    <select id="getMarketingDiscountSoreByMarketingChannelId" resultMap="resulMarketingDiscountMap" parameterType="string">
+        SELECT
+          mds.*,
+          mcd.marketing_channel_id
+        FROM
+          marketing_discount mds,
+          marketing_channel_discount mcd
+        WHERE 1 = 1
+          AND mds.`id` = mcd.`marketing_discount_id`
+          AND mcd.`marketing_channel_id` = #{marketingChannelId}
+          AND mds.delFlag = 0
+    </select>
+
+
+    <!--根据投放渠道ID查询优惠券-->
+    <resultMap id="resulMarketingChannelMap" type="org.jeecg.modules.marketing.entity.MarketingChannel">
+        <result property="id" column="id"/><!--主键ID-->
+        <result property="createBy" column="createBy"/><!--创建人-->
+        <result property="createTime" column="createTime"/><!--创建时间-->
+        <result property="updateBy" column="updateBy"/><!--修改人-->
+        <result property="updateTime" column="updateTime"/><!--修改时间-->
+        <result property="year" column="year"/><!--创建年-->
+        <result property="month" column="month"/><!--创建月-->
+        <result property="day" column="day"/><!--创建日-->
+        <result property="delFlag" column="delFlag"/><!--删除状态-->
+        <result property="name" column="name"/><!--渠道名称-->
+        <result property="userRestrict" column="userRestrict"/><!--使用人限制-->
+        <result property="astrict" column="astrict"/><!--每人限领次数-->
+        <result property="status" column="status"/><!--状态-->
+        <result property="statusExplain" column="statusExplain"/><!--停用说明-->
+    </resultMap>
+    <select id="getMarketingChannelByMarketingDiscountSoreId" resultMap="resulMarketingChannelMap" parameterType="string">
+        SELECT
+          mc.*,
+          mcd.`marketing_discount_id`
+        FROM
+          marketing_channel mc,
+          marketing_channel_discount mcd
+        WHERE 1 = 1
+          AND mc.`id` = mcd.`marketing_channel_id`
+          AND mcd.`marketing_discount_id` = #{marketingDiscountId}
+          AND mc.`del_flag` = 0;
+    </select>
+</mapper>

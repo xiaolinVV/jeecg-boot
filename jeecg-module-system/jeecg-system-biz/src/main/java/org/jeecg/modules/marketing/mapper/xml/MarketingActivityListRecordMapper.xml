@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.mapper.MarketingActivityListRecordMapper">
+
+    <select id="getMarketingActivityListRecordList" resultType="map" parameterType="org.jeecg.modules.marketing.dto.MarketingActivityListRecordDTO">
+                SELECT
+            mal.serial_number AS serialNumber,
+            mal.activity_name AS activityName,
+            ml.phone,
+            ml.nick_name AS nickName,
+            malr.contact_number AS contactNumber,
+            malr.linkman,
+            DATE_FORMAT(malr.registration_time,'%Y-%m-%d %H:%i:%s') AS registrationTime
+        FROM
+            marketing_activity_list_record malr
+            LEFT JOIN member_list ml ON malr.member_list_id = ml.id
+            LEFT JOIN marketing_activity_list mal ON mal.id = malr.marketing_activity_list_id
+        WHERE
+            malr.del_flag = '0'
+
+        <if test='marketingActivityListRecordDTO.serialNumber!=null and marketingActivityListRecordDTO.serialNumber!=""'>
+            and mal.serial_number LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.serialNumber}),'%')
+        </if>
+
+        <if test='marketingActivityListRecordDTO.activityName!=null and marketingActivityListRecordDTO.activityName!=""'>
+            and mal.activity_name LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.activityName}),'%')
+        </if>
+
+        <if test='marketingActivityListRecordDTO.phone!=null and marketingActivityListRecordDTO.phone!=""'>
+            and ml.phone LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.phone}),'%')
+        </if>
+
+        <if test='marketingActivityListRecordDTO.nickName!=null and marketingActivityListRecordDTO.nickName!=""'>
+            and ml.nick_name LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.nickName}),'%')
+        </if>
+
+        <if test='marketingActivityListRecordDTO.linkman!=null and marketingActivityListRecordDTO.linkman!=""'>
+            and malr.linkman LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.linkman}),'%')
+        </if>
+
+        <if test='marketingActivityListRecordDTO.contactNumber!=null and marketingActivityListRecordDTO.contactNumber!=""'>
+            and malr.contact_number LIKE CONCAT(CONCAT('%',#{marketingActivityListRecordDTO.contactNumber}),'%')
+        </if>
+        <if test='marketingActivityListRecordDTO.registrationTimeStart!=null and marketingActivityListRecordDTO.registrationTimeStart!=""'>
+            and malr.registration_time &gt;=#{marketingActivityListRecordDTO.registrationTimeStart}
+        </if>
+        <if test='marketingActivityListRecordDTO.registrationTimeEnd!=null and marketingActivityListRecordDTO.registrationTimeEnd!=""'>
+            and malr.registration_time &lt;=#{marketingActivityListRecordDTO.registrationTimeEnd}
+        </if>
+        ORDER BY
+            malr.registration_time DESC
+
+    </select>
+
+    <select id="getmarketingActivityListRecordByMemberId" resultType="map">
+
+                SELECT
+            mal.surface_plot AS surfacePlot,
+            mal.activity_name AS activityName,
+            mal.active_status AS activeStatus,
+            mal.id
+        FROM
+            marketing_activity_list_record malr
+            LEFT JOIN marketing_activity_list mal ON malr.marketing_activity_list_id = mal.id
+        WHERE
+            malr.del_flag = '0'
+            AND mal.id IS NOT NULL
+            AND malr.member_list_id = #{memberListId}
+        ORDER BY
+            malr.create_time DESC
+    </select>
+</mapper>
