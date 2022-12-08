@@ -72,6 +72,7 @@ public class StorePayment implements Serializable {
 	/**店铺管理id*/
 	@Excel(name = "店铺管理id", width = 15)
     @ApiModelProperty(value = "店铺管理id")
+    @Dict(dictTable = "store_manage",dicCode = "id",dicText = "boss_name")
     private java.lang.String storeManageId;
 	/**老板手机（联系人手机号，是登录账号）*/
 	@Excel(name = "老板手机（联系人手机号，是登录账号）", width = 15)
