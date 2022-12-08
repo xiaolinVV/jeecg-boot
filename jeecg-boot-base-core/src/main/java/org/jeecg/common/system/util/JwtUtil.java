@@ -36,7 +36,7 @@ import org.jeecg.common.util.oConvertUtils;
 public class JwtUtil {
 
 	/**Token有效期为1小时（Token在reids中缓存时间为两倍）*/
-	public static final long EXPIRE_TIME = 60 * 60 * 6 * 1000;
+	public static final long EXPIRE_TIME = 60 * 60 * 12 * 1000;
 	static final String WELL_NUMBER = SymbolConstant.WELL_NUMBER + SymbolConstant.LEFT_CURLY_BRACKET;
 
     /**
