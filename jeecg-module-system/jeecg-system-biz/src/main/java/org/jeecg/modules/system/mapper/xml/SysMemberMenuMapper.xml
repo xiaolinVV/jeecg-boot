@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.system.mapper.SysMemberMenuMapper">
+        <select id="getSysMemberMenuListMap" resultType="map">
+          SELECT
+          id,
+          menu_name AS menuName,
+          english_name AS englishName,
+          menu_logo AS menuLogo,
+          menu_current_logo as menuCurrentLogo,
+          review_hidden as reviewHidden,
+          status
+        FROM
+          sys_member_menu
+        WHERE del_flag = 0
+        ORDER BY sort ASC ,update_time DESC, create_time DESC
+        </select>
+</mapper>
