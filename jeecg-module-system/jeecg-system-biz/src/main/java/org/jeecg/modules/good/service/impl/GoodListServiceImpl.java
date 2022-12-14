@@ -13,7 +13,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.config.util.HttpClientUtil;
+import org.jeecg.common.util.gongke.HttpClientUtil;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
 import org.jeecg.modules.good.dto.GoodListDto;
 import org.jeecg.modules.good.dto.SpecificationsPicturesDTO;

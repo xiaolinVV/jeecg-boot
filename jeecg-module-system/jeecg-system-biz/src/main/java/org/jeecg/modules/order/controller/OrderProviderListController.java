@@ -21,7 +21,7 @@ import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.SpringContextUtils;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.config.util.HttpUtils;
+import org.jeecg.common.util.gongke.HttpUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.service.IGoodSpecificationService;

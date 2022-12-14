@@ -1,4 +1,4 @@
-package org.jeecg.modules.jwt.def;
+package org.jeecg.config.jwt.def;
 
 public class JwtConstants {
 

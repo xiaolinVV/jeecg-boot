@@ -13,8 +13,6 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.config.util.PermissionUtils;
-import org.jeecg.modules.agency.dto.AgencyRechargeRecordDTO;
 import org.jeecg.modules.agency.dto.AgencyStatementAccountDTO;
 import org.jeecg.modules.agency.entity.AgencyAccountCapital;
 import org.jeecg.modules.agency.entity.AgencyStatementAccount;
@@ -39,9 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 

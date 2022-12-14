@@ -19,7 +19,7 @@ import org.jeecg.modules.alliance.dto.AllianceManageDTO;
 import org.jeecg.modules.alliance.entity.AllianceManage;
 import org.jeecg.modules.alliance.service.IAllianceManageService;
 import org.jeecg.modules.alliance.vo.AllianceManageVO;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.member.service.IMemberDesignationGroupService;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.service.IStoreManageService;

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.system.entity.SysSmallcode;
 import org.jeecg.modules.system.service.ISysSmallcodeService;
 import org.springframework.beans.factory.annotation.Autowired;

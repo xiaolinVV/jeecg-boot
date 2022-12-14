@@ -18,7 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.jeecg.common.system.vo.DictModel;
-import org.jeecg.config.util.HttpUtils;
+import org.jeecg.common.util.gongke.HttpUtils;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.order.dto.OrderEvaluateDTO;
 import org.jeecg.modules.order.dto.OrderListDTO;

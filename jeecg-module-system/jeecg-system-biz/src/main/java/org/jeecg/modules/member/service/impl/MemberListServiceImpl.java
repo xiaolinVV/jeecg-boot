@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.agency.vo.AgencyWorkbenchVO;
 import org.jeecg.modules.alliance.vo.AllianceWorkbenchVO;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.marketing.entity.MarketingDistributionSetting;
 import org.jeecg.modules.marketing.entity.MarketingGiftBagRecord;
 import org.jeecg.modules.marketing.service.IMarketingDistributionSettingService;

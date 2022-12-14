@@ -1,4 +1,4 @@
-package org.jeecg.modules.jwt.utils;
+package org.jeecg.config.jwt.utils;
 
 
 import com.alibaba.fastjson.JSONArray;
@@ -11,12 +11,13 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.jeecg.config.util.HttpClientUtil;
-import org.jeecg.modules.jwt.service.RedisTokenManager;
-import org.jeecg.modules.jwt.service.TokenManager;
-import org.jeecg.modules.system.service.ISysDictService;
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.util.gongke.HttpClientUtil;
+import org.jeecg.config.jwt.service.RedisTokenManager;
+import org.jeecg.config.jwt.service.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -43,20 +45,21 @@ public class WeixinQRUtils {
     private TokenManager tokenManager;
     @Autowired
     private RedisTokenManager redisTokenManager;
+    @Lazy
+    @Resource
+    private CommonAPI commonApi;
     @Autowired
-    private ISysDictService iSysDictService;
-    @Autowired
-    private HttpClientUtil  httpClientUtil;
+    private HttpClientUtil httpClientUtil;
 
     //生成会员端店铺二维码
     public String getQrCode(String scene) {
 
         //获取常量信息
-        String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID");
+        String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID");
         if(appid.equals("-1")){
             return null;
         }
-        String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret");
+        String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret");
         String accessToken = tokenManager.createWeiXinToken(appid, appSecret);
         RestTemplate rest = new RestTemplate();
 
@@ -105,8 +108,8 @@ public class WeixinQRUtils {
     public String getQrCodeByPage(String scene,String page) {
 
         //获取常量信息
-        String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID");
-        String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret");
+        String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID");
+        String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret");
         String accessToken = tokenManager.createWeiXinToken(appid, appSecret);
         RestTemplate rest = new RestTemplate();
 
@@ -158,8 +161,8 @@ public class WeixinQRUtils {
     public String getCommercialQrCode(String scene) {
 
         //获取常量信息
-        String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID_store");
-        String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret_store");
+        String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID_store");
+        String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret_store");
         String accessToken = tokenManager.createWeiXinToken(appid, appSecret);
         RestTemplate rest = new RestTemplate();
 
@@ -208,8 +211,8 @@ public class WeixinQRUtils {
     public String getCommercialQrCodeByPage(String scene,String page) {
 
         //获取常量信息
-        String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID_store");
-        String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret_store");
+        String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID_store");
+        String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret_store");
         String accessToken = tokenManager.createWeiXinToken(appid, appSecret);
         RestTemplate rest = new RestTemplate();
 
@@ -258,8 +261,8 @@ public class WeixinQRUtils {
     //获取小程序用户的openid,unionid
     public JSONObject getSessionByCode(String openid) {//code是从小程序调用wx.login拿到的code
 
-        String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID");
-        String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret");
+        String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID");
+        String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret");
         String  accessToken =  redisTokenManager.createWeiXinToken(appid, appSecret);
         Map<String,String> params = new HashMap<String,String>();
         params.put("access_token",accessToken);
@@ -273,8 +276,8 @@ public class WeixinQRUtils {
     //获取小程序用户的unionid
        public   Map<String,Object> oauth2GetOpenid(String code) {
          String GetPageAccessTokenUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=CODE&grant_type=authorization_code";
-         String appid = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppID");
-         String appSecret = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "AppSecret");
+         String appid = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppID");
+         String appSecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "AppSecret");
 
          String requestUrl = GetPageAccessTokenUrl.replace("APPID", appid).replace("SECRET", appSecret).replace("CODE", code);
                  HttpClient client = null;

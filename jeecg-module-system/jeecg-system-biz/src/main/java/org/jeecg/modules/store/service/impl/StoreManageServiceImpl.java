@@ -25,7 +25,7 @@ import org.jeecg.modules.alliance.entity.AllianceRechargeRecord;
 import org.jeecg.modules.alliance.service.IAllianceAccountCapitalService;
 import org.jeecg.modules.alliance.service.IAllianceManageService;
 import org.jeecg.modules.alliance.service.IAllianceRechargeRecordService;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.marketing.entity.MarketingCommingStore;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePayments;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;

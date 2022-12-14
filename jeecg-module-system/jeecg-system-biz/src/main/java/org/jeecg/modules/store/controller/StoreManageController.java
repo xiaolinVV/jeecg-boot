@@ -20,7 +20,7 @@ import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.alliance.entity.AllianceManage;
 import org.jeecg.modules.alliance.service.IAllianceManageService;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.map.api.AfterMapController;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;
 import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;

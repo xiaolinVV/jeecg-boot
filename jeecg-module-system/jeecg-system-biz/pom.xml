@@ -43,19 +43,6 @@
 
 		<!--		贡客迁移过来的依赖-->
 
-		<!--JWT-->
-		<dependency>
-			<groupId>com.auth0</groupId>
-			<artifactId>java-jwt</artifactId>
-			<version>3.16.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.9.1</version>
-		</dependency>
-
 		<!-- Excel 导出 -->
 		<dependency>
 			<groupId>cn.afterturn</groupId>

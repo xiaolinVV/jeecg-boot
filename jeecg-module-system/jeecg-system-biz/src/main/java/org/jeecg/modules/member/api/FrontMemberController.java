@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.util.PasswordUtil;
 import org.jeecg.common.util.RedisUtil;
-import org.jeecg.modules.jwt.service.TokenManager;
+import org.jeecg.config.jwt.service.TokenManager;
 import org.jeecg.modules.marketing.service.IMarketingIntegralTaskService;
 import org.jeecg.modules.marketing.service.IMarketingLeagueMemberService;
 import org.jeecg.modules.member.entity.MemberList;

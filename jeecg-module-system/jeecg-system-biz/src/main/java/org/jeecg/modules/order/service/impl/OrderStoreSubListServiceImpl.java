@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.jeecg.common.system.vo.DictModel;
-import org.jeecg.config.util.HttpTool;
+import org.jeecg.common.util.gongke.HttpTool;
 import org.jeecg.modules.order.dto.OrderStoreSubListDTO;
 import org.jeecg.modules.order.entity.OrderStoreSubList;
 import org.jeecg.modules.order.mapper.OrderStoreSubListMapper;

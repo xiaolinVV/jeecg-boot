@@ -1,4 +1,4 @@
-package org.jeecg.config.util;
+package org.jeecg.common.util.gongke;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
@@ -17,12 +17,13 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.jeecg.modules.system.service.ISysDictService;
+import org.jeecg.common.api.CommonAPI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.net.ssl.SSLContext;
 import java.io.*;
 import java.net.*;
@@ -39,9 +40,9 @@ public class HttpClientUtil {
     //证书到商户系统下载
     @Value("${jeecg.path.cert}")
     private  String cert;
-    @Autowired
     @Lazy
-    private ISysDictService iSysDictService;
+    @Resource
+    private CommonAPI commonApi;
    /* final static String KEYSTORE_FILE = "C:/zhengshu/apiclient_cert.p12";
     final static String KEYSTORE_PASSWORD = "1501259041";//默认证书密码是商户号*/
 
@@ -355,7 +356,7 @@ public static String doGet(String url, Map<String, String> param) {
     }
     public  String doSendMoney(String url, String data) throws Exception {
         //商户号
-        String  mchId =iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "mchId");
+        String  mchId =commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "mchId");
 
         KeyStore keyStore  = KeyStore.getInstance("PKCS12");
         FileInputStream instream = new FileInputStream(new File(cert + "/apiclient_cert.p12"));//P12文件目录

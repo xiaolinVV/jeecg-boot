@@ -1,4 +1,4 @@
-package org.jeecg.config.util;
+package org.jeecg.common.util.gongke;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;

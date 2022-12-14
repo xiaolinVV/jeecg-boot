@@ -1,7 +1,7 @@
-package org.jeecg.modules.jwt.service;
+package org.jeecg.config.jwt.service;
 
 
-import org.jeecg.modules.jwt.model.TokenModel;
+import org.jeecg.config.jwt.model.TokenModel;
 
 /**
  * 对token进行操作的接口

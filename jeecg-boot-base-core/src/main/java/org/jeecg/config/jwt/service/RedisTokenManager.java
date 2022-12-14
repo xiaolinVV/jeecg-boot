@@ -1,10 +1,10 @@
-package org.jeecg.modules.jwt.service;
+package org.jeecg.config.jwt.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.jeecg.modules.jwt.def.JwtConstants;
-import org.jeecg.modules.jwt.model.TokenModel;
+import org.jeecg.config.jwt.def.JwtConstants;
+import org.jeecg.config.jwt.model.TokenModel;
 import org.jeewx.api.core.exception.WexinReqException;
 import org.jeewx.api.wxbase.wxtoken.JwTokenAPI;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,7 @@ public class RedisTokenManager implements TokenManager {
     /**
      * 生成TOKEN
      */
+    @Override
     public String createToken(String memberId,String softModel) {
         //使用uuid作为源token
         String token = Jwts.builder().setId(memberId).setSubject(memberId).setIssuedAt(new Date()).signWith(SignatureAlgorithm.HS256, JwtConstants.JWT_SECRET).compact();
@@ -34,11 +35,13 @@ public class RedisTokenManager implements TokenManager {
         redisTemplate.boundValueOps(softModel+"member="+memberId).set(token, JwtConstants.TOKEN_EXPIRES_HOUR, TimeUnit.HOURS);
         return token;
     }
-    
+
+    @Override
     public TokenModel getToken(String token,String memberId) {
         return new TokenModel(memberId, token,"");
     }
 
+    @Override
     public boolean checkToken(TokenModel model,String softModel) {
         if (model == null) {
             return false;
@@ -52,6 +55,7 @@ public class RedisTokenManager implements TokenManager {
         return true;
     }
 
+    @Override
     public void deleteToken(String memberId,String softModel) {
         redisTemplate.delete(softModel+"member="+memberId);
     }

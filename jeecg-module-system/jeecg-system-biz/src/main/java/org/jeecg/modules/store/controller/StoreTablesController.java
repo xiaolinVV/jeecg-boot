@@ -13,7 +13,7 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.jwt.utils.WeixinQRUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.store.entity.StoreTables;
 import org.jeecg.modules.store.service.IStoreTablesService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;

@@ -1,4 +1,4 @@
-package org.jeecg.modules.jwt.model;
+package org.jeecg.config.jwt.model;
 
 import lombok.Data;
 
