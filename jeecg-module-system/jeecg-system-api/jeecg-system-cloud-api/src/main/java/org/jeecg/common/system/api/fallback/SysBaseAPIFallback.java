@@ -280,6 +280,11 @@ public class SysBaseAPIFallback implements ISysBaseAPI {
     }
 
     @Override
+    public LoginMemberList getMemberListById(String id) {
+        return null;
+    }
+
+    @Override
     public void sendTemplateMessage(MessageDTO message) {
     }
 
