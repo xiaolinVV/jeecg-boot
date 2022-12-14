@@ -12,6 +12,7 @@ import org.jeecg.common.util.oConvertUtils;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 
@@ -65,6 +66,40 @@ public class MybatisInterceptor implements Interceptor {
 						if (localCreateDate == null || "".equals(localCreateDate)) {
 							field.setAccessible(true);
 							field.set(parameter, new Date());
+							field.setAccessible(false);
+						}
+					}
+					Calendar calendar=Calendar.getInstance();
+					// 注入创建年
+					if ("year".equals(field.getName())) {
+						field.setAccessible(true);
+						Object localYear = field.get(parameter);
+						field.setAccessible(false);
+						if (localYear == null || "".equals(localYear)) {
+							field.setAccessible(true);
+							field.set(parameter,calendar.get(Calendar.YEAR));
+							field.setAccessible(false);
+						}
+					}
+					// 注入创建月
+					if ("month".equals(field.getName())) {
+						field.setAccessible(true);
+						Object localMonth = field.get(parameter);
+						field.setAccessible(false);
+						if (localMonth == null || "".equals(localMonth)) {
+							field.setAccessible(true);
+							field.set(parameter,calendar.get(Calendar.MONTH)+1);
+							field.setAccessible(false);
+						}
+					}
+					// 注入创建日
+					if ("day".equals(field.getName())) {
+						field.setAccessible(true);
+						Object localDay = field.get(parameter);
+						field.setAccessible(false);
+						if (localDay == null || "".equals(localDay)) {
+							field.setAccessible(true);
+							field.set(parameter,calendar.get(Calendar.DAY_OF_MONTH));
 							field.setAccessible(false);
 						}
 					}
