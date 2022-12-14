@@ -1,5 +1,6 @@
 package org.jeecg.modules.system.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -25,6 +26,8 @@ import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.*;
 import org.jeecg.common.util.*;
 import org.jeecg.common.util.dynamic.db.FreemarkerParseFactory;
+import org.jeecg.modules.member.entity.MemberList;
+import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.message.entity.SysMessageTemplate;
 import org.jeecg.modules.message.handle.impl.DdSendMsgHandle;
 import org.jeecg.modules.message.handle.impl.EmailSendMsgHandle;
@@ -104,6 +107,8 @@ public class SysBaseApiImpl implements ISysBaseAPI {
 	private ISysDataLogService sysDataLogService;
 	@Autowired
 	private ISysFilesService sysFilesService;
+	@Autowired
+	private IMemberListService memberListService;
 
 	@Override
 	//@SensitiveDecode
@@ -1296,5 +1301,16 @@ public class SysBaseApiImpl implements ISysBaseAPI {
 		obj.put(WebsocketConst.MSG_CMD, WebsocketConst.MSG_CHAT);
 		obj.put(WebsocketConst.MSG_USER_ID, userId);
 		webSocket.sendMessage(userId, obj.toJSONString());
+	}
+
+	@Override
+	public LoginMemberList getMemberListById(String id) {
+		MemberList memberList = memberListService.getById(id);
+		if (memberList != null) {
+			LoginMemberList loginMemberList = new LoginMemberList();
+			BeanUtil.copyProperties(memberList,loginMemberList);
+			return loginMemberList;
+		}
+		return null;
 	}
 }

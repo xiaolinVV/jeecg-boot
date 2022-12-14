@@ -127,4 +127,11 @@ public interface CommonAPI {
      */
     List<DictModel> translateDictFromTableByKeys(String table, String text, String code, String keys);
 
+    /**
+     * 根据 ID 获取会员信息
+     * @param id 会员ID
+     * @return
+     */
+    LoginMemberList getMemberListById(String id);
+
 }

@@ -24,6 +24,7 @@ public class RedisTokenManager implements TokenManager {
 	@Autowired
     private StringRedisTemplate redisTemplate;
 
+    // TODO: 2022/12/14 token 生成逻辑梳理与替换 @zhangshaolin
     /**
      * 生成TOKEN
      */
