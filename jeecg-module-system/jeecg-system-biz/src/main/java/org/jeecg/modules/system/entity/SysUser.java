@@ -123,20 +123,20 @@ public class SysUser implements Serializable {
     /**
      * 工号，唯一键
      */
-    @Excel(name = "工号", width = 15)
+//    @Excel(name = "工号", width = 15)
     private String workNo;
 
     /**
      * 职务，关联职务表
      */
-    @Excel(name = "职务", width = 15)
+//    @Excel(name = "职务", width = 15)
     @Dict(dictTable ="sys_position",dicText = "name",dicCode = "code")
     private String post;
 
     /**
      * 座机号
      */
-    @Excel(name = "座机号", width = 15)
+//    @Excel(name = "座机号", width = 15)
     private String telephone;
 
     /**
@@ -166,13 +166,13 @@ public class SysUser implements Serializable {
     /**
      * 身份（0 普通成员 1 上级）
      */
-    @Excel(name="（1普通成员 2上级）",width = 15)
+//    @Excel(name="（1普通成员 2上级）",width = 15)
     private Integer userIdentity;
 
     /**
      * 负责部门
      */
-    @Excel(name="负责部门",width = 15,dictTable ="sys_depart",dicText = "depart_name",dicCode = "id")
+//    @Excel(name="负责部门",width = 15,dictTable ="sys_depart",dicText = "depart_name",dicCode = "id")
     @Dict(dictTable ="sys_depart",dicText = "depart_name",dicCode = "id")
     private String departIds;
 
