@@ -8,12 +8,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.system.vo.SysUserCacheInfo;
+import org.jeecg.modules.system.dto.SysUserDTO;
 import org.jeecg.modules.system.entity.SysRoleIndex;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.vo.SysWorkbenchVO;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -312,5 +314,20 @@ public interface ISysUserService extends IService<SysUser> {
 	public Map<String, Object> getUserRoleCodeAndGoodAudit(String sysUserId);
 
 	SysWorkbenchVO totalSum();
+
+	/**
+	 * 根据角色查询用户列表
+	 * @param roleName
+	 * @return
+	 */
+	List<SysUserDTO> getUserByRoleName(String roleName);
+
+	/**
+	 * 根据sysUserId 查询 返回角色roleCode
+	 */
+
+	String getUserRoleCode(String sysUserId);
+
+	Map<String,Object> findAll(SysWorkbenchVO sysWorkbenchVO) throws ParseException;
 
 }

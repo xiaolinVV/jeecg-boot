@@ -10,27 +10,40 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.Maps;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.aspect.annotation.PermissionData;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.constant.SymbolConstant;
 import org.jeecg.common.system.api.ISysBaseAPI;
+import org.jeecg.modules.agency.entity.AgencyManage;
+import org.jeecg.modules.agency.service.IAgencyManageService;
+import org.jeecg.modules.alliance.entity.AllianceManage;
+import org.jeecg.modules.alliance.service.IAllianceManageService;
 import org.jeecg.modules.base.service.BaseCommonService;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.util.JwtUtil;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.*;
+import org.jeecg.modules.provider.entity.ProviderManage;
+import org.jeecg.modules.provider.service.IProviderManageService;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreManageService;
+import org.jeecg.modules.system.dto.SysUserDTO;
 import org.jeecg.modules.system.entity.*;
 import org.jeecg.modules.system.model.DepartIdModel;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.service.*;
 import org.jeecg.modules.system.vo.SysDepartUsersVO;
 import org.jeecg.modules.system.vo.SysUserRoleVO;
+import org.jeecg.modules.system.vo.SysWorkbenchVO;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -46,6 +59,8 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -91,6 +106,17 @@ public class SysUserController {
 
     @Autowired
     private BaseCommonService baseCommonService;
+
+    @Autowired
+    private IStoreManageService iStoreManageService;
+    @Autowired
+    private ISysRoleService iSysRoleService;
+    @Autowired
+    private IAgencyManageService iAgencyManageService;
+    @Autowired
+    private IProviderManageService iProviderManageService;
+    @Autowired
+    private IAllianceManageService iAllianceManageService;
 
     /**
      * 获取用户列表数据
@@ -179,8 +205,59 @@ public class SysUserController {
             user.setOrgCode(null);
 			// 保存用户走一个service 保证事务
 			sysUserService.saveUser(user, selectedRoles, selectedDeparts);
+
+            //是否是添加代理角色
+            SysRole sysRole = iSysRoleService.getById(selectedRoles);
+            if (oConvertUtils.isNotEmpty(sysRole)) {
+                if (sysRole.getRoleCode().equals("Provincial_agents") || sysRole.getRoleCode().equals("Municipal_agent") || sysRole.getRoleCode().equals("County_agent")) {
+                    String selectProvince = jsonObject.getString("selectProvince");
+                    AgencyManage agencyManage = new AgencyManage();
+                    agencyManage.setDelFlag("0");
+                    agencyManage.setSysUserId(user.getId());
+                    agencyManage.setStatus("0");
+                    agencyManage.setSysAreaId(selectProvince);
+                    iAgencyManageService.save(agencyManage);
+                    result.success("请去代理列表完善代理信息！");
+                } else {
+                    result.success("添加成功！");
+                }
+                //供应商
+                if (sysRole.getRoleCode().equals("Supplier")) {
+                    ProviderManage providerManage = new ProviderManage();
+                    providerManage.setDelFlag("0");
+                    providerManage.setStatus("1");
+                    providerManage.setSysUserId(user.getId());
+                    providerManage.setLinkman(user.getRealname());
+                    providerManage.setLinkphone(user.getPhone());
+                    iProviderManageService.save(providerManage);
+                    result.success("添加成功！");
+                }
+                //店铺
+                if (sysRole.getRoleCode().equals("Merchant")) {
+                    StoreManage storeManage = new StoreManage();
+                    storeManage.setDelFlag("0");
+                    storeManage.setSysUserId(user.getId());
+                    storeManage.setComprehensiveEvaluation(new BigDecimal(5));
+                    storeManage.setBossName(user.getRealname());
+                    storeManage.setBossPhone(user.getPhone());
+                    storeManage.setStatus("1");
+                    storeManage.setAttestationStatus("-1");
+                    storeManage.setPayStatus("2");
+                    storeManage.setCityDistributionType("0");
+                    iStoreManageService.save(storeManage);
+                    result.success("添加成功！");
+                }
+                if (sysRole.getRoleCode().equals("Franchisee")) {
+                    iAllianceManageService.save(new AllianceManage()
+                            .setDelFlag("0")
+                            .setSysUserId(user.getId())
+                    );
+                    result.success("添加成功！");
+                }
+            }else {
+                result.success("添加成功！");
+            }
             baseCommonService.addLog("添加用户，username： " +user.getUsername() ,CommonConstant.LOG_TYPE_2, 2);
-			result.success("添加成功！");
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			result.error500("操作失败");
@@ -213,6 +290,43 @@ public class SysUserController {
                 user.setOrgCode(null);
                 // 修改用户走一个service 保证事务
 				sysUserService.editUser(user, roles, departs);
+                //是否是添加代理角色
+                SysRole sysRole = iSysRoleService.getById(roles);
+                if (oConvertUtils.isNotEmpty(sysRole)) {
+                    if (sysRole.getRoleCode().equals("Provincial_agents") || sysRole.getRoleCode().equals("Municipal_agent") || sysRole.getRoleCode().equals("County_agent")) {
+                        QueryWrapper<AgencyManage> queryWrapper = new QueryWrapper();
+                        queryWrapper.eq("sys_user_id", user.getId());
+                        queryWrapper.eq("del_flag", "0");
+                        AgencyManage agencyManage = iAgencyManageService.getOne(queryWrapper);
+                        if (agencyManage == null) {
+                            agencyManage = new AgencyManage();
+                            agencyManage.setDelFlag("0");
+                            agencyManage.setSysUserId(user.getId());
+                            agencyManage.setStatus("0");
+                            iAgencyManageService.save(agencyManage);
+                            result.success("请去代理列表完善代理信息！");
+                        } else {
+                            iAgencyManageService.updateById(agencyManage);
+                        }
+                    } else {
+                        result.success("添加成功！");
+                    }
+                    if (sysRole.getRoleCode().equals("Merchant")) {
+                        QueryWrapper<StoreManage> storeManageQueryWrapper = new QueryWrapper<>();
+                        storeManageQueryWrapper.eq("sys_user_id", jsonObject.getString("id"));
+                        StoreManage one = iStoreManageService.getOne(storeManageQueryWrapper);
+                        if (!org.apache.commons.lang3.StringUtils.equals(one.getBossPhone(), jsonObject.getString("phone"))) {
+                            one.setBossPhone(jsonObject.getString("phone"));
+                            iStoreManageService.updateById(one);
+                        }
+                        if (!org.apache.commons.lang3.StringUtils.equals(one.getBossName(), jsonObject.getString("realname"))) {
+                            one.setBossName(jsonObject.getString("realname"));
+                            iStoreManageService.updateById(one);
+                        }
+                    }
+                } else {
+                    result.success("添加成功！");
+                }
 				result.success("修改成功!");
 			}
 		} catch (Exception e) {
@@ -350,6 +464,224 @@ public class SysUserController {
         baseCommonService.addLog("修改用户 "+sysUser.getUsername()+" 的密码，操作人： " +loginUser.getUsername() ,CommonConstant.LOG_TYPE_2, 2);
         //update-end---author:wangshuai ---date:20220316  for：[VUEN-234]修改密码添加敏感日志------------
         return sysUserService.changePassword(sysUser);
+    }
+
+    /**
+     * 返回店铺安全设置
+     *
+     * @return
+     */
+    @RequestMapping(value = "findUser", method = RequestMethod.GET)
+    public Result<SysUser> findUser() {
+        Result<SysUser> result = new Result<>();
+        LoginUser user = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+        SysUser b = sysUserService.getById(user.getId());
+        result.setSuccess(true);
+        result.setResult(b);
+        return result;
+    }
+
+    /**
+     * 店铺安全设置修改密码
+     *
+     * @param jsonObject
+     * @return
+     */
+    @RequestMapping(value = "updateStorePassword", method = RequestMethod.PUT)
+    public Result<SysUser> updateStorePassword(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String id = jsonObject.getString("id");
+        String phone = jsonObject.getString("phone");
+        String smscode = jsonObject.getString("captcha");
+        String username = jsonObject.getString("username");
+        String password = jsonObject.getString("password");
+        String confirmpassword = jsonObject.getString("confirmpassword");
+        SysUser user = sysUserService.getById(id);
+        Object code = redisUtil.get(phone);
+        if (!smscode.equals(code)) {
+            result.error500("手机验证码错误");
+            return result;
+        }
+        if (oConvertUtils.isEmpty(password)) {
+            result.error500("新密码不存在!");
+            return result;
+        }
+
+        if (!password.equals(confirmpassword)) {
+            result.error500("两次输入密码不一致!");
+            return result;
+        }
+        String newpassword = PasswordUtil.encrypt(username, password, user.getSalt());
+        sysUserService.saveOrUpdate(user.setPassword(newpassword));
+        result.success("密码修改完成！");
+        return result;
+    }
+
+    /**
+     * 店铺安全设置绑定手机
+     *
+     * @param
+     * @return
+     */
+    @RequestMapping(value = "updateStorePhone", method = RequestMethod.POST)
+    public Result<SysUser> updateStorePhone(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String id = jsonObject.getString("id");
+        String oldPhone = jsonObject.getString("oldPhone");
+        String oldPhoneCode = jsonObject.getString("oldPhoneCode");
+        String newPhone = jsonObject.getString("newPhone");
+        String newPhoneCode = jsonObject.getString("newPhoneCode");
+
+        if (org.apache.commons.lang3.StringUtils.isBlank(newPhone)) {
+            result.error500("不能为空");
+            return result;
+        }
+        Object o = redisUtil.get(oldPhone);
+        if (!oldPhoneCode.equals(o)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        Object o1 = redisUtil.get(newPhone);
+        if (!newPhoneCode.equals(o1)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        UpdateWrapper<StoreManage> storeManageUpdateWrapper = new UpdateWrapper<>();
+        storeManageUpdateWrapper.eq("sys_user_id", id);
+        StoreManage storeManage = new StoreManage();
+        storeManage.setBossPhone(newPhone);
+        iStoreManageService.update(storeManage, storeManageUpdateWrapper);
+        SysUser user = new SysUser();
+        user.setPhone(newPhone);
+        UpdateWrapper<SysUser> sysUserUpdateWrapper = new UpdateWrapper<>();
+        sysUserUpdateWrapper.eq("id", id);
+        boolean b = sysUserService.update(user, sysUserUpdateWrapper);
+        if (b) {
+            result.setMessage("修改成功");
+        } else {
+            result.error500("修改失败");
+        }
+        return result;
+    }
+
+    /**
+     * 供应商安全设置(修改手机号)
+     *
+     * @param jsonObject
+     * @return
+     */
+    @RequestMapping(value = "updateProviderPhone", method = RequestMethod.POST)
+    public Result<SysUser> updateProviderPhone(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String id = jsonObject.getString("id");
+        String oldPhone = jsonObject.getString("oldPhone");
+        String oldPhoneCode = jsonObject.getString("oldPhoneCode");
+        String newPhone = jsonObject.getString("newPhone");
+        String newPhoneCode = jsonObject.getString("newPhoneCode");
+
+        if (org.apache.commons.lang3.StringUtils.isBlank(newPhone)) {
+            result.error500("不能为空");
+            return result;
+        }
+        Object o = redisUtil.get(oldPhone);
+        if (!oldPhoneCode.equals(o)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        Object o1 = redisUtil.get(newPhone);
+        if (!newPhoneCode.equals(o1)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        UpdateWrapper<ProviderManage> providerManageUpdateWrapper = new UpdateWrapper<>();
+        providerManageUpdateWrapper.eq("sys_user_id", id);
+        ProviderManage providerManage = new ProviderManage();
+        providerManage.setLinkphone(newPhone);
+        iProviderManageService.update(providerManage, providerManageUpdateWrapper);
+        SysUser byId = sysUserService.getById(id);
+        byId.setPhone(newPhone);
+        boolean b = sysUserService.updateById(byId);
+        if (b) {
+            result.setMessage("修改成功");
+        } else {
+            result.error500("修改失败");
+        }
+        return result;
+    }
+
+    @PostMapping("/updateFranchiseePhone")
+    public Result<SysUser> updateFranchiseePhone(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String id = jsonObject.getString("id");
+        String username = jsonObject.getString("username");
+        String phone = jsonObject.getString("phone");
+        String sbCode = jsonObject.getString("sbCode");
+        String password = jsonObject.getString("password");
+        String confirmpassword = jsonObject.getString("confirmpassword");
+
+        if (!password.equals(confirmpassword)) {
+            result.error500("两次输入密码不一致!");
+            return result;
+        }
+        Object o = redisUtil.get(phone);
+        if (!sbCode.equals(o)) {
+            return result.error500("验证码错误");
+        }
+        SysUser user = sysUserService.getById(id);
+        String newpassword = PasswordUtil.encrypt(username, password, user.getSalt());
+        sysUserService.saveOrUpdate(user.setPassword(newpassword));
+        result.success("修改成功");
+        return result;
+    }
+
+    @PostMapping("/updateFranchiseePassword")
+    public Result<SysUser> updateFranchiseePassword(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String id = jsonObject.getString("id");
+        String username = jsonObject.getString("username");
+        String oldPhone = jsonObject.getString("oldPhone");
+        String oldPhoneCode = jsonObject.getString("oldPhoneCode");
+        String newPhone = jsonObject.getString("newPhone");
+        String newPhoneCode = jsonObject.getString("newPhoneCode");
+        if (org.apache.commons.lang3.StringUtils.isBlank(newPhone)) {
+            result.error500("不能为空");
+            return result;
+        }
+        Object o = redisUtil.get(oldPhone);
+        if (!oldPhoneCode.equals(o)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        Object o1 = redisUtil.get(newPhone);
+        if (!newPhoneCode.equals(o1)) {
+            result.error500("验证码错误");
+            return result;
+        }
+        SysUser user = sysUserService.getById(id);
+        boolean b = sysUserService.saveOrUpdate(user.setPhone(newPhone));
+        if (b) {
+            result.setMessage("修改成功");
+        } else {
+            result.error500("修改失败");
+        }
+        return result;
+    }
+
+    /**
+     * 店铺安全设置绑定邮箱
+     *
+     * @param
+     * @return
+     */
+    @RequestMapping(value = "updateEmail", method = RequestMethod.POST)
+    public Result<SysUser> updateEmail(@RequestBody JSONObject jsonObject) {
+        Result<SysUser> result = new Result<>();
+        String email = jsonObject.getString("email");
+        if (org.apache.commons.lang3.StringUtils.isBlank(email)) {
+            result.error500("不能为空");
+        }
+
+        return result;
     }
 
     /**
@@ -1465,6 +1797,145 @@ public class SysUserController {
             user.setSalt(null);
         }
         return ls;
+    }
+
+    /**
+     * 查询出供应商集合
+     *
+     * @return
+     */
+    @AutoLog(value = "用户-查询出供应商")
+    @ApiOperation(value = "用户-查询出供应商", notes = "用户-查询出供应商")
+    @GetMapping("/getUserByRoleName")
+    public Result<List<SysUserDTO>> getUserByRoleName() {
+        Result<List<SysUserDTO>> result = new Result<List<SysUserDTO>>();
+        try {
+            List<SysUserDTO> sysUserDTOs = sysUserService.getUserByRoleName("供应商");
+            result.setResult(sysUserDTOs);
+            result.setSuccess(true);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            e.printStackTrace();
+            result.error(500, "查询失败:" + e.getMessage());
+        }
+        return result;
+    }
+
+    @AutoLog(value = "用户-登录调用返回角色集合")
+    @ApiOperation(value = "用户-登录调用返回角色集合", notes = "用户-登录调用返回角色集合")
+    @RequestMapping(value = "findRoleCodeById", method = RequestMethod.GET)
+    public List<String> findRoleCodeById() {
+        LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+        return sysUserRoleService.getRoleByUserId(sysUser.getId());
+    }
+
+    /**
+     * 根据角色UserId 返回角色信息 ：roleCode ：1.台平 2.供应商，3店铺
+     * 商品审核      ：goodAudit：：0：需审核 1:免审核
+     *
+     * @param sysUserId
+     * @return
+     */
+    @AutoLog(value = "根据角色UserId-查询角色状态、商品审核状态")
+    @ApiOperation(value = "根据角色UserId-查询角色状态、商品审核状态", notes = "根据角色UserId-查询角色状态、商品审核状态")
+    @GetMapping("/getUserRoleCodeAndGoodAudit")
+    public Result<Map<String, Object>> getUserRoleCodeAndGoodAudit(@RequestParam("sysUserId") String sysUserId) {
+        Result<Map<String, Object>> result = new Result<Map<String, Object>>();
+        String role = sysUserService.getUserRoleCode(sysUserId);
+        if (org.apache.commons.lang3.StringUtils.isBlank(role)) {
+            result.error500("未找到用户角色！");
+            return result;
+        }
+        Map<String, Object> map = Maps.newHashMap();
+        if ("Supplier".equals(role)) {
+            //供应商管理员信息
+            QueryWrapper<ProviderManage> queryWrapperProviderManage = new QueryWrapper();
+            queryWrapperProviderManage.eq("sys_user_id", sysUserId);
+            queryWrapperProviderManage.eq("status", "1");
+            ProviderManage providerManage = iProviderManageService.getOne(queryWrapperProviderManage);
+            if (oConvertUtils.isNotEmpty(providerManage)) {
+                map.put("roleCode", "2");
+                map.put("goodAudit", providerManage.getGoodAudit());
+            } else {
+                result.error500("未找到供应商用户/是否已停用！");
+                return result;
+            }
+
+        } else if ("Merchant".equals(role)) {
+            //店铺管理员信息
+            QueryWrapper<StoreManage> queryWrapperProviderManage = new QueryWrapper();
+            queryWrapperProviderManage.eq("sys_user_id", sysUserId);
+            queryWrapperProviderManage.eq("status", "1");
+            StoreManage storeManage = iStoreManageService.getOne(queryWrapperProviderManage);
+            if (oConvertUtils.isNotEmpty(storeManage)) {
+                map.put("roleCode", "3");
+                map.put("goodAudit", storeManage.getGoodAudit());
+            } else {
+                result.error500("未找到店铺用户/是否已停用！");
+                return result;
+            }
+        } else {
+            //平台管理员
+            map.put("roleCode", "1");
+            map.put("goodAudit", "1");
+        }
+        result.setResult(map);
+        result.setSuccess(true);
+        return result;
+    }
+
+    @AutoLog(value = "根据角色UserId-返回工作台信息")
+    @ApiOperation(value = "根据角色UserId-返回工作台信息", notes = "根据角色UserId-返回工作台信息")
+    @RequestMapping(value = "findAll", method = RequestMethod.GET)
+    public Map<String, Object> findAll(SysWorkbenchVO sysWorkbenchVO,
+                                       HttpServletRequest request) throws ParseException {
+        return sysUserService.findAll(sysWorkbenchVO);
+    }
+    @GetMapping("getRole")
+    public Result<String> getRole(){
+        Result<String> result = new Result<>();
+        List<String> roleCodeById = this.findRoleCodeById();
+        if (roleCodeById.contains("Merchant")){
+            result.setResult("1");
+        }else {
+            result.setResult("0");
+        }
+        return result;
+    }
+    @PostMapping("forGetThePassWord")
+    public Result<String> forGetThePassWord(SysUserDTO sysUserDTO){
+        Result<String> result = new Result<>();
+        LambdaQueryWrapper<SysUser> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getDelFlag, "0")
+                .eq(SysUser::getUsername, sysUserDTO.getUserName());
+        if (sysUserService.count(sysUserLambdaQueryWrapper)<=0){
+            return result.error500("登录账号未找到,请重新填写");
+        }
+        SysUser sysUser = sysUserService.list(sysUserLambdaQueryWrapper).get(0);
+        Object code = redisUtil.get(sysUserDTO.getPhone());
+
+        if (!sysUserDTO.getSbCode().equals(code)) {
+            return result.error500("手机验证码错误");
+        }
+
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(sysUser.getPhone())){
+            if (!sysUser.getPhone().equals(sysUserDTO.getPhone())){
+                return result.error500("绑定手机号码与账号的绑定号码有误,请核对");
+            }
+        }else {
+            sysUser.setPhone(sysUserDTO.getPhone());
+        }
+        if (!sysUserDTO.getNewPassword().equals(sysUserDTO.getAffirmPassword())){
+            return result.error500("两次输入密码有误");
+        }
+        String newpassword = PasswordUtil.encrypt(sysUser.getUsername(), sysUserDTO.getNewPassword(), sysUser.getSalt());
+        boolean b = sysUserService.saveOrUpdate(sysUser.setPassword(newpassword));
+        if (b){
+            result.setResult("修改成功");
+        }else {
+            return result.error500("修改失败");
+        }
+        return result;
     }
 
 }

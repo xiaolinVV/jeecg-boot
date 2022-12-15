@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
+import org.jeecg.modules.system.dto.SysUserDTO;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.vo.SysUserDepVo;
@@ -159,11 +160,23 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 */
 	List<SysUser> queryByDepIds(@Param("departIds")List<String> departIds,@Param("username") String username);
 
+
+	/**
+	 * 根据角色名查询用户信息
+	 * @param roleName
+	 * @return
+	 */
+	List<SysUserDTO> getUserByRoleName(@Param("roleName") String roleName);
+
 	/**
 	 * 根据sysUserId 查询 返回角色roleCode
 	 */
 
 	List<String> getUserRoleCode(@Param("sysUserId") String sysUserId);
+
+	List<SysWorkbenchVO> findAll(@Param("userId") String userId);
+
+	List<SysWorkbenchVO> getEarningList(@Param("sysWorkbenchVO") SysWorkbenchVO sysWorkbenchVO);
 
 	SysWorkbenchVO totalSum();
 }

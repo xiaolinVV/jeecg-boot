@@ -1,5 +1,6 @@
 package org.jeecg.modules.system.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CacheConstant;
 import org.jeecg.common.constant.CommonConstant;
@@ -17,14 +20,28 @@ import org.jeecg.common.system.vo.SysUserCacheInfo;
 import org.jeecg.common.util.PasswordUtil;
 import org.jeecg.common.util.UUIDGenerator;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.agency.service.IAgencyAccountCapitalService;
+import org.jeecg.modules.agency.service.IAgencyManageService;
+import org.jeecg.modules.agency.vo.AgencyWorkbenchVO;
+import org.jeecg.modules.alliance.service.IAllianceAccountCapitalService;
+import org.jeecg.modules.alliance.service.IAllianceManageService;
+import org.jeecg.modules.alliance.vo.AllianceWorkbenchVO;
 import org.jeecg.modules.base.service.BaseCommonService;
+import org.jeecg.modules.member.dto.MemberListDTO;
+import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.provider.entity.ProviderManage;
+import org.jeecg.modules.provider.service.IProviderAccountCapitalService;
 import org.jeecg.modules.provider.service.IProviderManageService;
+import org.jeecg.modules.provider.vo.ProviderWorkbenchVO;
 import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreAccountCapitalService;
 import org.jeecg.modules.store.service.IStoreManageService;
+import org.jeecg.modules.store.vo.StoreWorkbenchVO;
+import org.jeecg.modules.system.dto.SysUserDTO;
 import org.jeecg.modules.system.entity.*;
 import org.jeecg.modules.system.mapper.*;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
+import org.jeecg.modules.system.service.ISysBackSettingService;
 import org.jeecg.modules.system.service.ISysUserService;
 import org.jeecg.modules.system.vo.SysUserDepVo;
 import org.jeecg.modules.system.vo.SysWorkbenchVO;
@@ -37,6 +54,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,12 +83,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Autowired
 	private SysDepartMapper sysDepartMapper;
 	@Autowired
-	@Lazy
-	private IStoreManageService iStoreManageService;
-	@Autowired
-	@Lazy
-	private IProviderManageService iProviderManageService;
-	@Autowired
 	private SysRoleMapper sysRoleMapper;
 	@Autowired
 	private SysDepartRoleUserMapper departRoleUserMapper;
@@ -84,6 +98,37 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	ThirdAppDingtalkServiceImpl dingtalkService;
 	@Autowired
 	SysRoleIndexMapper sysRoleIndexMapper;
+
+	@Autowired
+	@Lazy
+	private IStoreManageService iStoreManageService;
+	@Autowired
+	@Lazy
+	private IProviderManageService iProviderManageService;
+	@Autowired
+	@Lazy
+	private ISysBackSettingService iSysBackSettingService;
+	@Autowired
+	@Lazy
+	private IAgencyManageService iAgencyManageService;
+	@Autowired
+	@Lazy
+	private IStoreAccountCapitalService iStoreAccountCapitalService;
+	@Autowired
+	@Lazy
+	private IProviderAccountCapitalService iProviderAccountCapitalService;
+	@Autowired
+	@Lazy
+	private IAgencyAccountCapitalService iAgencyAccountCapitalService;
+	@Autowired
+	@Lazy
+	private IMemberListService iMemberListService;
+	@Autowired
+	@Lazy
+	private IAllianceManageService iAllianceManageService;
+	@Autowired
+	@Lazy
+	private IAllianceAccountCapitalService iAllianceAccountCapitalService;
 
     @Override
     @CacheEvict(value = {CacheConstant.SYS_USERS_CACHE}, allEntries = true)
@@ -628,13 +673,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	/**
 	 * 根据sysUserId 查询 返回角色roleCode
 	 */
-
+	@Override
 	public String getUserRoleCode(String sysUserId){
 		List<String> list = userMapper.getUserRoleCode(sysUserId);
 		if(list.size()>0){
 			return	list.get(0);
 		}
 		return null;
+	}
+
+	/**
+	 * 根据角色查询用户列表
+	 * @param roleName
+	 * @return
+	 */
+	@Override
+	public List<SysUserDTO> getUserByRoleName(String roleName){
+		return userMapper.getUserByRoleName(roleName);
 	}
 
 	/**
@@ -674,6 +729,190 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		}
 
 		return map;
+	}
+
+	@Override
+	public Map<String,Object> findAll(SysWorkbenchVO sysWorkbenchVO) throws ParseException {
+		//获取当前登录人信息
+		LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+		String userId = sysUser.getId();
+		//查出当前登录人角色集合
+		List<String> roleByUserId = sysUserRoleMapper.getRoleByUserId(userId);
+		//返回给前端的数据格式
+		HashMap<String, Object> map = new HashMap<>();
+		//查出后台设置logo
+		QueryWrapper<SysBackSetting> sysBackSettingQueryWrapper = new QueryWrapper<>();
+		sysBackSettingQueryWrapper.eq("del_flag",0);
+		SysBackSetting sysBackSetting = iSysBackSettingService.list(sysBackSettingQueryWrapper).get(0);
+		//解析json(将多图格式转为单图)
+		String s = (String) JSON.parseObject(sysBackSetting.getLoginLogo()).get("0");
+		ArrayList<Map<String, Object>> memberList = new ArrayList<>();
+		ArrayList<Map<String, Object>> memberSexList = new ArrayList<>();
+		if (roleByUserId.contains("Merchant")){//店铺
+			StoreWorkbenchVO storeWorkbenchVO = iStoreManageService.findStoreWorkbenchVO(userId);
+			//判断有没有logo,没有就取后台设置logo
+			if (StringUtils.isBlank(storeWorkbenchVO.getLogoAddr())){
+				storeWorkbenchVO.setLogoAddr(s);
+			}
+			sysWorkbenchVO.setSysUserId(userId);
+			sysWorkbenchVO.setId(storeWorkbenchVO.getId());
+			StoreWorkbenchVO earningList = iStoreAccountCapitalService.getEarningList(sysWorkbenchVO);
+			MemberListDTO storeSexSum = iMemberListService.getStoreSexSum(sysWorkbenchVO);
+			storeWorkbenchVO.setMemberList(storeSexSum.getMemberList());
+			storeWorkbenchVO.setMemberSexList(storeSexSum.getMemberSexList());
+			storeWorkbenchVO.setEarningsList(earningList.getEarningsList());
+			storeWorkbenchVO.setEarningsPatch(earningList.getEarningsPatch());
+			storeWorkbenchVO.setMemberPatch(storeSexSum.getMemberPatch());
+			map.put("Merchant",storeWorkbenchVO);
+			return map;
+		}else if (roleByUserId.contains("Supplier")){//供应商
+			ProviderWorkbenchVO providerWorkbenchVO = iProviderManageService.findproviderWorkbenchVO(userId);
+			if (StringUtils.isBlank(providerWorkbenchVO.getAvatar())){
+				providerWorkbenchVO.setAvatar(s);
+			}
+			providerWorkbenchVO.setEarningTime_begin(sysWorkbenchVO.getEarningTime_begin());
+			providerWorkbenchVO.setEarningTime_end(sysWorkbenchVO.getEarningTime_end());
+			ProviderWorkbenchVO earningList = iProviderAccountCapitalService.getEarningList(providerWorkbenchVO);
+			providerWorkbenchVO.setEarningsList(earningList.getEarningsList());
+			providerWorkbenchVO.setEarningsPatch(earningList.getEarningsPatch());
+			map.put("Supplier",providerWorkbenchVO);
+			return map;
+		}else if (roleByUserId.contains("Provincial_agents")||
+				roleByUserId.contains("Municipal_agent")||
+				roleByUserId.contains("County_agent")){//代理
+			AgencyWorkbenchVO agencyWorkbenchVO = iAgencyManageService.findAgencyWorkbenchVO(userId);
+			if (StringUtils.isBlank(agencyWorkbenchVO.getAvatar())){
+				agencyWorkbenchVO.setAvatar(s);
+			}
+			agencyWorkbenchVO.setEarningTime_begin(sysWorkbenchVO.getEarningTime_begin());
+			agencyWorkbenchVO.setEarningTime_end(sysWorkbenchVO.getEarningTime_end());
+			agencyWorkbenchVO.setMemberTime_begin(sysWorkbenchVO.getMemberTime_begin());
+			agencyWorkbenchVO.setMemberTime_end(sysWorkbenchVO.getMemberTime_end());
+			AgencyWorkbenchVO earningList = iAgencyAccountCapitalService.getEarningList(agencyWorkbenchVO);
+			AgencyWorkbenchVO agencySexSum = iMemberListService.getAgencySexSum(agencyWorkbenchVO);
+			agencyWorkbenchVO.setMemberSexList(agencySexSum.getMemberSexList());
+			agencyWorkbenchVO.setMemberList(agencySexSum.getMemberList());
+			agencyWorkbenchVO.setMemberPatch(agencySexSum.getMemberPatch());
+			agencyWorkbenchVO.setEarningsList(earningList.getEarningsList());
+			agencyWorkbenchVO.setEarningsPatch(earningList.getEarningsPatch());
+			map.put("agency",agencyWorkbenchVO);
+			return map;
+		} else if (roleByUserId.contains("Franchisee")){
+			AllianceWorkbenchVO workbench = iAllianceManageService.findWorkbench(userId);
+			if (StringUtils.isBlank(workbench.getAvatar())){
+				workbench.setAvatar(s);
+			}
+			workbench.setEarningTime_begin(sysWorkbenchVO.getEarningTime_begin());
+			workbench.setEarningTime_end(sysWorkbenchVO.getEarningTime_end());
+			workbench.setMemberTime_begin(sysWorkbenchVO.getMemberTime_begin());
+			workbench.setMemberTime_end(sysWorkbenchVO.getMemberTime_end());
+			AllianceWorkbenchVO earningList = iAllianceAccountCapitalService.getEarningList(workbench);
+			AllianceWorkbenchVO franchiseeSexSum = iMemberListService.getFranchiseeSexSum(workbench);
+			workbench.setMemberSexList(franchiseeSexSum.getMemberSexList());
+			workbench.setMemberList(franchiseeSexSum.getMemberList());
+			workbench.setMemberPatch(franchiseeSexSum.getMemberPatch());
+			workbench.setEarningsList(earningList.getEarningsList());
+			workbench.setEarningsPatch(earningList.getEarningsPatch());
+			map.put("Franchisee",workbench);
+			return map;
+		}else {
+			SysWorkbenchVO all = baseMapper.findAll(userId).get(0);
+			if (StringUtils.isBlank(all.getAvatar())){
+				all.setAvatar(s);
+			}
+			//定义传入后台时间list
+			ArrayList<String> arrayList = new ArrayList<>();
+			Date earningTime_begin = sysWorkbenchVO.getEarningTime_begin();
+			Date earningTime_end = sysWorkbenchVO.getEarningTime_end();
+			if (oConvertUtils.isEmpty(earningTime_begin)){
+				for (int i = 1; i < 31; i++) {
+					//推算当前时间前一天日期
+					Calendar calendar=Calendar.getInstance();
+					calendar.add(Calendar.DAY_OF_YEAR,-i);
+					String s1 = calendar.get(Calendar.YEAR) + "-" + org.apache.commons.lang.StringUtils.leftPad((calendar.get(Calendar.MONTH) + 1)+"",2,"0") + "-" + org.apache.commons.lang.StringUtils.leftPad((calendar.get(Calendar.DAY_OF_MONTH))+"",2,"0");
+					arrayList.add(s1);
+					if (i==1){
+						SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+						sysWorkbenchVO.setEarningTime_end(simpleDateFormat.parse(s1));
+					}
+					if (i==30){
+						SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+						sysWorkbenchVO.setEarningTime_begin(simpleDateFormat.parse(s1));
+					}
+				}
+
+			}else {
+				long day = (earningTime_end.getTime()-earningTime_begin.getTime())/(24*60*60*1000);
+				for (int i = 0; i < day; i++) {
+					//推算当前时间前一天日期
+					Calendar calendar=Calendar.getInstance();
+					calendar.setTime(earningTime_end);
+					calendar.add(Calendar.DAY_OF_YEAR,-i);
+					String s1 = calendar.get(Calendar.YEAR) + "-" + org.apache.commons.lang.StringUtils.leftPad((calendar.get(Calendar.MONTH) + 1)+"",2,"0") + "-" + org.apache.commons.lang.StringUtils.leftPad((calendar.get(Calendar.DAY_OF_MONTH))+"",2,"0");
+					arrayList.add(s1);
+				}
+			}
+			sysWorkbenchVO.setEarningTimeList(arrayList);
+
+			List<SysWorkbenchVO> earningList = baseMapper.getEarningList(sysWorkbenchVO);
+
+			//算出时间内的累计收益
+			BigDecimal earningsPatch = earningList.stream()
+					.map(SysWorkbenchVO::getTotalPrice)
+					.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+			//将查出的集合转为map形式
+			Map<String, BigDecimal> collect = earningList.stream().collect(Collectors.
+					toMap(SysWorkbenchVO::getMyDate, SysWorkbenchVO::getTotalPrice));
+
+			ArrayList<Map<String, Object>> maps = new ArrayList<>();
+
+			arrayList.forEach(arr->{
+				HashMap<String, Object> hashMap = new HashMap<>();
+				hashMap.put("x",arr);
+				hashMap.put("y",collect.getOrDefault(arr,new BigDecimal(0)));
+				maps.add(hashMap);
+			});
+			sysWorkbenchVO.setId(userId);
+			Map<String, Long> sysSexSum = iMemberListService.getSysSexSum(sysWorkbenchVO);
+			Long asordinarySum = sysSexSum.get("asordinarySum");
+			Long vipSum = sysSexSum.get("vipSum");
+			sysSexSum.forEach((k,v)->{
+				HashMap<String, Object> mapx = new HashMap<>();
+				if (k.equals("asordinarySum")){
+					mapx.put("item","普通会员");
+					mapx.put("count",String.valueOf(v));
+					memberList.add(mapx);
+				}
+				if (k.equals("vipSum")){
+					mapx.put("item","vip");
+					mapx.put("count",String.valueOf(v));
+					memberList.add(mapx);
+				}
+				if (k.equals("memberMan")){
+					mapx.put("item","男");
+					mapx.put("count",String.valueOf(v));
+					memberSexList.add(mapx);
+				}
+				if (k.equals("memberWoMan")){
+					mapx.put("item","女");
+					mapx.put("count",String.valueOf(v));
+					memberSexList.add(mapx);
+				}
+				if (k.equals("memberUnknown")){
+					mapx.put("item","未知");
+					mapx.put("count",String.valueOf(v));
+					memberSexList.add(mapx);
+				}
+			});
+			all.setEarningsPatch(earningsPatch);
+			all.setMemberPatch(asordinarySum+vipSum);
+			all.setMemberList(memberList);
+			all.setMemberSexList(memberSexList);
+			all.setEarningsList(maps);
+			map.put("admin",all);
+			return map;
+		}
 	}
 
 	@Override

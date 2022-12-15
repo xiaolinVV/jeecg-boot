@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CacheConstant;
@@ -19,14 +20,12 @@ import org.jeecg.common.util.*;
 import org.jeecg.common.util.encryption.EncryptedString;
 import org.jeecg.config.JeecgBaseConfig;
 import org.jeecg.modules.base.service.BaseCommonService;
-import org.jeecg.modules.system.entity.SysDepart;
-import org.jeecg.modules.system.entity.SysRoleIndex;
-import org.jeecg.modules.system.entity.SysTenant;
-import org.jeecg.modules.system.entity.SysUser;
+import org.jeecg.modules.system.entity.*;
 import org.jeecg.modules.system.model.SysLoginModel;
 import org.jeecg.modules.system.service.*;
 import org.jeecg.modules.system.service.impl.SysBaseApiImpl;
 import org.jeecg.modules.system.util.RandImageUtil;
+import org.jeecg.modules.system.vo.SysUserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +35,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author scott
@@ -67,6 +67,11 @@ public class LoginController {
 
 	@Autowired
 	private JeecgBaseConfig jeecgBaseConfig;
+
+	@Autowired
+	private ISysUserRoleService iSysUserRoleService;
+	@Autowired
+	private ISysPermissionService iSysPermissionService;
 
 	private final String BASE_CHECK_CODES = "qwertyuiplkjhgfdsazxcvbnmQWERTYUPLKJHGFDSAZXCVBNM1234567890";
 
@@ -452,8 +457,6 @@ public class LoginController {
 		}
 		// update-end--Author:sunjianlei Date:20210802 for：获取用户租户信息
 
-		obj.put("userInfo", sysUser);
-
 		List<SysDepart> departs = sysDepartService.queryUserDeparts(sysUser.getId());
 		obj.put("departs", departs);
 		if (departs == null || departs.size() == 0) {
@@ -471,6 +474,15 @@ public class LoginController {
 			// update-end--Author:wangshuai Date:20200805 for：如果用戶为选择部门，数据库为存在上一次登录部门，则取一条存进去
 			obj.put("multi_depart", 2);
 		}
+
+		SysUserVO sysUserVO = new SysUserVO();
+		BeanUtils.copyProperties(sysUser,sysUserVO);
+		sysUserVO.setUserRole(iSysUserRoleService.getRoleByUserId(sysUser.getId())
+				.stream()
+				.collect(Collectors.joining(",")));
+		storeIsVisw(sysUserVO);
+		obj.put("userInfo", sysUserVO);
+
 		obj.put("sysAllDictItems", sysDictService.queryAllDictItems());
 		result.setResult(obj);
 		result.success("登录成功");
@@ -669,6 +681,17 @@ public class LoginController {
 			result.put("token", "-1");
 		}
 		return Result.OK(result);
+	}
+
+	private void storeIsVisw(SysUserVO sysUserVO){
+		List<SysPermission> sysPermissions = iSysPermissionService.queryByUser(sysUserVO.getUsername());
+		sysUserVO.setIsView1(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreManageInforMation"))?"1":"0");
+		sysUserVO.setIsView2(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreSecurity"))?"1":"0");
+		sysUserVO.setIsView3(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreBankCardList"))?"1":"0");
+		sysUserVO.setIsView4(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreAddressList"))?"1":"0");
+		sysUserVO.setIsView5(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreTemplateList"))?"1":"0");
+		sysUserVO.setIsView6(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreManagePickUp"))?"1":"0");
+		sysUserVO.setIsView7(sysPermissions.stream().anyMatch(sysPermission -> StringUtils.isNotBlank(sysPermission.getUrl())&&sysPermission.getUrl().equals("/store/StoreManagedistribution"))?"1":"0");
 	}
 
 }

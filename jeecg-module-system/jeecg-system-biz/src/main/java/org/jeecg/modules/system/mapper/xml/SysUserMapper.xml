@@ -192,6 +192,229 @@
 		</if>
 	</select>
 
+	<select id="findAll" resultType="org.jeecg.modules.system.vo.SysWorkbenchVO">
+		SELECT
+			su.id,
+			su.`avatar`,
+			-- 头像
+			su.`realname`,
+			-- 联系人
+			(SELECT
+				 GROUP_CONCAT(sr.`role_name`)
+			 FROM
+				 sys_user_role sur
+					 LEFT JOIN sys_role sr
+							   ON sur.`role_id` = sr.`id`
+			 WHERE sur.`user_id` = su.id) AS roleName,
+			-- 角色
+			IF(
+					su.`org_code` = NULL,
+					'',
+					(SELECT
+						 sd.`depart_name`
+					 FROM
+						 sys_depart sd
+					 WHERE sd.`del_flag` = 0
+					   AND sd.`org_code` = su.`org_code`)
+
+				) AS NAME,
+			-- 公司名称
+			(
+				CASE
+					su.`status`
+					WHEN 1
+						THEN '正常'
+					WHEN 2
+						THEN '冻结'
+					ELSE '异常'
+					END
+				) AS statusName,
+			-- 状态
+			(
+					(SELECT
+						 COUNT(1)
+					 FROM
+						 order_list ol
+					 WHERE ol.`del_flag` = 0
+					   AND ol.`status` = 5) +
+					(SELECT
+						 COUNT(1)
+					 FROM
+						 order_store_list osl
+					 WHERE osl.`del_flag` = 0
+					   AND osl.`status` = 5)
+				) AS orderSum,
+			-- 有效订单
+			(
+					(SELECT
+						 SUM(ol.`actual_payment`)
+					 FROM
+						 order_list ol
+					 WHERE ol.`del_flag` = 0
+					   AND ol.`status` = 5) +
+					(SELECT
+						 SUM(sp.`money`)
+					 FROM
+						 store_payment sp
+					 WHERE sp.`del_flag` = 0
+					   AND sp.`pay_status` = 1) +
+					(SELECT
+						 SUM(mgbr.`price`)
+					 FROM
+						 marketing_gift_bag_record mgbr
+					 WHERE mgbr.`del_flag` = 0
+					   AND mgbr.`pay_status` = 1
+					   AND mgbr.`back_status` = 1) +
+					(SELECT
+						 SUM(osl.`actual_payment`)
+					 FROM
+						 order_store_list osl
+					 WHERE osl.`del_flag` = 0
+					   AND osl.`status` = 5)
+				) AS earnings,
+			-- 累计收入
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 member_list ml
+			 WHERE ml.`del_flag` = 0) AS memberSum,
+			-- 累计会员
+			(SELECT
+				 SUM(mwp.`bargain_payments`)
+			 FROM
+				 marketing_welfare_payments mwp
+			 WHERE mwp.`del_flag` = 0
+			) AS welfareSum,
+			-- 已送福利金
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 store_manage sm
+			 WHERE sm.`del_flag` = 0
+			   AND sm.`attestation_status` in(1,2)) AS storeSum,
+			-- 已认证店铺
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 provider_manage pm
+			 WHERE pm.`del_flag` = 0) AS providerSum,
+			-- 供应商
+			(
+					(SELECT
+						 COUNT(1)
+					 FROM
+						 order_list ol
+					 WHERE ol.`del_flag` = 0
+					   AND ol.`status` = 1) +
+					(SELECT
+						 COUNT(1)
+					 FROM
+						 order_store_list osl
+					 WHERE osl.`del_flag` = 0
+					   AND osl.`status` = 1)
+				) AS waitDeliverGoods,
+			-- 待发货订单
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 good_list gl
+			 WHERE gl.`del_flag` = 0
+			   AND gl.`status` = 1
+			   AND gl.`frame_status` = 1
+			   AND gl.`audit_status` = 2) AS forGoods,
+			-- 在售商品
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 marketing_discount_coupon mdc
+			 WHERE mdc.`del_flag` = 0
+			) AS byGetDiscount,
+			-- 已被领取优惠券
+			(SELECT
+				 COUNT(1)
+			 FROM
+				 marketing_discount_coupon mdc
+			 WHERE mdc.`del_flag` = 0
+			   AND mdc.`status` = 2) AS byUseDiscount
+			-- 已被使用优惠券
+		FROM
+			sys_user su
+				LEFT JOIN sys_user_role sur
+						  ON su.`id` = sur.`user_id`
+				LEFT JOIN sys_role sr
+						  ON sur.`role_id` = sr.`id`
+		WHERE su.`del_flag` = 0
+		  AND su.`id` = #{userId}
+	</select>
+
+	<!-- 根据角色名称查询 -->
+	<select id="getUserByRoleName" resultType="org.jeecg.modules.system.dto.SysUserDTO" >
+		SELECT
+			id AS id,
+			realname AS realname
+		FROM
+			sys_user
+		WHERE del_flag = '0'
+		  AND id IN
+			  (SELECT
+				   user_id
+			   FROM
+				   sys_user_role
+			   WHERE role_id IN
+					 (SELECT
+						  id
+					  FROM
+						  sys_role
+					  WHERE role_name = #{roleName}))
+	</select>
+
+	<select id="getEarningList" resultType="org.jeecg.modules.system.vo.SysWorkbenchVO">
+		SELECT
+			SUM(a.totalprice) AS totalprice,
+			a.myDate
+		FROM
+			(SELECT
+				 SUM(osl.`actual_payment`) AS totalprice,
+				 DATE_FORMAT(osl.`delivery_time`, '%Y-%m-%d') AS myDate
+			 FROM
+				 order_store_list osl
+			 WHERE osl.`del_flag` = 0
+			   AND osl.`status` = 5
+			 GROUP BY myDate
+			 UNION
+			 SELECT
+				 SUM(mgbr.`price`) AS totalprice,
+				 DATE_FORMAT(mgbr.`pay_time`, '%Y-%m-%d') AS myDate
+			 FROM
+				 marketing_gift_bag_record mgbr
+			 WHERE mgbr.`del_flag` = 0
+			   AND mgbr.`pay_status` = 1
+			   AND mgbr.`back_status` = 1
+			 GROUP BY myDate
+			 UNION
+			 SELECT
+				 SUM(sp.`money`) AS totalprice,
+				 DATE_FORMAT(sp.`pay_time`, '%Y-%m-%d') AS myDate
+			 FROM
+				 store_payment sp
+			 WHERE sp.`del_flag` = 0
+			   AND sp.`pay_status` = 1
+			 GROUP BY myDate
+			 UNION
+			 SELECT
+				 SUM(ol.`actual_payment`) AS totalprice,
+				 DATE_FORMAT(ol.`delivery_time`, '%Y-%m-%d') AS myDate
+			 FROM
+				 order_list ol
+			 WHERE ol.`del_flag` = 0
+			   AND ol.`status` = 5
+			 GROUP BY myDate) a
+		WHERE a.myDate <![CDATA[>=]]> #{sysWorkbenchVO.earningTime_begin}
+		  AND a.myDate <![CDATA[<=]]> #{sysWorkbenchVO.earningTime_end}
+		GROUP BY a.myDate
+		ORDER BY a.myDate DESC
+	</select>
+
 	<select id="totalSum" resultType="org.jeecg.modules.system.vo.SysWorkbenchVO">
 		SELECT
 			(
