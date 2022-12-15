@@ -239,10 +239,11 @@ public class CommonController {
                 outputStream.write(buf, 0, len);
             }
             response.flushBuffer();
-        } catch (IOException e) {
-            log.error("预览文件失败" + e.getMessage());
+        } catch (Exception e) {
+            // TODO: 2022/12/15 历史数据很多文件都没有，避免调试麻烦，这里暂时先注释  @zhangshaolin
+//            log.error("预览文件失败" + e.getMessage());
             response.setStatus(404);
-            e.printStackTrace();
+//            e.printStackTrace();
         } finally {
             if (inputStream != null) {
                 try {
