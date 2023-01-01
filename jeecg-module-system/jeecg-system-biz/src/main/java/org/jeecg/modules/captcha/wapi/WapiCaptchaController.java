@@ -2,12 +2,14 @@ package org.jeecg.modules.captcha.wapi;
 
 
 import cn.hutool.core.util.RandomUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.aliyuncs.exceptions.ClientException;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.common.collect.Maps;
 import lombok.extern.java.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.util.DySmsEnum;
 import org.jeecg.common.util.DySmsHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -96,30 +98,30 @@ public class WapiCaptchaController {
      */
     @RequestMapping("verificationCode")
     @ResponseBody
-    public Result<Map<String,String>> verificationCode(String phone){
-        Result<Map<String,String>> result=new Result<>();
-
-        Map<String,String> stringMap=Maps.newHashMap();
+    public Result<JSONObject> verificationCode(String phone){
+        Result<JSONObject> result=new Result<>();
 
         //参数验证
         if(StringUtils.isBlank(phone)){
             result.error500("手机号码不能为空");
             return result;
         }
+
+        JSONObject templateParamJson = new JSONObject();
         //随机数
         String captcha = RandomUtil.randomNumbers(4);
-        stringMap.put("captcha",captcha);
-        // TODO: 2022/12/8 发送短信工具需要重构，这里暂时注释 @zhangshaolin
-//        try {
-//            if(dySmsHelper.sendSms(phone, captcha, dySmsHelper.IDENTITY_TEMPLATE_CODE)){
-//            }else{
-//                result.error500("验证码发送失败");
-//                return result;
-//            }
-//        } catch (ClientException e) {
-//            e.printStackTrace();
-//        }
-        result.setResult(stringMap);
+        templateParamJson.put("captcha",captcha);
+        templateParamJson.put("code",captcha);
+        try {
+            if(DySmsHelper.sendSms(phone, templateParamJson, DySmsEnum.IDENTITY_TEMPLATE_CODE)){
+            }else{
+                result.error500("验证码发送失败");
+                return result;
+            }
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+        result.setResult(templateParamJson);
         result.success("验证码发送成功");
         return result;
     }

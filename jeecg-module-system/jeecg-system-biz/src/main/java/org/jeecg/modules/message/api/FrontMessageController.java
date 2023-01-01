@@ -2,10 +2,12 @@ package org.jeecg.modules.message.api;
 
 
 import cn.hutool.core.util.RandomUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.aliyuncs.exceptions.ClientException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.util.DySmsEnum;
 import org.jeecg.common.util.DySmsHelper;
 import org.jeecg.common.util.PasswordUtil;
 import org.jeecg.common.util.RedisUtil;
@@ -31,9 +33,6 @@ public class FrontMessageController {
     private RedisUtil redisUtil;
 
     @Autowired
-    private DySmsHelper dySmsHelper;
-
-    @Autowired
     private ISysUserService iSysUserService;
 
     /**
@@ -53,19 +52,19 @@ public class FrontMessageController {
 
         //随机数
         String captcha = RandomUtil.randomNumbers(6);
-
-        // TODO: 2022/12/8 发送短信工具需要重构，这里暂时注释 @zhangshaolin
-//        try {
-//            if(dySmsHelper.sendSms(phone, captcha, dySmsHelper.IDENTITY_TEMPLATE_CODE)){
-//                //验证码10分钟内有效
-//                redisUtil.set(phone, captcha, 600);
-//            }else{
-//                result.error500("验证码发送失败");
-//                return result;
-//            }
-//        } catch (ClientException e) {
-//            e.printStackTrace();
-//        }
+        JSONObject templateParamJson = new JSONObject();
+        templateParamJson.put("code", captcha);
+        try {
+            if(DySmsHelper.sendSms(phone, templateParamJson, DySmsEnum.IDENTITY_TEMPLATE_CODE)){
+                //验证码10分钟内有效
+                redisUtil.set(phone, captcha, 600);
+            }else{
+                result.error500("验证码发送失败");
+                return result;
+            }
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
 
         result.success("验证码发送成功");
         return result;

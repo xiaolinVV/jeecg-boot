@@ -8,16 +8,20 @@ import org.apache.commons.lang3.StringUtils;
  */
 public enum DySmsEnum {
 
+	// TODO: 2023/1/1 上线时需要修改新的模板@zhangshaolin
+
     /**登录短信模板编码*/
-	LOGIN_TEMPLATE_CODE("SMS_175435174","JEECG","code"),
+	LOGIN_TEMPLATE_CODE("SMS_151475203","贡客","code"),
     /**忘记密码短信模板编码*/
-	FORGET_PASSWORD_TEMPLATE_CODE("SMS_175435174","JEECG","code"),
+	FORGET_PASSWORD_TEMPLATE_CODE("SMS_151475200","贡客","code"),
     /**注册账号短信模板编码*/
-	REGISTER_TEMPLATE_CODE("SMS_175430166","JEECG","code"),
+	REGISTER_TEMPLATE_CODE("SMS_151475201","贡客","code"),
 	/**会议通知*/
 	MEET_NOTICE_TEMPLATE_CODE("SMS_201480469","H5活动之家","username,title,minute,time"),
 	/**我的计划通知*/
-	PLAN_NOTICE_TEMPLATE_CODE("SMS_201470515","H5活动之家","username,title,time");
+	PLAN_NOTICE_TEMPLATE_CODE("SMS_201470515","H5活动之家","username,title,time"),
+	/**身份验证*/
+	IDENTITY_TEMPLATE_CODE("SMS_151475201","贡客","code");
 
 	/**
 	 * 短信模板编码
