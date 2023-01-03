@@ -4,7 +4,7 @@ package ${bussiPackage}.${entityPackage}.mapper;
 
 import java.util.List;
 import ${bussiPackage}.${entityPackage}.entity.${subTab.entityName};
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Param;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface ${subTab.entityName}Mapper extends BaseMapper<${subTab.entityName}> {
+public interface ${subTab.entityName}Mapper extends MPJBaseMapper<${subTab.entityName}> {
 
   /**
    * 通过主表id删除子表数据

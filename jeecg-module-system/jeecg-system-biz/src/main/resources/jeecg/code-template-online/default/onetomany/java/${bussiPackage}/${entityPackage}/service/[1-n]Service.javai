@@ -3,7 +3,7 @@
 package ${bussiPackage}.${entityPackage}.service;
 
 import ${bussiPackage}.${entityPackage}.entity.${subTab.entityName};
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.yulichang.base.MPJBaseService;
 import java.util.List;
 
 /**
@@ -12,7 +12,7 @@ import java.util.List;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface I${subTab.entityName}Service extends IService<${subTab.entityName}> {
+public interface I${subTab.entityName}Service extends MPJBaseService<${subTab.entityName}> {
 
   /**
    * 通过主表id查询子表数据
