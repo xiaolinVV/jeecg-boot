@@ -95,10 +95,10 @@ public class ProviderAccountCapitalVO {
      */
     private String linkPhone;
 
-//    /**
-//     * 供应商名称
-//     */
-//    private String providerName;
+    /**
+     * 供应商名称
+     */
+    private String providerName;
 
     /**
      * 供应商名称
