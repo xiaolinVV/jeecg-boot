@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 <#assign pidFieldName = "">
 <#assign hasChildrenField = "">
 <#list originalColumns as po>
@@ -33,7 +33,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  * @Version: V1.0
  */
 @Service
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service {
+public class ${entityName}ServiceImpl extends MPJBaseServiceImpl<${entityName}Mapper, ${entityName}> implements I${entityName}Service {
 
 	@Override
 	public void add${entityName}(${entityName} ${entityName?uncap_first}) {

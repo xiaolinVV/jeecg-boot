@@ -75,10 +75,10 @@ public class MybatisPlusSaasConfig {
                 return true;
             }
         }));
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         //update-begin-author:zyf date:20220425 for:【VUEN-606】注入动态表名适配拦截器解决多表名问题
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor());
         //update-end-author:zyf date:20220425 for:【VUEN-606】注入动态表名适配拦截器解决多表名问题
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         return interceptor;
     }
 

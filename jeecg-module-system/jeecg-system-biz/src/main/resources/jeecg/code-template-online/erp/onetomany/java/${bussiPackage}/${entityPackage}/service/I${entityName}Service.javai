@@ -4,7 +4,7 @@ package ${bussiPackage}.${entityPackage}.service;
 import ${bussiPackage}.${entityPackage}.entity.${sub.entityName};
 </#list>
 import ${bussiPackage}.${entityPackage}.entity.${entityName};
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.yulichang.base.MPJBaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.Serializable;
 import java.util.Collection;
@@ -16,7 +16,7 @@ import java.util.List;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface I${entityName}Service extends IService<${entityName}> {
+public interface I${entityName}Service extends MPJBaseService<${entityName}> {
 
 	/**
 	 * 删除一对多

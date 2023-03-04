@@ -1,6 +1,6 @@
 package ${bussiPackage}.${entityPackage}.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.common.system.vo.SelectTreeModel;
 import ${bussiPackage}.${entityPackage}.entity.${entityName};
@@ -14,7 +14,7 @@ import java.util.Map;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface ${entityName}Mapper extends BaseMapper<${entityName}> {
+public interface ${entityName}Mapper extends MPJBaseMapper<${entityName}> {
 
 	/**
 	 * 编辑节点状态
