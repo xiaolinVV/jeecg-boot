@@ -2,7 +2,7 @@ package ${bussiPackage}.${entityPackage}.service;
 
 import org.jeecg.common.system.vo.SelectTreeModel;
 import ${bussiPackage}.${entityPackage}.entity.${entityName};
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.yulichang.base.MPJBaseService;
 import org.jeecg.common.exception.JeecgBootException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface I${entityName}Service extends IService<${entityName}> {
+public interface I${entityName}Service extends MPJBaseService<${entityName}> {
 
 	/**根节点父ID的值*/
 	public static final String ROOT_PID_VALUE = "0";

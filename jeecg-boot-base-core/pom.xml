@@ -269,6 +269,12 @@
 			<version>0.9.1</version>
 		</dependency>
 		<!--		贡客迁移过来的依赖-->
+		<!-- 对 mybatis-plus 多表查询的扩展-->
+		<dependency>
+			<groupId>com.github.yulichang</groupId>
+			<artifactId>mybatis-plus-join-boot-starter</artifactId>
+			<version>1.4.2</version>
+		</dependency>
 	</dependencies>
 
 </project>

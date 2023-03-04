@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
 import ${bussiPackage}.${entityPackage}.entity.${entityName};
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
  * @Description: ${tableVo.ftlDescription}
@@ -12,6 +12,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Date:   ${.now?string["yyyy-MM-dd"]}
  * @Version: V1.0
  */
-public interface ${entityName}Mapper extends BaseMapper<${entityName}> {
+public interface ${entityName}Mapper extends MPJBaseMapper<${entityName}> {
 
 }
