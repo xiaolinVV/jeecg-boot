@@ -27,7 +27,8 @@ import java.io.PrintWriter;
 @Log
 public class JwtInterceptor implements HandlerInterceptor {
 
-    @Autowired
+    @Lazy
+    @Resource
     private TokenManager tokenManager;
 
     @Lazy
