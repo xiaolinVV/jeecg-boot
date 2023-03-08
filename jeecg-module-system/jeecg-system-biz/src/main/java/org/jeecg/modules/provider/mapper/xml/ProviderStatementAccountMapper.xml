@@ -12,7 +12,7 @@
             ON psa.`sys_user_id` = pm.`sys_user_id`
           LEFT JOIN sys_user su
             ON su.`id` = pm.`sys_user_id`
-        WHERE psa.`del_flag` = 0
+        WHERE psa.`del_flag` = '0'
         <if test="providerStatementAccountDTO != null and providerStatementAccountDTO.sysUserId != null and providerStatementAccountDTO.sysUserId != ''">
             AND psa.sys_user_id = #{providerStatementAccountDTO.sysUserId}
         </if>

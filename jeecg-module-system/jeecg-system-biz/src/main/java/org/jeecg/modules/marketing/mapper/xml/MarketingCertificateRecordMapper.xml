@@ -50,7 +50,7 @@
         COUNT(1)
         FROM
         marketing_certificate_good mcg
-        WHERE mcg.`del_flag` = 0
+        WHERE mcg.`del_flag` = '0'
         AND mcg.`marketing_certificate_id` = m.`marketing_certificate_id`) AS goods,
         IF(record_type = 0,IF(is_nomal = 0,0,4),record_type) AS recordType,
         IF(record_type = 0,price,active_price) AS price
@@ -90,7 +90,9 @@
           IF(record_type = 0,price,active_price) AS price,
           market_price AS marketPrice,
           record_type AS recordType,
-          is_nomal AS isNomal
+          is_nomal AS isNomal,
+          above_use AS aboveUse,
+        below_use AS belowUse
         FROM
           marketing_certificate_record
         WHERE
@@ -166,7 +168,7 @@
                   marketing_certificate_record mcr
                   LEFT JOIN member_list ml
                     ON mcr.`member_list_id` = ml.`id`
-                WHERE mcr.`del_flag` = 0
+                WHERE mcr.`del_flag` = '0'
                 <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.phone!=null and marketingCertificateRecordVO.phone!=''">
                     AND ml.phone LIKE concat('%',concat(#{marketingCertificateRecordVO.phone},'%'))
                 </if>
@@ -287,7 +289,7 @@
         ON mcr.`member_list_id` = ml.`id`
         LEFT JOIN store_manage sm
         ON sm.`sys_user_id` = mcr.`sys_user_id`
-        WHERE mcr.`del_flag` = 0
+        WHERE mcr.`del_flag` = '0'
         <if test="marketingCertificateRecordVO!=null and marketingCertificateRecordVO.storeUId!=null and marketingCertificateRecordVO.storeUId!=''">
             AND mcr.sys_user_id = #{marketingCertificateRecordVO.storeUId}
         </if>
@@ -342,7 +344,7 @@
           marketing_certificate_record mcr
         SET
           mcr.`status` = 1
-        WHERE mcr.`del_flag` = 0
+        WHERE mcr.`del_flag` = '0'
           AND NOW() > mcr.`start_time`
           AND mcr.`status` = 0
     </update>
@@ -351,7 +353,7 @@
           marketing_certificate_record mcr
         SET
           mcr.`status` = 3
-        WHERE mcr.`del_flag` = 0
+        WHERE mcr.`del_flag` = '0'
           AND NOW() > mcr.`end_time`
           AND mcr.`status` = 1
     </update>

@@ -1,9 +1,6 @@
 package org.jeecg.modules.member.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,7 +27,7 @@ import java.util.Date;
 public class MemberDesignation {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -188,4 +185,7 @@ public class MemberDesignation {
 	@Excel(name = "是否以购买礼包作为获得当前称号的获取条件：0为否；1为是；只有当前值为1时，礼包中赠送称号时方可配置当前称号", width = 15)
 	@ApiModelProperty(value = "是否以购买礼包作为获得当前称号的获取条件：0为否；1为是；只有当前值为1时，礼包中赠送称号时方可配置当前称号")
 	private String isBuyGiftbag;
+
+	@Version
+	private Integer version;
 }

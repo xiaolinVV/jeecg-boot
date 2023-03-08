@@ -24,9 +24,9 @@
             ON mcs.`store_manage_id` = sm.`id`
           LEFT JOIN sys_user su
             ON su.`id` = sm.`sys_user_id`
-        WHERE mcs.`del_flag` = 0
-          AND sm.`del_flag` = 0
-          AND su.`del_flag` = 0
+        WHERE mcs.`del_flag` = '0'
+          AND sm.`del_flag` = '0'
+          AND su.`del_flag` = '0'
         <if test="marketingCommingStoreDTO.sysUserId != null and marketingCommingStoreDTO.sysUserId != ''">
             AND sm.sys_user_id = #{marketingCommingStoreDTO.sysUserId}
         </if>

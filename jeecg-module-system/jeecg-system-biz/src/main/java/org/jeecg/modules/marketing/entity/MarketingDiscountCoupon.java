@@ -14,6 +14,7 @@ import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -30,7 +31,7 @@ import java.util.Date;
 public class MarketingDiscountCoupon {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -73,7 +74,7 @@ public class MarketingDiscountCoupon {
 	/**优惠金额*/
 	@Excel(name = "优惠金额", width = 15)
     @ApiModelProperty(value = "优惠金额")
-	private java.math.BigDecimal price;
+	private BigDecimal price;
 	/**优惠券名称*/
 	@Excel(name = "优惠券名称", width = 15)
     @ApiModelProperty(value = "优惠券名称")
@@ -128,7 +129,7 @@ public class MarketingDiscountCoupon {
 	/**实际抵扣金额（核销默认全抵）*/
 	@Excel(name = "实际抵扣金额（核销默认全抵）", width = 15)
     @ApiModelProperty(value = "实际抵扣金额（核销默认全抵）")
-	private java.math.BigDecimal practicalDeduction;
+	private BigDecimal practicalDeduction;
 	/**优惠券的id*/
 	@Excel(name = "优惠券的id", width = 15)
     @ApiModelProperty(value = "优惠券的id")
@@ -140,7 +141,7 @@ public class MarketingDiscountCoupon {
 	/**满多少钱*/
 	@Excel(name = "满多少钱", width = 15)
     @ApiModelProperty(value = "满多少钱")
-	private java.math.BigDecimal completely;
+	private BigDecimal completely;
 	@Excel(name = "赠送人的会员id,没有就为空", width = 15)
 	@ApiModelProperty(value = "赠送人的会员id,没有就为空")
 	private String giveMemberListId;
@@ -159,7 +160,7 @@ public class MarketingDiscountCoupon {
 	/**过期前多少天提醒*/
 	@Excel(name = "过期前多少天提醒", width = 15)
 	@ApiModelProperty(value = "过期前多少天提醒")
-	private java.math.BigDecimal warnDays;
+	private BigDecimal warnDays;
 	/**券说明*/
 	@Excel(name = "券说明", width = 15)
 	@ApiModelProperty(value = "券说明")
@@ -215,4 +216,20 @@ public class MarketingDiscountCoupon {
 	@Excel(name = "领用限制；会员类型数据字典：member_type", width = 15)
 	@ApiModelProperty(value = "领用限制；会员类型数据字典：member_type")
 	private String getRestrict;
+
+	/**折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） */
+	@Excel(name = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） ", width = 15)
+	@ApiModelProperty(value = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券）")
+	private BigDecimal discountLimitAmount;
+	/**优惠折扣百分比：指参与折扣的力度（用于折扣券） */
+	@Excel(name = "优惠折扣百分比：指参与折扣的力度（用于折扣券）", width = 15)
+	@ApiModelProperty(value = "优惠折扣百分比：指参与折扣的力度（用于折扣券）")
+	private BigDecimal discountPercent;
+
+	/**折扣券已使用金额 */
+	@Excel(name = "折扣券已使用金额", width = 15)
+	@ApiModelProperty(value = "折扣券已使用金额")
+	private BigDecimal discountUseAmount;
+	
+
 }

@@ -98,7 +98,7 @@
           mac.`go_and_come` AS goAndCome
         FROM
           member_account_capital mac
-        WHERE mac.`del_flag` = 0
+        WHERE mac.`del_flag` = '0'
           AND mac.`member_list_id` = #{map.memberId}
           <if test="map.pattern!=2">
               AND mac.`go_and_come` = #{map.pattern}
@@ -116,10 +116,8 @@
           member_account_capital mac
           LEFT JOIN member_list ml
             ON mac.`member_list_id` = ml.`id`
-            LEFT JOIN member_recharge_record mrr
-            ON mrr.`order_no` = mac.`order_no`
-        WHERE mac.`del_flag` = 0
-          AND mac.`pay_type` = 8
-          AND mrr.`trade_no` = #{marketingEnterMoney.orderNo}
+        WHERE mac.`del_flag` = '0'
+          AND mac.`pay_type` = '8'
+          AND mac.`order_no` = #{marketingEnterMoney.orderNo}
     </select>
 </mapper>

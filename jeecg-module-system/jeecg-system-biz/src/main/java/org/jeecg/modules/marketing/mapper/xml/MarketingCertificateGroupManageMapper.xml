@@ -12,9 +12,9 @@
             ON mcgm.`marketing_certificate_group_list_id` = mcgl.`id`
           LEFT JOIN marketing_certificate mc
             ON mcgl.`marketing_certificate_id` = mc.`id`
-        WHERE mcgm.`del_flag` = 0
+        WHERE mcgm.`del_flag` = '0'
           AND mcgm.status = 0
-          AND mcgl.`del_flag` = 0
+          AND mcgl.`del_flag` = '0'
           AND mcgl.status = 1
         ORDER BY mcgm.`create_time` DESC
         LIMIT 18
@@ -31,7 +31,7 @@
           marketing_certificate_group_record mcgr
           LEFT JOIN marketing_certificate_group_list mcgl
             ON mcgr.`marketing_certificate_group_list_id` = mcgl.`id`
-        WHERE mcgr.`del_flag` = 0
+        WHERE mcgr.`del_flag` = '0'
           AND mcgr.`member_list_id` = #{memberId}
           <if test="status != null and status !=''">
               AND mcgr.status = #{status}
@@ -49,7 +49,7 @@
             marketing_certificate_group_manage mcgm
             LEFT JOIN marketing_certificate_group_list mcgl
               ON mcgm.`marketing_certificate_group_list_id` = mcgl.`id`
-          WHERE mcgm.`del_flag` = 0
+          WHERE mcgm.`del_flag` = '0'
           ORDER BY mcgm.`create_time` DESC) m ${ew.customSqlSegment}
     </select>
     <select id="getInfo" resultType="map">

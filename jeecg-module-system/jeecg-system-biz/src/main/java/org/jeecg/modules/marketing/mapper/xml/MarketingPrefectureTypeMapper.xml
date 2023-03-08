@@ -32,7 +32,7 @@
           mpt.`type_name`
         FROM
           marketing_prefecture_type mpt
-        WHERE mpt.`del_flag` = 0
+        WHERE mpt.`del_flag` = '0'
           AND mpt.`pid` = #{id}
           AND mpt.`status` = 1
         ORDER BY mpt.sort ASC
@@ -44,7 +44,7 @@
           mpt.`logo_addr` AS logoAddr
         FROM
           marketing_prefecture_type mpt
-        WHERE mpt.`del_flag` = 0
+        WHERE mpt.`del_flag` = '0'
           AND mpt.`pid` = #{id}
           ORDER BY mpt.sort ASC
     </select>
@@ -60,9 +60,9 @@
           marketing_prefecture_type mpt
           LEFT JOIN marketing_prefecture_type mptt
             ON mpt.`id` = mptt.`pid`
-        WHERE mpt.`del_flag` = 0
+        WHERE mpt.`del_flag` = '0'
           AND mpt.`id` = #{id}
-          AND mptt.`del_flag` = 0
+          AND mptt.`del_flag` = '0'
         ORDER BY mptt.sort ASC
     </select>
 </mapper>

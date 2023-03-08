@@ -5,6 +5,7 @@ import org.jeecg.modules.good.dto.SpecificationsPicturesDTO;
 import org.jeecg.modules.good.entity.GoodStoreSpecification;
 import org.jeecg.modules.good.vo.GoodStoreListSpecificationVO;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -14,13 +15,29 @@ import java.util.List;
  * @Version: V1.0
  */
 public interface IGoodStoreSpecificationService extends IService<GoodStoreSpecification> {
-    List<GoodStoreSpecification> getGoodStoreSpecificationByGoodListId(String goodStoreListId);
+
     /**
-     * 根据商品id删除规格
-     * @param goodId
-     * @param delFlag
+     * 查询价格最低的一条规格数据
+     *
+     * @param goodListId
+     * @return
      */
-    void updateDelFlagByGoodId(String goodId, String delFlag);
+    public GoodStoreSpecification getSmallGoodSpecification(String goodListId);
+
+
+
+    /**
+     * 获取商品的总库存
+     *
+     * @param goodListId
+     * @return
+     */
+    public BigDecimal getTotalRepertory(String goodListId);
+
+
+
+    List<GoodStoreSpecification> getGoodStoreSpecificationByGoodListId(String goodStoreListId);
+
 
     /**
      * 根据商品id查询规格

@@ -31,7 +31,6 @@ import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysSmallcodeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,7 +41,7 @@ import java.util.*;
  * 会员api接口
  */
 @RequestMapping("after/member")
-@Controller
+@RestController
 @Slf4j
 public class AfterMemberController {
 
@@ -102,12 +101,6 @@ public class AfterMemberController {
     private IMarketingFourthIntegralSettingService iMarketingFourthIntegralSettingService;
 
     @Autowired
-    private IMarketingThirdIntegralSettingService iMarketingThirdIntegralSettingService;
-
-    @Autowired
-    private IMemberThirdIntegralService iMemberThirdIntegralService;
-
-    @Autowired
     private PromotionCodeUtils promotionCodeUtils;
 
     @Autowired
@@ -136,6 +129,50 @@ public class AfterMemberController {
 
     @Autowired
     private NotifyUrlUtils notifyUrlUtils;
+
+
+    /**
+     * 验证昵称和头像是否存在
+     *
+     * @param memberId
+     * @return
+     */
+    @PostMapping("hasMemberNickName")
+    public Result<?> hasMemberNickName(@RequestAttribute("memberId") String memberId){
+        MemberList memberList=iMemberListService.getById(memberId);
+        if(StringUtils.isBlank(memberList.getHeadPortrait())){
+            return Result.error("头像不存在");
+        }
+        if(StringUtils.isBlank(memberList.getNickName())){
+            return Result.error("昵称不存在");
+        }
+        return Result.ok("会员基本信息存在");
+    }
+
+
+    /**
+     * 用户完善资料接口
+     *
+     * @param memberId
+     * @param headPortrait
+     * @param nickName
+     * @return
+     */
+    @PostMapping("completeInformation")
+    public Result<?> completeInformation(@RequestAttribute("memberId") String memberId,String headPortrait,String nickName){
+        //参数校验
+        if(StringUtils.isBlank(headPortrait)){
+            return Result.error("请上传头像");
+        }
+        if(StringUtils.isBlank(nickName)){
+            return Result.error("请填写昵称");
+        }
+        iMemberListService.updateById(new MemberList().setId(memberId).setHeadPortrait(headPortrait).setNickName(nickName));
+        return Result.ok("完善资料成功！！！");
+    }
+
+
+
 
     /**
      * 支付密码验证接口
@@ -367,14 +404,6 @@ public class AfterMemberController {
                     memberObjectMap.put("memberGrowthValue", "");
                 }
             }
-            if (memberList.getMemberType().equals("1")&&StringUtils.isBlank(memberList.getMemberGradeId())){
-                MemberGrade memberGrade = iMemberGradeService.list(memberGradeLambdaQueryWrapper.eq(MemberGrade::getSort, "0")).get(0);
-                memberList.setMemberGradeId(memberGrade.getId());
-                iMemberListService.saveOrUpdate(memberList);
-                memberObjectMap.put("memberGradeName",memberGrade.getGradeName());
-                memberObjectMap.put("memberGradeLogo",memberGrade.getGradeLogo());
-                memberObjectMap.put("memberGrowthValue",memberList.getGrowthValue());
-            }
 
         }else {
             memberObjectMap.put("isViewGrade","0");
@@ -545,31 +574,6 @@ public class AfterMemberController {
             memberObjectMap.put("integralValue",marketingWelfarePaymentsSetting.getIntegralValue());
         }
 
-
-        //第三积分的显示和隐藏
-        MarketingThirdIntegralSetting marketingThirdIntegralSetting=iMarketingThirdIntegralSettingService.getOne(new LambdaQueryWrapper<MarketingThirdIntegralSetting>()
-                .eq(MarketingThirdIntegralSetting::getStatus,"1"));
-        Map<String,Object> marketingThirdIntegralSettingMap=Maps.newHashMap();
-        if(marketingThirdIntegralSetting==null){
-            marketingThirdIntegralSettingMap.put("isViewMarketingThirdIntegralSettingMap","0");
-        }else {
-
-            log.info("第四积分端控制：softModel=" + softModel);
-            if (marketingThirdIntegralSetting.getPointsDisplay().equals("0")) {
-                marketingThirdIntegralSettingMap.put("isViewMarketingThirdIntegralSettingMap", "1");
-            } else
-            //小程序
-            if (softModel.equals("0") && marketingThirdIntegralSetting.getPointsDisplay().equals("1")) {
-                marketingThirdIntegralSettingMap.put("isViewMarketingThirdIntegralSettingMap", "1");
-            } else if ((softModel.equals("1") || softModel.equals("2")) && marketingThirdIntegralSetting.getPointsDisplay().equals("2")) {
-                marketingThirdIntegralSettingMap.put("isViewMarketingThirdIntegralSettingMap", "1");
-            } else {
-                marketingThirdIntegralSettingMap.put("isViewMarketingThirdIntegralSettingMap", "0");
-            }
-            marketingThirdIntegralSettingMap.put("integralName",marketingThirdIntegralSetting.getIntegralName());
-            marketingThirdIntegralSettingMap.put("totalIntegral",iMemberThirdIntegralService.totalIntegral(memberId));
-        }
-        memberObjectMap.put("marketingThirdIntegralSettingMap",marketingThirdIntegralSettingMap);
         MemberBusinessDesignation memberBusinessDesignation = iMemberBusinessDesignationService.getOne(new LambdaQueryWrapper<MemberBusinessDesignation>()
                 .eq(MemberBusinessDesignation::getMemberListId, memberList.getId())
                 .orderByDesc(MemberBusinessDesignation::getCreateTime)
@@ -779,6 +783,7 @@ public class AfterMemberController {
         if (oConvertUtils.isNotEmpty(memberList)){
             map.put("phone",memberList.getPhone());
             map.put("id",memberList.getId());
+            map.put("nickName",memberList.getNickName());
             MemberGiveWelfarePayments memberGiveWelfarePayments=iMemberGiveWelfarePaymentsService.getOne(new LambdaQueryWrapper<MemberGiveWelfarePayments>()
                     .eq(MemberGiveWelfarePayments::getMemberListId,map.get("id"))
                     .orderByDesc(MemberGiveWelfarePayments::getCreateTime)
@@ -849,13 +854,7 @@ public class AfterMemberController {
         map.put("logoAddr",memberDesignation.getLogoAddr());
         map.put("totalMembers",memberDesignationMemberList.getTotalMembers());
 
-        /*int count = iMemberListService.count(new LambdaQueryWrapper<MemberList>()
-                .eq(MemberList::getDelFlag, "0")
-                .eq(MemberList::getStatus, "1")
-                .eq(MemberList::getTManageId, memberList.getId())
-        );*/
         long count = iMemberDesignationMemberListService.count(new LambdaQueryWrapper<MemberDesignationMemberList>()
-                .eq(MemberDesignationMemberList::getDelFlag, "0")
                 .eq(MemberDesignationMemberList::getMemberDesignationGroupId, memberDesignationMemberList.getMemberDesignationGroupId())
                 .eq(MemberDesignationMemberList::getTManageId, memberList.getId())
         );

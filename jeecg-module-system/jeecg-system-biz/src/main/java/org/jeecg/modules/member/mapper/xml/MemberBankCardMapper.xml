@@ -11,8 +11,8 @@
         member_bank_card mbc
         LEFT JOIN member_list ml
         ON mbc.`member_list_id` = ml.`id`
-        WHERE mbc.`del_flag` = 0
-        AND ml.`del_flag` = 0
+        WHERE mbc.`del_flag` = '0'
+        AND ml.`del_flag` = '0'
         AND ml.`status` = 1
         AND mbc.car_type = 0
         <if test="memberBankCardDTO!=null and memberBankCardDTO.mlPhone!=null and memberBankCardDTO.mlPhone!=''">

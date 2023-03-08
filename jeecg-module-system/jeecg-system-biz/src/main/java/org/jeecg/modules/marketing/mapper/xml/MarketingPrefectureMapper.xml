@@ -11,7 +11,7 @@
         COUNT(1)
         FROM
         marketing_prefecture_recommend mpr
-        WHERE mpr.`del_flag` = 0
+        WHERE mpr.`del_flag` = '0'
         AND mpr.`marketing_prefecture_id` = mp.id) > 0,'1','0') AS isViewRecommend
         FROM
           `marketing_prefecture` mp
@@ -51,51 +51,6 @@
         and is_designation='0'
         ORDER BY sort
 
-    </select>
-
-
-    <select id="getFiltrationGoodId" resultType="map">
-        SELECT
-        mpg.good_list_id,
-        mp.valid_time,
-        mp.start_time,
-        mp.end_time
-        FROM
-        `marketing_prefecture_good` mpg
-        LEFT JOIN `marketing_prefecture` mp
-        ON mp.id = mpg.marketing_prefecture_id
-        WHERE mp.del_flag = '0'
-        AND mpg.del_flag = '0'
-        <if test="paramMap != null and paramMap.validTime == 1 ">
-            <if test="paramMap != null  and paramMap.startTime !=null  and paramMap.endTime !=null ">
-                <!--短短时间-->
-                AND ((mp.valid_time = 1
-                AND mp.start_time BETWEEN #{paramMap.startTime}
-                AND #{paramMap.startTime}
-                OR mp.end_time BETWEEN #{paramMap.startTime}
-                AND #{paramMap.startTime} )
-                <!--短长时间-->
-                or (mp.valid_time = 0
-                AND mp.start_time <![CDATA[<]]> #{paramMap.endTime} ))
-            </if>
-        </if>
-        <if test="paramMap != null and paramMap.validTime == 0 ">
-            <if test="paramMap != null  and paramMap.startTime !=null ">
-                <!--长短时间-->
-                and ((mp.valid_time = 1
-                AND mp.end_time   <![CDATA[>]]>  #{paramMap.startTime}   )
-                <!--长长时间-->
-                or (mp.valid_time = 0 ))
-            </if>
-        </if>
-        <!--修改时间使用-->
-        <if test="paramMap != null and paramMap.containsKey('goodListId')">
-         and   mpg.good_list_id = #{paramMap.goodListId}
-        </if>
-        <if test="paramMap != null and paramMap.containsKey('marketingPrefectureId')">
-         and  mpg.marketing_prefecture_id != #{paramMap.marketingPrefectureId}
-        </if>
-        GROUP BY mpg.good_list_id
     </select>
 
     <select id="getFiltrationGoodIds" resultType="map">
@@ -152,7 +107,7 @@
         COUNT(1)
         FROM
         marketing_prefecture_recommend mpr
-        WHERE mpr.`del_flag` = 0
+        WHERE mpr.`del_flag` = '0'
         AND mpr.`marketing_prefecture_id` = mp.id) > 0,'1','0') AS isViewRecommend
         FROM
           `marketing_prefecture` mp

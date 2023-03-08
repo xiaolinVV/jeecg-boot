@@ -11,11 +11,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import java.math.BigDecimal;
 
 /**
  * @Description: 店铺商品列表
@@ -32,7 +29,7 @@ import java.math.BigDecimal;
 public class GoodStoreList {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -88,18 +85,10 @@ public class GoodStoreList {
 	@Excel(name = "商品别名（默认与商品名称相同）", width = 15)
     @ApiModelProperty(value = "商品别名（默认与商品名称相同）")
 	private String nickName;
-	/**商品销售价格*/
-	@Excel(name = "商品销售价格", width = 15)
-    @ApiModelProperty(value = "商品销售价格")
-	private String price;
 	/**店铺商品分类id*/
 	@Excel(name = "店铺商品分类id", width = 15)
     @ApiModelProperty(value = "店铺商品分类id")
 	private String goodStoreTypeId;
-	/**店铺自行设定，也可以为空*/
-	@Excel(name = "店铺自行设定，也可以为空", width = 15)
-    @ApiModelProperty(value = "店铺自行设定，也可以为空")
-	private String vipPrice;
 	/**商品编号*/
 	@Excel(name = "商品编号", width = 15)
     @ApiModelProperty(value = "商品编号")
@@ -108,15 +97,6 @@ public class GoodStoreList {
 	@Excel(name = "运费模板", width = 15)
     @ApiModelProperty(value = "运费模板")
 	private String storeTemplateId;
-	/**商品成本价*/
-	@Excel(name = "商品成本价", width = 15)
-    @ApiModelProperty(value = "商品成本价")
-	private String costPrice;
-	/**参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动*/
-	@Excel(name = "参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动", width = 15,dicCode = "activities_type")
-    @ApiModelProperty(value = "参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动")
-	@Dict(dicCode = "activities_type")
-	private String activitiesType;
 	/**商品市场价*/
 	@Excel(name = "商品市场价", width = 15)
     @ApiModelProperty(value = "商品市场价")
@@ -137,10 +117,6 @@ public class GoodStoreList {
 	@Excel(name = "商品详情图多张以json的形式存储", width = 15)
     @ApiModelProperty(value = "商品详情图多张以json的形式存储")
 	private String detailsGoods;
-	/**库存*/
-	@Excel(name = "库存", width = 15)
-    @ApiModelProperty(value = "库存")
-	private BigDecimal repertory;
 	/**上下架；0：下架；1：上架*/
 	@Excel(name = "上下架；0：下架；1：上架", width = 15)
     @ApiModelProperty(value = "上下架；0：下架；1：上架")
@@ -187,35 +163,13 @@ public class GoodStoreList {
 	@Excel(name = "审核状态：0:草稿；1：正常；", width = 15)
     @ApiModelProperty(value = "审核状态：0:草稿；1：正常；")
 	private String auditStatus;
-	/**最低商品价格；*/
-	@Excel(name = "最低商品价格；", width = 15)
-	@ApiModelProperty(value = "最低商品价格")
-	private String smallPrice;
-	/**最低vip价格；*/
-	@Excel(name = "最低vip价格；", width = 15)
-	@ApiModelProperty(value = "最低vip价格")
-	private String smallVipPrice;
-	/**最低成本价；*/
-	@Excel(name = "最低成本价；", width = 15)
-	@ApiModelProperty(value = "最低成本价")
-	private String smallCostPrice;
-	/**最低供货价；*/
-	/*@Excel(name = "最低供货价；", width = 15)
-	@ApiModelProperty(value = "最低供货价")
-	private java.lang.String smallSupplyPrice;*/
-	/**活动价；*/
-	@Excel(name = "活动价；", width = 15)
-	@ApiModelProperty(value = "活动价")
-	private String activityPrice;
 	/**审核原因*/
 	@Excel(name = "审核原因", width = 15)
 	@ApiModelProperty(value = "审核原因")
 	private String auditExplain;
 
+	private String specifications;
 
-	/**
-	 * 销量
-	 */
-	private BigDecimal salesVolume;
 
+	private String searchInfo;
 }

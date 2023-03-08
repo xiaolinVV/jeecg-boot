@@ -33,7 +33,7 @@
         ON sur.`user_id` = su.`id`
         LEFT JOIN sys_role sr
         ON sur.`role_id` = sr.`id`
-        WHERE pm.`del_flag` = 0
+        WHERE pm.`del_flag` = '0'
         <if test="providerManageVO!=null and providerManageVO.name!=null and providerManageVO.name !=''">
             AND pm.name LIKE CONCAT('%',#{providerManageVO.name},'%')
         </if>
@@ -87,7 +87,7 @@
           provider_manage pm
           LEFT JOIN sys_user su
             ON pm.`sys_user_id` = su.`id`
-        WHERE pm.`del_flag` = 0
+        WHERE pm.`del_flag` = '0'
         <if test="providerManageVO!=null and providerManageVO.userName!=null and providerManageVO.userName!=''">
             AND su.username LIKE concat('%',#{providerManageVO.userName},'%')
         </if>
@@ -119,7 +119,7 @@
           provider_manage pm
           LEFT JOIN sys_user su
             ON pm.`sys_user_id` = su.`id`
-        WHERE pm.`del_flag` = 0
+        WHERE pm.`del_flag` = '0'
           AND pm.`sys_user_id` = #{userId}
     </select>
     <select id="findproviderWorkbenchVO" resultType="org.jeecg.modules.provider.vo.ProviderWorkbenchVO">
@@ -149,7 +149,7 @@
             COUNT(1)
           FROM
             order_provider_list opl
-          WHERE opl.`del_flag` = 0
+          WHERE opl.`del_flag` = '0'
             AND opl.`sys_user_id` = pm.`sys_user_id`
             AND opl.`status` IN (1, 2, 3)) AS orderSum,
           -- 有效订单
@@ -157,7 +157,7 @@
             SUM(pac.`amount`)
           FROM
             provider_account_capital pac
-          WHERE pac.`del_flag` = 0
+          WHERE pac.`del_flag` = '0'
             AND pac.`sys_user_id` = pm.`sys_user_id`
             AND pac.`go_and_come` = 0) AS earnings,
           -- 累计收益
@@ -165,7 +165,7 @@
             COUNT(1)
           FROM
             order_provider_list opl
-          WHERE opl.`del_flag` = 0
+          WHERE opl.`del_flag` = '0'
             AND opl.`sys_user_id` = pm.`sys_user_id`
             AND opl.`status` = 1) AS waitDeliverGoods,
           -- 待发货订单
@@ -173,7 +173,7 @@
             count(1)
           FROM
             good_list gl
-          WHERE gl.`del_flag` = 0
+          WHERE gl.`del_flag` = '0'
             AND gl.`sys_user_id` = pm.`sys_user_id`
             AND gl.`status` = 1
             AND gl.`frame_status` = 1
@@ -189,7 +189,7 @@
             ON sur.`user_id` = su.`id`
           LEFT JOIN sys_role sr
             ON sr.`id` = sur.`role_id`
-        WHERE pm.`del_flag` = 0
+        WHERE pm.`del_flag` = '0'
           AND pm.`sys_user_id` = #{userId}
     </select>
     <select id="queryPageList" resultType="org.jeecg.modules.provider.vo.ProviderRechargeRecordVO">
@@ -203,7 +203,7 @@
         ON prr.`sys_user_id` = pm.`sys_user_id`
         LEFT JOIN sys_user su
         ON prr.`sys_user_id` = su.`id`
-        WHERE prr.`del_flag` = 0
+        WHERE prr.`del_flag` = '0'
         <if test="providerManageDTO.sysUserId != null and providerManageDTO.sysUserId != ''">
             AND prr.sys_user_id = #{providerManageDTO.sysUserId}
         </if>

@@ -23,7 +23,7 @@ import java.util.List;
 public class StoreManageDTO {
     private static final long serialVersionUID = 1L;
     /**主键ID*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**创建人*/

@@ -56,7 +56,7 @@
             ON prr.`sys_user_id` = pm.`sys_user_id`
           LEFT JOIN sys_user su
             ON pm.`sys_user_id` = su.`id`
-        WHERE prr.`del_flag` = 0
+        WHERE prr.`del_flag` = '0'
         <if test="providerRechargeRecordDTO != null and providerRechargeRecordDTO.sysUserId != null and providerRechargeRecordDTO.sysUserId != ''">
             AND prr.sys_user_id = #{providerRechargeRecordDTO.sysUserId}
         </if>

@@ -52,6 +52,21 @@ public class MemberDesignationController {
     @Autowired
     private IMemberDesignationService memberDesignationService;
 
+
+    /**
+     * 称号选择
+     *
+     * @param memberDesignationGroupId
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
+    @GetMapping("getSelectDesignation")
+    public Result<?> getSelectDesignation(String memberDesignationGroupId, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
+                                          @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize){
+        return Result.ok(memberDesignationService.getSelectDesignation(new Page<>(pageNo,pageSize),memberDesignationGroupId));
+    }
+
     /**
      * 分页列表查询
      *

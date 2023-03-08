@@ -134,10 +134,6 @@ public class AfterMarketingGroupManageController {
 
         goodSpecification.setRepertory(goodSpecification.getRepertory().subtract(quantity));//扣除规格库存
         iGoodSpecificationService.saveOrUpdate(goodSpecification);
-        goodList.setRepertory(goodList.getRepertory().subtract(quantity));//扣除商品库存
-        goodList.setSalesVolume(goodList.getSalesVolume().add(quantity));//增加销量
-        iGoodListService.saveOrUpdate(goodList);
-
         boolean identity=false;
 
         //生成拼团管理

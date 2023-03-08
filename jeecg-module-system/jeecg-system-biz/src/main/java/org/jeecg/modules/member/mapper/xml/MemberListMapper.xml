@@ -12,6 +12,7 @@
         ml.`area_addr`,
         ml.`member_type`,
         ml.`welfare_payments`,
+        ml.`member_grade_id`,
         ml.`balance`,
         ml.account_frozen,
         ml.unusable_frozen,
@@ -23,26 +24,26 @@
         COUNT(1)
         FROM
         marketing_discount_coupon mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`status` = 1
         AND mdc.`member_list_id` = ml.`id`) AS discount,
         (SELECT
         COUNT(1)
         FROM
         member_goods_collection mgc
-        WHERE mgc.`del_flag` = 0
+        WHERE mgc.`del_flag` = '0'
         AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
         (SELECT
         COUNT(1)
         FROM
         member_attention_store mas
-        WHERE mas.`del_flag` = 0
+        WHERE mas.`del_flag` = '0'
         AND mas.`member_list_id` = ml.`id`) AS attentionStore,
         (SELECT
         COUNT(1)
         FROM
         member_browsing_history mbh
-        WHERE mbh.`del_flag` = 0
+        WHERE mbh.`del_flag` = '0'
         AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
         IF(
         ml.`is_open_store` = 0,
@@ -62,7 +63,7 @@
         )
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
         ml.`create_time`,
         ml.`vip_time`,
@@ -107,7 +108,7 @@
         )
         FROM
         member_list mls
-        WHERE mls.`del_flag` = 0
+        WHERE mls.`del_flag` = '0'
         AND mls.`id` = ml.`promoter`)
         WHEN 2
         THEN '平台'
@@ -122,7 +123,7 @@
         mg.`grade_name`
         FROM
         member_grade mg
-        WHERE mg.`del_flag` = 0
+        WHERE mg.`del_flag` = '0'
         AND mg.id = ml.`member_grade_id`)
         ) AS gradeName,
         ml.`del_flag` AS delFlag,
@@ -133,7 +134,7 @@
         LEFT JOIN
         member_designation_member_list mdml
         ON md.`id` = mdml.`member_designation_id`
-        WHERE mdml.`del_flag` = 0
+        WHERE mdml.`del_flag` = '0'
         AND mdml.`member_list_id` = ml.`id`
         ORDER BY mdml.`create_time`,
         mdml.`update_time` DESC
@@ -143,7 +144,7 @@
         member_list ml
         LEFT JOIN sys_smallcode ss
         ON ss.id = ml.sys_smallcode_id
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         <if test="memberListVO!=null and memberListVO.sysUserId!=null and memberListVO.sysUserId!=''">
             AND ml.sys_user_id = #{memberListVO.sysUserId}
         </if>
@@ -191,7 +192,7 @@
             LEFT JOIN
             member_designation_member_list mdml
             ON md.`id` = mdml.`member_designation_id`
-            WHERE mdml.`del_flag` = 0
+            WHERE mdml.`del_flag` = '0'
             AND mdml.`member_list_id` = ml.`id`
             ORDER BY mdml.`create_time`,
             mdml.`update_time` DESC
@@ -230,7 +231,7 @@
             FROM
             member_list mls
             WHERE
-            mls.`del_flag` = 0
+            mls.`del_flag` = '0'
             AND mls.`id` = ml.`promoter`
             )
             WHEN 2 THEN
@@ -251,7 +252,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`sys_user_id` = ml.`sys_user_id`
             ) LIKE concat('%',#{memberListVO.storeName},'%')
         </if>
@@ -274,26 +275,26 @@
         COUNT(1)
         FROM
         marketing_discount_coupon mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`status` = 1
         AND mdc.`member_list_id` = ml.`id`) AS discount,
         (SELECT
         COUNT(1)
         FROM
         member_goods_collection mgc
-        WHERE mgc.`del_flag` = 0
+        WHERE mgc.`del_flag` = '0'
         AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
         (SELECT
         COUNT(1)
         FROM
         member_attention_store mas
-        WHERE mas.`del_flag` = 0
+        WHERE mas.`del_flag` = '0'
         AND mas.`member_list_id` = ml.`id`) AS attentionStore,
         (SELECT
         COUNT(1)
         FROM
         member_browsing_history mbh
-        WHERE mbh.`del_flag` = 0
+        WHERE mbh.`del_flag` = '0'
         AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
         IF(
         ml.`is_open_store` = 0,
@@ -313,7 +314,7 @@
         )
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
         ml.`create_time`,
         ml.`vip_time`,
@@ -354,7 +355,7 @@
         ON ml.`sys_smallcode_id` = ss.`id`
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         <if test="memberListVO!=null and memberListVO.phone!=null and memberListVO.phone!=''">
             AND ml.phone LIKE concat('%',concat(#{memberListVO.phone},'%'))
         </if>
@@ -424,7 +425,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`sys_user_id` = ml.`sys_user_id`
             ) LIKE concat('%',#{memberListVO.storeName},'%')
         </if>
@@ -460,7 +461,7 @@
             FROM
             member_list mls
             WHERE
-            mls.`del_flag` = 0
+            mls.`del_flag` = '0'
             AND mls.`id` = ml.`promoter`
             )
             WHEN 2 THEN
@@ -499,7 +500,7 @@
         FROM
         marketing_discount_good mdg
         WHERE mdg.`marketing_discount_id` = mdc.`marketing_discount_id`
-        AND mdg.`del_flag` = 0)AS applyGood,
+        AND mdg.`del_flag` = '0')AS applyGood,
         IF(
         mdc.`is_platform` = 0,
         (SELECT
@@ -517,14 +518,17 @@
         mdc.`create_time`,
         mdc.user_time,
         mdc.`marketing_discount_id`,
-        mdc.is_platform
+        mdc.is_platform,
+        mdc.is_nomal,
+        mdc.discount_limit_amount,
+        mdc.discount_percent
         FROM
         (SELECT * FROM marketing_discount_coupon WHERE del_flag = 0 ORDER BY create_time DESC LIMIT #{memberDiscountVO.pageNo},#{memberDiscountVO.pageSize}) mdc
         LEFT JOIN member_list ml
         ON mdc.`member_list_id` = ml.id
         LEFT JOIN marketing_discount md
         ON mdc.`marketing_discount_id` = md.`id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         <if test="memberDiscountVO!=null and memberDiscountVO.phone!=null and memberDiscountVO.phone!=''">
             AND ml.phone LIKE CONCAT(CONCAT('%',#{memberDiscountVO.phone}),'%')
         </if>
@@ -573,7 +577,7 @@
             COUNT(1)
           FROM
             marketing_certificate_store mcs
-          WHERE mcs.`del_flag` = 0
+          WHERE mcs.`del_flag` = '0'
             AND mcs.`marketing_certificate_id` = mc.`id`) AS storeQuantity,
           mcr.`status`,
           mcr.`the_channel`,
@@ -609,8 +613,8 @@
             ON ml.`id` = mcr.`member_list_id`
           LEFT JOIN marketing_certificate mc
             ON mcr.`marketing_certificate_id` = mc.`id`
-        WHERE ml.`del_flag` = 0
-          AND mcr.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+          AND mcr.`del_flag` = '0'
         <if test="memberCertificateVO!=null and memberCertificateVO.phone!=null and memberCertificateVO.phone!=''">
             AND ml.phone LIKE CONCAT(CONCAT('%',#{memberCertificateVO.phone}),'%')
         </if>
@@ -655,7 +659,7 @@
               ) AS mlSum
             FROM
               member_list ml
-            WHERE ml.`del_flag` = 0
+            WHERE ml.`del_flag` = '0'
               AND ml.`id` = #{memberId}
     </select>
 
@@ -683,7 +687,7 @@
         ) AS mlSum
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`id` = #{id}
     </select>
     <select id="findMemberVipByMarketingGiftBag" resultType="long">
@@ -695,12 +699,12 @@
               COUNT(1)
             FROM
               marketing_gift_bag_record mgbr
-            WHERE mgbr.`del_flag` = 0
+            WHERE mgbr.`del_flag` = '0'
               AND mgbr.`vip_privilege` = 1
               AND mgbr.`member_list_id` = ml.`id`) AS mlB
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`member_type` = 1
             AND ml.`promoter_type` = 1
             AND ml.`promoter` = #{id}
@@ -749,7 +753,7 @@
             COUNT(1)
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`member_type` = 0
             AND ml.`sys_user_id` = sm.`sys_user_id`
             <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
@@ -763,7 +767,7 @@
             COUNT(1)
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`member_type` = 1
             AND ml.`sys_user_id` = sm.`sys_user_id`
             <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
@@ -777,7 +781,7 @@
             COUNT(1)
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`sys_user_id` = sm.`sys_user_id`
             AND ml.`sex` = 1
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
@@ -791,7 +795,7 @@
             COUNT(1)
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`sys_user_id` = sm.`sys_user_id`
             AND ml.`sex` = 2
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
@@ -807,7 +811,7 @@
             member_list ml
           WHERE (ml.`sex` = 0
                 OR ml.`sex` IS NULL)
-            AND ml.`del_flag` = 0
+            AND ml.`del_flag` = '0'
             AND ml.`sys_user_id` = sm.`sys_user_id`
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!=''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
@@ -818,7 +822,7 @@
         ) AS memberUnknown
         FROM
           store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysWorkbenchVO.sysUserId}
     </select>
     <select id="getAgencySexSum" resultType="map">
@@ -834,9 +838,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 0
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -854,9 +858,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 0
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(
                   SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -878,9 +882,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 0
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -904,9 +908,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -924,9 +928,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(
                   SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -948,9 +952,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`member_type` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -974,9 +978,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -994,9 +998,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(
                   SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -1018,9 +1022,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 1
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -1044,9 +1048,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 2
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -1064,9 +1068,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 2
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(
                   SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -1088,9 +1092,9 @@
                 member_list ml
                 LEFT JOIN store_manage sm
                   ON ml.`sys_user_id` = sm.`sys_user_id`
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sex` = 2
-                AND sm.`del_flag` = 0
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -1116,8 +1120,8 @@
                   ON ml.`sys_user_id` = sm.`sys_user_id`
               WHERE (ml.`sex` = 0
                   OR ml.`sex` IS NULL)
-                AND ml.`del_flag` = 0
-                AND sm.`del_flag` = 0
+                AND ml.`del_flag` = '0'
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -1137,8 +1141,8 @@
                   ON ml.`sys_user_id` = sm.`sys_user_id`
               WHERE (ml.`sex` = 0
                   OR ml.`sex` IS NULL)
-                AND ml.`del_flag` = 0
-                AND sm.`del_flag` = 0
+                AND ml.`del_flag` = '0'
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(
                   SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -1162,8 +1166,8 @@
                   ON ml.`sys_user_id` = sm.`sys_user_id`
               WHERE (ml.`sex` = 0
                   OR ml.`sex` IS NULL)
-                AND ml.`del_flag` = 0
-                AND sm.`del_flag` = 0
+                AND ml.`del_flag` = '0'
+                AND sm.`del_flag` = '0'
                 AND sm.`attestation_status` IN (1, 2)
                 AND FIND_IN_SET(SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
         <if test="agencyWorkbenchVO!=null and agencyWorkbenchVO.memberTime_begin!=null and agencyWorkbenchVO.memberTime_begin!=''">
@@ -1184,7 +1188,7 @@
             ON sur.`user_id` = su.`id`
           LEFT JOIN sys_role sr
             ON sur.`role_id` = sr.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
           AND am.`sys_user_id` = #{agencyWorkbenchVO.sysUserId}
     </select>
     <select id="getSysSexSum" resultType="map">
@@ -1193,7 +1197,7 @@
         COUNT(1)
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`member_type` = 0
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
@@ -1206,7 +1210,7 @@
         COUNT(1)
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`member_type` = 1
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
@@ -1218,7 +1222,7 @@
         COUNT(1)
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`sex` = 1
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
@@ -1231,7 +1235,7 @@
         COUNT(1)
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`sex` = 2
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
@@ -1246,7 +1250,7 @@
         member_list ml
         WHERE (ml.`sex` = 0
         OR ml.`sex` IS NULL)
-        AND ml.`del_flag` = 0
+        AND ml.`del_flag` = '0'
         <if test="sysWorkbenchVO!=null and sysWorkbenchVO.memberTime_begin!=null and sysWorkbenchVO.memberTime_begin!= ''">
             AND DATE_FORMAT(ml.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.memberTime_begin}
         </if>
@@ -1256,7 +1260,7 @@
         ) AS memberUnknown
         FROM
         sys_user su
-        WHERE su.`del_flag` = 0
+        WHERE su.`del_flag` = '0'
         AND su.id = #{sysWorkbenchVO.id}
     </select>
 
@@ -1324,7 +1328,7 @@
           member_list ml
           LEFT JOIN store_manage sm
             ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
           AND sm.`alliance_user_id` = am.sys_user_id
           AND ml.`member_type` = 0
         <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
@@ -1340,7 +1344,7 @@
         member_list ml
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND sm.`alliance_user_id` = am.sys_user_id
         AND ml.`member_type` = 1
         <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
@@ -1356,7 +1360,7 @@
         member_list ml
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND sm.`alliance_user_id` = am.sys_user_id
         AND ml.`sex` = 1
         <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
@@ -1372,7 +1376,7 @@
         member_list ml
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND sm.`alliance_user_id` = am.sys_user_id
         AND ml.`sex` = 2
         <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
@@ -1388,7 +1392,7 @@
         member_list ml
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND sm.`alliance_user_id` = am.sys_user_id
         AND ml.`sex` = 0
         <if test="workbench!=null and workbench.memberTime_begin!=null and workbench.memberTime_begin!=''">
@@ -1419,26 +1423,26 @@
         COUNT(1)
         FROM
         marketing_discount_coupon mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`status` = 1
         AND mdc.`member_list_id` = ml.`id`) AS discount,
         (SELECT
         COUNT(1)
         FROM
         member_goods_collection mgc
-        WHERE mgc.`del_flag` = 0
+        WHERE mgc.`del_flag` = '0'
         AND mgc.`member_list_id` = ml.`id`) AS goodsCollection,
         (SELECT
         COUNT(1)
         FROM
         member_attention_store mas
-        WHERE mas.`del_flag` = 0
+        WHERE mas.`del_flag` = '0'
         AND mas.`member_list_id` = ml.`id`) AS attentionStore,
         (SELECT
         COUNT(1)
         FROM
         member_browsing_history mbh
-        WHERE mbh.`del_flag` = 0
+        WHERE mbh.`del_flag` = '0'
         AND mbh.`member_list_id` = ml.`id`) AS browsingHistory,
         IF(
         ml.`is_open_store` = 0,
@@ -1458,7 +1462,7 @@
         )
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`sys_user_id` = ml.`sys_user_id`) AS storeName,
         ml.`create_time`,
         ml.`vip_time`,
@@ -1503,7 +1507,7 @@
         )
         FROM
         member_list mls
-        WHERE mls.`del_flag` = 0
+        WHERE mls.`del_flag` = '0'
         AND mls.`id` = ml.`promoter`)
         WHEN 2
         THEN '平台'
@@ -1515,7 +1519,7 @@
         member_list ml
         LEFT JOIN store_manage sm
         ON ml.`sys_user_id` = sm.`sys_user_id`
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND LENGTH(TRIM(sm.`alliance_user_id`)) > 0
         <if test="memberListDTO!=null and memberListDTO.promoter!=null and memberListDTO.promoter!=''">
             AND sm.alliance_user_id = #{memberListDTO.promoter}
@@ -1563,7 +1567,7 @@
           ml.nick_name
         FROM
           member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
           AND ml.`phone` LIKE CONCAT('%',#{phone},'%')
           LIMIT 10
     </select>
@@ -1581,7 +1585,7 @@
           COUNT(1)
         FROM
           member_designation_member_list mdmls
-        WHERE mdmls.`del_flag` = 0
+        WHERE mdmls.`del_flag` = '0'
           AND mdmls.`t_manage_id` = ml.id
           AND mdmls.`member_designation_group_id` = #{memberDesignationGroupId}) AS levelDownMlSum,
           mdml.is_change AS levelDownIsChange,
@@ -1592,8 +1596,9 @@
         ON mdml.`member_list_id` = ml.`id`
           LEFT JOIN member_designation md
             ON mdml.`member_designation_id` = md.`id`
-        WHERE ml.`del_flag` = 0
-          AND md.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+          AND md.`del_flag` = '0'
+          AND mdml.`del_flag` = '0'
           AND mdml.`t_manage_id` = #{id}
           AND mdml.`member_designation_group_id` = #{memberDesignationGroupId}
     </select>
@@ -1606,7 +1611,7 @@
             COUNT(1)
           FROM
             member_list mls
-          WHERE mls.`del_flag` = 0
+          WHERE mls.`del_flag` = '0'
             AND mls.`t_manage_id` = ml.`id`) > 0,
             '1',
             '0') AS isViewUnderling,
@@ -1614,7 +1619,7 @@
             COUNT(1)
           FROM
             member_list mls
-          WHERE mls.`del_flag` = 0
+          WHERE mls.`del_flag` = '0'
             AND mls.`t_manage_id` = ml.`id`) AS memberSum,
         IF(
         ml.`t_manage_id` IS NULL,
@@ -1632,8 +1637,8 @@
             ON ml.`member_designation_id` = md.`id`
         LEFT JOIN member_designation_group mdg
         ON md.member_designation_group_id = mdg.`id`
-        WHERE ml.`del_flag` = 0
-        AND md.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+        AND md.`del_flag` = '0'
         AND ml.member_designation_group_id IS NOT NULL
         AND LENGTH(TRIM(ml.member_designation_group_id)) > 0
         <if test="memberListDTO.phone != null and memberListDTO.phone != ''">
@@ -1650,7 +1655,7 @@
             COUNT(1)
           FROM
             member_list mls
-          WHERE mls.`del_flag` = 0
+          WHERE mls.`del_flag` = '0'
             AND mls.`t_manage_id` = ml.`id` )> 0,
             '1',
             '0') AS isViewUnderling,
@@ -1658,7 +1663,7 @@
             COUNT(1)
           FROM
             member_list mls
-          WHERE mls.`del_flag` = 0
+          WHERE mls.`del_flag` = '0'
             AND mls.`t_manage_id` = ml.`id`) AS memberSum,
         IF(
         ml.`t_manage_id` IS NULL,
@@ -1676,8 +1681,8 @@
             ON ml.`member_designation_id` = md.`id`
             LEFT JOIN member_designation_group mdg
         ON md.member_designation_group_id = mdg.`id`
-        WHERE ml.`del_flag` = 0
-        AND md.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+        AND md.`del_flag` = '0'
         AND ml.`t_manage_id` = #{id}
     </select>
 
@@ -1692,7 +1697,7 @@
           ) AS NAME
         FROM
           member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
           AND ml.`phone` LIKE CONCAT('%',#{phone},'%')
           LIMIT 10
     </select>
@@ -1707,13 +1712,13 @@
               COUNT(1)
             FROM
               marketing_gift_bag_record mgbr
-            WHERE mgbr.`del_flag` = 0
+            WHERE mgbr.`del_flag` = '0'
               AND mgbr.`pay_status` = 1
               AND mgbr.`marketing_gift_bag_id` = #{marketingGiftBagId}
               AND mgbr.`member_list_id` = ml.`id`) AS mlGibtSum
           FROM
             member_list ml
-          WHERE ml.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
             AND ml.`member_designation_id` = #{memberDesignationId}) m
         WHERE m.mlGibtSum > 0
     </select>

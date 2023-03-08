@@ -1,39 +1,39 @@
 package org.jeecg.modules.good.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.system.query.QueryGenerator;
-import org.jeecg.common.aspect.annotation.AutoLog;
-import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.good.entity.GoodExhibits;
-import org.jeecg.modules.good.service.IGoodExhibitsService;
-import java.util.Date;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.aspect.annotation.AutoLog;
+import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.common.util.OrderNoUtils;
+import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.good.dto.GoodExhibitsDTO;
+import org.jeecg.modules.good.entity.GoodExhibits;
+import org.jeecg.modules.good.service.IGoodExhibitsService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import com.alibaba.fastjson.JSON;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
  /**
  * @Description: 展品列表
@@ -48,7 +48,31 @@ import io.swagger.annotations.ApiOperation;
 public class GoodExhibitsController {
 	@Autowired
 	private IGoodExhibitsService goodExhibitsService;
-	
+
+
+	 /**
+	  * 上下架
+	  *
+	  * @param id
+	  * @return
+	  */
+	@GetMapping("upAndDown")
+	public Result<?> upAndDown(String id){
+		GoodExhibits goodExhibits=goodExhibitsService.getById(id);
+		if(goodExhibits.getFrameStatus().equals("0")){
+			goodExhibits.setFrameStatus("1");
+			goodExhibitsService.saveOrUpdate(goodExhibits);
+			return Result.ok("上架成功！！！");
+		}
+		if(goodExhibits.getFrameStatus().equals("1")){
+			goodExhibits.setFrameStatus("0");
+			goodExhibitsService.saveOrUpdate(goodExhibits);
+			return Result.ok("下架成功！！！");
+		}
+		return Result.error("未知错误");
+	}
+
+
 	/**
 	  * 分页列表查询
 	 * @param goodExhibits
@@ -60,14 +84,14 @@ public class GoodExhibitsController {
 	@AutoLog(value = "展品列表-分页列表查询")
 	@ApiOperation(value="展品列表-分页列表查询", notes="展品列表-分页列表查询")
 	@GetMapping(value = "/list")
-	public Result<IPage<GoodExhibits>> queryPageList(GoodExhibits goodExhibits,
+	public Result<?> queryPageList(GoodExhibits goodExhibits,
 									  @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 									  @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 									  HttpServletRequest req) {
-		Result<IPage<GoodExhibits>> result = new Result<IPage<GoodExhibits>>();
+		Result<IPage<GoodExhibitsDTO>> result = new Result<IPage<GoodExhibitsDTO>>();
 		QueryWrapper<GoodExhibits> queryWrapper = QueryGenerator.initQueryWrapper(goodExhibits, req.getParameterMap());
-		Page<GoodExhibits> page = new Page<GoodExhibits>(pageNo, pageSize);
-		IPage<GoodExhibits> pageList = goodExhibitsService.page(page, queryWrapper);
+		Page<GoodExhibitsDTO> page = new Page<GoodExhibitsDTO>(pageNo, pageSize);
+		IPage<GoodExhibitsDTO> pageList = goodExhibitsService.queryPageList(page, queryWrapper);
 		result.setSuccess(true);
 		result.setResult(pageList);
 		return result;
@@ -84,6 +108,7 @@ public class GoodExhibitsController {
 	public Result<GoodExhibits> add(@RequestBody GoodExhibits goodExhibits) {
 		Result<GoodExhibits> result = new Result<GoodExhibits>();
 		try {
+			goodExhibits.setSerialNumber(OrderNoUtils.getOrderNo());
 			goodExhibitsService.save(goodExhibits);
 			result.success("添加成功！");
 		} catch (Exception e) {

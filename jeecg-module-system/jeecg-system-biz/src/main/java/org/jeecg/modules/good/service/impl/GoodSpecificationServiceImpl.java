@@ -1,5 +1,7 @@
 package org.jeecg.modules.good.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.jeecg.modules.good.dto.SpecificationsPicturesDTO;
@@ -11,6 +13,7 @@ import org.jeecg.modules.good.vo.GoodListSpecificationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +36,15 @@ public class GoodSpecificationServiceImpl extends ServiceImpl<GoodSpecificationM
     }
 
     @Override
-    public void updateDelFlagByGoodId(String goodId, String delFlag) {
-        baseMapper.updateDelFlagByGoodId(goodId,delFlag);
+    public GoodSpecification getSmallGoodSpecification(String goodListId) {
+        return this.getOne(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getGoodListId,goodListId).orderByAsc(GoodSpecification::getPrice).last("limit 1"));
     }
+
+    @Override
+    public BigDecimal getTotalRepertory(String goodListId) {
+        return new BigDecimal(String.valueOf(this.getMap(new QueryWrapper<GoodSpecification>().select("sum(repertory) as repertory").lambda().eq(GoodSpecification::getGoodListId,goodListId)).get("repertory")));
+    }
+
 
     @Override
     public List<String> selectByGoodId(String goodId) {

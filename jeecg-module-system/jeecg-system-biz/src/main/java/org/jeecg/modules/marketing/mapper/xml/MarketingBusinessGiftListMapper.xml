@@ -7,7 +7,7 @@
           mbgl.`main_picture` AS mainPicture
         FROM
           marketing_business_gift_list mbgl
-        WHERE mbgl.`del_flag` = 0
+        WHERE mbgl.`del_flag` = '0'
           AND mbgl.status = 1
         ORDER BY mbgl.`sort` ASC,
           mbgl.`create_time` DESC
@@ -21,7 +21,7 @@
           LEFT JOIN
           marketing_business_gift_list mbgl
           ON mbgl.id = mbgr.marketing_business_gift_list_id
-        WHERE mbgr.`del_flag` = 0
+        WHERE mbgr.`del_flag` = '0'
           AND mbgr.member_list_id = #{memberId}
         ORDER BY mbgr.pay_time DESC
     </select>

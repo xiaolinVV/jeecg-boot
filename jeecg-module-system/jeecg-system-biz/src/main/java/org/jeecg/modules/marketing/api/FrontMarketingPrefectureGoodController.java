@@ -120,7 +120,7 @@ public class FrontMarketingPrefectureGoodController {
                     if(marketingPrefectureGood==null){
                        continue;
                     }
-                    mp.put("smallPrefecturePrice",marketingPrefectureGood.getSmallPrefecturePrice());
+                    mp.put("smallPrice",marketingPrefectureGood.getSmallPrefecturePrice());
                     //是否支持福利金抵扣
                     mp.put("isWelfare",marketingPrefectureGood.getIsWelfare());
 

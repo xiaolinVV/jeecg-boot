@@ -26,7 +26,7 @@
             ON mdg.`member_id` = ml.`id`
           LEFT JOIN store_manage sm
             ON mdg.store_manage_id = sm.id
-        WHERE mdg.`del_flag` = 0) m ${ew.customSqlSegment}
+        WHERE mdg.`del_flag` = '0') m ${ew.customSqlSegment}
     </select>
     <select id="findMemberDesignationGroupByName" resultType="map">
         SELECT
@@ -37,13 +37,13 @@
         COUNT(1)
         FROM
         member_designation md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.`member_designation_group_id` = mdg.`id`) > 0,
         (SELECT
         md.sort
         FROM
         member_designation md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.`member_designation_group_id` = mdg.`id`
         ORDER BY md.sort DESC
         LIMIT 1),
@@ -51,7 +51,7 @@
         ) AS sort
         FROM
         member_designation_group mdg
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
         <if test="name != null and name != ''">
             AND mdg.`group_name` LIKE concat('%',#{name},'%')
         </if>
@@ -139,7 +139,7 @@
             marketing_gift_bag_record mgbr
             LEFT JOIN marketing_gift_bag mgb
               ON mgbr.`marketing_gift_bag_id` = mgb.`id`
-          WHERE mgbr.`del_flag` = 0
+          WHERE mgbr.`del_flag` = '0'
             AND mgbr.`pay_status` = 1
             AND mgbr.distribution_channel = sm.`sys_user_id`
             AND (
@@ -151,7 +151,7 @@
         FROM
           store_manage sm
         WHERE sm.`alliance_user_id` = #{id}
-          AND sm.`del_flag` = 0
+          AND sm.`del_flag` = '0'
           AND sm.`pay_status` IN (1, 2)
         ORDER BY priceSum DESC
     </select>
@@ -178,7 +178,7 @@
             marketing_gift_bag_record mgbr
             LEFT JOIN marketing_gift_bag mgb
               ON mgbr.`marketing_gift_bag_id` = mgb.`id`
-          WHERE mgbr.`del_flag` = 0
+          WHERE mgbr.`del_flag` = '0'
             AND mgbr.`pay_status` = 1
             AND mgbr.distribution_channel = sm.`sys_user_id`
             AND DATE_FORMAT(mgbr.`pay_time`, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
@@ -191,7 +191,7 @@
         FROM
           store_manage sm
         WHERE sm.`alliance_user_id` = #{id}
-          AND sm.`del_flag` = 0
+          AND sm.`del_flag` = '0'
           AND sm.`pay_status` IN (1, 2)
         ORDER BY priceSum DESC
     </select>

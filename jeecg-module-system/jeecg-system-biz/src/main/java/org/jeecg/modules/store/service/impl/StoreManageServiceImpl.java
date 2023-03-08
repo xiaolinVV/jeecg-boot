@@ -13,6 +13,7 @@ import org.jeecg.common.util.DateUtils;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.PasswordUtil;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.agency.entity.AgencyAccountCapital;
 import org.jeecg.modules.agency.entity.AgencyManage;
 import org.jeecg.modules.agency.entity.AgencyRechargeRecord;
@@ -25,7 +26,6 @@ import org.jeecg.modules.alliance.entity.AllianceRechargeRecord;
 import org.jeecg.modules.alliance.service.IAllianceAccountCapitalService;
 import org.jeecg.modules.alliance.service.IAllianceManageService;
 import org.jeecg.modules.alliance.service.IAllianceRechargeRecordService;
-import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.marketing.entity.MarketingCommingStore;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePayments;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;
@@ -148,8 +148,18 @@ public class StoreManageServiceImpl extends ServiceImpl<StoreManageMapper, Store
 
 
     @Override
-    public List<Map<String, Object>> getAllStoreList() {
-        return baseMapper.getAllStoreList();
+    public StoreManage getStoreManageBySysUserId(String sysUserId) {
+        return this.getOne(new LambdaQueryWrapper<StoreManage>()
+                .eq(StoreManage::getSysUserId,sysUserId)
+                .in(StoreManage::getPayStatus,"1","2")
+                .eq(StoreManage::getStatus,"1")
+                .orderByAsc(StoreManage::getCreateTime)
+                .last("limit 1"));
+    }
+
+    @Override
+    public List<Map<String, Object>> getAllStoreList(String userId) {
+        return baseMapper.getAllStoreList(userId);
     }
 
     @Override
@@ -1948,12 +1958,6 @@ public class StoreManageServiceImpl extends ServiceImpl<StoreManageMapper, Store
     @Override
     public IPage<Map<String, Object>> findCityLifeStoreManageList(Page<Map<String, Object>> page, Map<String, Object> paramObjectMap) {
         return baseMapper.findCityLifeStoreManageList(page,paramObjectMap);
-    }
-
-
-    @Override
-    public List<Map<String, Object>> storeComplimentaryThree() {
-        return baseMapper.storeComplimentaryThree();
     }
 
     @Override

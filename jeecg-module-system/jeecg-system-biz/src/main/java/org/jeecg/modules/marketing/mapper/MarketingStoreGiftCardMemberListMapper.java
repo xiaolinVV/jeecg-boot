@@ -20,13 +20,23 @@ import java.util.Map;
 public interface MarketingStoreGiftCardMemberListMapper extends BaseMapper<MarketingStoreGiftCardMemberList> {
 
     /**
-     * 根据会员iD获取礼品卡
+     * 根据会员iD获取礼品卡（分页）
      *
      * @param page
      * @param paramMap
      * @return
      */
     public IPage<Map<String,Object>> getByMemberId(Page<Map<String,Object>> page, @Param("paramMap") Map<String,Object> paramMap);
+
+
+    /**
+     * 根据会员iD获取礼品卡(全部)
+     *
+     * @param
+     * @param paramMap
+     * @return
+     */
+    public List<Map<String,Object>> getByMemberId(@Param("paramMap") Map<String,Object> paramMap);
 
 
     /**

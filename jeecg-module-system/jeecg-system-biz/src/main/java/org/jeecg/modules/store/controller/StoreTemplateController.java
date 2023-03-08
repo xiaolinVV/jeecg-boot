@@ -1,6 +1,7 @@
 package org.jeecg.modules.store.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,8 +16,11 @@ import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.util.PermissionUtils;
+import org.jeecg.modules.provider.entity.ProviderTemplate;
 import org.jeecg.modules.store.dto.StoreTemplateDTO;
+import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.entity.StoreTemplate;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.store.service.IStoreTemplateService;
 import org.jeecg.modules.system.entity.SysArea;
 import org.jeecg.modules.system.service.ISysAreaService;
@@ -57,6 +61,24 @@ public class StoreTemplateController {
 	private IStoreTemplateService storeTemplateService;
 	@Autowired
 	private ISysAreaService iSysAreaService;
+
+	@Autowired
+	private IStoreManageService iStoreManageService;
+
+
+
+
+	/**
+	 * 根据供应商id获取运费模板
+	 *
+	 * @param storeManageId
+	 * @return
+	 */
+	@GetMapping("getStoreTemplateByStoreManageId")
+	public Result<?> getProviderTemplateBySysUserId(String storeManageId){
+		StoreManage storeManage=iStoreManageService.getById(storeManageId);
+		return Result.ok(storeTemplateService.list(new LambdaQueryWrapper<StoreTemplate>().eq(StoreTemplate::getSysUserId,storeManage.getSysUserId())));
+	}
 
 	 @AutoLog(value = "平台新增运费模板")
 	 @ApiOperation(value = "平台新增运费模板", notes = "平台新增运费模板")

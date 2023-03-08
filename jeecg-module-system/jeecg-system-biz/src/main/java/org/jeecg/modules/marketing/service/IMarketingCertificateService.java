@@ -27,6 +27,9 @@ public interface IMarketingCertificateService extends IService<MarketingCertific
 
     List<MarketingCertificateVO> findCertificateVO(MarketingCertificateVO marketingCertificateVO);
 
+
+    IPage<MarketingCertificateVO> findCertificateVO(Page<MarketingCertificateDTO> page,MarketingCertificateVO marketingCertificateVO);
+
     /**
      * 查询兑换券的列表
      *
@@ -65,11 +68,9 @@ public interface IMarketingCertificateService extends IService<MarketingCertific
      * @param sysUserId  渠道店铺
      * @param quantity  数量
      * @param memberId  会员id
-     * @param longitude
-     * @param latitude
      * @param isContinuous   是否连续
      */
-    public List<MarketingCertificateRecord>  generate(String marketingCertificateId, String sysUserId, BigDecimal quantity, String memberId, BigDecimal longitude, BigDecimal latitude, Boolean isContinuous);
+    public List<MarketingCertificateRecord>  generate(String marketingCertificateId, String sysUserId, BigDecimal quantity, String memberId, Boolean isContinuous);
 
     List<MarketingCertificateVO> findCertificateData(MarketingCertificateVO marketingCertificateVO);
 

@@ -86,15 +86,11 @@ public class GoodCuisineListController {
 		try {
 			log.info(JSON.toJSONString(goodCuisineListDTO));
 			GoodCuisineList goodCuisineList=new GoodCuisineList();
-			goodCuisineList.setSerialNumber(goodCuisineListService.getById(goodCuisineListDTO.getId()).getSerialNumber());
 			//商品编号
 			JSONArray shopInfo=JSON.parseArray(goodCuisineListDTO.getShopInfo());
 			JSONObject shopInfoo=(JSONObject)shopInfo.get(0);
 			if(StringUtils.isBlank(shopInfoo.getString("serialNumber"))){
 				return Result.error("商品编号不能为空");
-			}
-			if(goodCuisineListService.count(new LambdaQueryWrapper<GoodCuisineList>().eq(GoodCuisineList::getSerialNumber,shopInfoo.getString("serialNumber")))>0){
-				return Result.error("商品编号不能重复，请重新编写");
 			}
 			//商品名称
 			if(StringUtils.isBlank(goodCuisineListDTO.getGoodName())){

@@ -1,10 +1,10 @@
 package org.jeecg.modules.store.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,6 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.pay.utils.HftxPayUtils;
 import org.jeecg.modules.store.dto.StoreCashierRoutingDTO;
 import org.jeecg.modules.store.entity.StoreCashierRouting;
 import org.jeecg.modules.store.service.IStoreCashierRoutingService;
@@ -51,9 +50,6 @@ public class StoreCashierRoutingController {
 	@Autowired
 	private IStoreCashierRoutingService storeCashierRoutingService;
 
-	 @Autowired
-	 private HftxPayUtils hftxPayUtils;
-
 	/**
 	  * 分页列表查询
 	 * @param storeCashierRouting
@@ -86,37 +82,25 @@ public class StoreCashierRoutingController {
 	@AutoLog(value = "店铺收银分账设置-添加")
 	@ApiOperation(value="店铺收银分账设置-添加", notes="店铺收银分账设置-添加")
 	@PostMapping(value = "/add")
-	public Result<StoreCashierRouting> add(@RequestBody StoreCashierRouting storeCashierRouting) {
+	public Result<?> add(@RequestBody StoreCashierRouting storeCashierRouting) {
 		Result<StoreCashierRouting> result = new Result<StoreCashierRouting>();
 		try {
-			if(storeCashierRoutingService.save(storeCashierRouting)) {
-				if (!storeCashierRouting.getAccountType().equals("2")) {
-					//新增会员信息和结算账户对象
-					if (hftxPayUtils.createMemberPrivate(storeCashierRouting.getId(), storeCashierRouting.getRealName())) {
-						//新增结算账户信息
-						Map<String, Object> paramMap = Maps.newHashMap();
-						paramMap.put("card_id", storeCashierRouting.getBankCard());
-						paramMap.put("card_name", storeCashierRouting.getRealName());
-						paramMap.put("cert_id", storeCashierRouting.getIdNumber());
-						paramMap.put("tel_no", storeCashierRouting.getPhone());
-						paramMap.put("bank_acct_type", "2");
-						Map<String, Object> resultMap = hftxPayUtils.createSettleAccountPrivate(storeCashierRouting.getId(), paramMap);
-						if (resultMap.get("status").toString().equals("succeeded")) {
-							if (StringUtils.isNotBlank(resultMap.get("id").toString())) {
-								storeCashierRouting.setSettleAccount(resultMap.get("id").toString());
-								storeCashierRoutingService.saveOrUpdate(storeCashierRouting);
-							} else {
-								result.error500("结算信息有问题");
-							}
-						} else {
-							result.error500("分账设置失败");
-						}
-					} else {
-						result.error500("分账设置失败");
-					}
+			if(storeCashierRouting.getIsStore().equals("1")){
+				storeCashierRouting.setAffiliationStoreManageId(storeCashierRouting.getStoreManageId());
+			}
+			if(storeCashierRouting.getRoleType().equals("0")){
+				storeCashierRouting.setIsStore("0");
+			}
+			//本商户的信息只能一条
+			if(storeCashierRouting.getIsStore().equals("1")) {
+				long storeCashierRoutingCount = storeCashierRoutingService.count(new LambdaQueryWrapper<StoreCashierRouting>().eq(StoreCashierRouting::getStoreManageId, storeCashierRouting.getStoreManageId()).eq(StoreCashierRouting::getIsStore, "1"));
+				if (storeCashierRoutingCount > 1) {
+					return Result.error("本商户信息只能是一条");
 				}
 			}
-			result.success("添加成功！");
+			if (!storeCashierRouting.getAccountType().equals("2")) {
+				return storeCashierRoutingService.settingBankCard(storeCashierRouting);
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);
 			result.error500("操作失败");
@@ -132,32 +116,31 @@ public class StoreCashierRoutingController {
 	@AutoLog(value = "店铺收银分账设置-编辑")
 	@ApiOperation(value="店铺收银分账设置-编辑", notes="店铺收银分账设置-编辑")
 	@PutMapping(value = "/edit")
-	public Result<StoreCashierRouting> edit(@RequestBody StoreCashierRouting storeCashierRouting) {
+	public Result<?> edit(@RequestBody StoreCashierRouting storeCashierRouting) {
 		Result<StoreCashierRouting> result = new Result<StoreCashierRouting>();
 		StoreCashierRouting storeCashierRoutingEntity = storeCashierRoutingService.getById(storeCashierRouting.getId());
 		if(storeCashierRoutingEntity==null) {
 			result.error500("未找到对应实体");
 		}else {
+			if(storeCashierRouting.getIsStore().equals("1")){
+				storeCashierRouting.setAffiliationStoreManageId(storeCashierRouting.getStoreManageId());
+			}
+			if(storeCashierRouting.getRoleType().equals("0")){
+				storeCashierRouting.setIsStore("0");
+			}
+			//本商户的信息只能一条
+			if(storeCashierRouting.getIsStore().equals("1")) {
+				long storeCashierRoutingCount = storeCashierRoutingService.count(new LambdaQueryWrapper<StoreCashierRouting>().eq(StoreCashierRouting::getStoreManageId, storeCashierRouting.getStoreManageId()).eq(StoreCashierRouting::getIsStore, "1"));
+				if (storeCashierRoutingCount > 1) {
+					return Result.error("修改失败，本商户信息只能是一条");
+				}
+			}
 			boolean ok = storeCashierRoutingService.updateById(storeCashierRouting);
 			//TODO 返回false说明什么？
 			if(ok) {
-				if (!storeCashierRouting.getAccountType().equals("2")) {
-					//修改结算账户对象
-					Map<String, Object> paramMap = Maps.newHashMap();
-					paramMap.put("card_id", storeCashierRouting.getBankCard());
-					paramMap.put("card_name", storeCashierRouting.getRealName());
-					paramMap.put("cert_id", storeCashierRouting.getIdNumber());
-					paramMap.put("tel_no", storeCashierRouting.getPhone());
-					paramMap.put("bank_acct_type", "2");
-					Map<String, Object> resultMap = hftxPayUtils.updateSettleAccountPrivate(storeCashierRouting.getId(), paramMap, storeCashierRouting.getSettleAccount());
-					if (resultMap.get("status").toString().equals("succeeded")) {
-						storeCashierRouting.setSettleAccount(resultMap.get("id").toString());
-						storeCashierRoutingService.saveOrUpdate(storeCashierRouting);
-					} else {
-						result.error500("分账设置失败");
-					}
+				if (!storeCashierRouting.getAccountType().equals("2")&&StringUtils.isNotBlank(storeCashierRouting.getAffiliationStoreManageId())) {
+					return storeCashierRoutingService.settingBankCard(storeCashierRouting);
 				}
-				result.success("修改成功!");
 			}
 		}
 		

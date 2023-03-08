@@ -25,7 +25,7 @@ import java.util.List;
 public class MarketingDiscountDTO implements Serializable{
     private static final long serialVersionUID = 1L;
     /**主键ID*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**创建人*/
@@ -263,4 +263,13 @@ public class MarketingDiscountDTO implements Serializable{
     private BigDecimal tomorow;
     private String mainPictures;
     private String coverPlans;
+
+    /**折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） */
+    @Excel(name = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） ", width = 15)
+    @ApiModelProperty(value = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券）")
+    private BigDecimal discountLimitAmount;
+    /**优惠折扣百分比：指参与折扣的力度（用于折扣券） */
+    @Excel(name = "优惠折扣百分比：指参与折扣的力度（用于折扣券）", width = 15)
+    @ApiModelProperty(value = "优惠折扣百分比：指参与折扣的力度（用于折扣券）")
+    private BigDecimal discountPercent;
 }

@@ -94,7 +94,7 @@
           gs.`repertory`
         FROM
           good_specification gs
-        WHERE gs.`del_flag` = 0
+        WHERE gs.`del_flag` = '0'
           AND gs.`good_list_id` = #{id}
     </select>
 

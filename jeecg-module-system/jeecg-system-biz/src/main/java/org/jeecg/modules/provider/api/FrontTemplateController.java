@@ -7,13 +7,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
-import org.jeecg.modules.good.entity.GoodStoreList;
 import org.jeecg.modules.good.entity.GoodStoreSpecification;
-import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
-import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberListService;
@@ -35,10 +31,6 @@ import java.util.Map;
 @RequestMapping("front/template")
 @Controller
 public class FrontTemplateController {
-
-    @Autowired
-    private IGoodStoreListService iGoodStoreListService;
-
     @Autowired
     private IGoodStoreSpecificationService iGoodStoreSpecificationService;
 
@@ -50,9 +42,6 @@ public class FrontTemplateController {
 
     @Autowired
     private IStoreTemplateService iStoreTemplateService;
-
-    @Autowired
-    private IGoodListService iGoodListService;
 
     @Autowired
     private IMemberListService iMemberListService;
@@ -95,15 +84,7 @@ public class FrontTemplateController {
         //查询运费
         //查询店铺商品运费
         if(isPlatform.intValue()==0){
-            GoodStoreList goodStoreList= iGoodStoreListService.getById(goodId);
-            if(goodStoreList.getRepertory().longValue()>0){
-                paramMap.put("isAvailable","1");
-                paramMap.put("carriage",null);
-            }else{
-                paramMap.put("isAvailable","0");
-                paramMap.put("carriage",null);
-            }
-            if(goodStoreList!=null){
+            if(goodId!=null){
                 QueryWrapper<GoodStoreSpecification> goodStoreSpecificationQueryWrapper=new QueryWrapper<>();
                 goodStoreSpecificationQueryWrapper.eq("good_store_list_id",goodId);
                 goodStoreSpecificationQueryWrapper.eq("specification",specification);
@@ -155,14 +136,6 @@ public class FrontTemplateController {
             //查询平台商品运费
             if(isPlatform.intValue()==1){
 
-                GoodList goodList= iGoodListService.getById(goodId);
-                if(goodList.getRepertory().longValue()>0){
-                    paramMap.put("isAvailable","1");
-                    paramMap.put("carriage",null);
-                }else{
-                    paramMap.put("isAvailable","0");
-                    paramMap.put("carriage",null);
-                }
                 if(goodId!=null){
                     GoodSpecification goodSpecification=iGoodSpecificationService.getOne(new LambdaQueryWrapper<GoodSpecification>()
                             .eq(GoodSpecification::getGoodListId,goodId)

@@ -1,8 +1,11 @@
 package org.jeecg.modules.marketing.api;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -14,6 +17,7 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.ijpay.core.kit.QrCodeKit;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.entity.GoodStoreList;
@@ -209,8 +213,13 @@ public class AfterMarketingDiscountCouponController {
         paramMap.put("memberId",memberId);
         paramMap.put("pattern",pattern);
         IPage<Map<String, Object>> marketingDiscountCouponByMemberId = iMarketingDiscountCouponService.findMarketingDiscountCouponByMemberId(page, paramMap);
+        String frontLogo = iSysFrontSettingService.getOne(new LambdaQueryWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
         marketingDiscountCouponByMemberId.getRecords().forEach(mdc->{
-            mdc.put("logoAddr",new String((byte[])mdc.get("logoAddr")));
+            if(mdc.get("logoAddr")!=null) {
+                mdc.put("logoAddr", Convert.toStr(mdc.get("logoAddr")));
+            }else {
+                mdc.put("logoAddr", JSON.parseObject(frontLogo).get("0"));
+            }
         });
         result.setResult(marketingDiscountCouponByMemberId);
 
@@ -234,47 +243,43 @@ public class AfterMarketingDiscountCouponController {
             result.error500("id不能为空！！！");
             return result;
         }
-        String frontLogo = iSysFrontSettingService.getOne(new LambdaUpdateWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
         Map<String,Object> marketingDiscountCoupon =iMarketingDiscountCouponService.findMarketingDiscountCouponInfo(id);
         if(marketingDiscountCoupon.get("isPlatform").equals("0")&&marketingDiscountCoupon.get("sysUserId")!=null&&StringUtils.isNotBlank(marketingDiscountCoupon.get("sysUserId").toString())) {
             marketingDiscountCoupon.put("isViewStore","1");
-            QueryWrapper<StoreManage> storeManageQueryWrapper = new QueryWrapper<>();
-            storeManageQueryWrapper.eq("sys_user_id", marketingDiscountCoupon.get("sysUserId"));
-            storeManageQueryWrapper.in("pay_status", "1","2");
-            StoreManage storeManage = iStoreManageService.list(storeManageQueryWrapper).get(0);
-            if (storeManage.getSubStoreName() == null) {
-                marketingDiscountCoupon.put("storeName", storeManage.getStoreName());
-            } else {
-                marketingDiscountCoupon.put("storeName", storeManage.getStoreName() + "(" + storeManage.getStoreName() + ")");
-            }
-            marketingDiscountCoupon.put("storeAddress", storeManage.getStoreAddress());
-            marketingDiscountCoupon.put("takeOutPhone", storeManage.getTakeOutPhone());
-            marketingDiscountCoupon.put("latitude",storeManage.getLatitude());
-            marketingDiscountCoupon.put("longitude",storeManage.getLongitude());
-            marketingDiscountCoupon.put("logoAddr",storeManage.getLogoAddr());
-            /*if(marketingDiscountCoupon.get("logoAddr")!=null) {
-                marketingDiscountCoupon.put("logoAddr",new String((byte[])marketingDiscountCoupon.get("logoAddr")));
-            }else {
-                marketingDiscountCoupon.put("logoAddr", JSON.parseObject(frontLogo).get("0"));
-            }*/
-            if (StringUtils.isNotBlank(location)) {
-                JSONArray mapJsonArray= JSON.parseArray(tengxunMapUtils.findDistance(location,storeManage.getLatitude()+","+storeManage.getLongitude()));
+            StoreManage storeManage = iStoreManageService.getStoreManageBySysUserId(marketingDiscountCoupon.get("sysUserId").toString());
 
-                if(mapJsonArray!=null) {
-                    mapJsonArray.forEach(mj -> {
-                        JSONObject jb = (JSONObject) mj;
-                        BigDecimal dis = new BigDecimal(jb.getString("distance"));
-                        if (dis.doubleValue() > 1000) {
-                            marketingDiscountCoupon.put("distance", dis.divide(new BigDecimal(1000)).setScale(2, RoundingMode.DOWN) + "km");
-                        } else {
-                            marketingDiscountCoupon.put("distance", dis + "m");
-                        }
+            if(storeManage!=null) {
 
-                    });
+                if (storeManage.getSubStoreName() == null) {
+                    marketingDiscountCoupon.put("storeName", storeManage.getStoreName());
+                } else {
+                    marketingDiscountCoupon.put("storeName", storeManage.getStoreName() + "(" + storeManage.getStoreName() + ")");
                 }
-            } else {
-                marketingDiscountCoupon.put("distance", "");
+                marketingDiscountCoupon.put("storeAddress", storeManage.getStoreAddress());
+                marketingDiscountCoupon.put("takeOutPhone", storeManage.getTakeOutPhone());
+                marketingDiscountCoupon.put("latitude", storeManage.getLatitude());
+                marketingDiscountCoupon.put("longitude", storeManage.getLongitude());
+                marketingDiscountCoupon.put("logoAddr", storeManage.getLogoAddr());
+                if (StringUtils.isNotBlank(location)) {
+                    JSONArray mapJsonArray = JSON.parseArray(tengxunMapUtils.findDistance(location, storeManage.getLatitude() + "," + storeManage.getLongitude()));
+
+                    if (mapJsonArray != null) {
+                        mapJsonArray.forEach(mj -> {
+                            JSONObject jb = (JSONObject) mj;
+                            BigDecimal dis = new BigDecimal(jb.getString("distance"));
+                            if (dis.doubleValue() > 1000) {
+                                marketingDiscountCoupon.put("distance", dis.divide(new BigDecimal(1000)).setScale(2, RoundingMode.DOWN) + "km");
+                            } else {
+                                marketingDiscountCoupon.put("distance", dis + "m");
+                            }
+
+                        });
+                    }
+                } else {
+                    marketingDiscountCoupon.put("distance", "");
+                }
             }
+
         }else{
             marketingDiscountCoupon.put("isViewStore","0");
         }
@@ -294,7 +299,7 @@ public class AfterMarketingDiscountCouponController {
             fileName = orgName.substring(0, orgName.lastIndexOf(".")) + "_" + System.currentTimeMillis() + orgName.substring(orgName.indexOf("."));
             String savePath = file.getPath() + File.separator + fileName;
 
-            Boolean encode = QrCodeKit.encode(marketingDiscountCoupon.get("id").toString(), BarcodeFormat.QR_CODE, 3, ErrorCorrectionLevel.H, "png", 200, 200,
+           QrCodeKit.encode(marketingDiscountCoupon.get("id").toString(), BarcodeFormat.QR_CODE, 3, ErrorCorrectionLevel.H, "png", 200, 200,
                     savePath);
             String dbpath = bizPath + File.separator + nowday + File.separator + fileName;
             //券二维码
@@ -321,6 +326,7 @@ public class AfterMarketingDiscountCouponController {
     @RequestMapping("findMarketingDiscountCouponGoods")
     @ResponseBody
     public  Result<Map<String,Object>> findMarketingDiscountCouponGoods(String id,
+                                                                        String state,
                                                                         String location,
                                                                         HttpServletRequest request){
         String memberId=request.getAttribute("memberId").toString();
@@ -333,11 +339,9 @@ public class AfterMarketingDiscountCouponController {
         Map<String,Object> marketingDiscountCoupon =iMarketingDiscountCouponService.findMarketingDiscountCouponInfo(id);
         if(marketingDiscountCoupon.get("isPlatform").equals("0")&&marketingDiscountCoupon.get("sysUserId")!=null&&StringUtils.isNotBlank(marketingDiscountCoupon.get("sysUserId").toString())) {
             marketingDiscountCoupon.put("isViewStore","1");
-            QueryWrapper<StoreManage> storeManageQueryWrapper = new QueryWrapper<>();
-            storeManageQueryWrapper.eq("sys_user_id", marketingDiscountCoupon.get("sysUserId"));
-            storeManageQueryWrapper.in("pay_status", "1","2");
-            if (iStoreManageService.count(storeManageQueryWrapper)>0){
-                StoreManage storeManage = iStoreManageService.list(storeManageQueryWrapper).get(0);
+            StoreManage storeManage = iStoreManageService.getStoreManageBySysUserId(marketingDiscountCoupon.get("sysUserId").toString());
+            if (storeManage!=null){
+
 
                 if (StringUtils.isNotBlank(location)) {
                     JSONArray mapJsonArray=JSON.parseArray(tengxunMapUtils.findDistance(location,storeManage.getLatitude()+","+storeManage.getLongitude()));
@@ -363,6 +367,11 @@ public class AfterMarketingDiscountCouponController {
 
         }else{
             marketingDiscountCoupon.put("isViewStore","0");
+        }
+
+        if (StrUtil.equals(Convert.toStr(marketingDiscountCoupon.get("isNomal")),"2") && StrUtil.equals(state,"1")) {
+            //折扣券不支持线下核销
+            throw  new JeecgBootException( "折扣券不支持线下核销");
         }
 
         //券二维码
@@ -409,10 +418,12 @@ public class AfterMarketingDiscountCouponController {
                 if(goodStoreList==null){
                     continue;
                 }
+                GoodStoreSpecification goodStoreSpecificationSmall=iGoodStoreSpecificationService.getSmallGoodSpecification(goodStoreList.getId());
+
                 gdMap.put("goodName",goodStoreList.getGoodName());
                 gdMap.put("mainPicture",goodStoreList.getMainPicture());
-                gdMap.put("smallVipPrice", goodStoreList.getSmallVipPrice());
-                gdMap.put("smallPrice", goodStoreList.getSmallPrice());
+                gdMap.put("smallVipPrice", goodStoreSpecificationSmall.getVipPrice());
+                gdMap.put("smallPrice", goodStoreSpecificationSmall.getPrice());
                 gdMap.put("id",goodStoreList.getId());
 
                 //查询购物车商品
@@ -441,10 +452,11 @@ public class AfterMarketingDiscountCouponController {
                 if(goodList==null){
                     continue;
                 }
+                GoodSpecification goodSpecificationSmall=iGoodSpecificationService.getSmallGoodSpecification(goodList.getId());
                 gdMap.put("goodName",goodList.getGoodName());
                 gdMap.put("mainPicture",goodList.getMainPicture());
-                gdMap.put("smallVipPrice", goodList.getSmallVipPrice());
-                gdMap.put("smallPrice", goodList.getSmallPrice());
+                gdMap.put("smallVipPrice", goodSpecificationSmall.getVipPrice());
+                gdMap.put("smallPrice", goodSpecificationSmall.getPrice());
                 gdMap.put("id",goodList.getId());
                 //查询购物车商品
                 QueryWrapper<MemberShoppingCart> memberShoppingCartQueryWrapper=new QueryWrapper<>();
@@ -458,7 +470,7 @@ public class AfterMarketingDiscountCouponController {
                     for (MemberShoppingCart msc:memberShoppingCarts) {
                         memberShoppingCartIds.add(msc.getId());
                         GoodSpecification goodSpecification = iGoodSpecificationService.getById(msc.getGoodSpecificationId());
-                        if (goodList.getGoodForm().equals("0")&&memberList.getMemberType().equals("1")) {
+                        if (memberList.getMemberType().equals("1")) {
                             total=total.add(goodSpecification.getVipPrice().multiply(msc.getQuantity()));
                         } else {
                             total=total.add(goodSpecification.getPrice().multiply(msc.getQuantity()));
@@ -557,7 +569,7 @@ public class AfterMarketingDiscountCouponController {
                     for (MemberShoppingCart msc:memberShoppingCarts) {
                         memberShoppingCartIds.add(msc.getId());
                         GoodSpecification goodSpecification = iGoodSpecificationService.getById(msc.getGoodSpecificationId());
-                        if (goodList.getGoodForm().equals("0")&&memberList.getMemberType().equals("1")) {
+                        if (memberList.getMemberType().equals("1")) {
                             total=total.add(goodSpecification.getVipPrice().multiply(msc.getQuantity()));
                         } else {
                             total=total.add(goodSpecification.getPrice().multiply(msc.getQuantity()));

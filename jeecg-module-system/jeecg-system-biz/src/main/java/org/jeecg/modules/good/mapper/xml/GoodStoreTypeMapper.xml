@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.good.mapper.GoodStoreTypeMapper">
 	<select id="getGoodStoreTypeOrParentIdList" resultType="org.jeecg.modules.good.entity.GoodStoreType">
-		select * from  good_store_type  where status =1 and del_flag =0
+		select * from  good_store_type  where status =1 and del_flag = '0'
 		<if test="parentId!=null and parentId!=''">
 			and parent_id=#{parentId}
 		</if>
@@ -12,7 +12,7 @@
 		order by sort desc
 	</select>
 	<select id="getGoodStoreTypeOrParentIdListtwo" resultType="org.jeecg.modules.good.entity.GoodStoreType">
-		select * from  good_store_type  where del_flag =0 and status =1
+		select * from  good_store_type  where del_flag = '0' and status =1
 		<if test="parentId!=null and parentId!=''">
 			and parent_id=#{parentId}
 		</if>
@@ -25,7 +25,7 @@
 		update good_store_type set hasChild = #{status} where id = #{id}
 	</update>
 	<select id="getGoodTypeOrParentIdListtwo" resultType="org.jeecg.modules.good.entity.GoodStoreType">
-		select * from  good_store_type  where del_flag =0 and status =1
+		select * from  good_store_type  where del_flag = '0' and status =1
 		<if test="parentId!=null and parentId!=''">
 			and parent_id=#{parentId}
 		</if>
@@ -39,7 +39,7 @@
 		order by sort desc
 	</select>
 	<select id="getgoodTypeListName" resultType="java.util.Map">
-		select id as id ,name as name,parent_id as parentId from  good_store_type  where del_flag =0 and status =1
+		select id as id ,name as name,parent_id as parentId from  good_store_type  where del_flag = '0' and status =1
 		<if test="nodeName!=null and nodeName!=''">
 			and name LIKE CONCAT('%',#{nodeName},'%')
 		</if>
@@ -53,11 +53,11 @@
 		limit  10
 	</select>
 	<select id="selectGoodTypeByParentId" resultType="org.jeecg.modules.good.entity.GoodStoreType">
-  select * from  good_store_type  where del_flag =0
+  select * from  good_store_type  where del_flag = '0'
     and parent_id=#{parentId}
 </select>
 	<select id="selectGoodTypeByParentIdAndName" resultType="java.util.Map">
-  select id as id,name as name from  good_store_type  where del_flag =0 and status =1
+  select id as id,name as name from  good_store_type  where del_flag = '0' and status =1
     and name LIKE CONCAT('%',#{name},'%')
     and parent_id=#{parentId}
     <if test="sysUserId !=null and sysUserId!=''">
@@ -67,12 +67,12 @@
 
 
 	<select id="findGoodTypeBySysUserId" resultType="map">
-  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag =0 and status =1
+  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag = '0' and status =1
     and sys_user_id=#{sysUserId} and parent_id='0' order by sort
 </select>
 
 	<select id="findGoodTypeByParentId" resultType="map">
-  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag =0 and status =1
+  select id as id,name as name,0 as isPlatform,type_picture as typePicture from  good_store_type  where del_flag = '0' and status =1
     and parent_id=#{parentId}  order by sort
 </select>
 	<select id="getHotRecommended" resultType="map">

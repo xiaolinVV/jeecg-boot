@@ -1,7 +1,5 @@
 package org.jeecg.modules.order.service.impl;
 
-import cn.afterturn.easypoi.excel.ExcelExportUtil;
-import cn.afterturn.easypoi.excel.entity.ExportParams;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -17,6 +15,7 @@ import com.huifu.adapay.core.exception.BaseAdaPayException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.util.FileUtil;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.oConvertUtils;
@@ -75,6 +74,8 @@ import org.jeecg.modules.system.service.ISysAreaService;
 import org.jeecg.modules.system.service.ISysBlanceService;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysUserService;
+import org.jeecgframework.poi.excel.ExcelExportUtil;
+import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -302,17 +303,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
     private IMarketingRushBaseSettingService iMarketingRushBaseSettingService;
 
     @Autowired
-    private IMarketingRushOrderService iMarketingRushOrderService;
-
-    @Autowired
     private PayUtils payUtils;
-
-    @Autowired
-    private IMarketingRushGroupService iMarketingRushGroupService;
-
-    @Autowired
-    private IMarketingRushTypeService iMarketingRushTypeService;
-
 
     @Autowired
     @Lazy
@@ -961,13 +952,8 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     }
                 }
                 iOrderProviderGoodRecordService.save(orderProviderGoodRecord);
-                //扣除库存
-                goodList.setRepertory(goodList.getRepertory().subtract(orderProviderGoodRecord.getAmount()));
                 //增加销量
-                if (goodList.getSalesVolume() == null) {
-                    goodList.setSalesVolume(new BigDecimal(0));
-                }
-                goodList.setSalesVolume(goodList.getSalesVolume().add(orderProviderGoodRecord.getAmount()));
+                //扣除库存
                 goodSpecification.setRepertory(goodSpecification.getRepertory().subtract(orderProviderGoodRecord.getAmount()));
                 iGoodListService.saveOrUpdate(goodList);
                 iGoodSpecificationService.saveOrUpdate(goodSpecification);
@@ -1657,37 +1643,6 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         if(orderList.getStatus().equals("1")){
             return true;
         }
-        //判断专区订单的指定情况
-        if(orderList.getOrderType().equals("5")&&StringUtils.isNotBlank(orderList.getMarketingPrefectureGoodId())&&StringUtils.isBlank(orderList.getMarketingRushGroupId())){
-            MarketingPrefectureGood marketingPrefectureGood=iMarketingPrefectureGoodService.getById(orderList.getMarketingPrefectureGoodId());
-            MarketingRushBaseSetting marketingRushBaseSetting=iMarketingRushBaseSettingService.getOne(new LambdaQueryWrapper<MarketingRushBaseSetting>()
-                    .eq(MarketingRushBaseSetting::getStatus,"1"));
-            if(marketingRushBaseSetting!=null){
-               if(marketingRushBaseSetting.getMarketingPrefectureId().equals(marketingPrefectureGood.getMarketingPrefectureId())&&marketingRushBaseSetting.getMarketingPrefectureTypeId().equals(marketingPrefectureGood.getMarketingPrefectureTypeId())){
-                   MarketingRushOrder marketingRushOrder=new MarketingRushOrder();
-                   marketingRushOrder.setMemberListId(orderList.getMemberListId());
-                   marketingRushOrder.setOrderNo(orderList.getOrderNo());
-                   iMarketingRushOrderService.save(marketingRushOrder);
-               }
-            }
-        }
-
-        //判断专区订单的指定情况
-        if(orderList.getOrderType().equals("5")&&StringUtils.isNotBlank(orderList.getMarketingPrefectureGoodId())&&StringUtils.isNotBlank(orderList.getMarketingRushGroupId())){
-            MarketingPrefectureGood marketingPrefectureGood=iMarketingPrefectureGoodService.getById(orderList.getMarketingPrefectureGoodId());
-           MarketingRushGroup marketingRushGroup=iMarketingRushGroupService.getById(orderList.getMarketingRushGroupId());
-           MarketingRushType marketingRushType=iMarketingRushTypeService.getById(marketingRushGroup.getMarketingRushTypeId());
-            if(marketingRushType!=null){
-                if(marketingRushType.getMarketingPrefectureId().equals(marketingPrefectureGood.getMarketingPrefectureId())&&marketingRushType.getMarketingPrefectureTypeId().equals(marketingPrefectureGood.getMarketingPrefectureTypeId())){
-                    marketingRushGroup.setIfPurchase("1");
-                    marketingRushGroup.setOrderNo(orderList.getOrderNo());
-                    marketingRushGroup.setPurchaseTime(new Date());
-                    marketingRushGroup.setConsignmentStatus("2");
-                    marketingRushGroup.setConsignmentTime(new Date());
-                    iMarketingRushGroupService.saveOrUpdate(marketingRushGroup);
-                }
-            }
-        }
 
         orderList.setStatus("1");
         orderList.setModePayment(payOrderCarLog.getPayModel());//支付方式的设定
@@ -1906,6 +1861,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         //退回积分
         iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(),orderList.getWelfarePayments(),"17",orderList.getOrderNo(),"");
 
+
+        /*退回优惠券*/
+        iMarketingDiscountCouponService.sendBackOrderMarketingDiscountCoupon(orderList);
+
         QueryWrapper<OrderProviderList> orderProviderListQueryWrapper = new QueryWrapper<>();
         orderProviderListQueryWrapper.eq("order_list_id", id);
         List<OrderProviderList> orderProviderLists = iOrderProviderListService.list(orderProviderListQueryWrapper);
@@ -1919,16 +1878,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             orderProviderGoodRecords.forEach(opgr -> {
                 String goodListId = opgr.getGoodListId();
                 String goodSpecificationId = opgr.getGoodSpecificationId();
-                GoodList goodList = iGoodListService.getById(goodListId);
-                if (goodList != null) {
-                    goodList.setRepertory(goodList.getRepertory().add(opgr.getAmount()));
-                    goodList.setSalesVolume(goodList.getSalesVolume().subtract(opgr.getAmount()));
-                    iGoodListService.saveOrUpdate(goodList);
-                    GoodSpecification goodSpecification = iGoodSpecificationService.getById(goodSpecificationId);
-                    if (goodSpecification != null) {
-                        goodSpecification.setRepertory(goodSpecification.getRepertory().add(opgr.getAmount()));
-                        iGoodSpecificationService.saveOrUpdate(goodSpecification);
-                    }
+                GoodSpecification goodSpecification = iGoodSpecificationService.getById(goodSpecificationId);
+                if (goodSpecification != null) {
+                    goodSpecification.setRepertory(goodSpecification.getRepertory().add(opgr.getAmount()));
+                    iGoodSpecificationService.saveOrUpdate(goodSpecification);
                 }
             });
             if (ops.getParentId().equals("0")) {
@@ -1994,35 +1947,34 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
     @Override
     @Transactional
-    public void refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
+    public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
 
         OrderList orderList=this.getById(id);
         if(orderList.getStatus().equals("0")||orderList.getStatus().equals("4")){
-            return;
+            return Result.error("订单状态不正确");
         }
-        //退回款项
-
-        //退回款项
-        if(orderList.getPayPrice().doubleValue()>0){
+        if (orderList.getPayPrice().doubleValue() > 0.0D) {
+            Map balanceMap;
             try {
-                Map<String,Object> balanceMap=hftxPayUtils.getSettleAccountBalance();
-                if(!balanceMap.get("status").equals("succeeded")){
-                    log.info("汇付账户的余额查询出错");
-                    return;
+                balanceMap = this.hftxPayUtils.getSettleAccountBalance();
+                if (!balanceMap.get("status").equals("succeeded")) {
+                    return Result.error("汇付账户的余额查询出错");
                 }
-                if(Double.parseDouble(balanceMap.get("avl_balance").toString())<orderList.getPayPrice().doubleValue()){
-                    log.info("汇付账户的余额不足");
-                    return;
+
+                if (Double.parseDouble(balanceMap.get("avl_balance").toString()) < orderList.getPayPrice().doubleValue()) {
+                    Object var10000 = balanceMap.get("avl_balance");
+                    return Result.error("汇付账户的余额：" + var10000 + "；需退金额：" + orderList.getPayPrice());
                 }
-            } catch (BaseAdaPayException e) {
-                e.printStackTrace();
+            } catch (BaseAdaPayException var6) {
+                var6.printStackTrace();
             }
-            Map<String, Object> resultMap=payUtils.refund(orderList.getPayPrice(),orderList.getSerialNumber(),orderList.getHftxSerialNumber());
-            if(resultMap.get("status").equals("failed")){
-                log.info("现金退款失败");
-                return;
+
+            balanceMap = this.payUtils.refund(orderList.getPayPrice(), orderList.getSerialNumber(), orderList.getHftxSerialNumber());
+            if (balanceMap.get("status").equals("failed")) {
+                return Result.error("现金退款失败");
             }
-            orderList.setRefundJson(JSON.toJSONString(resultMap));
+
+            orderList.setRefundJson(JSON.toJSONString(balanceMap));
         }
         this.saveOrUpdate(orderList);
         //退回余额
@@ -2031,24 +1983,15 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(),orderList.getPayWelfarePayments(),"20",orderList.getOrderNo(),"");
         //取消订单
         this.abrogateOrder(id,closeExplain,closeType);
+
+        return Result.ok("退款成功");
     }
 
     @Override
     @Transactional
     public void affirmOrder(String id) {
-        OrderList orderList = this.getById(id);
-        orderList.setDeliveryTime(new Date());
-        //确认收货
-        orderList.setStatus("3");
-        this.saveOrUpdate(orderList);
-        QueryWrapper<OrderProviderList> orderProviderListQueryWrapper = new QueryWrapper<>();
-        orderProviderListQueryWrapper.eq("order_list_id", orderList.getId());
-        List<OrderProviderList> orderProviderLists = iOrderProviderListService.list(orderProviderListQueryWrapper);
-        orderProviderLists.forEach(ops -> {
-            iOrderProviderListService.saveOrUpdate(ops.setStatus("3"));
-        });
-
-
+        this.updateById(new OrderList().setId(id).setStatus("3").setDeliveryTime(new Date()));
+        iOrderProviderListService.update(new OrderProviderList().setStatus("3"),new LambdaQueryWrapper<OrderProviderList>().eq(OrderProviderList::getOrderListId,id));
     }
 
     /**
@@ -2702,16 +2645,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             orderProviderGoodRecords.forEach(opgr -> {
                 String goodListId = opgr.getGoodListId();
                 String goodSpecificationId = opgr.getGoodSpecificationId();
-                GoodList goodList = iGoodListService.getById(goodListId);
-                if (goodList != null) {
-                    goodList.setRepertory(goodList.getRepertory().add(opgr.getAmount()));
-                    goodList.setSalesVolume(goodList.getSalesVolume().subtract(opgr.getAmount()));
-                    iGoodListService.saveOrUpdate(goodList);
-                    GoodSpecification goodSpecification = iGoodSpecificationService.getById(goodSpecificationId);
-                    if (goodSpecification != null) {
-                        goodSpecification.setRepertory(goodSpecification.getRepertory().add(opgr.getAmount()));
-                        iGoodSpecificationService.saveOrUpdate(goodSpecification);
-                    }
+                GoodSpecification goodSpecification = iGoodSpecificationService.getById(goodSpecificationId);
+                if (goodSpecification != null) {
+                    goodSpecification.setRepertory(goodSpecification.getRepertory().add(opgr.getAmount()));
+                    iGoodSpecificationService.saveOrUpdate(goodSpecification);
                 }
             });
             if (ops.getParentId().equals("0")) {

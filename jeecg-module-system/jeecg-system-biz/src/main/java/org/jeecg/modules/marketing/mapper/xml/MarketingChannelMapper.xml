@@ -13,14 +13,14 @@
         marketing_discount md
         LEFT JOIN marketing_channel_discount mcd
         ON md.`id` = mcd.`marketing_discount_id`
-        WHERE md.`del_flag` = 0
-        AND mcd.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
+        AND mcd.`del_flag` = '0'
         AND mcd.`marketing_channel_id` = mc.`id`) AS total,
         (SELECT
         COUNT(1)
         FROM
         marketing_discount_coupon mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`marketing_channel_id` = mc.`id`) AS discountGet,
         IF(mc.`status` = 0, '停用', '启动') AS statusName,
         mc.`status_explain`,
@@ -28,7 +28,7 @@
         mc.`update_time`
         FROM
         marketing_channel mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         <if test="marketingChannelVO!=null and marketingChannelVO.name!=null and marketingChannelVO.name!=''">
             AND mc.name LIKE concat('%',concat(#{marketingChannelVO.name},'%'))
         </if>

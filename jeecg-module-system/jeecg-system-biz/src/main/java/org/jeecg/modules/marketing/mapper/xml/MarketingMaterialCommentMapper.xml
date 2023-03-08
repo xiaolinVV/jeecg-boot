@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.marketing.mapper.MarketingMaterialCommentMapper">
 
-    <select id="getMarketingMaterialCommentDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialCommentDTO">
+    <select id="getMarketingMaterialCommentDTO" resultType="org.jeecg.modules.marketing.dto.MarketingMaterialCommentDTO" parameterType="org.jeecg.modules.marketing.vo.MarketingMaterialCommentVO">
          SELECT
             mmc.*,
             IF(mmc.parent_id = 0,mml.id,mmc.parent_id) AS parentIdS,
@@ -41,37 +41,37 @@
             LEFT JOIN marketing_material_list mml
               ON mmc.marketing_material_list = mml.id
            where mmc.del_flag = 0
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.marketingMaterialList!=null and marketingMaterialCommentVO.marketingMaterialList!=''">
+        <if test="marketingMaterialCommentVO.marketingMaterialList!=null and marketingMaterialCommentVO.marketingMaterialList!=''">
             AND mmc.marketing_material_list LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.marketingMaterialList}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentIdS!=null and marketingMaterialCommentVO.parentIdS!=''">
+        <if test="marketingMaterialCommentVO.parentIdS!=null and marketingMaterialCommentVO.parentIdS!=''">
             AND (mmc.parent_id LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentIdS}), '%') or (mmc.marketing_material_list LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentIdS}), '%') and mmc.parent_id= 0 ))
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentId!=null and marketingMaterialCommentVO.parentId!=''">
+        <if test="marketingMaterialCommentVO.parentId!=null and marketingMaterialCommentVO.parentId!=''">
             AND mmc.parent_id LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentId}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.title!=null and marketingMaterialCommentVO.title!=''">
+        <if test="marketingMaterialCommentVO.title!=null and marketingMaterialCommentVO.title!=''">
             AND mml.title LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.title}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.author!=null and marketingMaterialCommentVO.author!=''">
+        <if test="marketingMaterialCommentVO.author!=null and marketingMaterialCommentVO.author!=''">
             AND mml.author LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.author}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.nickName!=null and marketingMaterialCommentVO.nickName!=''">
+        <if test="marketingMaterialCommentVO.nickName!=null and marketingMaterialCommentVO.nickName!=''">
             AND ((mmc.user_type ='0' and ml.nick_name  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.nickName}), '%')) or(mmc.user_type ='1' and su.realname  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.nickName}), '%')) )
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.parentNickName!=null and marketingMaterialCommentVO.parentNickName!=''">
+        <if test="marketingMaterialCommentVO.parentNickName!=null and marketingMaterialCommentVO.parentNickName!=''">
             AND  mmcps.nickName  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.parentNickName}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.byReplyName!=null and marketingMaterialCommentVO.byReplyName!=''">
+        <if test="marketingMaterialCommentVO.byReplyName!=null and marketingMaterialCommentVO.byReplyName!=''">
             AND  mmcbs.nickName  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.byReplyName}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.status!=null and marketingMaterialCommentVO.status!=''">
+        <if test="marketingMaterialCommentVO.status!=null and marketingMaterialCommentVO.status!=''">
             AND  mmc.status  LIKE CONCAT(CONCAT('%',#{marketingMaterialCommentVO.status}), '%')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.commentTime_begin != null and marketingMaterialCommentVO.commentTime_begin != ''">
+        <if test="marketingMaterialCommentVO.commentTime_begin != null and marketingMaterialCommentVO.commentTime_begin != ''">
             and mmc.comment_time <![CDATA[>=]]> concat(#{marketingMaterialCommentVO.commentTime_begin},' 00:00:00')
         </if>
-        <if test="marketingMaterialCommentVO != null and marketingMaterialCommentVO.commentTime_end != null and marketingMaterialCommentVO.commentTime_end != ''">
+        <if test="marketingMaterialCommentVO.commentTime_end != null and marketingMaterialCommentVO.commentTime_end != ''">
             AND mmc.comment_time <![CDATA[<=]]> concat( #{marketingMaterialCommentVO.commentTime_end},' 23:59:59')
         </if>
         ORDER BY mmc.create_time DESC

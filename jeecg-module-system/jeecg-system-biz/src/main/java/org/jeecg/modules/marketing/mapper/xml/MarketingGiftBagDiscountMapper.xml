@@ -85,8 +85,8 @@
             FROM
               marketing_discount m) md
             ON mgbd.marketing_discount_id = md.id
-        WHERE mgbd.`del_flag` = 0
-          AND md.`del_flag` = 0
+        WHERE mgbd.`del_flag` = '0'
+          AND md.`del_flag` = '0'
           AND md.status = 1
           AND mgbd.`marketing_gift_bag_id` = #{marketingGiftBagId}
     </select>

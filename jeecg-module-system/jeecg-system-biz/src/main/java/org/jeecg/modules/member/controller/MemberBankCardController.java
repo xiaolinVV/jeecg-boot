@@ -1,6 +1,7 @@
 package org.jeecg.modules.member.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -55,6 +56,18 @@ import java.util.Map;
 public class MemberBankCardController {
 	@Autowired
 	private IMemberBankCardService memberBankCardService;
+
+
+	 /**
+	  * 根据会员id获取收银信息
+	  *
+	  * @param memberId
+	  * @return
+	  */
+	@GetMapping("getMemberBankCardByMemberId")
+	public Result<?> getMemberBankCardByMemberId(String memberId){
+		return Result.ok(memberBankCardService.getOne(new LambdaQueryWrapper<MemberBankCard>().eq(MemberBankCard::getMemberListId,memberId).eq(MemberBankCard::getCarType,"0")));
+	}
 	
 	/**
 	  * 分页列表查询
@@ -283,7 +296,7 @@ public class MemberBankCardController {
 			 });
 
 			 return Result.ok(resultMap);
-		 } catch (IOException e) {
+		 } catch (Exception e) {
 			 e.printStackTrace();
 		 }
 		 return Result.ok();

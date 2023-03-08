@@ -2,7 +2,9 @@ package org.jeecg.modules.marketing.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +14,10 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.MapHandleUtils;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.good.service.IGoodListService;
+import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.marketing.entity.MarketingRushGood;
-import org.jeecg.modules.marketing.entity.MarketingRushType;
 import org.jeecg.modules.marketing.service.IMarketingRushGoodService;
-import org.jeecg.modules.marketing.service.IMarketingRushTypeService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -49,8 +51,14 @@ import java.util.Map;
 public class MarketingRushGoodController {
 	@Autowired
 	private IMarketingRushGoodService marketingRushGoodService;
-	@Autowired
-	private IMarketingRushTypeService iMarketingRushTypeService;
+
+	 @Autowired
+	 private IGoodListService iGoodListService;
+
+	 @Autowired
+	 private IGoodSpecificationService iGoodSpecificationService;
+
+
 	/**
 	  * 分页列表查询
 	 * @param marketingRushGood
@@ -66,10 +74,7 @@ public class MarketingRushGoodController {
 														  @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 														  @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 														  HttpServletRequest req) {
-		if (StringUtils.isBlank(marketingRushGood.getMarketingRushTypeId())){
-			return Result.error("前端分类id未传递!");
-		}
-		return Result.ok(marketingRushGoodService.queryPageList(new Page<Map<String,Object>>(pageNo, pageSize),
+		return Result.ok(marketingRushGoodService.queryPageList(new Page<>(pageNo, pageSize),
 				QueryGenerator.initQueryWrapper(marketingRushGood, req.getParameterMap()),
 				MapHandleUtils.handleRequestMap(req.getParameterMap())));
 	}
@@ -255,19 +260,57 @@ public class MarketingRushGoodController {
 	 @PostMapping("addArr")
 	 public Result<?> addArr(@RequestBody List<MarketingRushGood> marketingRushGoodList){
 		 if (marketingRushGoodList.size()>0){
-			 MarketingRushGood marketingRushGood = marketingRushGoodList.get(0);
-			 if (StringUtils.isBlank(marketingRushGood.getMarketingRushTypeId())){
-				 return Result.error("前端抢购分类id未传递");
-			 }else {
-				 MarketingRushType marketingRushType = iMarketingRushTypeService.getById(marketingRushGood.getMarketingRushTypeId());
-				 marketingRushGoodList.forEach(mrg->{
-				 	mrg.setPrice(marketingRushType.getPrice());
-				 });
-				 marketingRushGoodService.saveBatch(marketingRushGoodList);
-				 return Result.ok("添加成功!");
-			 }
+			 marketingRushGoodService.saveBatch(marketingRushGoodList);
+			 return Result.ok("添加成功!");
 		 }else {
 			 return Result.error("至少添加一条数据");
 		 }
 	 }
+
+	 /**
+	  * 查询商品信息列表
+	  *
+	  *
+	  * 张靠勤   2021-3-29
+	  *
+	  * @param goodNo   商品编号
+	  * @param goodName  商品名称
+	  * @param goodTypeId   商品类型
+	  * @param discountStart  折扣开始
+	  * @param discountEnd   折扣结束
+	  * @param sysUserName   供应商名称
+	  * @param pageNo
+	  * @param pageSize
+	  * @return
+	  */
+	 @RequestMapping("chooseGoodList")
+	 @ResponseBody
+	 public Result<IPage<Map<String,Object>>> chooseGoodList(String goodNo, String goodName, String goodTypeId, String discountStart, String discountEnd, String sysUserName, @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+															 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize){
+		 Result<IPage<Map<String,Object>>> result=new Result<>();
+
+		 //组织查询参数
+		 Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
+		 Map<String,Object> paramObjectMap= Maps.newHashMap();
+		 paramObjectMap.put("goodNo",goodNo);
+		 paramObjectMap.put("goodTypeId",goodTypeId);
+		 paramObjectMap.put("discountStart",discountStart);
+		 paramObjectMap.put("discountEnd",discountEnd);
+		 paramObjectMap.put("sysUserName",sysUserName);
+		 paramObjectMap.put("goodName",goodName);
+		 paramObjectMap.put("pattern","4");
+
+		 //选择商品信息查询
+		 IPage<Map<String,Object>> mapIPage=iGoodListService.chooseGoodList(page,paramObjectMap);
+
+		 //查询商品规格信息
+		 mapIPage.getRecords().forEach(goodMap->{
+			 goodMap.put("goodSpecificationList",iGoodSpecificationService.chooseSpecificationByGoodId(goodMap.get("id").toString()));
+		 });
+
+		 result.setResult(mapIPage);
+		 result.success("查询商品列表成功");
+		 return result;
+	 }
+
 }

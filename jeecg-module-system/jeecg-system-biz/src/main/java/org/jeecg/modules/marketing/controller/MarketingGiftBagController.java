@@ -117,9 +117,12 @@ public class MarketingGiftBagController {
             memberInfoMap.put("TmemberName",memberList.getNickName());
             memberInfoMap.put("TmemberHeadPortrait",memberList.getHeadPortrait());
             memberInfoMap.put("sysUserId",memberList.getSysUserId());
+            paraMap.put("tMemberId",memberList.getId());
+            paraMap.put("tphone",memberList.getPhone());
+//            paraMap.put("sysUserId",);
             paraMap.put("TmemberInfo",memberInfoMap);
             String param=JSON.toJSONString(paraMap);
-            afterWeixinController.getQrCodeByPage("userAction/pages/vipMember/vipMember",param,memberList.getSysUserId(),memberList.getId());
+            afterWeixinController.getQrCodeByPage("userActiFn/pages/vipMember/vipMember",param,memberList.getSysUserId(),memberList.getId());
         }
         return Result.ok(iSysSmallcodeService.getShareAddress(marketingGiftBagId,memberList.getId()));
     }

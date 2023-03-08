@@ -309,8 +309,6 @@ public class MarketingCertificateGroupManageController {
                         "",
                         new BigDecimal(1),
                         ma.getMemberListId(),
-                        new BigDecimal(0),
-                        new BigDecimal(0),
                         false).get(0);
                 ma.setMarketingCertificateRecordId(marketingCertificateRecord.getId());
                 ma.setCloudsTime(new Date());

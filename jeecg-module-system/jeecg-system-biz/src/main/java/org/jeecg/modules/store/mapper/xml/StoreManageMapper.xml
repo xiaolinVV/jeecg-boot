@@ -11,7 +11,7 @@
                     LENGTH(
                     TRIM( sm.`sub_store_name` )) &gt;
                 0,
-                CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+                CONCAT( sm.`store_name`, '(', ifnull(sm.`sub_store_name`,''), ')' ),
                 sm.`store_name`
             ) AS storeName,
             sm.boss_phone AS bossPhone
@@ -21,7 +21,9 @@
                  sm.`status` = '1'
                 AND sm.attestation_status IN ( 1, 2 )
                 AND sm.del_flag = '0'
-
+<if test="userId != null and userId != ''">
+    sm.sys_user_id = #{userId}
+</if>
     </select>
 
 
@@ -167,7 +169,7 @@
         sm.*
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`status` = 1
         <if test="storeManageDTO!=null and storeManageDTO.storeName!=null and storeManageDTO.storeName!=''">
             AND sm.store_name LIKE concat('%',concat(#{storeManageDTO.storeName},'%'))
@@ -194,7 +196,7 @@
             ON sm.sys_smallcode_id = ss.`id`
           LEFT JOIN sys_user su
             ON su.`id` = sm.`sys_user_id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` =#{userId}
     </select>
     <select id="queryStoreManagePage" resultType="org.jeecg.modules.store.dto.StoreManageDTO" parameterType="org.jeecg.modules.store.vo.StoreManageVO">
@@ -242,7 +244,7 @@
         )
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`id` = sm.`promoter`)
         WHEN 2
         THEN '平台'
@@ -254,7 +256,7 @@
         alliance_manage am
         LEFT JOIN sys_user su
         ON am.`sys_user_id` = su.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
         AND am.`sys_user_id` = sm.`promoter`)
         ELSE '无'
         END
@@ -265,7 +267,7 @@
         alliance_manage am
         LEFT JOIN sys_user su
         ON am.`sys_user_id` = su.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
         AND am.`sys_user_id` = sm.alliance_user_id)) AS allianceName
         FROM
         store_manage sm
@@ -273,7 +275,7 @@
         ON sm.`sys_smallcode_id` = ss.`id`
         LEFT JOIN sys_user su
         ON su.`id` = sm.`sys_user_id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`pay_status` IN (1, 2)
         <if test="storeManageVO!=null and storeManageVO.id!=null and storeManageVO.id!=''">
             AND sm.id LIKE concat('%',concat(#{storeManageVO.id},'%'))
@@ -315,7 +317,7 @@
             am.`sys_area_id`
             FROM
             agency_manage am
-            WHERE am.`del_flag` = 0
+            WHERE am.`del_flag` = '0'
             AND am.`sys_user_id` =#{storeManageVO.ProvincialId}))
         </if>
         <if test="storeManageVO!=null and storeManageVO.municipalId!=null and storeManageVO.municipalId!=''">
@@ -323,7 +325,7 @@
             am.`sys_area_id`
             FROM
             agency_manage am
-            WHERE am.`del_flag` = 0
+            WHERE am.`del_flag` = '0'
             AND am.`sys_user_id` =#{storeManageVO.municipalId}))
         </if>
         <if test="storeManageVO!=null and storeManageVO.countyId!=null and storeManageVO.countyId!=''">
@@ -331,7 +333,7 @@
             am.`sys_area_id`
             FROM
             agency_manage am
-            WHERE am.`del_flag` = 0
+            WHERE am.`del_flag` = '0'
             AND am.`sys_user_id` =#{storeManageVO.countyId}))
         </if>
         ORDER BY sm.`create_time` DESC
@@ -358,7 +360,7 @@
         ON sm.`sys_smallcode_id` = ss.`id`
         LEFT JOIN sys_user su
         ON su.`id` = sm.`sys_user_id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`pay_status` != 0
         <if test="storeManageVO!=null and storeManageVO.bossName!=null and storeManageVO.bossName!=''">
             AND sm.boss_name LIKE concat('%',concat(#{storeManageVO.bossName},'%'))
@@ -408,7 +410,7 @@
           store_manage sm
           LEFT JOIN sys_user su
             ON sm.`sys_user_id` = su.`id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`pay_status` IN (1, 2)
         <if test="storeManageVO!=null and storeManageVO.userName!=null and storeManageVO.userName!= ''">
             AND su.username LIKE concat('%',concat(#{storeManageVO.userName},'%'))
@@ -482,7 +484,7 @@
                 COUNT(1)
               FROM
                 order_store_list osl
-              WHERE osl.`del_flag` = 0
+              WHERE osl.`del_flag` = '0'
                 AND osl.`status` IN (1, 2, 3)
                 AND osl.`sys_user_id` = sm.`sys_user_id`) AS orderSum,
             --   -- 有效订单
@@ -490,7 +492,7 @@
                 SUM(sac.`amount`)
               FROM
                 store_account_capital sac
-              WHERE sac.`del_flag` = 0
+              WHERE sac.`del_flag` = '0'
                 AND sac.`go_and_come` = 0
                 AND sac.`store_manage_id` = sm.`id`) AS earnings,
             --   -- 累计收入
@@ -498,14 +500,14 @@
                 COUNT(1)
               FROM
                 member_list ml
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
                 AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberSum,
             --   -- 累计会员
               (SELECT
                 SUM(mwp.`bargain_payments`)
               FROM
                 marketing_welfare_payments mwp
-              WHERE mwp.`del_flag` = 0
+              WHERE mwp.`del_flag` = '0'
                 AND mwp.`is_platform` = 0
                 AND mwp.`status` = 1
                 AND mwp.`sys_user_id` = sm.`sys_user_id`) AS welfareSum,
@@ -514,7 +516,7 @@
                 COUNT(1)
               FROM
                 order_store_list osl
-              WHERE osl.`del_flag` = 0
+              WHERE osl.`del_flag` = '0'
                 AND osl.`status` = 1
                 AND osl.`sys_user_id` = sm.`sys_user_id`) AS waitDeliverGoods,
             --   -- 待发货
@@ -522,7 +524,7 @@
                 COUNT(1)
               FROM
                 good_store_list gsl
-              WHERE gsl.`del_flag` = 0
+              WHERE gsl.`del_flag` = '0'
                 AND gsl.`sys_user_id` = sm.`sys_user_id`
                 AND gsl.`status` = 1
                 AND gsl.`frame_status` = 1
@@ -532,7 +534,7 @@
                 COUNT(1)
               FROM
                 marketing_discount_coupon mdc
-              WHERE mdc.`del_flag` = 0
+              WHERE mdc.`del_flag` = '0'
                 AND mdc.`is_platform` = 0
                 AND mdc.`sys_user_id` = sm.`sys_user_id`) AS byGetDiscount,
             --   -- 已被领取优惠券
@@ -540,7 +542,7 @@
                 COUNT(1)
               FROM
                 marketing_discount_coupon mdc
-              WHERE mdc.`del_flag` = 0
+              WHERE mdc.`del_flag` = '0'
                 AND mdc.`is_platform` = 0
                 AND mdc.`sys_user_id` = sm.`sys_user_id`
                 AND mdc.`status` = 2) AS byUseDiscount, -- 已被使用优惠券
@@ -548,14 +550,14 @@
                 COUNT(1)
               FROM
                 member_list ml
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
               AND ml.member_type = 0
                 AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberP,
                 (SELECT
                 COUNT(1)
               FROM
                 member_list ml
-              WHERE ml.`del_flag` = 0
+              WHERE ml.`del_flag` = '0'
               AND ml.member_type = 1
                 AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberV
             FROM
@@ -564,7 +566,7 @@
                 ON sm.`sys_user_id` = sur.`user_id`
               LEFT JOIN sys_role sr
                 ON sur.`role_id` = sr.`id`
-            WHERE sm.`del_flag` = 0
+            WHERE sm.`del_flag` = '0'
         AND sm.`sys_user_id` = #{userId}
     </select>
     <select id="myStore" resultType="map">
@@ -620,7 +622,7 @@
           store_manage sm
           LEFT JOIN sys_user su
             ON sm.`sys_user_id` = su.`id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
 
@@ -642,7 +644,7 @@
           store_manage sm
           LEFT JOIN sys_user su
             ON sm.`sys_user_id` = su.`id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="returnAuthentication" resultType="map">
@@ -670,7 +672,7 @@
           sm.`agent_authorization` AS agentAuthorization
         FROM
           store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="returnSecurity" resultType="map">
@@ -681,7 +683,7 @@
           store_manage sm
           LEFT JOIN sys_user su
             ON sm.`sys_user_id` = su.`id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="findCertificateStore" resultType="map">
@@ -719,7 +721,7 @@
                 mcs.`sys_user_id`
                 FROM
                 marketing_certificate_store mcs
-                WHERE mcs.`del_flag` = 0
+                WHERE mcs.`del_flag` = '0'
                 AND mcs.`marketing_certificate_id` = #{objectObjectHashMap.id})
             </if>
             ) m
@@ -739,7 +741,7 @@
           sm.money_receiving_code as  moneyReceivingCode
         FROM
           store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="findAllianceStoreList" resultType="org.jeecg.modules.store.vo.StoreManageVO">
@@ -785,7 +787,7 @@
         )
         FROM
         member_list ml
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`id` = sm.`promoter`)
         WHEN 2
         THEN '平台'
@@ -797,7 +799,7 @@
         alliance_manage am
         LEFT JOIN sys_user su
         ON am.`sys_user_id` = su.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
         AND am.`sys_user_id` = sm.`alliance_user_id`)
         ELSE '无'
         END
@@ -808,7 +810,7 @@
         ON sm.`sys_smallcode_id` = ss.`id`
         LEFT JOIN sys_user su
         ON su.`id` = sm.`sys_user_id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`pay_status` IN (1, 2)
         AND LENGTH(TRIM(sm.`alliance_user_id`)) > 0
         <if test="storeManageDTO!=null and storeManageDTO.bossName!=null and storeManageDTO.bossName!=''">
@@ -854,11 +856,13 @@
           sm.sys_user_id
         FROM
           store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.status = 1
           AND sm.attestation_status IN (1,2)
           AND sm.pay_status IN (1,2)
-          AND sm.`boss_phone` LIKE CONCAT('%',#{bossPhone},'%')
+        <if test="bossPhone != null and bossPhone != ''">
+            AND sm.`boss_phone` LIKE CONCAT('%',#{bossPhone},'%')
+        </if>
           LIMIT 10
     </select>
 
@@ -895,7 +899,7 @@
           store_manage sm
           LEFT JOIN sys_user su
             ON sm.`sys_user_id` = su.`id`
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
           AND sm.`pay_status` IN (1, 2)
           AND sm.`attestation_status` IN (1, 2)) m
           <if test="storeName != null">
@@ -975,35 +979,7 @@
             ORDER BY comprehensiveEvaluation DESC
         </if>
     </select>
-    <select id="storeComplimentaryThree" resultType="map">
-        SELECT
-        SUM(mwp.`bargain_payments`) AS bargainPayments,
-          IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
-            CONCAT(
-              sm.`store_name`,
-              '(',
-              sm.`sub_store_name`,
-              ')'
-            ),
-            sm.`store_name`
-          ) AS storeName,
-            sm.`sys_user_id` AS sysUserId,
-            sm.`store_picture`AS storePicture,
-            sm.`logo_addr` AS logoAddr
-        FROM
-          marketing_welfare_payments mwp
-          LEFT JOIN store_manage sm
-            ON mwp.`sys_user_id` = sm.`sys_user_id`
-        WHERE mwp.`del_flag` = 0
-          AND mwp.`we_type` = 0
-          AND mwp.`is_platform` = 0
-          AND sm.`del_flag` = 0
-          AND sm.status = 1
-        GROUP BY storeName
-        ORDER BY bargainPayments DESC
-        LIMIT 3
-    </select>
+
     <select id="findCityLifeStoreManageListNew" resultType="map">
         SELECT
         *
@@ -1034,7 +1010,7 @@
         COUNT(1)
         FROM
         marketing_comming_store mcs
-        WHERE mcs.`del_flag` = 0
+        WHERE mcs.`del_flag` = '0'
         AND mcs.`status` = 1
         AND mcs.take_way = 0
         AND mcs.`store_manage_id` = sm.id)>0,1,0)AS takeWayOne,
@@ -1042,7 +1018,7 @@
         COUNT(1)
         FROM
         marketing_comming_store mcs
-        WHERE mcs.`del_flag` = 0
+        WHERE mcs.`del_flag` = '0'
         AND mcs.`status` = 1
         AND mcs.take_way = 1
         AND mcs.`store_manage_id` = sm.id)>0,1,0)AS takeWayTwo,
@@ -1076,7 +1052,7 @@
             st.`id`
             FROM
             store_type st
-            WHERE st.`del_flag` = 0
+            WHERE st.`del_flag` = '0'
             AND st.`status` = 1
             AND st.`pid` = #{paramObjectMap.storeTypeId})
         </if>

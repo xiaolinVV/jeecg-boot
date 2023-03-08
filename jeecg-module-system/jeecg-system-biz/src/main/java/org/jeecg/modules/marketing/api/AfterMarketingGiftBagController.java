@@ -18,6 +18,10 @@ import org.jeecg.modules.marketing.service.IMarketingGiftBagService;
 import org.jeecg.modules.member.entity.*;
 import org.jeecg.modules.member.service.*;
 import org.jeecg.modules.order.utils.TotalPayUtils;
+import org.jeecg.modules.store.entity.StoreFranchiser;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreFranchiserService;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +63,15 @@ public class AfterMarketingGiftBagController {
 
     @Autowired
     private IMarketingBusinessGiftBaseSettingService iMarketingBusinessGiftBaseSettingService;
+
+
+    @Autowired
+    private IStoreFranchiserService iStoreFranchiserService;
+
+
+    @Autowired
+    private IStoreManageService iStoreManageService;
+
     /**
      * 提交礼包的待支付订单
      *
@@ -67,7 +80,7 @@ public class AfterMarketingGiftBagController {
      */
     @RequestMapping("submitMarketingGiftBag")
     @ResponseBody
-    public Result<Map<String,Object>> submitMarketingGiftBag(String id,
+    public Result<?> submitMarketingGiftBag(String id,
                                                              @RequestParam(name = "tPhone",required = false,defaultValue = "") String tPhone,
                                                              @RequestParam(name = "marketingGiftBagRecordId",required = false,defaultValue = "") String marketingGiftBagRecordId,
                                                              @RequestHeader(defaultValue = "") String sysUserId,
@@ -138,7 +151,36 @@ public class AfterMarketingGiftBagController {
                     return result.error500("您是该团队的创始人，不允许购买自己的团队礼包。");
                 }
             }
+
+
+            //判断是否有经销商奖励
+            if(marketingGiftBag.getDealerAwards().doubleValue()>0){
+                if(StringUtils.isBlank(sysUserId)){
+                   return Result.error("请选进入商户礼包进行购买");
+                }
+                if(StringUtils.isNotBlank(tMemberId)){
+                    StoreManage storeManage=iStoreManageService.getStoreManageBySysUserId(sysUserId);
+                    //获取本会员的经销商
+                    StoreFranchiser storeFranchiser=iStoreFranchiserService.findStoreFranchiser(memberId,storeManage.getId());
+                    if(storeFranchiser!=null){
+                        StoreFranchiser storeFranchiser1=iStoreFranchiserService.findStoreFranchiser(tMemberId,storeManage.getId());
+                        if(storeFranchiser1!=null){
+                            if(!storeFranchiser1.getId().equals(storeFranchiser.getId())){
+                                return Result.error("您已经加入了一个经销商团队不可再加入其它的团队");
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
         }
+
+
+
+
+
         result.setResult(totalPayUtils.payGiftBag(memberId,request,id,sysUserId,longitude,latitude,tMemberId,softModel,marketingGiftBagRecordId));
         result.success("生成待支付订单成功");
         return result;

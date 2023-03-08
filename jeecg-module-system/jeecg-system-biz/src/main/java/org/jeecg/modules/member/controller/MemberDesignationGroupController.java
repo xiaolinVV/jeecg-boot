@@ -57,11 +57,23 @@ public class MemberDesignationGroupController {
     @Autowired
     private IMemberDesignationService iMemberDesignationService;
     @Autowired
-    private IMemberListService iMemberListService;
-    @Autowired
     private IMemberDesignationMemberListService iMemberDesignationMemberListService;
     @Autowired
     private IMemberDesignationCountService iMemberDesignationCountService;
+
+
+    /**
+     * 根据店铺id获取称号团队
+     *
+     * @param storeManageId
+     * @return
+     */
+    @GetMapping("getDesignationGroupByStoreManageId")
+    public Result<?> getDesignationGroupByStoreManageId(String storeManageId){
+       return Result.ok(memberDesignationGroupService.getOne(new LambdaQueryWrapper<MemberDesignationGroup>()
+               .eq(MemberDesignationGroup::getStoreManageId,storeManageId)
+               .last("limit 1")));
+    }
 
     /**
      * 分页列表查询

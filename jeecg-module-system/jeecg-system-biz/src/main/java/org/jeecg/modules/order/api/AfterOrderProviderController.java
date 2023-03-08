@@ -1,5 +1,6 @@
 package org.jeecg.modules.order.api;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -257,7 +258,7 @@ public class AfterOrderProviderController {
                     map.put("logisticsCompany",logisticsCompany) ;
                     map.put("trackingNumber",orderProviderListDTO.getTrackingNumber());
                     map.put("logisticsTracking",orderProviderListDTO.getLogisticsTracking());
-                    if(orderProviderListDTO!=null&&orderProviderListDTO.getOrderProviderGoodRecords().size()>0){
+                    if(CollUtil.isNotEmpty(orderProviderListDTO.getOrderProviderGoodRecords())){
                         map.put("mainPicture",orderProviderListDTO.getOrderProviderGoodRecords().get(0).getMainPicture());
                     }
                     listMap.add(map);

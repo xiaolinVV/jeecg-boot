@@ -3,8 +3,10 @@ package org.jeecg.modules.member.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.member.dto.MemberGradeDTO;
 import org.jeecg.modules.member.entity.MemberGrade;
+import org.jeecg.modules.member.entity.MemberShoppingCart;
 import org.jeecg.modules.member.vo.MemberGradeVO;
 
 import java.util.List;
@@ -23,4 +25,22 @@ public interface IMemberGradeService extends IService<MemberGrade> {
     List<Map<String,Object>> findMemberGradeListMap();
 
     List<Map<String,String>> getReferMemberGradeList();
+
+    /*会员等级设置商品详情信息*/
+    public void settingGoodInfo(Map<String,Object> resultMap, GoodSpecification goodSpecification,String memberId);
+
+
+    /*会员等级设置商品列表信息*/
+    public void settingGoodListInfo(Map<String,Object> resultMap,String goodId,String memberId);
+
+
+    /*会员等级设置商品规格*/
+    public void settingGoodSpecificationInfo(Map<String,Object> resultMap, GoodSpecification goodSpecification,String memberId);
+
+    /*购物车信息设置*/
+    public void settingMemberShopCardinfo(MemberShoppingCart memberShoppingCart, GoodSpecification goodSpecification, String memberId);
+
+
+    /*购物车信息设置*/
+    public void settingGetMemberShopCardinfo(Map<String,Object> resultMap, GoodSpecification goodSpecification, String memberId);
 }

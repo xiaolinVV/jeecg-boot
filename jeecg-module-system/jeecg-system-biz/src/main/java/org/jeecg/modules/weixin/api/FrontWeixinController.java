@@ -167,7 +167,8 @@ public class FrontWeixinController {
                 unionid=(String)stringMap.get("unionid");
             }
             if (StringUtils.isBlank(openid)) {
-                result.error500("通过code查询不到openid");
+                log.error("微信登录失败，获取不到 openid：{}",JSON.toJSON(stringMap));
+                result.error500(JSON.toJSON(stringMap).toString());
                 return result;
             }
 
@@ -240,8 +241,12 @@ public class FrontWeixinController {
             }else{
                 if(StringUtils.isBlank(memberList.getOpenid())){
                     memberList.setOpenid(openid);
+                }else if(!memberList.getOpenid().equals(openid)){
+                    memberList.setOpenid(openid);
                 }
                 if(StringUtils.isBlank(memberList.getUnionId())){
+                    memberList.setUnionId(unionid);
+                }else if(!memberList.getUnionId().equals(unionid)){
                     memberList.setUnionId(unionid);
                 }
                 memberList.setSessionKey(sessionKey);
@@ -269,7 +274,7 @@ public class FrontWeixinController {
     }
 
     /**
-     * 通过code进行增加用户信息
+     * 通过code进行增加用户信息（接口已废除：客户端已经删除使用）
      *
      * @param code
      * @return
@@ -585,5 +590,13 @@ public class FrontWeixinController {
             return result.error500("获取信息失败!");
         }
         return result;
+    }
+
+    public static void main(String[] args) {
+        String appid = "wx3726e5aa7e0fe80b";
+        String appSecret = "49aafafbf07436bf7669d9d7831651f2";
+        String code = "053BQZZv3IJ3103aLQ0w3UEHgz0BQZZG";
+        Map<String, Object> stringMap = WeixinUtils.getOpenId(appid, appSecret, code);
+        System.out.println(stringMap);
     }
 }

@@ -141,8 +141,8 @@
           marketing_gift_bag_record_batch mgbrb
           LEFT JOIN member_list ml
             ON mgbrb.`member_list_id` = ml.`id`
-        WHERE mgbrb.`del_flag` = 0
-          AND ml.`del_flag` = 0
+        WHERE mgbrb.`del_flag` = '0'
+          AND ml.`del_flag` = '0'
           AND mgbrb.`pay_status` = 1
           <if test="marketingGiftBagRecordBatchDTO.id != null and marketingGiftBagRecordBatchDTO.id != ''">
               AND mgbrb.id LIKE concat('%',#{marketingGiftBagRecordBatchDTO.id},'%')

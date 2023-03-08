@@ -13,7 +13,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.common.util.gongke.HttpClientUtil;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
 import org.jeecg.modules.good.dto.GoodListDto;
 import org.jeecg.modules.good.dto.SpecificationsPicturesDTO;
@@ -26,7 +25,7 @@ import org.jeecg.modules.good.vo.SearchTermsVO;
 import org.jeecg.modules.good.vo.SpecificationsPicturesVO;
 import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.service.*;
-import org.jeecg.modules.member.entity.MemberGrade;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureGoodService;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.entity.MemberShoppingCart;
 import org.jeecg.modules.member.service.IMemberGradeService;
@@ -43,7 +42,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -104,16 +102,22 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
     private IMarketingPrefectureService iMarketingPrefectureService;
     @Autowired
     private IMemberGradeService iMemberGradeService;
-    @Autowired
-    private HttpClientUtil httpClientUtil;
 
     @Autowired
     private IMarketingLeagueSettingService iMarketingLeagueSettingService;
 
+
+    @Autowired
+    private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
+
+
+
     @Override
-    public IPage<GoodList> getGoodListdelFlagOrAuditStatus(Page<GoodList> page, String delFlag, String auditStatus, QueryWrapper<GoodList> queryWrapper) {
-        return goodListMapper.getGoodListdelFlagOrAuditStatus(page, delFlag, auditStatus, queryWrapper);
+    public IPage<Map<String, Object>> queryPageList(Page<Map<String, Object>> page, Map<String, Object> paramMap, QueryWrapper wrapper) {
+        return baseMapper.queryPageList(page,paramMap,wrapper);
     }
+
+
 
     ;
 
@@ -128,12 +132,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         goodListMapper.updateDelFalg(goodList, delFlag);
     }
 
-    ;
-
-    @Override
-    public List<GoodList> getGoodListOK(QueryWrapper<GoodList> queryWrapper) {
-        return goodListMapper.getGoodListOK(queryWrapper);
-    }
 
     /**
      * 根据id获取商品
@@ -193,8 +191,8 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         int i = 0;
         int result1;
         Boolean isHaveId = true;
-        //最低商品价格
-        if (StringUtils.isNotBlank(goodListVo.getPrice())) {
+        //最低商品价格(需要修正或者删除代码)
+        /*if (StringUtils.isNotBlank(goodListVo.getPrice())) {
             result1 = goodListVo.getPrice().indexOf("-");
             if (result1 != -1) {
                 String smallPrice = goodListVo.getPrice().substring(0, goodListVo.getPrice().indexOf("-"));
@@ -232,7 +230,7 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
             } else {
                 goodList.setSmallSupplyPrice(goodListVo.getSupplyPrice());
             }
-        }
+        }*/
         //如果没有选择供应商就存入当前登录人id
         if (StringUtils.isBlank(goodListVo.getSysUserId())) {
             goodList.setSysUserId(sysUser.getId());
@@ -255,17 +253,7 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         }
         return false;
     }
-
-    @Override
-    public GoodListDto selectGoodListById(String id) {
-        GoodList goodList = goodListMapper.selectById(id);
-        GoodListDto goodListDto = new GoodListDto();
-        List<GoodSpecification> goodSpecifications = goodSpecificationService.getGoodSpecificationByGoodListId(id);
-        BeanUtils.copyProperties(goodList, goodListDto);
-        goodListDto.setGoodListSpecificationVOs(goodSpecifications);
-        return goodListDto;
-
-    }
+    
 
     private void updatePrefectureGoodSpecification(String goodId){
         iMarketingPrefectureGoodService.update(new MarketingPrefectureGood().setStatus("3"),new LambdaQueryWrapper<MarketingPrefectureGood>()
@@ -324,7 +312,7 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                         .eq(GoodSpecification::getGoodListId, goodList.getId())
                         .eq(GoodSpecification::getDelFlag, "0");
               //修改规格
-              if(goodSpecificationService.count(goodSpecificationLambdaQueryWrapper)>1){
+             /* if(goodSpecificationService.count(goodSpecificationLambdaQueryWrapper)>1){
                   goodSpecificationService.remove(goodSpecificationLambdaQueryWrapper);
                   GoodSpecification gf = new GoodSpecification();
                   gf.setCostPrice(new BigDecimal(goodList.getCostPrice()));
@@ -374,10 +362,10 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                   gf.setSupplyPrice(new BigDecimal(goodList.getSupplyPrice()));
                   gf.setPrice(new BigDecimal(goodList.getPrice()));
                   goodSpecificationService.save(gf);
-              }
+              }*/
             }else{
                 //新增规格
-                GoodSpecification gf = new GoodSpecification();
+              /*  GoodSpecification gf = new GoodSpecification();
                 gf.setCostPrice(new BigDecimal(goodList.getCostPrice()));
                 gf.setGoodListId(goodList.getId());
                 gf.setRepertory(goodList.getRepertory());
@@ -393,7 +381,7 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                 gf.setSupplyPrice(new BigDecimal(goodList.getSupplyPrice()));
                 gf.setPrice(new BigDecimal(goodList.getPrice()));
                 goodSpecificationService.delpecification(goodList.getId(), specifications);
-                goodSpecificationService.save(gf);
+                goodSpecificationService.save(gf);*/
             }
 
         }
@@ -460,6 +448,7 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         return pageList;
     }
 
+    @Override
     public IPage<GoodListDto> getGoodListDtoDelFlag(Page<GoodList> page, GoodListVo goodListVo) {
         //查询添加goodTypeId 处理
         if(goodListVo!=null){
@@ -622,6 +611,14 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                     goodInfo.put("goodSpecificationId", goodStoreSpecification.getId());
                     goodInfo.put("marketingCertificateRecordId",m.getMarketingCertificateRecordId());
                     goodInfo.put("marketingStoreGiftCardMemberListId",m.getMarketingStoreGiftCardMemberListId());
+                    goodInfo.put("marketingStorePrefectureGoodId",m.getMarketingStorePrefectureGoodId());
+
+                    /*店铺专区价格设置*/
+                    if(StringUtils.isNotBlank(m.getMarketingStorePrefectureGoodId())){
+                        iMarketingStorePrefectureGoodService.settingGetMemberShoppingCarInfo(goodInfo,m.getMarketingStorePrefectureGoodId(),goodStoreSpecification.getSpecification());
+                    }
+
+
                     //兑换商品价格设置
                     if(StringUtils.isNotBlank(m.getMarketingCertificateRecordId())){
                         goodInfo.put("price", new BigDecimal(0));
@@ -640,10 +637,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                 GoodList goodList = this.getById(m.getGoodListId());
 
                 if (goodList != null) {
-
-                    String goodForm = goodList.getGoodForm();
-
-
                     //设置商品信息
                     Map<String, Object> goodInfo = Maps.newHashMap();
                     GoodSpecification goodSpecification = iGoodSpecificationService.getById(m.getGoodSpecificationId());
@@ -659,25 +652,15 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
                     if(StringUtils.isBlank(m.getMarketingPrefectureId())&&StringUtils.isBlank(m.getMarketingFreeGoodListId())&&StringUtils.isBlank(m.getMarketingGroupRecordId())&&StringUtils.isBlank(m.getMarketingLeagueGoodListId())) {
                         if(StringUtils.isBlank(m.getMarketingCertificateRecordId())) {
                             MemberList memberList = iMemberListService.getById(memberId);
-                            if (goodForm.equals("0") && memberList.getMemberType().equals("1")) {
-                                //会员等级计算价格
-                                if (StringUtils.isNotBlank(memberList.getMemberGradeId())) {
-                                    MemberGrade memberGrade = iMemberGradeService.getById(memberList.getMemberGradeId());
-                                    if (memberGrade != null) {
-                                        //单个会员等级折扣金额
-                                        goodInfo.put("memberDiscountPrice", goodSpecification.getVipPrice().multiply((new BigDecimal("100").subtract(memberGrade.getDiscount()).divide(new BigDecimal("100"), 2, RoundingMode.DOWN))).setScale(2, RoundingMode.DOWN));
-                                        //会员等级信息
-                                        goodInfo.put("memberGradeContent", memberGrade.getGradeName() + " 会员价再享" + memberGrade.getDiscount().divide(new BigDecimal("10"), 1, RoundingMode.DOWN) + "折");
-                                        //会员等级
-                                        goodInfo.put("memberGrade", memberGrade.getGradeName());
-
-                                    }
-                                }
+                            goodInfo.put("label", "");
+                            if (memberList.getMemberType().equals("1")) {
                                 goodInfo.put("price", goodSpecification.getVipPrice());
+                                //会员等级计算价格
+                                iMemberGradeService.settingGetMemberShopCardinfo(goodInfo,goodSpecification,memberId);
                             } else {
                                 goodInfo.put("price", goodSpecification.getPrice());
                             }
-                            goodInfo.put("label", "");
+
                         }
                     }
                     //专区商品
@@ -789,16 +772,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         return goodListMapper.getEverydayGoodTypeId(createTime,limit);
     };
 
-    /**
-     * 每周特惠查询
-     * @param page
-     * @param paramMap
-     * @return
-     */
-    @Override
-   public IPage<Map<String,Object>> getEveryWeekPreferential(Page<Map<String,Object>> page, Map<String,Object> paramMap){
-      return goodListMapper.getEveryWeekPreferential(page,paramMap);
-    }
 
     @Override
     public IPage<GoodDiscountDTO> findGoodList(Page<GoodListVo> page,GoodListVo goodListVo) {
@@ -830,14 +803,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         return mapList;
     };
 
-    /**
-     * 查询规格商品里有0库存的商品ID和目前总库存
-     * @return
-     */
-      @Override
-  public List<Map<String,Object>>  getGoodListIdAndRepertory(){
-        return  goodListMapper.getGoodListIdAndRepertory();
-    };
     /**
      * 定时器下架0库存的商品
      * @return
@@ -887,76 +852,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
              }
          });
      }
-    /**
-     *检查图片是否存在
-     */
-    @Override
-    public void isImgNull(Integer pageNo,Integer pageSize){
-        //查询需检查的商品
-       Page<GoodList> page = new Page<GoodList>(pageNo, pageSize);
-      IPage<GoodList> goodListList = baseMapper.selectPage(page,new LambdaQueryWrapper<GoodList>().eq(GoodList::getDelFlag,"0")
-              .eq(GoodList::getSource,"1")
-      .ne(GoodList::getUpdateVersion,"2")
-      .ne(GoodList::getUpdateVersion,"3")
-      .ne(GoodList::getUpdateVersion,"4"));
-        goodListList.getRecords().forEach(gl->{
-            try {
-             //主图
-            boolean  bl =false;
-            if(StringUtils.isNotBlank(gl.getMainPicture())){
-                Map mainPictureMap =  JSONObject.parseObject(gl.getMainPicture());
-                     //主图
-                     for (Object obj : mainPictureMap.keySet()){
-                         String imgUrl ="https://gk.kaoqinwangluo.com/jeecg-boot/sys/common/isImgNull/"+ mainPictureMap.get(obj);
-                       String err = httpClientUtil.doGet(imgUrl);
-                       if("404".equals(err)){
-                           bl = true;
-                       }
-                     }
-            }
-            //详情图
-            if(StringUtils.isNotBlank(gl.getDetailsGoods())){
-                Map detailsGoodsMap =  JSONObject.parseObject(gl.getDetailsGoods());
-                for (Object obj : detailsGoodsMap.keySet()){
-                    String imgUrl ="https://gk.kaoqinwangluo.com/jeecg-boot/sys/common/isImgNull/"+ detailsGoodsMap.get(obj);
-                    String err = httpClientUtil.doGet(imgUrl);
-                    if("404".equals(err)){
-                        bl = true;
-                    }
-                }
-            }
-            if("1".equals(gl.getIsSpecification())){
-                //规格图
-                List<GoodSpecification> goodSpecificationList = goodSpecificationService.list(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getDelFlag,"0")
-                        .eq(GoodSpecification::getGoodListId,gl.getId()));
-                for(GoodSpecification gs:goodSpecificationList){
-                    if(StringUtils.isNotBlank(gs.getSpecificationPicture())){
-                        if(gs.getSpecificationPicture().length()>3){
-                        String imgUrl ="https://gk.kaoqinwangluo.com/jeecg-boot/sys/common/isImgNull/"+ gs.getSpecificationPicture();
-                        String err = httpClientUtil.doGet(imgUrl);
-                        if("404".equals(err)){
-                            bl = true;
-                        }
-                        }
-                    }
-                }
-            }
-
-            if(bl){
-                gl.setUpdateVersion(new BigDecimal("3"));
-                log.info("图片不存在的商品id:"+gl.getId()+"商品名称:"+gl.getGoodName());
-            }else{
-                gl.setUpdateVersion(new BigDecimal("2"));
-            }
-                baseMapper.updateById(gl);
-            }catch (Exception e){
-                e.printStackTrace();
-                log.info("商品检查图片出错:"+gl.getId()+"商品名称:"+gl.getGoodName());
-                gl.setUpdateVersion(new BigDecimal("4"));
-                baseMapper.updateById(gl);
-            }
-        });
-    }
 
     /**
      * 判断是否要重新审核

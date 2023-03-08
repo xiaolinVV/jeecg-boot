@@ -29,7 +29,7 @@ import java.util.Date;
 public class MarketingRushGood {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -69,10 +69,6 @@ public class MarketingRushGood {
     @ApiModelProperty(value = "删除状态（0，正常，1已删除）")
 	@TableLogic
 	private String delFlag;
-	/**抢购分类id*/
-	@Excel(name = "抢购分类id", width = 15)
-    @ApiModelProperty(value = "抢购分类id")
-	private String marketingRushTypeId;
 	/**平台商品id*/
 	@Excel(name = "平台商品id", width = 15)
     @ApiModelProperty(value = "平台商品id")
@@ -97,4 +93,8 @@ public class MarketingRushGood {
 	@Excel(name = "删除说明", width = 15)
     @ApiModelProperty(value = "删除说明")
 	private String delExplain;
+
+	private Date startTime;
+
+	private Date endTime;
 }

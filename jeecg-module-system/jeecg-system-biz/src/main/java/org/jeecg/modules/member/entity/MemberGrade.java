@@ -2,6 +2,7 @@ package org.jeecg.modules.member.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
@@ -29,7 +30,7 @@ import java.util.Date;
 public class MemberGrade {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -67,6 +68,7 @@ public class MemberGrade {
 	/**删除状态（0，正常，1已删除）*/
 	@Excel(name = "删除状态（0，正常，1已删除）", width = 15)
     @ApiModelProperty(value = "删除状态（0，正常，1已删除）")
+	@TableLogic
 	private String delFlag;
 	/**等级名称*/
 	@Excel(name = "等级名称", width = 15)
@@ -90,10 +92,6 @@ public class MemberGrade {
 	@Excel(name = "级别，数字越小等级越低", width = 15)
 	@ApiModelProperty(value = "级别，数字越小等级越低")
 	private BigDecimal sort;
-	/**折扣*/
-	@Excel(name = "折扣", width = 15)
-    @ApiModelProperty(value = "折扣")
-	private BigDecimal discount;
 	/**状态；0：停用；1：启用*/
 	@Excel(name = "状态；0：停用；1：启用", width = 15)
     @ApiModelProperty(value = "状态；0：停用；1：启用")

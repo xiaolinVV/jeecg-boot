@@ -30,7 +30,7 @@ import java.math.BigDecimal;
 public class OrderStoreList {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -292,4 +292,12 @@ public class OrderStoreList {
 	 * 退款json返回日志
 	 */
 	private String refundJson;
+
+	/*赠送的积分*/
+	private BigDecimal giveWelfarePayments;
+
+	/**
+	 * 折扣券结算结果json
+	 */
+	private String discountSettleJson;
 }

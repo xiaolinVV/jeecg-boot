@@ -1,5 +1,7 @@
 package org.jeecg.modules.vehicle.service.impl;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import org.jeecg.common.util.DateUtils;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.modules.vehicle.entity.VehicleParkTicket;
@@ -43,11 +45,10 @@ public class VehicleParkTicketServiceImpl extends ServiceImpl<VehicleParkTicketM
                 .setActivityNo(activityNo)
                 .setGetTime(new Date());
         //计算开始和结束时间
-        Calendar calendar=Calendar.getInstance();
-        calendar.setTime(DateUtils.str2Date(DateUtils.formatDate()+" 00:00:00",DateUtils.datetimeFormat.get()));
-        vehicleParkTicketRecord.setStartTime(calendar.getTime());
-        calendar.add(Calendar.DATE,vehicleParkTicketRecord.getEffectiveDays().intValue()-1);
-        vehicleParkTicketRecord.setEndTime(DateUtils.str2Date(DateUtils.formatDate(calendar)+" 23:59:59",DateUtils.datetimeFormat.get()));
+        DateTime startTime = DateUtil.beginOfDay(DateUtil.date());
+        vehicleParkTicketRecord.setStartTime(startTime);
+        DateTime endTime = DateUtil.endOfDay(DateUtil.offsetDay(startTime, vehicleParkTicketRecord.getEffectiveDays().intValue() - 1));
+        vehicleParkTicketRecord.setEndTime(endTime);
         iVehicleParkTicketRecordService.save(vehicleParkTicketRecord);
         return true;
     }

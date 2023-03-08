@@ -639,32 +639,37 @@ public class AfterMarketingCertificateRecordController {
             if(isPlatform.equals("0")){
                 //店铺商品
                 GoodStoreList goodStoreList=iGoodStoreListService.getById(mcg.getGoodListId());
+                GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(mcg.getGoodSpecificationId());
+
                 gdMap.put("goodName",goodStoreList.getGoodName());
                 gdMap.put("mainPicture",goodStoreList.getMainPicture());
-                gdMap.put("smallVipPrice", goodStoreList.getSmallVipPrice());
-                gdMap.put("smallPrice", goodStoreList.getSmallPrice());
+                gdMap.put("smallVipPrice", goodStoreSpecification.getVipPrice());
+                gdMap.put("smallPrice", goodStoreSpecification.getPrice());
                 gdMap.put("id",goodStoreList.getId());
                 if (memberList.getMemberType().equals("1")) {
-                    total=total.add(new BigDecimal(goodStoreList.getSmallVipPrice()));
+                    total=total.add(goodStoreSpecification.getVipPrice());
                 } else {
-                    total=total.add(new BigDecimal(goodStoreList.getSmallPrice()));
+                    total=total.add(goodStoreSpecification.getPrice());
                 }
-                GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(mcg.getGoodSpecificationId());
+               
                 gdMap.put("specification",goodStoreSpecification.getSpecification());
             }else{
                 //平台商品
                 GoodList goodList=iGoodListService.getById(mcg.getGoodListId());
+
+                GoodSpecification goodSpecification=iGoodSpecificationService.getById(mcg.getGoodSpecificationId());
+
                 gdMap.put("goodName",goodList.getGoodName());
                 gdMap.put("mainPicture",goodList.getMainPicture());
-                gdMap.put("smallVipPrice", goodList.getSmallVipPrice());
-                gdMap.put("smallPrice", goodList.getSmallPrice());
+                gdMap.put("smallVipPrice", goodSpecification.getPrice());
+                gdMap.put("smallPrice", goodSpecification.getVipPrice());
                 gdMap.put("id",goodList.getId());
                 if (memberList.getMemberType().equals("1")) {
-                    total=total.add(new BigDecimal(goodList.getSmallVipPrice()));
+                    total=total.add(goodSpecification.getVipPrice());
                 } else {
-                    total=total.add(new BigDecimal(goodList.getSmallPrice()));
+                    total=total.add(goodSpecification.getPrice());
                 }
-                GoodSpecification goodSpecification=iGoodSpecificationService.getById(mcg.getGoodSpecificationId());
+
                 gdMap.put("specification",goodSpecification.getSpecification());
             }
             //组织查询参数

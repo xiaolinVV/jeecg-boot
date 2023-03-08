@@ -1,5 +1,7 @@
 package org.jeecg.modules.pay.api;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -12,6 +14,7 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.marketing.entity.MarketingCertificateGroupRecord;
 import org.jeecg.modules.marketing.entity.MarketingGiftBagRecordBatch;
 import org.jeecg.modules.marketing.service.*;
+import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagRecordService;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.order.service.IOrderListService;
@@ -114,6 +117,15 @@ public class FrontPayController {
 
     @Autowired
     private IStoreShouyinRecordService iStoreShouyinRecordService;
+
+    @Autowired
+    private IPayMarketingStoreGiftbagLogService iPayMarketingStoreGiftbagLogService;
+
+
+    @Autowired
+    private IMarketingStoreGiftbagRecordService iMarketingStoreGiftbagRecordService;
+
+
     /**
      * 兑换券回调（加盟商已优化）
      *
@@ -475,9 +487,9 @@ public class FrontPayController {
                                    HttpServletRequest request,
                                    @RequestAttribute(value = "memberId", required = false) String memberId) {
         Result<String> result = new Result<>();
-
+        log.info("接收到的会员id+"+memberId);
         if (StringUtils.isNotBlank(memberId)) {
-
+            log.info("进入礼包冲账!!!!!");
             PayGiftBagLog payGiftBagLog = iPayGiftBagLogService.getById(id);
 
             if (payGiftBagLog == null) {
@@ -493,7 +505,9 @@ public class FrontPayController {
             payGiftBagLog.setBackStatus("1");
             payGiftBagLog.setBackTimes(payGiftBagLog.getBackTimes().add(new BigDecimal(1)));
             iPayGiftBagLogService.saveOrUpdate(payGiftBagLog);
+            log.info("冲账参数");
             if(payGiftBagLog.getPayPrice().doubleValue()==0&&payGiftBagLog.getPayStatus().equals("0")){
+                log.info("冲账进入礼包奖励分配!!!");
                 iMarketingGiftBagService.paySuccess(payGiftBagLog.getMemberListId(), payGiftBagLog.getId());
             }
             result.success("礼包冲账成功！！！");
@@ -527,18 +541,20 @@ public class FrontPayController {
             if (weixinMiniSoftPay.equals("1")) {
                 String data = request.getParameter("data");
                 log.info("回调的data数据：" + data);
-                JSONObject jsonObject = JSON.parseObject(data);
-                if (jsonObject.getString("status").equals("succeeded")) {
-                    tradeNo = jsonObject.getString("order_no");
-                    // 更新订单信息
-                    // 发送通知等
-                    PayGiftBagLog payGiftBagLog = iPayGiftBagLogService.getById(tradeNo);
-                    log.info(tradeNo);
-                    if (payGiftBagLog.getPayStatus().equals("0")) {
-                        iMarketingGiftBagService.paySuccess(payGiftBagLog.getMemberListId(), payGiftBagLog.getId());
+                if (StrUtil.isNotBlank(data)) {
+                    JSONObject jsonObject = JSON.parseObject(data);
+                    if (jsonObject.getString("status").equals("succeeded")) {
+                        tradeNo = jsonObject.getString("order_no");
+                        // 更新订单信息
+                        // 发送通知等
+                        PayGiftBagLog payGiftBagLog = iPayGiftBagLogService.getById(tradeNo);
+                        log.info(tradeNo);
+                        if (payGiftBagLog.getPayStatus().equals("0")) {
+                            iMarketingGiftBagService.paySuccess(payGiftBagLog.getMemberListId(), payGiftBagLog.getId());
+                        }
+                    } else {
+                        log.info("汇付天下微信支付失败：" + data);
                     }
-                } else {
-                    log.info("汇付天下微信支付失败：" + data);
                 }
             }
         }
@@ -1049,6 +1065,90 @@ public class FrontPayController {
     @ResponseBody
     public String paymentLevel(HttpServletRequest request) {
         log.info("支付级积分的参数：" + JSON.toJSONString(request.getParameterMap()));
+        return "SUCCESS";
+    }
+
+
+    /**
+     *
+     * 礼包团支付回调
+     *
+     * @param id
+     * @param request
+     * @param memberId
+     * @return
+     */
+    @RequestMapping("marketingStoreGift")
+    @ResponseBody
+    public Object marketingStoreGift(String id, HttpServletRequest request, @RequestAttribute(value = "memberId", required = false) String memberId){
+        Result<String> result = new Result<>();
+
+        if (StringUtils.isNotBlank(memberId)) {
+
+            PayMarketingStoreGiftbagLog payMarketingStoreGiftbagLog = iPayMarketingStoreGiftbagLogService.getById(id);
+
+            if (payMarketingStoreGiftbagLog == null) {
+                result.error500("id参数找不到相关的支付日志");
+                return JSON.toJSONString(result);
+            }
+//回调支付冲账
+//回调支付冲账
+            if (payMarketingStoreGiftbagLog.getPayStatus().equals("0")) {
+//成功
+                iMarketingStoreGiftbagRecordService.success(payMarketingStoreGiftbagLog.getId());
+            }
+            result.success("余额冲账成功！！！");
+            return result;
+        } else {
+            String weixinMiniSoftPay = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "weixin_mini_soft_pay");
+            String tradeNo = null;
+
+//官方微信支付回调
+            if (weixinMiniSoftPay.equals("0")) {
+
+                String xmlMsg = HttpKit.readData(request);
+                log.info("支付通知=" + xmlMsg);
+                Map<String, String> params = WxPayKit.xmlToMap(xmlMsg);
+
+                String returnCode = params.get("return_code");
+                if (WxPayKit.codeIsOk(returnCode)) {
+// 更新订单信息
+// 发送通知等
+                    PayMarketingStoreGiftbagLog payMarketingStoreGiftbagLog = iPayMarketingStoreGiftbagLogService.getById(params.get("out_trade_no"));
+                    log.info(params.get("out_trade_no"));
+                    if (payMarketingStoreGiftbagLog.getPayStatus().equals("0")) {
+
+//成功
+                        iMarketingStoreGiftbagRecordService.success(payMarketingStoreGiftbagLog.getId());
+                    }
+                    Map<String, String> xml = new HashMap<String, String>(2);
+                    xml.put("return_code", "SUCCESS");
+                    xml.put("return_msg", "OK");
+                    return WxPayKit.toXml(xml);
+                }
+            }
+//汇付天下微信支付回调
+            if (weixinMiniSoftPay.equals("1")) {
+                String data = request.getParameter("data");
+                log.info("回调的data数据：" + data);
+                JSONObject jsonObject = JSON.parseObject(data);
+                if (jsonObject.getString("status").equals("succeeded")) {
+                    tradeNo = jsonObject.getString("order_no");
+// 更新订单信息
+// 发送通知等
+                    PayMarketingStoreGiftbagLog payMarketingStoreGiftbagLog = iPayMarketingStoreGiftbagLogService.getById(tradeNo);
+                    log.info(tradeNo);
+                    if (payMarketingStoreGiftbagLog.getPayStatus().equals("0")) {
+
+//成功
+                        iMarketingStoreGiftbagRecordService.success(payMarketingStoreGiftbagLog.getId());
+                    }
+                } else {
+                    log.info("汇付天下微信支付失败：" + data);
+                }
+            }
+
+        }
         return "SUCCESS";
     }
 }

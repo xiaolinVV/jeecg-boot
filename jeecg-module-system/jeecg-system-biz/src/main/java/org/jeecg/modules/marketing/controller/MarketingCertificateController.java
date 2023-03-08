@@ -15,6 +15,7 @@ import org.jeecg.modules.marketing.dto.MarketingCertificateDTO;
 import org.jeecg.modules.marketing.dto.MarketingCertificateGoodDTO;
 import org.jeecg.modules.marketing.dto.MarketingCertificateStoreDTO;
 import org.jeecg.modules.marketing.entity.MarketingCertificate;
+import org.jeecg.modules.marketing.entity.MarketingStoreGiftCardMemberList;
 import org.jeecg.modules.marketing.service.IMarketingCertificateGoodService;
 import org.jeecg.modules.marketing.service.IMarketingCertificateService;
 import org.jeecg.modules.marketing.service.IMarketingCertificateStoreService;
@@ -307,6 +308,24 @@ public class MarketingCertificateController {
         result.setResult(map);
         return result;
     }
+
+    /**
+     * 选择兑换券的列表
+     *
+     * @param marketingCertificateVO
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
+   @GetMapping("findCertificateVOPage")
+    public Result<?>findCertificateVOPage(MarketingCertificateVO marketingCertificateVO, @RequestParam(value = "pageNo",defaultValue = "1")Integer pageNo,
+                                                           @RequestParam(value = "pageSize",defaultValue = "10")Integer pageSize){
+      return Result.ok(marketingCertificateService.findCertificateVO(new Page<>(pageNo,pageSize),marketingCertificateVO));
+    }
+
+
+
+
     @AutoLog(value = "兑换券-推荐兑换券调用接口")
     @ApiOperation(value = "兑换券-推荐兑换券调用接口", notes = "兑换券-推荐兑换券调用接口")
     @RequestMapping(value = "findCertificate",method = RequestMethod.GET)

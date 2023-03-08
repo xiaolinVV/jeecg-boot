@@ -12,8 +12,8 @@
             ON mrm.`member_designation_id` = md.`id`
         LEFT JOIN member_designation_group mdg
         ON md.member_designation_group_id = mdg.id
-        WHERE mrm.`del_flag` = 0
-        AND md.`del_flag` = 0
+        WHERE mrm.`del_flag` = '0'
+        AND md.`del_flag` = '0'
         <if test="marketingRecordedMoneyDTO.orderNo != null and marketingRecordedMoneyDTO.orderNo != ''">
             AND mrm.order_no LIKE concat('%',#{marketingRecordedMoneyDTO.orderNo},'%')
         </if>

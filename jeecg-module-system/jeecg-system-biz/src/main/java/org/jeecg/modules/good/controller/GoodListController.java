@@ -1,6 +1,7 @@
 package org.jeecg.modules.good.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -11,7 +12,7 @@ import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.aspect.annotation.PermissionData;
@@ -20,12 +21,11 @@ import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
 import org.jeecg.modules.good.dto.GoodListDto;
+import org.jeecg.modules.good.dto.GoodListNewDTO;
 import org.jeecg.modules.good.dto.GoodTypeDto;
-import org.jeecg.modules.good.entity.GoodList;
-import org.jeecg.modules.good.entity.GoodSpecification;
-import org.jeecg.modules.good.entity.GoodStoreList;
-import org.jeecg.modules.good.entity.GoodStoreSpecification;
+import org.jeecg.modules.good.entity.*;
 import org.jeecg.modules.good.service.*;
+import org.jeecg.modules.good.util.GoodUtils;
 import org.jeecg.modules.good.vo.GoodListVo;
 import org.jeecg.modules.marketing.entity.MarketingMaterialGood;
 import org.jeecg.modules.marketing.entity.MarketingPrefecture;
@@ -43,6 +43,7 @@ import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -93,6 +94,23 @@ public class GoodListController {
     @Autowired
     private IMarketingMaterialGoodService iMarketingMaterialGoodService;
 
+    @Autowired
+    private IGoodMachineBrandService iGoodMachineBrandService;
+
+    @Autowired
+    private IGoodMachineModelService iGoodMachineModelService;
+
+    @Autowired
+    private IGoodBrandService iGoodBrandService;
+
+
+    @Autowired
+    private GoodUtils goodUtils;
+
+
+    @Autowired
+    private IGoodSettingService iGoodSettingService;
+
 
     /**
      * 修改商品排序
@@ -105,7 +123,7 @@ public class GoodListController {
     @ResponseBody
     public Result<?> updateSort(String goodListId,
                                 @RequestParam(required = false,defaultValue = "0") BigDecimal sort){
-        if(org.apache.commons.lang3.StringUtils.isBlank(goodListId)){
+        if(StringUtils.isBlank(goodListId)){
             return Result.error("商品id不能为空");
         }
         GoodList goodList= goodListService.getById(goodListId);
@@ -118,30 +136,110 @@ public class GoodListController {
     /**
      * 分页列表查询
      *
-     * @param goodListVo
+     * @param goodList
      * @param pageNo
      * @param pageSize
      * @param req
      * @return
      */
-    @AutoLog(value = "商品列表-分页列表查询")
-    @ApiOperation(value = "商品列表-分页列表查询", notes = "商品列表-分页列表查询")
+    @AutoLog(value = "平台商品列表-分页列表查询")
+    @ApiOperation(value="平台商品列表-分页列表查询", notes="平台商品列表-分页列表查询")
     @GetMapping(value = "/list")
-    public Result<IPage<GoodListDto>> queryPageList(GoodListVo goodListVo,
-                                                    @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
-                                                    @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-                                                    HttpServletRequest req) {
-        Result<IPage<GoodListDto>> result = new Result<IPage<GoodListDto>>();
-        Page<GoodList> page = new Page<GoodList>(pageNo, pageSize);
-        //判断当前用户是否是品台，是 STR=NULL 不是STR= UserId
-        String str = PermissionUtils.ifPlatform();
-        if (StringUtils.isNotBlank(str)) {
-            goodListVo.setSysUserId(str);
-        }
-        IPage<GoodListDto> pageList = goodListService.getGoodListDto(page, goodListVo, "0");
-        result.setSuccess(true);
-        result.setResult(pageList);
-        return result;
+    public Result<?> queryPageList(GoodList goodList,
+                                   @RequestParam(name = "level",defaultValue = "-1",required = false) String level,
+                                   @RequestParam(name = "typeId",defaultValue = "",required = false) String typeId,
+                                   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+                                   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+                                   HttpServletRequest req) {
+        QueryWrapper<GoodList> queryWrapper = QueryGenerator.initQueryWrapper(goodList, req.getParameterMap());
+        Map<String,Object> paramMap= Maps.newHashMap();
+        paramMap.put("level",level);
+        paramMap.put("typeId",typeId);
+        IPage<Map<String,Object>> pageList = goodListService.queryPageList(new Page<>(pageNo,pageSize),paramMap, queryWrapper);
+        //组织返回的数据
+        pageList.getRecords().forEach(g->{
+            //图片数据格式转换
+            if(g.get("mainPicture")!=null){
+                g.put("mainPicture",goodUtils.imgTransition(g.get("mainPicture").toString()));
+            }
+           if(g.get("detailsGoods")!=null){
+               g.put("detailsGoods",goodUtils.imgTransition(g.get("detailsGoods").toString()));
+           }
+
+            if(g.get("specifications")==null){
+                if(g.get("specification")!=null){
+                    g.put("specifications",goodUtils.oldSpecificationToNew(g.get("specification").toString(),false));
+                }else{
+                    g.put("specifications",goodUtils.oldSpecificationToNew("",false));
+                }
+            }
+            List<Map<String,Object>> shopInfo= Lists.newArrayList();
+            List<Map<String,Object>> specificationsDecribes=Lists.newArrayList();
+
+            List<GoodSpecification> goodSpecifications=iGoodSpecificationService.list(new LambdaQueryWrapper<GoodSpecification>()
+                    .eq(GoodSpecification::getGoodListId,g.get("id"))
+                    .orderByDesc(GoodSpecification::getCreateTime));
+
+            Map<String,Object> shopInfoMap=Maps.newHashMap();
+
+            if(g.get("isSpecification").toString().equals("0")){
+                GoodSpecification goodSpecification=goodSpecifications.get(0);
+                shopInfoMap.put("salesPrice",goodSpecification.getPrice());
+                shopInfoMap.put("vipPrice",goodSpecification.getVipPrice());
+                shopInfoMap.put("vipTwoPrice",goodSpecification.getVipTwoPrice());
+                shopInfoMap.put("vipThirdPrice",goodSpecification.getVipThirdPrice());
+                shopInfoMap.put("vipFouthPrice",goodSpecification.getVipFouthPrice());
+                shopInfoMap.put("costPrice",goodSpecification.getCostPrice());
+				shopInfoMap.put("repertory",goodSpecification.getRepertory());
+                shopInfoMap.put("supplyPrice",goodSpecification.getSupplyPrice());
+                shopInfoMap.put("weight",goodSpecification.getWeight());
+                shopInfoMap.put("skuNo",goodSpecification.getSkuNo());
+                shopInfoMap.put("barCode",goodSpecification.getBarCode());
+            }
+            if(g.get("isSpecification").toString().equals("1")){
+
+                	BigDecimal repertory=new BigDecimal(0);
+
+                for (GoodSpecification goodSpecification:goodSpecifications){
+                    Map<String,Object> specificationsDecribeMap= Maps.newHashMap();
+
+                    specificationsDecribeMap.put("pName",goodSpecification.getSpecification());
+                    specificationsDecribeMap.put("salesPrice",goodSpecification.getPrice());
+                    specificationsDecribeMap.put("vipPrice",goodSpecification.getVipPrice());
+                    specificationsDecribeMap.put("vipTwoPrice",goodSpecification.getVipTwoPrice());
+                    specificationsDecribeMap.put("vipThirdPrice",goodSpecification.getVipThirdPrice());
+                    specificationsDecribeMap.put("vipFouthPrice",goodSpecification.getVipFouthPrice());
+                    specificationsDecribeMap.put("costPrice",goodSpecification.getCostPrice());
+                    specificationsDecribeMap.put("supplyPrice",goodSpecification.getSupplyPrice());
+                    specificationsDecribeMap.put("weight",goodSpecification.getWeight());
+                    specificationsDecribeMap.put("repertory",goodSpecification.getRepertory());
+                    specificationsDecribeMap.put("skuNo",goodSpecification.getSkuNo());
+                    specificationsDecribeMap.put("imgUrl",goodSpecification.getSpecificationPicture());
+                    specificationsDecribeMap.put("barCode",goodSpecification.getBarCode());
+                    repertory=repertory.add(goodSpecification.getRepertory());
+                    specificationsDecribes.add(specificationsDecribeMap);
+                }
+
+                shopInfoMap.put("salesPrice",g.get("minPrice")+"-"+g.get("maxPrice"));
+                shopInfoMap.put("vipPrice",g.get("minVipPrice")+"-"+g.get("maxVipPrice"));
+                shopInfoMap.put("vipTwoPrice",g.get("minVipTwoPrice")+"-"+g.get("maxVipTwoPrice"));
+                shopInfoMap.put("vipThirdPrice",g.get("minVipThirdPrice")+"-"+g.get("maxVipThirdPrice"));
+                shopInfoMap.put("vipFouthPrice",g.get("minVipFouthPrice")+"-"+g.get("maxVipFouthPrice"));
+                shopInfoMap.put("costPrice",g.get("minCostPrice")+"-"+g.get("maxCostPrice"));
+                shopInfoMap.put("repertory",repertory);
+                shopInfoMap.put("supplyPrice",g.get("minSupplyPrice")+"-"+g.get("maxSupplyPrice"));
+                shopInfoMap.put("weight","0");
+                shopInfoMap.put("skuNo","");
+                shopInfoMap.put("barCode","");
+            }
+
+            shopInfo.add(shopInfoMap);
+
+
+            g.put("shopInfo",JSON.toJSONString(shopInfo));
+            g.put("specificationsDecribes",JSON.toJSONString(specificationsDecribes));
+        });
+        return Result.ok(pageList);
     }
 
     @AutoLog(value = "商品列表-分页列表查询")
@@ -362,47 +460,419 @@ public class GoodListController {
     /**
      * 添加
      *
-     * @param goodListVo
+     * @param goodListDTO
      * @return
      */
-    @AutoLog(value = "商品列表-添加")
-    @ApiOperation(value = "商品列表-添加", notes = "商品列表-添加")
+    @AutoLog(value = "平台商品列表-添加")
+    @ApiOperation(value="平台商品列表-添加", notes="平台商品列表-添加")
     @PostMapping(value = "/add")
-    public Result<GoodListVo> add(@RequestBody GoodListVo goodListVo) {// @RequestBody GoodListVo goodListVo
-        Result<GoodListVo> result = new Result<GoodListVo>();
-        try {
-            goodListService.saveOrUpdate(goodListVo);
-            result.success("添加成功！");
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            result.error500("操作失败");
+    @Transactional
+    public Result<?> add(@RequestBody GoodListNewDTO goodListDTO) {
+        log.info(JSON.toJSONString(goodListDTO));
+        goodListDTO.setGoodTypeId("91e3cc1c2d48eb16075be7e1b2d8dc2e");
+        GoodSetting goodSetting=iGoodSettingService.getGoodSetting();
+        if(goodSetting==null){
+            return Result.error("请先设置商品基本信息");
         }
-        return result;
+        GoodList goodList=new GoodList();
+        goodList.setGoodTypeId("91e3cc1c2d48eb16075be7e1b2d8dc2e");
+        /*上下架状态*/
+        goodList.setFrameStatus(goodListDTO.getFrameStatus());
+
+        //审核状态
+        goodList.setAuditStatus("2");
+
+        //供应商
+        if(StringUtils.isBlank(goodListDTO.getSysUserId())){
+            return Result.error("请选择供应商");
+        }
+
+        goodList.setSysUserId(goodListDTO.getSysUserId());
+
+
+        //请选择运费模板
+        if(StringUtils.isBlank(goodListDTO.getProviderTemplateId())){
+            return Result.error("请选择运费模板");
+        }
+
+        goodList.setProviderTemplateId(goodListDTO.getProviderTemplateId());
+
+        //市场价
+        if(goodListDTO.getMarketPrice()==null || goodListDTO.getMarketPrice().doubleValue()==0){
+            return Result.error("请填写市场价或者市场价必须高于0");
+        }
+        goodList.setMarketPrice(goodListDTO.getMarketPrice().toString());
+
+        goodList.setGoodBrandId(goodListDTO.getGoodBrandId());
+
+        /*整机品牌*/
+        goodList.setGoodMachineBrandIds(goodListDTO.getGoodMachineBrandIds());
+        if(StringUtils.isNotBlank(goodList.getGoodMachineBrandIds())){
+            List<String> goodMachineBrandNames=Lists.newArrayList();
+            JSON.parseArray(goodList.getGoodMachineBrandIds(),String.class).forEach(id->{
+                goodMachineBrandNames.add(iGoodMachineBrandService.getById(id).getBrandName());
+            });
+            goodList.setGoodMachineBrandNames(JSON.toJSONString(goodMachineBrandNames));
+        }
+
+
+        /*整机车型*/
+        goodList.setGoodMachineModelIds(goodListDTO.getGoodMachineModelIds());
+        if(StringUtils.isNotBlank(goodList.getGoodMachineModelIds())){
+            List<String> goodGoodMachineModelNames=Lists.newArrayList();
+            JSON.parseArray(goodList.getGoodMachineModelIds(),String.class).forEach(id->{
+                goodGoodMachineModelNames.add(iGoodMachineModelService.getById(id).getModelName());
+            });
+            goodList.setGoodMachineModelNames(JSON.toJSONString(goodGoodMachineModelNames));
+        }
+
+        //商品编号
+        JSONArray shopInfo=JSON.parseArray(goodListDTO.getShopInfo());
+        JSONObject shopInfoo=(JSONObject)shopInfo.get(0);
+        if(StringUtils.isNotBlank(goodListDTO.getGoodNo())&&goodListService.count(new LambdaQueryWrapper<GoodList>().eq(GoodList::getGoodNo,goodListDTO.getGoodNo()))>0){
+            return Result.error("商品编号不能重复，请重新编写");
+        }
+        //商品编码
+        goodList.setGoodNo(goodListDTO.getGoodNo());
+        //商品名称
+        if(StringUtils.isBlank(goodListDTO.getGoodName())){
+            return Result.error("商品名称不能为空");
+        }
+        goodList.setGoodName(goodListDTO.getGoodName());
+
+        //商品分类
+        if(goodSetting.getOpenGoodType().equals("1")&&StringUtils.isBlank(goodListDTO.getGoodTypeId())){
+            return Result.error("请选择商品分类");
+        }
+        if(goodSetting.getOpenGoodType().equals("1")) {
+            goodList.setGoodTypeId(goodListDTO.getGoodTypeId());
+        }
+        goodList.setGoodDescribe(goodListDTO.getGoodDescribe());
+        goodList.setMainPicture(goodListDTO.getMainImages());
+        goodList.setDetailsGoods(goodListDTO.getDetailsImages());
+        goodList.setCommitmentCustomers(goodListDTO.getCommitmentCustomers());
+        //是否有规格
+        JSONArray specifications= JSON.parseArray(goodListDTO.getSpecifications());
+        goodList.setSpecifications(goodListDTO.getSpecifications());
+        goodList.setStatus(goodListDTO.getStatus());
+
+
+        /*添加搜索内容*/
+        List<String> searchInfos=Lists.newArrayList();
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodName()));
+        searchInfos.add(StringUtils.defaultString(goodList.getNickName()));
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodDescribe()));
+        if(StringUtils.isNotBlank(goodList.getGoodBrandId())){
+            searchInfos.add(StringUtils.defaultString(iGoodBrandService.getById(goodList.getGoodBrandId()).getBrandName()));
+        }
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodMachineBrandNames()));
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodMachineModelNames()));
+        if(goodSetting.getOpenGoodType().equals("1")) {
+            searchInfos.add(iGoodTypeService.getById(goodList.getGoodTypeId()).getName());
+        }
+
+
+        if(specifications.size()==0){
+            //无规格
+            goodList.setIsSpecification("0");
+        }else{
+            //有规格
+            goodList.setIsSpecification("1");
+        }
+        //校验数据唯一性
+        if(specifications.size()==0){
+            //无规格
+            if(StringUtils.isNotBlank(shopInfoo.getString("skuNo"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getSkuNo,shopInfoo.getString("skuNo")))>0){
+                return Result.error("SKU编码不唯一："+shopInfoo.getString("skuNo"));
+            }
+            if(StringUtils.isNotBlank(shopInfoo.getString("barCode"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getBarCode,shopInfoo.getString("barCode")))>0){
+                return Result.error("条形码不唯一："+shopInfoo.getString("barCode"));
+            }
+        }else{
+            //有规格
+            JSONArray specificationsDecribes= JSON.parseArray(goodListDTO.getSpecificationsDecribes());
+            for (Object s :specificationsDecribes){
+                JSONObject jsonObject=(JSONObject)s;
+                searchInfos.add(jsonObject.getString("pName"));
+                log.info("规格信息："+JSON.toJSONString(jsonObject));
+                if(StringUtils.isNotBlank(jsonObject.getString("skuNo"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getSkuNo,jsonObject.getString("skuNo")))>0){
+                    return Result.error("SKU编码不唯一："+jsonObject.getString("skuNo"));
+                }
+                if(StringUtils.isNotBlank(jsonObject.getString("barCode"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getBarCode,jsonObject.getString("barCode")))>0){
+                    return Result.error("条形码不唯一："+jsonObject.getString("barCode"));
+                }
+            }
+        }
+
+        goodList.setSearchInfo(JSON.toJSONString(searchInfos));
+
+        //保存数据
+        if(goodListService.save(goodList)){
+            if(specifications.size()==0){
+                //无规格
+                GoodSpecification goodSpecification=new GoodSpecification();
+                goodSpecification.setGoodListId(goodList.getId());
+                goodSpecification.setSpecification("无");
+                goodSpecification.setPrice(shopInfoo.getBigDecimal("salesPrice"));
+                goodSpecification.setVipPrice(shopInfoo.getBigDecimal("vipPrice"));
+                goodSpecification.setVipTwoPrice(shopInfoo.getBigDecimal("vipTwoPrice"));
+                goodSpecification.setVipThirdPrice(shopInfoo.getBigDecimal("vipThirdPrice"));
+                goodSpecification.setVipFouthPrice(shopInfoo.getBigDecimal("vipFouthPrice"));
+                goodSpecification.setCostPrice(shopInfoo.getBigDecimal("costPrice"));
+                goodSpecification.setSupplyPrice(shopInfoo.getBigDecimal("supplyPrice"));
+                goodSpecification.setRepertory(shopInfoo.getBigDecimal("repertory"));
+                goodSpecification.setSkuNo(shopInfoo.getString("skuNo"));
+                goodSpecification.setWeight(new BigDecimal(shopInfoo.getString("weight")));
+                goodSpecification.setBarCode(shopInfoo.getString("barCode"));
+                iGoodSpecificationService.save(goodSpecification);
+            }else{
+                //有规格
+                JSONArray specificationsDecribes= JSON.parseArray(goodListDTO.getSpecificationsDecribes());
+                for (Object s :specificationsDecribes){
+                    JSONObject jsonObject=(JSONObject)s;
+                    GoodSpecification goodSpecification=new GoodSpecification();
+                    goodSpecification.setGoodListId(goodList.getId());
+                    goodSpecification.setSpecification(jsonObject.getString("pName"));
+                    goodSpecification.setPrice(jsonObject.getBigDecimal("salesPrice"));
+                    goodSpecification.setVipPrice(jsonObject.getBigDecimal("vipPrice"));
+                    goodSpecification.setVipTwoPrice(jsonObject.getBigDecimal("vipTwoPrice"));
+                    goodSpecification.setVipThirdPrice(jsonObject.getBigDecimal("vipThirdPrice"));
+                    goodSpecification.setVipFouthPrice(jsonObject.getBigDecimal("vipFouthPrice"));
+                    goodSpecification.setCostPrice(jsonObject.getBigDecimal("costPrice"));
+                    goodSpecification.setSupplyPrice(jsonObject.getBigDecimal("supplyPrice"));
+                    goodSpecification.setRepertory(jsonObject.getBigDecimal("repertory"));
+                    goodSpecification.setSkuNo(jsonObject.getString("skuNo"));
+                    goodSpecification.setWeight(new BigDecimal(jsonObject.getString("weight")));
+                    goodSpecification.setBarCode(jsonObject.getString("barCode"));
+                    goodSpecification.setSpecificationPicture(jsonObject.getString("imgUrl"));
+                    iGoodSpecificationService.save(goodSpecification);
+                }
+            }
+        }else{
+            return Result.error("未知错误，请联系管理员");
+        }
+        return Result.ok("添加成功！");
     }
 
     /**
      * 编辑
      *
-     * @param goodList
+     * @param goodListDTO
      * @return
      */
-    @AutoLog(value = "商品列表-编辑")
-    @ApiOperation(value = "商品列表-编辑", notes = "商品列表-编辑")
-    @PutMapping(value = "/edit")
-    public Result<GoodList> edit(@RequestBody GoodList goodList) {
-        Result<GoodList> result = new Result<GoodList>();
-        GoodList goodListEntity = goodListService.getById(goodList.getId());
-        if (oConvertUtils.isEmpty(goodListEntity)) {
-            result.error500("未找到对应实体");
-        } else {
-            boolean ok = goodListService.updateById(goodList);
-            //TODO 返回false说明什么？
-            if (ok) {
-                result.success("修改成功!");
+    @AutoLog(value = "平台商品列表-编辑")
+    @ApiOperation(value="平台商品列表-编辑", notes="平台商品列表-编辑")
+    @RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
+    public Result<?> edit(@RequestBody GoodListNewDTO goodListDTO) {
+        log.info(JSON.toJSONString(goodListDTO));
+        GoodSetting goodSetting=iGoodSettingService.getGoodSetting();
+        if(goodSetting==null){
+            return Result.error("请先设置商品基本信息");
+        }
+        GoodList goodList=goodListService.getById(goodListDTO.getId());
+
+
+        /*上下架状态*/
+        goodList.setFrameStatus(goodListDTO.getFrameStatus());
+
+        //审核状态
+        goodList.setAuditStatus("2");
+
+
+        //供应商
+        if(StringUtils.isBlank(goodListDTO.getSysUserId())){
+            return Result.error("请选择供应商");
+        }
+
+        goodList.setSysUserId(goodListDTO.getSysUserId());
+
+
+        //请选择运费模板
+        if(StringUtils.isBlank(goodListDTO.getProviderTemplateId())){
+            return Result.error("请选择运费模板");
+        }
+
+        goodList.setProviderTemplateId(goodListDTO.getProviderTemplateId());
+
+
+        //市场价
+        if(goodListDTO.getMarketPrice()==null || goodListDTO.getMarketPrice().doubleValue()==0){
+            return Result.error("请填写市场价或者市场价必须高于0");
+        }
+        goodList.setMarketPrice(goodListDTO.getMarketPrice().toString());
+
+        goodList.setGoodBrandId(goodListDTO.getGoodBrandId());
+
+        /*整机品牌*/
+        goodList.setGoodMachineBrandIds(goodListDTO.getGoodMachineBrandIds());
+        if(StringUtils.isNotBlank(goodList.getGoodMachineBrandIds())){
+            List<String> goodMachineBrandNames=Lists.newArrayList();
+            JSON.parseArray(goodList.getGoodMachineBrandIds(),String.class).forEach(id->{
+                goodMachineBrandNames.add(iGoodMachineBrandService.getById(id).getBrandName());
+            });
+            goodList.setGoodMachineBrandNames(JSON.toJSONString(goodMachineBrandNames));
+        }
+
+
+        /*整机车型*/
+        goodList.setGoodMachineModelIds(goodListDTO.getGoodMachineModelIds());
+        if(StringUtils.isNotBlank(goodList.getGoodMachineModelIds())){
+            List<String> goodGoodMachineModelNames=Lists.newArrayList();
+            JSON.parseArray(goodList.getGoodMachineModelIds(),String.class).forEach(id->{
+                goodGoodMachineModelNames.add(iGoodMachineModelService.getById(id).getModelName());
+            });
+            goodList.setGoodMachineModelNames(JSON.toJSONString(goodGoodMachineModelNames));
+        }
+
+
+
+        //商品编号
+        JSONArray shopInfo=JSON.parseArray(goodListDTO.getShopInfo());
+        JSONObject shopInfoo=(JSONObject)shopInfo.get(0);
+        if(StringUtils.isNotBlank(goodListDTO.getGoodNo())&&goodListService.count(new LambdaQueryWrapper<GoodList>().eq(GoodList::getGoodNo,goodListDTO.getGoodNo()).ne(GoodList::getId,goodListDTO.getId()))>0){
+            return Result.error("商品编号不能重复，请重新编写");
+        }
+        //商品编码
+        goodList.setGoodNo(goodListDTO.getGoodNo());
+        //商品名称
+        if(StringUtils.isBlank(goodListDTO.getGoodName())){
+            return Result.error("商品名称不能为空");
+        }
+        goodList.setGoodName(goodListDTO.getGoodName());
+        //商品分类
+        if(goodSetting.getOpenGoodType().equals("1")&&StringUtils.isBlank(goodListDTO.getGoodTypeId())){
+            return Result.error("请选择商品分类");
+        }
+        goodList.setGoodTypeId(goodListDTO.getGoodTypeId());
+        goodList.setGoodDescribe(goodListDTO.getGoodDescribe());
+        goodList.setMainPicture(goodListDTO.getMainImages());
+        goodList.setDetailsGoods(goodListDTO.getDetailsImages());
+        goodList.setCommitmentCustomers(goodListDTO.getCommitmentCustomers());
+        //是否有规格
+        JSONArray specifications= JSON.parseArray(goodListDTO.getSpecifications());
+        goodList.setSpecifications(goodListDTO.getSpecifications());
+        goodList.setStatus(goodListDTO.getStatus());
+
+
+        /*添加搜索内容*/
+        List<String> searchInfos=Lists.newArrayList();
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodName()));
+        searchInfos.add(StringUtils.defaultString(goodList.getNickName()));
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodDescribe()));
+        if(StringUtils.isNotBlank(goodList.getGoodBrandId())){
+            searchInfos.add(StringUtils.defaultString(iGoodBrandService.getById(goodList.getGoodBrandId()).getBrandName()));
+        }
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodMachineBrandNames()));
+        searchInfos.add(StringUtils.defaultString(goodList.getGoodMachineModelNames()));
+        if(goodSetting.getOpenGoodType().equals("1")) {
+            searchInfos.add(iGoodTypeService.getById(goodList.getGoodTypeId()).getName());
+        }
+
+
+        if(specifications.size()==0){
+            //无规格
+            goodList.setIsSpecification("0");
+        }else{
+            //有规格
+            goodList.setIsSpecification("1");
+        }
+        //校验数据唯一性
+        if(specifications.size()==0){
+            //无规格
+            if(StringUtils.isNotBlank(shopInfoo.getString("skuNo"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getSkuNo,shopInfoo.getString("skuNo")).ne(GoodSpecification::getGoodListId,goodListDTO.getId()))>0){
+                return Result.error("SKU编码不唯一："+shopInfoo.getString("skuNo"));
+            }
+            if(StringUtils.isNotBlank(shopInfoo.getString("barCode"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getBarCode,shopInfoo.getString("barCode")).ne(GoodSpecification::getGoodListId,goodListDTO.getId()))>0){
+                return Result.error("条形码不唯一："+shopInfoo.getString("barCode"));
+            }
+        }else{
+            //有规格
+            JSONArray specificationsDecribes= JSON.parseArray(goodListDTO.getSpecificationsDecribes());
+            for (Object s :specificationsDecribes){
+                JSONObject jsonObject=(JSONObject)s;
+                searchInfos.add(jsonObject.getString("pName"));
+                log.info("规格信息："+JSON.toJSONString(jsonObject));
+                if(StringUtils.isNotBlank(jsonObject.getString("skuNo"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getSkuNo,jsonObject.getString("skuNo")).ne(GoodSpecification::getGoodListId,goodListDTO.getId()))>0){
+                    return Result.error("SKU编码不唯一："+jsonObject.getString("skuNo"));
+                }
+                if(StringUtils.isNotBlank(jsonObject.getString("barCode"))&&iGoodSpecificationService.count(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getBarCode,jsonObject.getString("barCode")).ne(GoodSpecification::getGoodListId,goodListDTO.getId()))>0){
+                    return Result.error("条形码不唯一："+jsonObject.getString("barCode"));
+                }
             }
         }
 
-        return result;
+
+        goodList.setSearchInfo(JSON.toJSONString(searchInfos));
+
+        //保存数据
+        if(goodListService.saveOrUpdate(goodList)){
+            //查询所有商品的规格信息
+            Map<String,GoodSpecification> goodSpecificationMap=Maps.newHashMap();
+            iGoodSpecificationService.list(new LambdaQueryWrapper<GoodSpecification>().eq(GoodSpecification::getGoodListId,goodList.getId())).forEach(gs->{
+                goodSpecificationMap.put(gs.getSpecification(),gs);
+            });
+
+            if(specifications.size()==0){
+                //无规格
+                GoodSpecification goodSpecification=new GoodSpecification();
+                if(goodSpecificationMap.containsKey("无")){
+                    goodSpecification=goodSpecificationMap.get("无");
+                    goodSpecificationMap.remove("无");
+                }
+                goodSpecification.setGoodListId(goodList.getId());
+                goodSpecification.setSpecification("无");
+                goodSpecification.setPrice(shopInfoo.getBigDecimal("salesPrice"));
+                goodSpecification.setVipPrice(shopInfoo.getBigDecimal("vipPrice"));
+                goodSpecification.setVipTwoPrice(shopInfoo.getBigDecimal("vipTwoPrice"));
+                goodSpecification.setVipThirdPrice(shopInfoo.getBigDecimal("vipThirdPrice"));
+                goodSpecification.setVipFouthPrice(shopInfoo.getBigDecimal("vipFouthPrice"));
+                goodSpecification.setCostPrice(shopInfoo.getBigDecimal("costPrice"));
+                goodSpecification.setSupplyPrice(shopInfoo.getBigDecimal("supplyPrice"));
+                goodSpecification.setRepertory(shopInfoo.getBigDecimal("repertory"));
+                goodSpecification.setSkuNo(shopInfoo.getString("skuNo"));
+                goodSpecification.setWeight(new BigDecimal(shopInfoo.getString("weight")));
+                goodSpecification.setBarCode(shopInfoo.getString("barCode"));
+                iGoodSpecificationService.saveOrUpdate(goodSpecification);
+            }else{
+                //有规格
+                JSONArray specificationsDecribes= JSON.parseArray(goodListDTO.getSpecificationsDecribes());
+                for (Object s :specificationsDecribes){
+                    JSONObject jsonObject=(JSONObject)s;
+                    GoodSpecification goodSpecification=new GoodSpecification();
+                    if(goodSpecificationMap.containsKey(jsonObject.getString("pName"))){
+                        goodSpecification=goodSpecificationMap.get(jsonObject.getString("pName"));
+                        goodSpecificationMap.remove(jsonObject.getString("pName"));
+                    }
+                    goodSpecification.setGoodListId(goodList.getId());
+                    goodSpecification.setSpecification(jsonObject.getString("pName"));
+                    goodSpecification.setPrice(jsonObject.getBigDecimal("salesPrice"));
+                    goodSpecification.setVipPrice(jsonObject.getBigDecimal("vipPrice"));
+                    goodSpecification.setVipTwoPrice(jsonObject.getBigDecimal("vipTwoPrice"));
+                    goodSpecification.setVipThirdPrice(jsonObject.getBigDecimal("vipThirdPrice"));
+                    goodSpecification.setVipFouthPrice(jsonObject.getBigDecimal("vipFouthPrice"));
+                    goodSpecification.setCostPrice(jsonObject.getBigDecimal("costPrice"));
+                    goodSpecification.setSupplyPrice(jsonObject.getBigDecimal("supplyPrice"));
+                    goodSpecification.setRepertory(jsonObject.getBigDecimal("repertory"));
+                    goodSpecification.setSkuNo(jsonObject.getString("skuNo"));
+                    goodSpecification.setWeight(new BigDecimal(jsonObject.getString("weight")));
+                    goodSpecification.setBarCode(jsonObject.getString("barCode"));
+                    goodSpecification.setSpecificationPicture(jsonObject.getString("imgUrl"));
+                    iGoodSpecificationService.saveOrUpdate(goodSpecification);
+                }
+            }
+            //删除规格信息
+            if(!goodSpecificationMap.isEmpty()){
+                goodSpecificationMap.entrySet().forEach(gs->{
+                    iGoodSpecificationService.removeById(gs.getValue().getId());
+
+                    /*处理其他活动的规格数据*/
+
+                });
+            }
+        }else{
+            return Result.error("未知错误，请联系管理员");
+        }
+        return Result.ok("编辑成功!");
     }
 
     /**
@@ -685,35 +1155,32 @@ public class GoodListController {
                     if (oConvertUtils.isEmpty(goodList)) {
                         result.error500("未找到对应实体");
                     } else {
-                        if (frameStatus.equals("1") && goodList.getRepertory().intValue() <= 0) {
-                            return result.error500(goodList.getGoodName() + "该商品库存为零，请补充库存后再上架");
-                        } else {
-                            goodList.setFrameExplain(frameExplain);
-                            goodList.setFrameStatus(frameStatus);
-                            goodListService.updateById(goodList);
-                            if (frameStatus.equals("0")) {
-                                //停用后修改专区商品商品
-                                QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
-                                queryWrapper.eq("del_flag", "0");
-                                queryWrapper.eq("good_list_id", goodList.getId());
-                                List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
-                                for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
-                                    mpg.setSrcStatus("0");
-                                    marketingPrefectureGoodService.updateById(mpg);
-                                }
-                            }
-                            if (frameStatus.equals("1")) {
-                                //停用后修改专区商品商品
-                                QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
-                                queryWrapper.eq("del_flag", "0");
-                                queryWrapper.eq("good_list_id", goodList.getId());
-                                List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
-                                for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
-                                    mpg.setSrcStatus("1");
-                                    marketingPrefectureGoodService.updateById(mpg);
-                                }
+                        goodList.setFrameExplain(frameExplain);
+                        goodList.setFrameStatus(frameStatus);
+                        goodListService.updateById(goodList);
+                        if (frameStatus.equals("0")) {
+                            //停用后修改专区商品商品
+                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
+                            queryWrapper.eq("del_flag", "0");
+                            queryWrapper.eq("good_list_id", goodList.getId());
+                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
+                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
+                                mpg.setSrcStatus("0");
+                                marketingPrefectureGoodService.updateById(mpg);
                             }
                         }
+                        if (frameStatus.equals("1")) {
+                            //停用后修改专区商品商品
+                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
+                            queryWrapper.eq("del_flag", "0");
+                            queryWrapper.eq("good_list_id", goodList.getId());
+                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
+                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
+                                mpg.setSrcStatus("1");
+                                marketingPrefectureGoodService.updateById(mpg);
+                            }
+                        }
+
                     }
                 }
                 result.success("修改成功!");
@@ -837,40 +1304,6 @@ public class GoodListController {
                                 marketingPrefectureGoodService.updateById(mpg);
                             }
                         }
-                    }
-                }
-                result.success("修改成功!");
-            } catch (Exception e) {
-                result.error500("修改失败！");
-            }
-        }
-        return result;
-    }
-
-    /**
-     * 修改:比价链接
-     *
-     * @param ids
-     * @return
-     */
-    @AutoLog(value = "商品管理-通过id查询")
-    @ApiOperation(value = "商品管理-通过id查询", notes = "商品管理-通过id查询")
-    @GetMapping(value = "/updateSkuUrl")
-    public Result<GoodList> updateSkuUrl(@RequestParam(name = "ids", required = true) String ids, @RequestParam(name = "skuUrl") String skuUrl) {
-        Result<GoodList> result = new Result<GoodList>();
-        if (StringUtils.isEmpty(ids)) {
-            result.error500("参数不识别！");
-        } else {
-            GoodList goodList;
-            try {
-                List<String> listid = Arrays.asList(ids.split(","));
-                for (String id : listid) {
-                    goodList = goodListService.getGoodListById(id);
-                    if (goodList == null) {
-                        result.error500("未找到对应实体");
-                    } else {
-                        goodList.setSkuUrl(skuUrl);
-                        goodListService.updateById(goodList);
                     }
                 }
                 result.success("修改成功!");
@@ -1071,7 +1504,7 @@ public class GoodListController {
             return result;
         }
 
-        if (org.apache.commons.lang3.StringUtils.isBlank(goodId)) {
+        if (StringUtils.isBlank(goodId)) {
             result.error500("goodId  商品id不能为空！！！   ");
             return result;
         }
@@ -1159,24 +1592,24 @@ public class GoodListController {
                     if (marketingPrefectureGood.getIsWelfare().equals("1")) {
                         goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice());
                     } else if (marketingPrefectureGood.getIsWelfare().equals("2")) {
-                        if (org.apache.commons.lang3.StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
-                            goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(org.apache.commons.lang3.StringUtils.trim(org.apache.commons.lang3.StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))));
+                        if (StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
+                            goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(StringUtils.trim(StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))));
 
                         } else {
                             goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(marketingPrefectureGood.getWelfareProportion()).divide(new BigDecimal(100))));
 
                         }
                     } else if (marketingPrefectureGood.getIsWelfare().equals("3")) {
-                        if (org.apache.commons.lang3.StringUtils.indexOf(goodlistMap.get("supplyPrice").toString(), "-") > -1) {
-                            if (org.apache.commons.lang3.StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
-                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(org.apache.commons.lang3.StringUtils.trim(org.apache.commons.lang3.StringUtils.substringBefore(goodlistMap.get("supplyPrice").toString(), "-")))).multiply(new BigDecimal(org.apache.commons.lang3.StringUtils.trim(org.apache.commons.lang3.StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
+                        if (StringUtils.indexOf(goodlistMap.get("supplyPrice").toString(), "-") > -1) {
+                            if (StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
+                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(StringUtils.trim(StringUtils.substringBefore(goodlistMap.get("supplyPrice").toString(), "-")))).multiply(new BigDecimal(StringUtils.trim(StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
                             } else {
-                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(org.apache.commons.lang3.StringUtils.trim(org.apache.commons.lang3.StringUtils.substringBefore(goodlistMap.get("supplyPrice").toString(), "-")))).multiply(new BigDecimal(marketingPrefectureGood.getWelfareProportion()).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
+                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(StringUtils.trim(StringUtils.substringBefore(goodlistMap.get("supplyPrice").toString(), "-")))).multiply(new BigDecimal(marketingPrefectureGood.getWelfareProportion()).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
                             }
                         } else {
 
-                            if (org.apache.commons.lang3.StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
-                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(goodlistMap.get("supplyPrice").toString())).multiply(new BigDecimal(org.apache.commons.lang3.StringUtils.trim(org.apache.commons.lang3.StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
+                            if (StringUtils.indexOf(marketingPrefectureGood.getWelfareProportion(), "-") > -1) {
+                                goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(goodlistMap.get("supplyPrice").toString())).multiply(new BigDecimal(StringUtils.trim(StringUtils.substringAfterLast(marketingPrefectureGood.getWelfareProportion(), "-"))).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
                             } else {
                                 goodlistMap.put("welfareProportionPrice", marketingPrefectureGood.getSmallPrefecturePrice().subtract(new BigDecimal(goodlistMap.get("supplyPrice").toString())).multiply(new BigDecimal(marketingPrefectureGood.getWelfareProportion()).divide(new BigDecimal(100))).setScale(2,RoundingMode.DOWN));
                             }
@@ -1196,8 +1629,8 @@ public class GoodListController {
                     //赠送福利金
                     goodlistMap.put("isGiveWelfare", marketingPrefectureGood.getIsGiveWelfare());
                     if (marketingPrefectureGood.getIsGiveWelfare().equals("1")) {
-                        if (org.apache.commons.lang3.StringUtils.indexOf(marketingPrefectureGood.getGiveWelfareProportion(), "-") > -1) {
-                            goodlistMap.put("giveWelfareProportion", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(org.apache.commons.lang3.StringUtils.substringAfterLast(marketingPrefectureGood.getGiveWelfareProportion(), "-")).divide(new BigDecimal(100))));
+                        if (StringUtils.indexOf(marketingPrefectureGood.getGiveWelfareProportion(), "-") > -1) {
+                            goodlistMap.put("giveWelfareProportion", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(StringUtils.substringAfterLast(marketingPrefectureGood.getGiveWelfareProportion(), "-")).divide(new BigDecimal(100))));
                         } else {
                             goodlistMap.put("giveWelfareProportion", marketingPrefectureGood.getSmallPrefecturePrice().multiply(new BigDecimal(marketingPrefectureGood.getGiveWelfareProportion()).divide(new BigDecimal(100))));
                         }

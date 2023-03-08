@@ -29,7 +29,7 @@ import java.util.Date;
 public class MarketingRushBaseSetting {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -81,62 +81,6 @@ public class MarketingRushBaseSetting {
 	@Excel(name = "分端显示；0：全部；1：小程序；2：app", width = 15)
     @ApiModelProperty(value = "分端显示；0：全部；1：小程序；2：app")
 	private String pointsDisplay;
-	/**开放时间段开始*/
-	@Excel(name = "开放时间段开始", width = 15)
-    @ApiModelProperty(value = "开放时间段开始")
-	private String dayStartTime;
-	/**开放时间段结束*/
-	@Excel(name = "开放时间段结束", width = 15)
-    @ApiModelProperty(value = "开放时间段结束")
-	private String dayEndTime;
-	/**首页广告图*/
-	@Excel(name = "首页广告图", width = 15)
-    @ApiModelProperty(value = "首页广告图")
-	private String indexAddress;
-	/**首页广告图大*/
-	@Excel(name = "首页广告图大", width = 15)
-    @ApiModelProperty(value = "首页广告图大")
-	private String indexBigAddress;
-	/**专区id*/
-	@Excel(name = "专区id", width = 15)
-    @ApiModelProperty(value = "专区id")
-	private String marketingPrefectureId;
-	/**专区分类id*/
-	@Excel(name = "专区分类id", width = 15)
-    @ApiModelProperty(value = "专区分类id")
-	private String marketingPrefectureTypeId;
-	/**抢购控制*/
-	@Excel(name = "抢购控制", width = 15)
-    @ApiModelProperty(value = "抢购控制")
-	private String rushController;
-	/**有效参与奖励；0：不限；1：仅失败；2：仅成功*/
-	@Excel(name = "有效参与奖励；0：不限；1：仅失败；2：仅成功", width = 15)
-    @ApiModelProperty(value = "有效参与奖励；0：不限；1：仅失败；2：仅成功")
-	private String groupRewards;
-	/**有效推荐奖励；0：不限；1：仅失败；2：仅成功*/
-	@Excel(name = "有效推荐奖励；0：不限；1：仅失败；2：仅成功", width = 15)
-    @ApiModelProperty(value = "有效推荐奖励；0：不限；1：仅失败；2：仅成功")
-	private String recommendGroupRewards;
-	/**有效团队奖励；0：不限；1：仅失败；2：仅成功*/
-	@Excel(name = "有效团队奖励；0：不限；1：仅失败；2：仅成功", width = 15)
-    @ApiModelProperty(value = "有效团队奖励；0：不限；1：仅失败；2：仅成功")
-	private String teamRewards;
-	/**团队长需抢购达限额；0：不限；1：限制*/
-	@Excel(name = "团队长需抢购达限额；0：不限；1：限制", width = 15)
-    @ApiModelProperty(value = "团队长需抢购达限额；0：不限；1：限制")
-	private String rewardLimitOne;
-	/**团队直推人员需抢购达限额；0：不限；1：限制*/
-	@Excel(name = "团队直推人员需抢购达限额；0：不限；1：限制", width = 15)
-    @ApiModelProperty(value = "团队直推人员需抢购达限额；0：不限；1：限制")
-	private String rewardLimitTwo;
-	/**团队奖励时间*/
-	@Excel(name = "团队奖励时间", width = 15)
-    @ApiModelProperty(value = "团队奖励时间")
-	private java.math.BigDecimal rewardTime;
-	/**规则*/
-	@Excel(name = "规则", width = 15)
-    @ApiModelProperty(value = "规则")
-	private Object ruleDescription;
 	/**状态；0：关闭；1：开启*/
 	@Excel(name = "状态；0：关闭；1：开启", width = 15)
     @ApiModelProperty(value = "状态；0：关闭；1：开启")

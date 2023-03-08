@@ -15,8 +15,10 @@ import org.jeecg.common.system.vo.DictModel;
 import org.jeecg.common.util.DateUtils;
 import org.jeecg.modules.good.entity.*;
 import org.jeecg.modules.good.service.*;
+import org.jeecg.modules.good.util.GoodUtils;
 import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.service.*;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureGoodService;
 import org.jeecg.modules.member.entity.MemberGoodsCollection;
 import org.jeecg.modules.member.entity.MemberGrade;
 import org.jeecg.modules.member.entity.MemberList;
@@ -37,7 +39,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -158,6 +159,14 @@ public class FrontGoodListController {
     private IMarketingLeagueGoodSpecificationService iMarketingLeagueGoodSpecificationService;
 
 
+    @Autowired
+    private GoodUtils goodUtils;
+
+
+    @Autowired
+    private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
+
+
 
     /**
      *  通过类型id查询商品列表
@@ -238,7 +247,8 @@ public class FrontGoodListController {
     @RequestMapping("findGoodListEveryGoodType")
     @ResponseBody
     public Result<IPage<Map<String,Object>>> findGoodListEveryGoodType(String goodTypeId, Integer isPlatform, @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
-                                                                       @RequestParam(name="pageSize", defaultValue="10") Integer pageSize){
+                                                                       @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+                                                                       @RequestAttribute(name = "memberId",required = false) String memberId){
         Result<IPage<Map<String,Object>>> result=new Result<>();
         //参数判断
         if(isPlatform==null){
@@ -292,7 +302,11 @@ public class FrontGoodListController {
                 if(StringUtils.contains(activeGoodsDisplayControl,"2")){
                     paramObjectMap.put("isViewgroup","0");
                 }
-                result.setResult(iGoodListService.findGoodListByGoodTypeAndlevel(page,paramObjectMap));
+                IPage<Map<String, Object>> iPage=iGoodListService.findGoodListByGoodTypeAndlevel(page,paramObjectMap);
+                iPage.getRecords().forEach(g->{
+                    iMemberGradeService.settingGoodListInfo(g,g.get("id").toString(),memberId);
+                });
+                result.setResult(iPage);
             }else{
                 result.error500("isPlatform  参数不正确请联系平台管理员！！！  ");
                 return  result;
@@ -304,7 +318,7 @@ public class FrontGoodListController {
     }
 
     /**
-     *  通过类型id查询商品列表
+     *  通过类型id查询商品列表（目前新的商品数据都采用这个接口）
      * @param goodTypeId
      * @param isPlatform
      * @param pattern   0:综合；1：销量；2：最新;3:价格降序；4：价格升序
@@ -314,23 +328,19 @@ public class FrontGoodListController {
      */
     @RequestMapping("findGoodListByGoodType")
     @ResponseBody
-    public Result<IPage<Map<String,Object>>> findGoodListByGoodType(String goodTypeId,
-                                                                    Integer isPlatform,
-                                                                    @RequestParam(required = false,defaultValue = "0") Integer pattern,
-                                                                    @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
-                                                                    @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-                                                                    @RequestAttribute(name = "memberId",required = false) String memberId){
-        Result<IPage<Map<String,Object>>> result=new Result<>();
+    public Result<?> findGoodListByGoodType(String goodTypeId,
+                                            Integer isPlatform,
+                                            String searchInfo,
+                                            @RequestParam(required = false,defaultValue = "") String goodBrandId,
+                                            @RequestParam(required = false,defaultValue = "") String goodMachineBrandId,
+                                            @RequestParam(required = false,defaultValue = "") String goodMachineModeId,
+                                            @RequestParam(required = false,defaultValue = "0") Integer pattern,
+                                            @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+                                            @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+                                            @RequestAttribute(name = "memberId",required = false) String memberId){
         //参数判断
         if(isPlatform==null){
-            result.error500("isPlatform  是否平台类型参数不能为空！！！   ");
-            return  result;
-        }
-
-        if(StringUtils.isBlank(goodTypeId)){
-            result.error500("goodTypeId  商品类型id不能为空！！！   ");
-
-            return  result;
+            return Result.error("isPlatform  是否平台类型参数不能为空！！！   ");
         }
 
         //组织查询参数
@@ -338,11 +348,20 @@ public class FrontGoodListController {
         Map<String,Object> paramObjectMap= Maps.newHashMap();
         paramObjectMap.put("goodTypeId",goodTypeId);
         paramObjectMap.put("pattern",pattern);
+        paramObjectMap.put("goodBrandId",goodBrandId);
+        paramObjectMap.put("goodMachineBrandId",goodMachineBrandId);
+        paramObjectMap.put("goodMachineModeId",goodMachineModeId);
+        if(StringUtils.isBlank(goodTypeId)){
+            paramObjectMap.put("searchInfo",searchInfo);
+        }else {
+            paramObjectMap.put("searchInfo","");
+        }
+
         paramObjectMap.put("memberId",StringUtils.defaultString(memberId,""));
 
         //查询店铺店铺商品列表
         if(isPlatform.intValue()==0){
-            result.setResult(iGoodStoreListService.findGoodListByGoodType(page,paramObjectMap));
+           return Result.ok(iGoodStoreListService.findGoodListByGoodType(page,paramObjectMap));
 
         }else
             //查询平台商品列表
@@ -367,13 +386,14 @@ public class FrontGoodListController {
                 if(StringUtils.contains(activeGoodsDisplayControl,"2")){
                     paramObjectMap.put("isViewgroup","0");
                 }
-                result.setResult(iGoodListService.findGoodListByGoodType(page,paramObjectMap));
+                IPage<Map<String, Object>> iPage= iGoodListService.findGoodListByGoodType(page,paramObjectMap);
+                iPage.getRecords().forEach(g->{
+                    iMemberGradeService.settingGoodListInfo(g,g.get("id").toString(),memberId);
+                });
+                return Result.ok(iPage);
             }else{
-                result.error500("isPlatform  参数不正确请联系平台管理员！！！  ");
-                return  result;
+                return Result.error("isPlatform  参数不正确请联系平台管理员！！！  ");
             }
-        result.success("查询商品列表成功");
-        return result;
     }
 
 
@@ -382,12 +402,14 @@ public class FrontGoodListController {
      *
      * @param goodId
      * @param isPlatform
+     * isTransition  兼容新旧更新的时候使用，后期考虑去掉
      * @return
      */
     @RequestMapping("findGoodListByGoodId")
     @ResponseBody
     public Result<Map<String,Object>> findGoodListByGoodId(String goodId,
                                                            Integer isPlatform,
+                                                           @RequestParam(name = "isTransition",defaultValue = "0",required = false)String isTransition,
                                                            @RequestParam(name = "marketingFreeGoodListId",defaultValue = "",required = false) String marketingFreeGoodListId,
                                                            @RequestParam(name = "marketingGroupGoodListId",defaultValue = "",required = false) String marketingGroupGoodListId,
                                                            @RequestParam(name = "marketingPrefectureId",defaultValue = "",required = false) String marketingPrefectureId,
@@ -395,6 +417,7 @@ public class FrontGoodListController {
                                                            @RequestParam(name = "marketingZoneGroupGoodId",defaultValue = "" ,required = false) String marketingZoneGroupGoodId,
                                                            @RequestParam(name = "marketingRushGoodId",defaultValue = "" ,required = false) String marketingRushGoodId,
                                                            @RequestParam(name = "marketingLeagueGoodListId",defaultValue = "" ,required = false) String marketingLeagueGoodListId,
+                                                           @RequestParam(name = "marketingStorePrefectureGoodId",defaultValue = "" ,required = false) String marketingStorePrefectureGoodId,
                                                            @RequestAttribute(name = "memberId",required = false) String memberId){
 
         Result<Map<String,Object>> result=new Result<>();
@@ -436,15 +459,48 @@ public class FrontGoodListController {
            }
             //获取商品信息
            Map<String,Object> goodStoreListMap= iGoodStoreListService.findGoodListByGoodId(goodId);
-            //获取最便宜的规格组合信息
-            QueryWrapper<GoodStoreSpecification> goodStoreSpecificationQueryWrapper=new QueryWrapper<>();
-            goodStoreSpecificationQueryWrapper.eq("good_store_list_id",goodId);
-            goodStoreSpecificationQueryWrapper.orderByAsc("price");
-            GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.list(goodStoreSpecificationQueryWrapper).get(0);;
+
+
+            /*兼容数据转换*/
+            if(isTransition.equals("1")){
+                if(goodStoreListMap.get("mainPicture")!=null){
+                    goodStoreListMap.put("mainPicture",goodUtils.imgTransition(goodStoreListMap.get("mainPicture").toString()));
+                }
+                if(goodStoreListMap.get("detailsGoods")!=null){
+                    goodStoreListMap.put("detailsGoods",goodUtils.imgTransition(goodStoreListMap.get("detailsGoods").toString()));
+                }
+
+               if(goodStoreListMap.get("specifications")==null){
+
+                    if(goodStoreListMap.get("specification")==null){
+                        goodStoreListMap.put("specifications",goodUtils.oldSpecificationToNew("",true));
+                    }else {
+                        goodStoreListMap.put("specifications",goodUtils.oldSpecificationToNew(goodStoreListMap.get("specification").toString(),true));
+                    }
+
+               }
+            }
+
+            GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getSmallGoodSpecification(goodId);
             goodStoreListMap.put("smallSpecification",goodStoreSpecification.getSpecification());
             goodStoreListMap.put("goodsSale",goodsSale);
             goodStoreListMap.put("isViewShopCar",1);
-            goodStoreListMap.put("isViewVipPrice","1");
+
+            /*店铺专区*/
+            if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
+                iMarketingStorePrefectureGoodService.settingGoodInfo(goodStoreListMap,marketingStorePrefectureGoodId);
+            }
+
+
+            /**
+             * 普通商品
+             */
+            if(StringUtils.isBlank(marketingStorePrefectureGoodId)){
+                //显示vip价格
+                goodStoreListMap.put("isViewVipPrice","1");
+                goodStoreListMap.put("isPrefectureGood","0");
+            }
+
             resultMap.put("goodinfo",goodStoreListMap);
             //获取商品最新的一条评论信息
             Page<Map<String,Object>> evaluatepage = new Page<Map<String,Object>>(1, 1);
@@ -455,12 +511,6 @@ public class FrontGoodListController {
             resultMap.put("evaluateInfo",iOrderEvaluateStoreService.findOrderEvaluateByGoodId(evaluatepage,paramevaluateMap).getRecords());
             //评价总数
             resultMap.put("evaluateCount",iOrderEvaluateStoreService.count(new  LambdaQueryWrapper<OrderEvaluateStore>().eq(OrderEvaluateStore::getGoodStoreListId,goodId).eq(OrderEvaluateStore::getStatus, "1")));
-            //获取同类型9条推荐商品列表信息
-            Page<Map<String,Object>> page = new Page<Map<String,Object>>(1, 9);
-            Map<String,Object> paramGoodsMap= Maps.newHashMap();
-            paramObjectMap.put("goodTypeId",goodStoreListMap.get("goodTypeId"));
-            paramObjectMap.put("pattern",3);
-            resultMap.put("recommendGoods",iGoodStoreListService.findGoodListByGoodType(page,paramGoodsMap).getRecords());
         }else
             //查询平台商品详情
             if(isPlatform.intValue()==1){
@@ -480,6 +530,25 @@ public class FrontGoodListController {
                 }
                 //获取商品信息
                 Map<String,Object> goodlistMap=iGoodListService.findGoodListByGoodId(goodId);
+
+                /*兼容数据转换*/
+                if(isTransition.equals("1")){
+                    if(goodlistMap.get("mainPicture")!=null){
+                        goodlistMap.put("mainPicture",goodUtils.imgTransition(goodlistMap.get("mainPicture").toString()));
+                    }
+                    if(goodlistMap.get("detailsGoods")!=null){
+                        goodlistMap.put("detailsGoods",goodUtils.imgTransition(goodlistMap.get("detailsGoods").toString()));
+                    }
+                    if(goodlistMap.get("specifications")==null){
+
+                        if(goodlistMap.get("specification")==null){
+                            goodlistMap.put("specifications",goodUtils.oldSpecificationToNew("",true));
+                        }else {
+                            goodlistMap.put("specifications",goodUtils.oldSpecificationToNew(goodlistMap.get("specification").toString(),true));
+                        }
+
+                    }
+                }
                 goodlistMap.put("isViewShopCar",1);
 
 
@@ -839,6 +908,9 @@ public class FrontGoodListController {
                     goodlistMap.put("smallSpecification", goodSpecification.getSpecification());
                     goodlistMap.put("smallPrice",goodSpecification.getPrice());
                     goodlistMap.put("smallVipPrice",goodSpecification.getVipPrice());
+
+                    /*根据会员等级显示*/
+                    iMemberGradeService.settingGoodInfo(goodlistMap,goodSpecification,memberId);
                 }
                 resultMap.put("goodinfo",goodlistMap);
                 //获取商品最新的一条评论信息
@@ -852,35 +924,15 @@ public class FrontGoodListController {
                 //评价总数
                 resultMap.put("evaluateCount",iOrderEvaluateService.count(new  LambdaQueryWrapper<OrderEvaluate>().eq(OrderEvaluate::getGoodListId,goodId).eq(OrderEvaluate::getStatus, "1")));
 
-                //获取同类型9条推荐商品列表信息
-                Page<Map<String,Object>> page = new Page<Map<String,Object>>(1, 9);
-                Map<String,Object> paramGoodsMap= Maps.newHashMap();
-                paramObjectMap.put("goodTypeId",goodlistMap.get("goodTypeId"));
-                paramObjectMap.put("pattern",3);
-                //活动商品显示控制，加入活动后仅在活动中显示(多选)；0：专区；1：免单；2：中奖拼团
-                String activeGoodsDisplayControl = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "active_goods_display_control");
-                paramObjectMap.put("isViewPrefecture","1");
-                paramObjectMap.put("isViewfree","1");
-                paramObjectMap.put("isViewgroup","1");
-                if(StringUtils.contains(activeGoodsDisplayControl,"0")){
-                    paramObjectMap.put("isViewPrefecture","0");
-                }
-                if(StringUtils.contains(activeGoodsDisplayControl,"1")){
-                    paramObjectMap.put("isViewfree","0");
-                }
-                if(StringUtils.contains(activeGoodsDisplayControl,"2")){
-                    paramObjectMap.put("isViewgroup","0");
-                }
-                resultMap.put("recommendGoods",iGoodListService.findGoodListByGoodType(page,paramGoodsMap).getRecords());
             }else{
                 result.error500("isPlatform  参数不正确请联系平台管理员！！！  ");
                 return  result;
             }
 
         if(StringUtils.isNotBlank(memberId)){
-            QueryWrapper<MemberShoppingCart> memberShoppingCartQueryWrapper=new QueryWrapper<>();
-            memberShoppingCartQueryWrapper.eq("member_list_id",memberId);
-            resultMap.put("carGoods",iMemberShoppingCartService.count(memberShoppingCartQueryWrapper));
+            resultMap.put("carGoods",iMemberShoppingCartService.count(new LambdaQueryWrapper<MemberShoppingCart>()
+                    .eq(MemberShoppingCart::getMemberListId,memberId)
+                    .eq(MemberShoppingCart::getIsView,"1")));
         }else{
             resultMap.put("carGoods","0");
         }
@@ -986,6 +1038,7 @@ public class FrontGoodListController {
                                                              @RequestParam(value = "marketingZoneGroupGoodId",defaultValue = "",required = false) String marketingZoneGroupGoodId,
                                                              @RequestParam(name = "marketingRushGoodId",defaultValue = "" ,required = false) String marketingRushGoodId,
                                                              @RequestParam(name = "marketingLeagueGoodListId",defaultValue = "" ,required = false) String marketingLeagueGoodListId,
+                                                             @RequestParam(name = "marketingStorePrefectureGoodId",defaultValue = "" ,required = false) String marketingStorePrefectureGoodId,
                                                              @RequestAttribute(value = "memberId",required = false) String memberId){
         Result<Map<String,Object>>result=new Result<>();
         Map<String,Object>paramMap=Maps.newHashMap();
@@ -1021,9 +1074,16 @@ public class FrontGoodListController {
                 result.error500("找不到此规格的商品！！！");
                 return result;
             }
-            if(goodStoreSpecification.getSpecificationPicture()==null){
-                GoodStoreList goodStoreList=iGoodStoreListService.getById(goodId);
-                paramMap.put("specificationPicture",JSON.parseObject(goodStoreList.getMainPicture()).get("0"));
+            GoodStoreList goodStoreList=iGoodStoreListService.getById(goodId);
+            if(StringUtils.isBlank(goodStoreSpecification.getSpecificationPicture())){
+                if(goodStoreList.getMainPicture()!=null){
+                    goodStoreList.setMainPicture(goodUtils.imgTransition(goodStoreList.getMainPicture()));
+                }
+                if(JSON.parseArray(goodStoreList.getMainPicture()).size()>0) {
+                    paramMap.put("specificationPicture", JSON.parseArray(goodStoreList.getMainPicture()).get(0));
+                }else{
+                    paramMap.put("specificationPicture", "");
+                }
             }else{
                 paramMap.put("specificationPicture",goodStoreSpecification.getSpecificationPicture());
             }
@@ -1038,6 +1098,11 @@ public class FrontGoodListController {
             }else{
                 paramMap.put("price",goodStoreSpecification.getPrice());
             }
+
+            /*店铺专区*/
+            if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
+                iMarketingStorePrefectureGoodService.settingGoodSpecification(paramMap,marketingStorePrefectureGoodId,specification);
+            }
         }else
         //查询平台商品
             if(isPlatform.intValue()==1){
@@ -1051,9 +1116,12 @@ public class FrontGoodListController {
                     return result;
                 }
                 GoodList goodList=iGoodListService.getById(goodId);
-                if(goodSpecification.getSpecificationPicture()==null){
-                    if(goodList.getMainPicture()!=null) {
-                        paramMap.put("specificationPicture", JSON.parseObject(goodList.getMainPicture()).get(0));
+                if(StringUtils.isBlank(goodSpecification.getSpecificationPicture())){
+                    if(goodList.getMainPicture()!=null){
+                        goodList.setMainPicture(goodUtils.imgTransition(goodList.getMainPicture()));
+                    }
+                    if(JSON.parseArray(goodList.getMainPicture()).size()>0) {
+                        paramMap.put("specificationPicture", JSON.parseArray(goodList.getMainPicture()).get(0));
                     }else{
                         paramMap.put("specificationPicture", "");
                     }
@@ -1067,8 +1135,9 @@ public class FrontGoodListController {
                     log.info("商品是普通商品，规格id:"+goodSpecification.getId());
                     if (StringUtils.isNotBlank(memberId)) {
                         MemberList memberList = iMemberListService.getById(memberId);
-                        if (memberList.getMemberType().equals("1") && goodList.getGoodForm().equals("0")) {
+                        if (memberList.getMemberType().equals("1")) {
                             paramMap.put("price", goodSpecification.getVipPrice());
+                            iMemberGradeService.settingGoodSpecificationInfo(paramMap,goodSpecification,memberId);
                         } else {
                             paramMap.put("price", goodSpecification.getPrice().toString());
                         }
@@ -1163,6 +1232,7 @@ public class FrontGoodListController {
      */
     @RequestMapping("getEveryWeekPreferential")
     @ResponseBody
+    @Deprecated
     public Result<Map<String,Object>> getEveryWeekPreferential(String price,
                                                                @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
                                                                @RequestParam(name="pageSize", defaultValue="10") Integer pageSize){
@@ -1192,27 +1262,6 @@ public class FrontGoodListController {
         result.success("每周特惠查询成功");
       return result;
     }
-
-    /**
-     * 获取上周时间
-     * @return
-     */
-    public String getLastTimeInterval() {
-        Calendar calendar1 = Calendar.getInstance();
-        Calendar calendar2 = Calendar.getInstance();
-        int dayOfWeek = calendar1.get(Calendar.DAY_OF_WEEK) - 1;
-        int offset1 = 1 - dayOfWeek;
-        int offset2 = 7 - dayOfWeek;
-        calendar1.add(Calendar.DATE, offset1 - 7);
-        calendar2.add(Calendar.DATE, offset2 - 7);
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
-        // System.out.println(sdf.format(calendar1.getTime()));// last Monday
-        String lastBeginDate = df.format(calendar1.getTime());
-        // System.out.println(sdf.format(calendar2.getTime()));// last Sunday
-        String lastEndDate = df.format(calendar2.getTime());
-        return lastBeginDate + "," + lastEndDate;
-    }
-
     /**
      * 每日上新的6个商品轮播
      * @param isPlatform
@@ -1220,6 +1269,7 @@ public class FrontGoodListController {
      */
     @RequestMapping("getNewProduct")
     @ResponseBody
+    @Deprecated
     public  Result<Map<String,Object>> getNewProduct(String isPlatform){
         Result<Map<String,Object>>result=new Result<>();
         List<Map<String,Object>> objectList = Lists.newArrayList();

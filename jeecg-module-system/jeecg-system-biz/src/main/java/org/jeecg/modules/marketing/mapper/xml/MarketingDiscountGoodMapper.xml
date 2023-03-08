@@ -15,11 +15,11 @@
             gtTree.`name`
             ) AS typeName,
             gl.`market_price`,
-            gl.`price`,
-            gl.`cost_price`,
-            gl.`vip_price`,
-            gl.supply_price,
-            gl.`repertory`,
+<!--            gl.`price`,-->
+<!--            gl.`cost_price`,-->
+<!--            gl.`vip_price`,-->
+<!--            gl.supply_price,-->
+<!--            gl.`repertory`,-->
             gl.`create_time`,
             pm.`name`
             FROM
@@ -34,8 +34,8 @@
             ON gtTwo.`parent_id` = gtOne.`id`
             LEFT JOIN provider_manage pm
             ON pm.`sys_user_id` = gl.`sys_user_id`
-        WHERE mdg.`del_flag` = 0
-          AND gl.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
+          AND gl.`del_flag` = '0'
           AND mdg.`marketing_discount_id` = #{marketingDiscountId}
     </select>
 
@@ -47,10 +47,10 @@
               gsl.`good_name`,
               CONCAT(gstOne.`name`, '-', gstTwo.`name`) AS typeName,
               gsl.`market_price`,
-              gsl.`price`,
-              gsl.`cost_price`,
-              gsl.`vip_price`,
-              gsl.`repertory`,
+<!--              gsl.`price`,-->
+<!--              gsl.`cost_price`,-->
+<!--              gsl.`vip_price`,-->
+<!--              gsl.`repertory`,-->
               gsl.create_time
               FROM
               marketing_discount_good mdg
@@ -60,7 +60,7 @@
                 ON gsl.`good_store_type_id` = gstTwo.`id`
               LEFT JOIN good_store_type gstOne
                 ON gstTwo.`parent_id` = gstOne.`id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
           AND mdg.`marketing_discount_id` = #{marketingDiscountId}
     </select>
     <select id="findMarketingDiscountGoodById" resultType="map">
@@ -71,7 +71,7 @@
           marketing_discount_good mdg
           LEFT JOIN good_list gl
             ON mdg.`good_id` = gl.`id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
           AND mdg.`is_platform` = 1
           AND mdg.marketing_discount_id = #{id}
         ORDER BY mdg.`create_time` DESC
@@ -85,7 +85,7 @@
           marketing_discount_good mdg
           LEFT JOIN good_store_list gsl
             ON mdg.`good_id` = gsl.`id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
           AND mdg.`is_platform` = 0
           AND mdg.marketing_discount_id = #{id}
         ORDER BY mdg.`create_time` DESC
@@ -96,12 +96,12 @@
           gl.`id`,
           gl.`main_picture` AS mainPicture,
           gl.`good_name` AS goodName,
-          gl.`price`
+          gl.`market_price`
         FROM
           marketing_discount_good mdg
           LEFT JOIN good_list gl
             ON mdg.`good_id` = gl.`id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
           AND mdg.`is_platform` = 1
           AND mdg.`marketing_discount_id` = #{id}
         ORDER BY mdg.`create_time` DESC
@@ -111,12 +111,12 @@
           gsl.`id`,
           gsl.`main_picture` AS mainPicture,
           gsl.`good_name` AS goodName,
-          gsl.`price`
+          gsl.`market_price`
         FROM
           marketing_discount_good mdg
           LEFT JOIN good_store_list gsl
             ON mdg.`good_id` = gsl.`id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
           AND mdg.`is_platform` = 0
           AND mdg.`marketing_discount_id` = #{id}
         ORDER BY mdg.`create_time` DESC

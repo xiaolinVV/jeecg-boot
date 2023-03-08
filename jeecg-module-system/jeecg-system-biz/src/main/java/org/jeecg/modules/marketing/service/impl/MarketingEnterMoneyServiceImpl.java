@@ -61,7 +61,6 @@ public class MarketingEnterMoneyServiceImpl extends ServiceImpl<MarketingEnterMo
             memberDesignationGroupList.forEach(mdgl->{
 
                 List<MemberDesignation> memberDesignationList = iMemberDesignationService.list(new LambdaQueryWrapper<MemberDesignation>()
-                        .eq(MemberDesignation::getDelFlag, "0")
                         .eq(MemberDesignation::getMemberDesignationGroupId,mdgl.getId())
                         .eq(MemberDesignation::getStatus, "1")
                         .gt(MemberDesignation::getSort,"0")
@@ -80,7 +79,6 @@ public class MarketingEnterMoneyServiceImpl extends ServiceImpl<MarketingEnterMo
                             BigDecimal divide = mdl.getBalance().divide(memberCount,2, RoundingMode.DOWN);
 
                             MarketingEnterMoney marketingEnterMoney = new MarketingEnterMoney()
-                                    .setDelFlag("0")
                                     .setMemberDesignationId(mdl.getId())
                                     .setTradeType("0")
                                     .setEnterMoney(mdl.getBalance())
@@ -95,7 +93,11 @@ public class MarketingEnterMoneyServiceImpl extends ServiceImpl<MarketingEnterMo
                             iMemberDesignationService.saveOrUpdate(mdl);
                             memberDesignationMemberLists.forEach(mdld->{
                                 log.info(divide.multiply(mdld.getBuyCount())+":"+mdld.getMemberListId());
-                                iMemberListService.addBlance(mdld.getMemberListId(),divide.multiply(mdld.getBuyCount()),marketingEnterMoney.getOrderNo(),"8");
+                                int i=mdld.getBuyCount().intValue();
+                                while (i>0) {
+                                    iMemberListService.addBlance(mdld.getMemberListId(), divide, marketingEnterMoney.getOrderNo(), "8");
+                                    i--;
+                                }
                             });
                         }
                     }

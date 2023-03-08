@@ -71,7 +71,7 @@ public class BackStoreRechargeRecordController {
         queryWrapper.eq("pay_type","4");
         queryWrapper.eq("store_manage_id",storeManage.getId());
         queryWrapper.orderByDesc("create_time","amount");
-        IPage<Map<String, Object>> page=new Page<Map<String, Object>>(pageNo,pageSize);
+        Page<Map<String, Object>> page = new Page<Map<String, Object>>(pageNo, pageSize);
         IPage<Map<String, Object>> pageList = storeRechargeRecordService.pageMaps(page, queryWrapper);
         objectMap.put("storeRechargeRecordList",pageList);
         objectMap.put("sysUserId",sysUserId);

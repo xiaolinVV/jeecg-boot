@@ -11,7 +11,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -34,7 +33,7 @@ import java.math.BigDecimal;
 public class GoodList {
 
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
 	@ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -96,31 +95,6 @@ public class GoodList {
 	@Excel(name = "商品别名（默认与商品名称相同）", width = 15)
 	@ApiModelProperty(value = "商品别名（默认与商品名称相同）")
 	private String nickName;
-	/**商品销售价格*/
-	@Excel(name = "商品销售价格", width = 15)
-	@ApiModelProperty(value = "商品销售价格")
-	//@NotEmpty(message = "商品销售价格不能为空")
-	private String price;
-	/**商品成本价*/
-	@Excel(name = "商品成本价", width = 15)
-	@ApiModelProperty(value = "商品成本价")
-	//@NotEmpty(message = "商品成本价不能为空")
-	private String costPrice;
-	/**商品供货价*/
-	@Excel(name = "商品供货价", width = 15)
-	@ApiModelProperty(value = "商品供货价")
-	//@NotEmpty(message = "商品供货价不能为空")
-	private String supplyPrice;
-	/**商品会员价，按照利润比例，根据数据字段设置的比例自动填入*/
-	@Excel(name = "商品会员价，按照利润比例，根据数据字段设置的比例自动填入", width = 15)
-	@ApiModelProperty(value = "商品会员价，按照利润比例，根据数据字段设置的比例自动填入")
-	//@NotEmpty(message = "商品会员价不能为空")
-	private String vipPrice;
-	/**参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动*/
-	@Excel(name = "参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动", width = 15,dicCode = "activities_type")
-	@ApiModelProperty(value = "参与活动;对应数据字典字段的活动类型数据，为空代表没有参与活动")
-	@Dict(dicCode = "activities_type")
-	private String activitiesType;
 	/**商品市场价*/
 	@Excel(name = "商品市场价", width = 15)
 	@ApiModelProperty(value = "商品市场价")
@@ -144,10 +118,6 @@ public class GoodList {
 	@Excel(name = "商品详情图多张以json的形式存储", width = 15)
 	@ApiModelProperty(value = "商品详情图多张以json的形式存储")
 	private String detailsGoods;
-	/**库存*/
-	@Excel(name = "库存", width = 15)
-	@ApiModelProperty(value = "库存")
-	private BigDecimal repertory;
 	/**上下架；0：下架；1：上架*/
 	@Excel(name = "上下架；0：下架；1：上架", width = 15)
 	@ApiModelProperty(value = "上下架；0：下架；1：上架")
@@ -200,58 +170,17 @@ public class GoodList {
 	@DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
 	@ApiModelProperty(value = "删除时间")
 	private java.util.Date delTime;
-	/**商品形态；0：常规商品；1：特价商品*/
-	@Excel(name = "商品形态；0：常规商品；1：特价商品", width = 15)
-	@ApiModelProperty(value = "商品形态；0：常规商品；1：特价商品")
-	//@NotEmpty(message = "商品形态不能为空")
-	private String goodForm;
-	/**有无销售价区间；0：无；1：有*/
-	@Excel(name = "有无销售价区间；0：无；1：有", width = 15)
-	@ApiModelProperty(value = "有无销售价区间；0：无；1：有")
-	private String priceRange;
-	/**最低商品价格；*/
-	@Excel(name = "最低商品价格；", width = 15)
-	@ApiModelProperty(value = "最低商品价格")
-	private String smallPrice;
-    /**最低vip价格；*/
-    @Excel(name = "最低vip价格；", width = 15)
-    @ApiModelProperty(value = "最低vip价格")
-    private String smallVipPrice;
-    /**最低成本价；*/
-    @Excel(name = "最低成本价；", width = 15)
-    @ApiModelProperty(value = "最低成本价")
-    private String smallCostPrice;
-	/**最低供货价；*/
-	@Excel(name = "最低供货价；", width = 15)
-	@ApiModelProperty(value = "最低供货价")
-	private String smallSupplyPrice;
-	/**活动价；*/
-	@Excel(name = "活动价；", width = 15)
-	@ApiModelProperty(value = "活动价")
-	private String activityPrice;
-	/**
-	 * 销量
-	 */
-	private BigDecimal salesVolume;
-
-	/**来源分类:1:供应链自营产品 2:京东商品 3.普通商品*/
-	@Excel(name = "来源分类:1:供应链自营产品 2:京东商品 3.普通商品", width = 15)
-	@ApiModelProperty(value = "来源分类:1:供应链自营产品 2:京东商品 3.普通商品")
-	private String sourceType;
 
 	/**来源:1:京东供应链*/
 	@Excel(name = "来源:1:京东供应链", width = 15)
 	@ApiModelProperty(value = "来源:1:京东供应链")
 	private String source;
-	/**sku对比价url链接*/
-	@Excel(name = "sku对比价url链接", width = 15)
-	@ApiModelProperty(value = "sku对比价url链接")
-	private String skuUrl;
 
-	/**更新版本号*/
-	@Excel(name = "更新版本号", width = 15)
-	@ApiModelProperty(value = "更新版本号")
-	private BigDecimal updateVersion;
+
+	/**来源分类:1:供应链自营产品 2:京东商品 3.普通商品*/
+	@Excel(name = "来源分类:1:供应链自营产品 2:京东商品 3.普通商品", width = 15)
+	@ApiModelProperty(value = "来源分类:1:供应链自营产品 2:京东商品 3.普通商品")
+	private String sourceType;
 
 	/**
 	 * 分端显示；0：全部；1：小程序；2：app
@@ -261,4 +190,22 @@ public class GoodList {
 	 * 排序
 	 */
 	private BigDecimal sort;
+
+
+	private String specifications;
+
+
+	private String goodBrandId;
+
+
+	private String goodMachineBrandIds;
+
+	private String goodMachineModelIds;
+
+	private String goodMachineBrandNames;
+
+	private String goodMachineModelNames;
+
+	private String searchInfo;
+
 }

@@ -31,8 +31,8 @@
         member_list ml
         LEFT JOIN member_welfare_payments mwp
         ON ml.`id` = mwp.`member_list_id`
-        WHERE ml.`del_flag` = 0
-        AND mwp.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+        AND mwp.`del_flag` = '0'
         <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.serialNumber != null and memberWelfarePaymentsVO.serialNumber != ''">
             AND mwp.serial_number LIKE concat('%',#{memberWelfarePaymentsVO.serialNumber},'%')
         </if>
@@ -83,7 +83,7 @@
         ON mwp.`member_list_id` = ml.`id`
         WHERE mwp.`we_type` = 0
         AND mwp.trade_type = 6
-        AND mwp.`del_flag` = 0
+        AND mwp.`del_flag` = '0'
         <if test="memberWelfarePaymentsVO!=null and memberWelfarePaymentsVO.serialNumber!=null and memberWelfarePaymentsVO.serialNumber!=''">
             AND mwp.serial_number LIKE concat('%',#{memberWelfarePaymentsVO.serialNumber},'%')
         </if>
@@ -148,14 +148,14 @@
         mwps.`nick_name`
         FROM
         marketing_welfare_payments_setting mwps
-        WHERE mwps.`del_flag` = 0
+        WHERE mwps.`del_flag` = '0'
         LIMIT 1 ),
             mwp.`welfare_payments`
           ) AS welfarePayments,
         mwp.we_type AS weType
         FROM
           member_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
           AND mwp.`is_freeze` = 0
           AND mwp.`member_list_id` = #{paramObjectMap.memberId}
         <if test="paramObjectMap.pattern != -1">
@@ -185,7 +185,7 @@
           mwp.`we_type` AS weType
         FROM
           member_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
         AND mwp.member_list_id = #{paramObjectMap.memberId}
         <if test="paramObjectMap.pattern != 0">
             AND mwp.is_freeze = #{paramObjectMap.pattern}
@@ -197,7 +197,7 @@
           *
         FROM
           member_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
           AND mwp.`trade_type` = 5
           AND mwp.`go_and_come` LIKE CONCAT('%',mwp.`operator`,'%')
           AND mwp.`create_time` > #{map.time}

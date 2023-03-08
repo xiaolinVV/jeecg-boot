@@ -16,8 +16,6 @@ import java.util.List;
  */
 @Service
 public class GoodStoreUserTypeServiceImpl extends ServiceImpl<GoodStoreUserTypeMapper, GoodStoreUserType> implements IGoodStoreUserTypeService {
-
-  @Override
   public List<GoodStoreUserType> getGoodStoreUserType( String sysUserId){
       return baseMapper.getGoodStoreUserType(sysUserId);
   };

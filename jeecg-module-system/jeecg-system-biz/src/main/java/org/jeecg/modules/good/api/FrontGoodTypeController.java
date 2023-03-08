@@ -4,7 +4,6 @@ package org.jeecg.modules.good.api;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.good.entity.GoodList;
@@ -40,46 +39,14 @@ public class FrontGoodTypeController {
     private IGoodListService iGoodListService;
 
     /**
-     * 获取自选商品分类
-     *
-     * @return
-     */
-    @RequestMapping("findOpentionGoodTypes")
-    @ResponseBody
-    public Result<List<Map<String,Object>>> findOpentionGoodTypes(){
-        Result<List<Map<String,Object>>> result=new Result<>();
-
-        result.setResult(iGoodTypeService.findTopGoodType());
-
-        result.success("查询商品类型数据成功");
-        return  result;
-    }
-
-
-    /**
      * 获取第一级分类id和名称
      * @return
      */
     @RequestMapping("findTopGoodType")
     @ResponseBody
-    public Result<List<Map<String,Object>>> findTopGoodType(){
-        Result<List<Map<String,Object>>> result=new Result<>();
-
-        List<Map<String,Object>> mapList= Lists.newArrayList();
-            //加上推荐分类
-            Map<String, Object> objectMap = Maps.newHashMap();
-            objectMap.put("name", "推荐分类");
-            objectMap.put("isPlatform", "0");
-            objectMap.put("id", "");
-            mapList.add(objectMap);
-
+    public Result<?> findTopGoodType(){
         //加入平台商品
-        CollectionUtils.addAll(mapList,  iGoodTypeService.findTopGoodType().iterator());
-
-        result.setResult(mapList);
-
-        result.success("查询商品类型数据成功");
-        return  result;
+       return Result.ok(iGoodTypeService.findTopGoodType());
     }
 
 
@@ -135,6 +102,7 @@ public class FrontGoodTypeController {
      */
     @RequestMapping("classificationOfRecommendation")
     @ResponseBody
+    @Deprecated
     public Result<Map<String,Object>>  classificationOfRecommendation(@RequestHeader(defaultValue = "") String sysUserId){
          Result<Map<String,Object>> result=new Result<>();
         Map<String,Object> objectMap = Maps.newHashMap();
@@ -204,6 +172,7 @@ public class FrontGoodTypeController {
     //人气推荐
     @RequestMapping("getPopularityGoodStoreType")
     @ResponseBody
+    @Deprecated
     public Result<Map<String,Object>>  getPopularityGoodStoreType(@RequestHeader(defaultValue = "") String sysUserId){
         Result<Map<String,Object>> result=new Result<>();
         Map<String,Object> objectMap = Maps.newHashMap();
@@ -240,6 +209,7 @@ public class FrontGoodTypeController {
     //热门分类
     @RequestMapping("getHotgoodStoreType")
     @ResponseBody
+    @Deprecated
     public  Result<Map<String,Object>> getHotgoodStoreType(@RequestHeader(defaultValue = "") String sysUserId) {
         Result<Map<String, Object>> result = new Result<>();
         Map<String, Object> objectMap = Maps.newHashMap();
@@ -277,6 +247,7 @@ public class FrontGoodTypeController {
      */
     @RequestMapping("getEverydayGoodList")
     @ResponseBody
+    @Deprecated
   public Result<Map<String,Object>> getEverydayGoodList(@RequestHeader(defaultValue = "") String sysUserId){
       Result<Map<String,Object>> result=new Result<>();
        /* if(StringUtils.isBlank(sysUserId)){

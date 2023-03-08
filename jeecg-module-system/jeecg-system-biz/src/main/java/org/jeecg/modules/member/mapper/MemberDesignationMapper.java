@@ -26,4 +26,14 @@ public interface MemberDesignationMapper extends BaseMapper<MemberDesignation> {
     List<Map<String,Object>> getMemberDesignationListBySort(@Param("sort") String sort,@Param("memberDesignationGroupId") String memberDesignationGroupId);
 
     MemberDesignationVO getMemberDesignationById(@Param("memberDesignationId") String memberDesignationId);
+
+
+    /**
+     * 称号选择
+     *
+     * @param page
+     * @param memberDesignationGroupId
+     * @return
+     */
+    IPage<Map<String,Object>> getSelectDesignation(Page<Map<String,Object>> page,@Param("memberDesignationGroupId") String memberDesignationGroupId);
 }

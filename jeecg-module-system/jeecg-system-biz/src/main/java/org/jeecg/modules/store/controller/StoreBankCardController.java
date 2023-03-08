@@ -21,7 +21,6 @@ import org.jeecg.modules.store.entity.StoreBankCard;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.service.IStoreBankCardService;
 import org.jeecg.modules.store.service.IStoreManageService;
-import org.jeecg.modules.store.vo.StoreBankCardVO;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -66,6 +65,19 @@ public class StoreBankCardController {
     @Autowired
     private RedisUtil redisUtil;
 
+
+    /**
+     * 获取银行卡信息
+     *
+     * @param storeManageId
+     * @return
+     */
+    @GetMapping("getStoreBankCardByStoreManageId")
+    public Result<?> getStoreBankCardByStoreManageId(String storeManageId){
+        return Result.ok(storeBankCardService.getStoreBankCardByStoreManageId(storeManageId,"0"));
+    }
+
+
     /**
      * 分页列表查询
      *
@@ -78,18 +90,13 @@ public class StoreBankCardController {
     @AutoLog(value = "店铺银行卡-分页列表查询")
     @ApiOperation(value = "店铺银行卡-分页列表查询", notes = "店铺银行卡-分页列表查询")
     @GetMapping(value = "/list")
-    public Result<IPage<StoreBankCardVO>> queryPageList(StoreBankCardDTO storeBankCardDTO,
+    public Result<IPage<StoreBankCard>> queryPageList(StoreBankCardDTO storeBankCardDTO,
                                                         @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                         HttpServletRequest req) {
-        Result<IPage<StoreBankCardVO>> result = new Result<IPage<StoreBankCardVO>>();
-        Page<StoreBankCardVO> page = new Page<StoreBankCardVO>(pageNo, pageSize);
-        IPage<StoreBankCardVO> pageList = storeBankCardService.queryPageList(page, storeBankCardDTO);
-        pageList.getRecords().forEach(pl->{
-            if (StringUtils.isNotBlank(pl.getUpdateCertificate())){
-                pl.setUpdateCertificateOne((String) JSON.parseObject(pl.getUpdateCertificate()).get("0"));
-            }
-        });
+        Result<IPage<StoreBankCard>> result = new Result<IPage<StoreBankCard>>();
+        Page<StoreBankCard> page = new Page<StoreBankCard>(pageNo, pageSize);
+        IPage<StoreBankCard> pageList = storeBankCardService.queryPageList(page, storeBankCardDTO);
         result.setSuccess(true);
         result.setResult(pageList);
         return result;

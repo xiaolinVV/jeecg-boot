@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -73,15 +72,13 @@ public class FrontMarketingDiscountController {
                                                                                 String name,
                                                                                 @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
                                                                                 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-                                                                                HttpServletRequest request){
+                                                                                @RequestAttribute("memberId") String memberId){
         Result<IPage<Map<String,Object>>> result=new Result<>();
 
         if(StringUtils.isBlank(isThreshold)){
             result.error500("isThreshold不能为空！！！");
             return result;
         }
-        //用户登录判断
-        Object memberId=request.getAttribute("memberId");
         //组织查询参数
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
         String frontLogo = iSysFrontSettingService.getOne(new LambdaUpdateWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
@@ -93,7 +90,7 @@ public class FrontMarketingDiscountController {
             }else {
                 md.put("logoAddr", JSON.parseObject(frontLogo).get("0"));
             }
-            if(memberId!=null) {
+            if(StringUtils.isNotBlank(memberId)) {
                 QueryWrapper<MarketingDiscountCoupon> marketingDiscountCouponQueryWrapper = new QueryWrapper<>();
                 marketingDiscountCouponQueryWrapper.eq("marketing_discount_id", md.get("id"));
                 marketingDiscountCouponQueryWrapper.eq("member_list_id", memberId);
@@ -117,6 +114,84 @@ public class FrontMarketingDiscountController {
         return result;
     }
 
+
+
+    /**
+     * 根据商品id查询全部优惠券列表
+     * @param goodId
+     * @param isPlatform
+     * @return
+     */
+    @RequestMapping("findMarketingDiscountByGoodIdAll")
+    @ResponseBody
+    @Deprecated
+    public Result<?> findMarketingDiscountByGoodIdAll(String goodId,
+                                                   Integer isPlatform,
+                                                   @RequestAttribute(name = "memberId",required = false) String memberId){
+        Result<List<Map<String,Object>>> result=new Result<>();
+        //参数校验
+        //判断数据不为空
+        if(isPlatform==null){
+            result.error500("isPlatform是否平台类型参数不能为空！！！");
+            return result;
+        }
+
+        if(StringUtils.isBlank(goodId)){
+            result.error500("goodId商品id不能为空！！！");
+            return result;
+        }
+        //组织查询参数
+        Map<String,Object> paramMap= Maps.newHashMap();
+        paramMap.put("goodId",goodId);
+        paramMap.put("isPlatform",isPlatform);
+        String frontLogo = iSysFrontSettingService.getOne(new LambdaUpdateWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
+        List<Map<String,Object>> marketingDiscount=iMarketingDiscountService.findMarketingDiscountByGoodId(paramMap);
+        for (Map<String,Object> md:marketingDiscount) {
+            if(md.get("logoAddr")!=null) {
+                md.put("logoAddr",JSON.parseObject((String) md.get("logoAddr")).get("0"));
+            }else {
+                md.put("logoAddr", JSON.parseObject(frontLogo).get("0"));
+            }
+            if(StringUtils.isNotBlank(memberId)) {
+                QueryWrapper<MarketingDiscountCoupon> marketingDiscountCouponQueryWrapper = new QueryWrapper<>();
+                marketingDiscountCouponQueryWrapper.eq("marketing_discount_id", md.get("id"));
+                marketingDiscountCouponQueryWrapper.eq("member_list_id", memberId);
+                marketingDiscountCouponQueryWrapper.in("status", "0", "1");
+                if (iMarketingDiscountCouponService.count(marketingDiscountCouponQueryWrapper) > 0) {
+                    md.put("ifGet", "1");
+                    MarketingDiscountCoupon marketingDiscountCoupon=iMarketingDiscountCouponService.list(marketingDiscountCouponQueryWrapper).get(0);
+                    md.put("marketingDiscountCouponId",marketingDiscountCoupon.getId());
+                    md.put("marketingDiscountCouponStatus",marketingDiscountCoupon.getStatus());
+                } else {
+                    md.put("ifGet", "0");
+                }
+            }else{
+                md.put("ifGet", "0");
+            }
+            //优惠券说明
+            String vouchersWay=md.get("vouchersWay").toString();
+            String explainDisCount="";
+            if(vouchersWay.equals("0")){
+                explainDisCount=md.get("startTime")+"~"+md.get("endTime");
+            }
+            if(vouchersWay.equals("1")){
+                explainDisCount="领取当日起"+md.get("disData")+md.get("monad")+"内";
+            }
+            if(vouchersWay.equals("2")){
+                explainDisCount="领取次日起"+md.get("disData")+md.get("monad")+"内";
+            }
+            md.put("explainDisCount",explainDisCount);
+            if(new BigDecimal(md.get("completely").toString()).doubleValue()>0) {
+                md.put("usingThreshold", "满" + md.get("completely") + "元减" + md.get("subtract"));
+            }else{
+                md.put("usingThreshold", "无门槛减" + md.get("subtract"));
+            }
+        }
+        result.setResult(marketingDiscount);
+        result.success("查询优惠券成功");
+        return result;
+    }
+
     /**
      * 根据商品id查询优惠券列表
      * @param goodId
@@ -127,11 +202,12 @@ public class FrontMarketingDiscountController {
      */
     @RequestMapping("findMarketingDiscountByGoodId")
     @ResponseBody
+    @Deprecated
     public Result<IPage<Map<String,Object>>> findMarketingDiscountByGoodId(String goodId,
                                                                            Integer isPlatform,
                                                                            @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
                                                                            @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-                                                                           HttpServletRequest request){
+                                                                           @RequestAttribute("memberId") String memberId){
         Result<IPage<Map<String,Object>>> result=new Result<>();
         //参数校验
         //判断数据不为空
@@ -144,8 +220,6 @@ public class FrontMarketingDiscountController {
             result.error500("goodId商品id不能为空！！！");
             return result;
         }
-        //用户登录判断
-        Object memberId=request.getAttribute("memberId");
         //组织查询参数
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
         Map<String,Object> paramMap= Maps.newHashMap();
@@ -160,9 +234,7 @@ public class FrontMarketingDiscountController {
             }else {
                 md.put("logoAddr", JSON.parseObject(frontLogo).get("0"));
             }
-//            md.put("logoAddr",new String((byte[])md.get("logoAddr")));
-//            md.put("logoAddr",String.valueOf(md.get("logoAddr")));
-            if(memberId!=null) {
+            if(StringUtils.isNotBlank(memberId)) {
                 QueryWrapper<MarketingDiscountCoupon> marketingDiscountCouponQueryWrapper = new QueryWrapper<>();
                 marketingDiscountCouponQueryWrapper.eq("marketing_discount_id", md.get("id"));
                 marketingDiscountCouponQueryWrapper.eq("member_list_id", memberId);
@@ -241,15 +313,13 @@ public class FrontMarketingDiscountController {
     @ResponseBody
     public Result<Map<String,Object>> findMarketingDiscountById(String id,
                                                                 String location,
-                                                                HttpServletRequest request){
+                                                                @RequestAttribute("memberId") String memberId){
         Result<Map<String,Object>> result=new Result<>();
         //参数验证
         if(StringUtils.isBlank(id)){
             result.error500("id不能为空！！！");
             return result;
         }
-        //用户登录判断
-        Object memberId=request.getAttribute("memberId");
         String frontLogo = iSysFrontSettingService.getOne(new LambdaUpdateWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
         Map<String,Object> marketingDiscount =iMarketingDiscountService.findMarketingDiscountById(id);
         if(marketingDiscount.get("logoAddr")!=null) {
@@ -324,16 +394,14 @@ public class FrontMarketingDiscountController {
      * 券中心优惠券列表(免费领券)
      * @param pageNo
      * @param pageSize
-     * @param request
      * @return
      */
     @RequestMapping("findMarketingDiscountPage")
     @ResponseBody
     public Result<?> findMarketingDiscountPage(@RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
                                                @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-                                               HttpServletRequest request){
+                                               @RequestAttribute("memberId") String memberId){
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
-        Object memberId=request.getAttribute("memberId");
         IPage<Map<String, Object>> marketingDiscountPage = iMarketingDiscountService.findMarketingDiscountPage(page);
         List<Map<String, Object>> records = marketingDiscountPage.getRecords();
         records.forEach(rs->{

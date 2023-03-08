@@ -240,7 +240,7 @@
             DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') AS myDate
           FROM
             store_account_capital sac
-          WHERE sac.`del_flag` = 0
+          WHERE sac.`del_flag` = '0'
         AND sac.`store_manage_id` = #{sysWorkbenchVO.id}
         AND sac.`go_and_come` = 0
         and DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{sysWorkbenchVO.earningTime_begin}
@@ -293,7 +293,7 @@
           CONCAT('余额 ', sac.`balance`) AS balance
         FROM
           store_account_capital sac
-        WHERE sac.`del_flag` = 0
+        WHERE sac.`del_flag` = '0'
           AND sac.`store_manage_id` = #{map.id}
           <if test="map.isPlatform != 2">
               AND sac.`go_and_come` = #{map.isPlatform}
@@ -325,7 +325,7 @@
             sac.`store_manage_id`
           FROM
             store_account_capital sac
-          WHERE sac.`del_flag` = 0
+          WHERE sac.`del_flag` = '0'
             AND DATE_FORMAT(sac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{storeStatementAccount.calendarDate}, '%Y-%m-%d')
             AND sac.`store_manage_id` = #{storeStatementAccount.storeManageId}
           ORDER BY sac.`create_time` DESC,

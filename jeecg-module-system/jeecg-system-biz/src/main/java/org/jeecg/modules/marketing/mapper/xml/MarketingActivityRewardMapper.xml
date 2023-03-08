@@ -26,10 +26,10 @@
             ON ml.`id` = mar.`member_list_id`
           LEFT JOIN marketing_comming_store mcs
             ON mar.`marketing_comming_store_id` = mcs.`id`
-        WHERE mar.`del_flag` = 0
-          AND sm.`del_flag` = 0
-          AND ml.`del_flag` = 0
-          AND mcs.`del_flag` = 0
+        WHERE mar.`del_flag` = '0'
+          AND sm.`del_flag` = '0'
+          AND ml.`del_flag` = '0'
+          AND mcs.`del_flag` = '0'
           <if test="marketingActivityRewardDTO.sysUserId != null and marketingActivityRewardDTO.sysUserId != ''">
               AND sm.sys_user_id = #{marketingActivityRewardDTO.sysUserId}
           </if>

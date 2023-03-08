@@ -20,7 +20,7 @@ import java.util.Date;
 public class StorePaymentVo implements Serializable {
     private static final long serialVersionUID = 1L;
     /**主键ID*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**老板姓名（联系人名称）*/

@@ -18,7 +18,7 @@
               marketing_certificate_group_list mcgl
               LEFT JOIN marketing_certificate mc
                 ON mcgl.`marketing_certificate_id` = mc.`id`
-            WHERE mcgl.`del_flag` = 0
+            WHERE mcgl.`del_flag` = '0'
             ORDER BY mcgl.sort ASC ,mcgl.create_time DESC
             ) m ${ew.customSqlSegment}
     </select>
@@ -38,9 +38,9 @@
           marketing_certificate_group_list mcgl
           LEFT JOIN marketing_certificate mc
             ON mcgl.`marketing_certificate_id` = mc.`id`
-        WHERE mcgl.`del_flag` = 0
+        WHERE mcgl.`del_flag` = '0'
           AND mcgl.status = 1
-          AND mc.`del_flag` = 0
+          AND mc.`del_flag` = '0'
         ORDER BY mcgl.sort
         LIMIT #{sout}
     </select>
@@ -57,7 +57,7 @@
                   COUNT(1)
                 FROM
                   marketing_certificate_record mcr
-                WHERE mcr.`del_flag` = 0
+                WHERE mcr.`del_flag` = '0'
                   AND mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
             ),2) * 100
           )AS CHAR) AS residue
@@ -76,7 +76,7 @@
             marketing_certificate_group_list mcgl
             LEFT JOIN marketing_certificate mc
               ON mcgl.`marketing_certificate_id` = mc.`id`
-          WHERE mcgl.`del_flag` = 0
+          WHERE mcgl.`del_flag` = '0'
             AND mcgl.status = 1
           ORDER BY mcgl.sort ASC, mcgl.create_time DESC
           ) m

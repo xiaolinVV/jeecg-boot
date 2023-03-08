@@ -27,15 +27,6 @@ public interface IMarketingGiftBagService extends IService<MarketingGiftBag> {
      */
     IPage<Map<String, Object>> getMarketingGiftBagList(Page<Map<String,Object>> page, Map<String,Object> paramMap);
 
-
-    /**
-     * 根据礼包id获取信息
-     *
-     * @param id
-     * @return
-     */
-    Map<String,Object> findMarketingGiftBagById(String id);
-
     /**
      * 支付成功回调
      * @param memberId

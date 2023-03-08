@@ -158,7 +158,7 @@
         *
         FROM
         order_store_list osl
-        WHERE osl.`del_flag` = 0
+        WHERE osl.`del_flag` = '0'
         AND osl.`status` = 3
         AND ISNULL(osl.`completion_time`) = 1
         AND DATE_ADD(

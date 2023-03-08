@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.store.giftbag.mapper.MarketingStoreGiftbagTeamMapper">
+
+    <select id="getMarketingStoreGiftbagTeamByMemberId" resultType="map" parameterType="map">
+
+                    SELECT
+                msgt.id
+            FROM
+                marketing_store_giftbag_team_member msgtm
+                LEFT JOIN marketing_store_giftbag_team msgt ON msgtm.marketing_store_giftbag_team_id = msgt.id
+            WHERE
+                msgtm.del_flag = '0'
+                AND msgt.del_flag = '0'
+                AND msgt.`status` = '0'
+                AND msgtm.member_list_id=#{paramMap.memberId}
+                and msgt.store_manage_id=#{paramMap.storeManageId}
+            ORDER BY
+                msgt.create_time ASC
+                LIMIT 1
+    </select>
+
+    <select id="getMarketingStoreGiftbagTeamList" parameterType="map" resultType="map">
+
+                    SELECT
+                msgt.id,
+                msgt.`status`
+            FROM
+                marketing_store_giftbag_team_member msgtm
+                LEFT JOIN marketing_store_giftbag_team msgt ON msgtm.marketing_store_giftbag_team_id = msgt.id
+            WHERE
+                msgtm.del_flag = '0'
+                AND msgt.del_flag = '0'
+                <if test="paramMap.status!=-1">
+                  AND msgt.`status` =#{paramMap.status}
+                </if>
+                AND msgtm.member_list_id = #{paramMap.memberId}
+            GROUP BY
+                msgt.id
+            ORDER BY
+                msgt.`status` ASC,
+                msgt.create_time DESC
+    </select>
+</mapper>

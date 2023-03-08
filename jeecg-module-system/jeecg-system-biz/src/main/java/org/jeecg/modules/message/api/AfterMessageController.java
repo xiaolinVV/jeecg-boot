@@ -26,24 +26,38 @@ public class AfterMessageController {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private DySmsHelper dySmsHelper;
+
     /**
      * 发送验证码
-     *
      * @param phone
      * @return
      */
     @RequestMapping("verificationCode")
     @ResponseBody
-    public Result<String> verificationCode(String phone) {
-        Result<String> result = new Result<>();
+    public Result<String> verificationCode(String phone){
+        Result<String> result=new Result<>();
         //参数验证
-        if (StringUtils.isBlank(phone)) {
+        if(StringUtils.isBlank(phone)){
             result.error500("手机号码不能为空");
             return result;
         }
 
         //随机数
         String captcha = RandomUtil.randomNumbers(6);
+
+//        try {
+//            if(dySmsHelper.sendSms(phone, captcha, dySmsHelper.IDENTITY_TEMPLATE_CODE)){
+//                //验证码10分钟内有效
+//                redisUtil.set(phone, captcha, 600);
+//            }else{
+//                result.error500("验证码发送失败");
+//                return result;
+//            }
+//        } catch (ClientException e) {
+//            e.printStackTrace();
+//        }
         try {
             JSONObject templateParamJson = new JSONObject();
             templateParamJson.put("code", captcha);

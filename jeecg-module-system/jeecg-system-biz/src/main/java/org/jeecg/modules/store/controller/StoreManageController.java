@@ -17,10 +17,10 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.alliance.entity.AllianceManage;
 import org.jeecg.modules.alliance.service.IAllianceManageService;
-import org.jeecg.config.jwt.utils.WeixinQRUtils;
 import org.jeecg.modules.map.api.AfterMapController;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;
 import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;
@@ -90,6 +90,13 @@ public class StoreManageController {
     private QrCodeUtils qrCodeUtils;
 
 
+    /*获取店铺信息通过：sysUserId*/
+    @GetMapping("getBySysUserId")
+    public Result<?> getBySysUserId(String sysUserId){
+        return Result.ok(storeManageService.getStoreManageBySysUserId(sysUserId));
+    }
+
+
     /**
      * 获取所有的店铺列表
      *
@@ -97,7 +104,8 @@ public class StoreManageController {
      */
     @GetMapping("getAllStoreList")
     public Result<?> getAllStoreList(){
-        return Result.ok(storeManageService.getAllStoreList());
+        String userId = PermissionUtils.ifPlatform();
+        return Result.ok(storeManageService.getAllStoreList(userId));
     }
 
 
@@ -767,7 +775,7 @@ public class StoreManageController {
     @AutoLog(value = "店铺-模糊查询根据手机号")
     @ApiOperation(value = "店铺-模糊查询根据手机号", notes = "店铺-模糊查询根据手机号")
     @RequestMapping(value = "/getStoreByBossPhone", method = RequestMethod.GET)
-    public List<Map<String,Object>> getStoreByBossPhone(@RequestParam(name = "bossPhone", required = true) String bossPhone) {
+    public List<Map<String,Object>> getStoreByBossPhone(@RequestParam(name = "bossPhone",required = false) String bossPhone) {
         return storeManageService.getStoreByBossPhone(bossPhone);
     }
 

@@ -48,10 +48,6 @@ public class MemberDistributionLevelServiceImpl extends ServiceImpl<MemberDistri
 
     @Autowired
     @Lazy
-    private IMarketingGroupIntegralManageRecordService iMarketingGroupIntegralManageRecordService;
-
-    @Autowired
-    @Lazy
     private IMarketingZoneGroupRecordService iMarketingZoneGroupRecordService;
 
     @Autowired
@@ -188,9 +184,9 @@ public class MemberDistributionLevelServiceImpl extends ServiceImpl<MemberDistri
                 if(marketingDistributionSetting!=null){
                     if(marketingDistributionSetting.getDistributionLevel().equals("1")){
                         //参团次数必须大于0
-                        long count=iMarketingGroupIntegralManageRecordService.count(new LambdaQueryWrapper<MarketingGroupIntegralManageRecord>().eq(MarketingGroupIntegralManageRecord::getMemberListId,memberId));
-                        long firstCount=iMarketingZoneGroupRecordService.count(new LambdaQueryWrapper<MarketingZoneGroupRecord>().eq(MarketingZoneGroupRecord::getMemberListId,memberId));
-                      if(count>0||firstCount>=0) {
+                        long firstCount=iMarketingZoneGroupRecordService.count
+                                (new LambdaQueryWrapper<MarketingZoneGroupRecord>().eq(MarketingZoneGroupRecord::getMemberListId,memberId));
+                      if(firstCount>=0) {
                           MarketingDistributionLevel marketingDistributionLevel = iMarketingDistributionLevelService.getOne(new LambdaQueryWrapper<MarketingDistributionLevel>()
                                   .eq(MarketingDistributionLevel::getStatus, "1")
                                   .eq(MarketingDistributionLevel::getWaysObtain, "2")

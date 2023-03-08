@@ -20,7 +20,7 @@ public class MarketingCertificateDTO implements Serializable {
     /**
      * 主键ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**
@@ -284,4 +284,11 @@ public class MarketingCertificateDTO implements Serializable {
      * 输出数量
      */
     private String sout;
+    @Excel(name = "线上使用: 0 关闭 1开启", width = 15)
+    @ApiModelProperty(value = "线上使用: 0 关闭 1开启")
+    private Integer aboveUse;
+
+    @Excel(name = "线下使用: 0 关闭 1开启", width = 15)
+    @ApiModelProperty(value = "线下使用: 0 关闭 1开启")
+    private Integer belowUse;
 }

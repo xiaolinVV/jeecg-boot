@@ -10,7 +10,7 @@
           marketing_certificate_seckill_record mcsr
           LEFT JOIN member_list ml
             ON mcsr.`member_list_id` = ml.`id`
-        WHERE mcsr.`del_flag` = 0
+        WHERE mcsr.`del_flag` = '0'
         ORDER BY mcsr.`create_time` DESC
         limit 20
     </select>
@@ -27,7 +27,7 @@
             marketing_certificate_seckill_record mcsr
             LEFT JOIN member_list ml
               ON mcsr.`member_list_id` = ml.`id`
-          WHERE mcsr.`del_flag` = 0
+          WHERE mcsr.`del_flag` = '0'
           ORDER BY mcsr.`create_time` DESC) m ${ew.customSqlSegment}
     </select>
     <select id="lookQqzixuanguByPayId" resultType="map">
@@ -37,7 +37,7 @@
           mcr.`name`
         FROM
           marketing_certificate_record mcr
-        WHERE mcr.`del_flag` = 0
+        WHERE mcr.`del_flag` = '0'
           AND mcr.`pay_certificate_log_id` = #{payId}
     </select>
 </mapper>

@@ -1,6 +1,7 @@
 package org.jeecg.modules.good.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,12 +22,16 @@ import org.jeecg.modules.good.entity.GoodStoreType;
 import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreTypeService;
 import org.jeecg.modules.good.vo.GoodStoreListVo;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -55,6 +60,46 @@ public class GoodStoreTypeController {
 	private IGoodStoreTypeService goodStoreTypeService;
 	@Autowired
 	private IGoodStoreListService goodStoreListService;
+
+	@Autowired
+	private IStoreManageService iStoreManageService;
+
+
+
+	/**
+			* 根据分类id获取三级分类的id
+     * @param id
+     * @return
+			 */
+	 @GetMapping("getGoodStoreTypeByTwoId")
+	 @Cacheable(value = "getGoodStoreTypeByTwoId",key = "#id")
+	 public Result<?> getGoodStoreTypeByTwoId(String id){
+		 Map<String,Object> resultMap= Maps.newHashMap();
+		 GoodStoreType goodType2=goodStoreTypeService.getById(id);
+		 GoodStoreType goodType=goodStoreTypeService.getById(goodType2.getParentId());
+		 resultMap.put("2",goodType2);
+		 resultMap.put("1",goodType);
+		 return Result.ok(resultMap);
+	 }
+
+
+	 /**
+	  * 获取树状所有商品类型数据
+	  *
+	  * @return
+	  */
+	 @GetMapping("getStoreGoodTypeByTree")
+	 @Cacheable(value = "getStoreGoodTypeByTree")
+	 public Result<?> getStoreGoodTypeByTree(String storeManageId){
+		 StoreManage storeManage=iStoreManageService.getById(storeManageId);
+		 List<GoodStoreType> goodTypes=goodStoreTypeService.list(new LambdaQueryWrapper<GoodStoreType>().eq(GoodStoreType::getSysUserId,storeManage.getSysUserId()).eq(GoodStoreType::getLevel,"1").eq(GoodStoreType::getStatus,"1").orderByAsc(GoodStoreType::getSort));
+		 goodTypes.stream().forEach(g-> {
+			 g.setChildren(goodStoreTypeService.list(new LambdaQueryWrapper<GoodStoreType>().eq(GoodStoreType::getParentId,g.getId()).eq(GoodStoreType::getStatus,"1").orderByAsc(GoodStoreType::getSort)));
+		 });
+		 return Result.ok(goodTypes);
+	 }
+
+
 	/**
 	  * 分页列表查询
 	 * @param goodStoreType
@@ -102,6 +147,7 @@ public class GoodStoreTypeController {
 	 * @return
 	 */
 	@PostMapping(value = "/add")
+	@CacheEvict(value= "getStoreGoodTypeByTree", allEntries=true)
 	public Result<GoodStoreType> add(@RequestBody GoodStoreType goodStoreType) {
 		Result<GoodStoreType> result = new Result<GoodStoreType>();
 		try {
@@ -120,6 +166,7 @@ public class GoodStoreTypeController {
 	 * @return
 	 */
 	@PutMapping(value = "/edit")
+	@CacheEvict(value= "getStoreGoodTypeByTree", allEntries=true)
 	public Result<GoodStoreType> edit(@RequestBody GoodStoreType goodStoreType) {
 		Result<GoodStoreType> result = new Result<GoodStoreType>();
 		try {
@@ -137,6 +184,7 @@ public class GoodStoreTypeController {
 	 * @return
 	 */
 	@DeleteMapping(value = "/delete")
+	@CacheEvict(value= "getStoreGoodTypeByTree", allEntries=true)
 	public Result<GoodStoreType> delete(@RequestParam(name="id",required=true) String id) {
 		Result<GoodStoreType> result = new Result<GoodStoreType>();
 		try {
@@ -173,6 +221,7 @@ public class GoodStoreTypeController {
 	 * @return
 	 */
 	@DeleteMapping(value = "/deleteBatch")
+	@CacheEvict(value= "getStoreGoodTypeByTree", allEntries=true)
 	public Result<GoodStoreType> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
 		Result<GoodStoreType> result = new Result<GoodStoreType>();
 		if(ids==null || "".equals(ids.trim())) {
@@ -274,6 +323,7 @@ public class GoodStoreTypeController {
 	  */
 
 	 @GetMapping(value = "/updateStatus")
+	 @CacheEvict(value= "getStoreGoodTypeByTree", allEntries=true)
 	 public Result<GoodStoreType> updateStatus(@RequestParam(name="id",required=true) String id) {
 		 Result<GoodStoreType> result = new Result<GoodStoreType>();
 		 GoodStoreType goodStoreType = goodStoreTypeService.getById(id);

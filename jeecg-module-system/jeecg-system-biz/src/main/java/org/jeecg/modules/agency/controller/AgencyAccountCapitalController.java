@@ -13,10 +13,9 @@ import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.agency.dto.AgencyAccountCapitalDTO;
-import org.jeecg.modules.agency.vo.AgencyAccountCapitalVO;
 import org.jeecg.modules.agency.entity.AgencyAccountCapital;
 import org.jeecg.modules.agency.service.IAgencyAccountCapitalService;
-import org.jeecg.modules.system.service.ISysUserRoleService;
+import org.jeecg.modules.agency.vo.AgencyAccountCapitalVO;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -50,8 +49,6 @@ import java.util.Map;
 public class AgencyAccountCapitalController {
 	@Autowired
 	private IAgencyAccountCapitalService agencyAccountCapitalService;
-	@Autowired
-	private ISysUserRoleService iSysUserRoleService;
 	/**
 	  * 分页列表查询
 	 * @param agencyAccountCapitalVO

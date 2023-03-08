@@ -13,8 +13,8 @@
           marketing_gift_bag_store_batch mgbsb
           LEFT JOIN store_manage sm
             ON sm.`sys_user_id` = mgbsb.`sys_user_id`
-        WHERE mgbsb.`del_flag` = 0
-          AND sm.`del_flag` = 0
+        WHERE mgbsb.`del_flag` = '0'
+          AND sm.`del_flag` = '0'
           AND sm.`status` = 1
           AND mgbsb.`marketing_gift_bag_batch_id` = #{id}
     </select>

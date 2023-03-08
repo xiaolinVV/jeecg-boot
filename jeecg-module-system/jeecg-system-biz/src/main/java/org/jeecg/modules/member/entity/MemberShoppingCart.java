@@ -27,7 +27,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class MemberShoppingCart {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -144,4 +144,6 @@ public class MemberShoppingCart {
 	private String marketingRushGroupId;
 
 	private String marketingLeagueGoodListId;
+
+	private String marketingStorePrefectureGoodId;
 }

@@ -1,5 +1,13 @@
 package org.jeecg.modules.order.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.comparator.CompareUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -13,28 +21,28 @@ import com.google.common.collect.Maps;
 import com.huifu.adapay.core.exception.BaseAdaPayException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.good.entity.GoodStoreList;
 import org.jeecg.modules.good.entity.GoodStoreSpecification;
 import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
+import org.jeecg.modules.marketing.dto.MarketingDisountGoodDTO;
 import org.jeecg.modules.marketing.entity.MarketingDiscountCoupon;
+import org.jeecg.modules.marketing.entity.MarketingDiscountCouponRecord;
 import org.jeecg.modules.marketing.entity.MarketingStoreDistributionSetting;
 import org.jeecg.modules.marketing.entity.MarketingStoreGiftCardMemberList;
-import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
-import org.jeecg.modules.marketing.service.IMarketingStoreDistributionSettingService;
-import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
-import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;
+import org.jeecg.modules.marketing.service.*;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureGoodService;
 import org.jeecg.modules.member.entity.*;
 import org.jeecg.modules.member.service.*;
 import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
 import org.jeecg.modules.order.dto.OrderStoreListDTO;
 import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
 import org.jeecg.modules.order.dto.OrderStoreSubListDTO;
-import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
-import org.jeecg.modules.order.entity.OrderStoreList;
-import org.jeecg.modules.order.entity.OrderStoreSubList;
+import org.jeecg.modules.order.entity.*;
 import org.jeecg.modules.order.mapper.OrderStoreListMapper;
 import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
@@ -135,9 +143,6 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     @Autowired
     @Lazy
     private IMemberAccountCapitalService iMemberAccountCapitalService;
-    @Autowired
-    @Lazy
-    private IStoreAccountCapitalService iStoreAccountCapitalService;
 
     @Autowired
     @Lazy
@@ -172,6 +177,18 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     @Lazy
     private IStoreCashierRoutingService iStoreCashierRoutingService;
 
+    @Autowired
+    private IStoreOrderSettingService iStoreOrderSettingService;
+
+    @Autowired
+    private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
+
+    @Autowired
+    private IMarketingDiscountGoodService marketingDiscountGoodService;
+
+    @Autowired
+    private IMarketingDiscountCouponRecordService marketingDiscountCouponRecordService;
+
     @Override
     public IPage<OrderStoreListDTO> getOrderStoreListDto(Page<OrderStoreList> page, OrderStoreListVO orderListVO, String sysUserId) {
         IPage<OrderStoreListDTO> page1=orderStoreListMapper.getOrderStoreListDto(page, orderListVO);
@@ -181,9 +198,11 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                 //会员信息
                 MemberList memberList = iMemberListService.getMemberListById(ol.getMemberListId());
                 if(memberList!=null){ol.setMemberList(memberList);}
-                //优惠券信息
-                MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(ol.getMarketingDiscountCouponId());
-                if(marketingDiscountCoupon!=null){ol.setMarketingDiscountCoupon(marketingDiscountCoupon);}
+                if (StringUtils.isNotBlank(ol.getMarketingDiscountCouponId())){
+                    //优惠券信息
+                    MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(ol.getMarketingDiscountCouponId());
+                    if(marketingDiscountCoupon!=null){ol.setMarketingDiscountCoupon(marketingDiscountCoupon);}
+                }
                 List<OrderStoreSubListDTO>  orderProviderLists;
                 if("2".equals(ol.getStatus()) || "3".equals(ol.getStatus()) || "5".equals(ol.getStatus())){
                     //发货后的商品信息
@@ -367,6 +386,11 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             }
         }
 
+        if (jsonGoods == null) {
+            throw new JeecgBootException("传入的店铺id有误~");
+        }
+
+
 
         //建立店铺订单
         OrderStoreList orderStoreList=new OrderStoreList();
@@ -385,23 +409,6 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         //设置留言
         orderStoreList.setMessage(jsonGoods.getString("message"));
         orderStoreList.setCoupon(new BigDecimal(0));
-        //通过优惠券判断优惠金额
-        String discountId = jsonGoods.getString("discountId");
-        if (!oConvertUtils.isEmpty(discountId)) {
-            //设置优惠金额
-            MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
-            if (marketingDiscountCoupon == null || !marketingDiscountCoupon.getStatus().equals("1")) {
-                log.info("优惠券不可用");
-            }
-            orderStoreList.setCoupon(marketingDiscountCoupon.getPrice());
-            //标识优惠券已使用
-            marketingDiscountCoupon.setStatus("2");
-            //优惠券id
-            orderStoreList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
-            iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
-        } else {
-            orderStoreList.setCoupon(new BigDecimal(0));
-        }
         //设置无修改地址
         orderStoreList.setIsUpdateAddr("0");
         //设置订单状态
@@ -471,6 +478,30 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         //商品礼品卡金额
         BigDecimal goodGiftCardtotal=new BigDecimal(0);
         String marketingStoreGiftCardMemberListId=null;
+        String marketingStorePrefectureGoodId=null;
+
+        String storeId = storeGood.get("id").toString();
+        //折扣券优惠相关返回参数
+        Map<String, Object> settleMap = MapUtil.newHashMap();
+        BigDecimal marketingTotalPrice=new BigDecimal(0); //可优惠金额
+        BigDecimal noMarketingTotalPrice=new BigDecimal(0); //不可优惠金额
+        List<String> marketingGoodIds =  CollUtil.newArrayList(); //优惠商品
+        List<String> noMarketingGoodIds =  CollUtil.newArrayList();  //无优惠商品
+        BigDecimal coupon = BigDecimal.ZERO;
+
+        MarketingDiscountCoupon marketingDiscountCoupon = null;
+        List<String> marketingDiscountCouponGoodIds = CollUtil.newArrayList(); //优惠券对应的商品ID列表
+        //礼品卡ID不为空，计算折扣券优惠金额
+        String discountId = jsonGoods.getString("discountId");
+        //优惠券ID 不为空，则计算优惠金额
+        if (StrUtil.isNotBlank(discountId)) {
+            marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
+            if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
+                    && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                List<MarketingDisountGoodDTO> storeGoodList = marketingDiscountGoodService.findStoreGood(marketingDiscountCoupon.getMarketingDiscountId());
+                marketingDiscountCouponGoodIds = storeGoodList.stream().map(MarketingDisountGoodDTO::getId).collect(Collectors.toList());
+            }
+        }
 
         for (Map<String,Object> m:myStoreGoods) {
             GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(m.get("goodSpecificationId").toString());
@@ -494,13 +525,6 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             //商品总重量
             orderStoreGoodRecord.setWeight(goodStoreSpecification.getWeight().multiply(new BigDecimal(m.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
             iOrderStoreGoodRecordService.save(orderStoreGoodRecord);
-            //扣除库存
-            goodStoreList.setRepertory(goodStoreList.getRepertory().subtract(orderStoreGoodRecord.getAmount()));
-            //增加销量
-            if(goodStoreList.getSalesVolume()==null){
-                goodStoreList.setSalesVolume(new BigDecimal(0));
-            }
-            goodStoreList.setSalesVolume(goodStoreList.getSalesVolume().add(orderStoreGoodRecord.getAmount()));
             goodStoreSpecification.setRepertory(goodStoreSpecification.getRepertory().subtract(orderStoreGoodRecord.getAmount()));
             iGoodStoreListService.saveOrUpdate(goodStoreList);
             iGoodStoreSpecificationService.saveOrUpdate(goodStoreSpecification);
@@ -515,7 +539,24 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                     marketingStoreGiftCardMemberListId=m.get("marketingStoreGiftCardMemberListId").toString();
                 }
             }
-
+            if (StrUtil.isBlank(marketingStoreGiftCardMemberListId)) {
+                //判断哪些商品有优惠、哪些商品没优惠、并且计算优惠金额
+                if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"2")
+                        && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                    if (marketingDiscountCouponGoodIds.contains(Convert.toStr(m.get("goodId")))) {
+                        marketingGoodIds.add(Convert.toStr(m.get("goodId")));
+                        //可优惠总金额
+                        marketingTotalPrice = marketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
+                    }else {
+                        noMarketingGoodIds.add(Convert.toStr(m.get("goodId")));
+                        noMarketingTotalPrice = noMarketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
+                    }
+                }
+            }
+            /*店铺专区*/
+            if(m.get("marketingStorePrefectureGoodId")!=null){
+                marketingStorePrefectureGoodId=m.get("marketingStorePrefectureGoodId").toString();
+            }
             //店铺成本价
             costPrice=costPrice.add(goodStoreSpecification.getCostPrice().multiply((BigDecimal) m.get("quantity")));
             //商品总件数
@@ -543,30 +584,127 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         costPrice=costPrice.add(freight);
         orderStoreList.setCostPrice(costPrice);
 
+        //使用了礼品卡就不能再使用优惠券  fix by zhangshaolin
+        if(StringUtils.isBlank(marketingStoreGiftCardMemberListId)){
+            //通过优惠券判断优惠金额
+            //设置优惠金额
+            if (marketingDiscountCoupon == null || !marketingDiscountCoupon.getStatus().equals("1")) {
+                log.info("优惠券不可用");
+            } else {
+                String isNomal = marketingDiscountCoupon.getIsNomal();
+                //计算优惠券折扣多少钱
+                if (StrUtil.equals(isNomal, "2") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                    BigDecimal discountLimitAmount = marketingDiscountCoupon.getDiscountLimitAmount();
+                    BigDecimal discountUseAmount = marketingDiscountCoupon.getDiscountUseAmount();
+                    BigDecimal discountPercent = marketingDiscountCoupon.getDiscountPercent();
+                    //可使用折扣余额
+                    BigDecimal discountBalance = NumberUtil.sub(discountLimitAmount, discountUseAmount);
+                    settleMap.put("marketingTotalPrice", marketingTotalPrice);
+                    settleMap.put("noMarketingTotalPrice", noMarketingTotalPrice);
+                    settleMap.put("marketingGoodIds", CollUtil.join(marketingGoodIds,","));
+                    settleMap.put("noMarketingGoodIds", CollUtil.join(noMarketingGoodIds,","));
+                    //判断订单金额不在上限金额的范围内
+                    if (marketingTotalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        if (discountBalance.compareTo(BigDecimal.ZERO) > 0) {
+                            //记录折扣券使用记录
+                            MarketingDiscountCouponRecord marketingDiscountCouponRecord = new MarketingDiscountCouponRecord();
+                            marketingDiscountCouponRecord.setDelFlag("0");
+                            marketingDiscountCouponRecord.setDelReason("");
+                            marketingDiscountCouponRecord.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+                            marketingDiscountCouponRecord.setIsPlatform("0");
+                            marketingDiscountCouponRecord.setIsNomad("2");
+                            marketingDiscountCouponRecord.setAmount(totalPrice);
+                            marketingDiscountCouponRecord.setDiscountGoodAmount(marketingTotalPrice);
+                            marketingDiscountCouponRecord.setDiscountLimitAmount(discountLimitAmount);
+                            marketingDiscountCouponRecord.setDiscountPercent(discountPercent);
+                            marketingDiscountCouponRecord.setMemberListId(memberId);
+                            marketingDiscountCouponRecord.setStoreSysUserId(storeId);
+                            marketingDiscountCouponRecord.setOrderStoreListId(orderStoreList.getId());
+                            marketingDiscountCouponRecord.setUserTime(new Date());
+
+                            // 超过折扣金额，一次性使用，券状态更改为已使用
+                            if (marketingTotalPrice.subtract(discountBalance).doubleValue() >= 0) {
+                                coupon = NumberUtil.mul(NumberUtil.sub(new BigDecimal("1"), NumberUtil.div(discountPercent.toString(), "10")), discountBalance);
+                                //控制优惠金额的优惠幅度
+                                if (marketingTotalPrice.subtract(coupon).doubleValue() < 0) {
+                                    coupon = marketingTotalPrice;
+                                }
+//                                if (totalPrice.subtract(coupon).doubleValue()< 0) {
+//                                    coupon = totalPrice;
+//                                }
+                                settleMap.put("coupon", coupon);
+                                orderStoreList.setCoupon(coupon);
+                                //优惠券id
+                                orderStoreList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+
+                                // 更新折扣券已使用额度，状态更新为已使用
+                                marketingDiscountCoupon.setDiscountUseAmount(NumberUtil.add(discountUseAmount,discountBalance));
+                                marketingDiscountCoupon.setStatus("2");
+                                iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
+                                settleMap.put("discountUseAmount",discountBalance);
+                                settleMap.put("discountBalance",BigDecimal.ZERO);
+                                // 记录折扣券使用记录明细
+                                marketingDiscountCouponRecord.setDiscountUseAmount(discountBalance);
+                                marketingDiscountCouponRecord.setCoupon(coupon);
+                                marketingDiscountCouponRecord.setDiscountBalance(NumberUtil.sub(discountLimitAmount,marketingDiscountCoupon.getDiscountUseAmount()));
+                                marketingDiscountCouponRecord.setDiscountSettleJson(JSON.toJSONString(settleMap));
+                                marketingDiscountCouponRecordService.save(marketingDiscountCouponRecord);
+                            } else {
+                                coupon = NumberUtil.mul(marketingTotalPrice, NumberUtil.sub(new BigDecimal("1"), NumberUtil.div(discountPercent.toString(), "10")));
+                                //控制优惠金额的优惠幅度
+                                if (marketingTotalPrice.subtract(coupon).doubleValue() < 0) {
+                                    coupon = marketingTotalPrice;
+                                }
+                                settleMap.put("coupon", coupon);
+                                orderStoreList.setCoupon(coupon);
+                                //优惠券id
+                                orderStoreList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+
+                                //更新折扣券已使用额度
+                                marketingDiscountCoupon.setDiscountUseAmount(NumberUtil.add(discountUseAmount,marketingTotalPrice));
+                                if (NumberUtil.sub(discountBalance,marketingTotalPrice).compareTo(BigDecimal.ZERO) <= 0) {
+                                    marketingDiscountCoupon.setStatus("2");
+                                }
+                                iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
+                                settleMap.put("discountUseAmount",marketingTotalPrice);
+                                settleMap.put("discountBalance",NumberUtil.sub(discountBalance,marketingTotalPrice));
+                                // 记录折扣券使用记录明细
+                                marketingDiscountCouponRecord.setDiscountUseAmount(marketingTotalPrice);
+                                marketingDiscountCouponRecord.setCoupon(coupon);
+                                marketingDiscountCouponRecord.setDiscountBalance(NumberUtil.sub(discountLimitAmount,marketingDiscountCoupon.getDiscountUseAmount()));
+                                marketingDiscountCouponRecord.setDiscountSettleJson(JSON.toJSONString(settleMap));
+                                marketingDiscountCouponRecordService.save(marketingDiscountCouponRecord);
+                            }
+                        }
+                    }
+                    orderStoreList.setDiscountSettleJson(JSON.toJSONString(settleMap));
+                }
+                //判断优惠券类型
+                if (StrUtil.equals(isNomal,"0") || StrUtil.equals(isNomal,"1")) {
+                    //满减券,判断消费满多少钱优惠多少钱
+                    BigDecimal completely = marketingDiscountCoupon.getCompletely();
+                    if (totalPrice.subtract(completely).doubleValue() >= 0) {
+                        orderStoreList.setCoupon(marketingDiscountCoupon.getPrice());
+                    }
+                    //标识优惠券已使用
+                    marketingDiscountCoupon.setStatus("2");
+                    marketingDiscountCoupon.setUserTime(DateUtil.date());
+                    //优惠券id
+                    orderStoreList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+                    iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
+                }
+            }
+        } else {
+            orderStoreList.setCoupon(new BigDecimal(0));
+        }
+
         //控制优惠金额的优惠幅度
         if(totalPrice.subtract(orderStoreList.getCoupon()).doubleValue()<0){
             orderStoreList.setCoupon(totalPrice);
         }
 
-
-        //应付款
-        orderStoreList.setCustomaryDues(totalPrice.subtract(orderStoreList.getCoupon()));
-        //实付款
-        orderStoreList.setActualPayment(totalPrice.subtract(orderStoreList.getCoupon()));
-
-        //实付款小于等于，就设置为0
-        if(orderStoreList.getActualPayment().doubleValue()<=0){
-            orderStoreList.setActualPayment(new BigDecimal(0));
-        }
-
-        //给应付款和支付款加上运费
-        orderStoreList.setCustomaryDues(orderStoreList.getCustomaryDues().add(freight));
-        //实付款
-        orderStoreList.setActualPayment(orderStoreList.getActualPayment().add(freight));
-
         //无优惠的总价
         totalPrice=totalPrice.add(freight);
-
 
         //判断礼品卡的优惠
         if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){
@@ -577,14 +715,29 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setActiveId(marketingStoreGiftCardMemberListId);
             orderStoreList.setOrderType("7");
         }
-
+        /*店铺专区*/
+        if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
+            log.info("店铺专区购买："+marketingStorePrefectureGoodId);
+            orderStoreList.setActiveId(marketingStorePrefectureGoodId);
+            orderStoreList.setOrderType("8");
+        }
         //设置礼品卡优惠金额
         orderStoreList.setGiftCardTotal(goodGiftCardtotal);
 
         //应付款
-        orderStoreList.setCustomaryDues(totalPrice.subtract(goodGiftCardtotal));
+        orderStoreList.setCustomaryDues(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(goodGiftCardtotal));
         //实付款
-        orderStoreList.setActualPayment(totalPrice.subtract(goodGiftCardtotal));
+        orderStoreList.setActualPayment(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(goodGiftCardtotal));
+
+        //实付款小于等于，就设置为0
+        if(orderStoreList.getActualPayment().doubleValue()<=0){
+            orderStoreList.setActualPayment(new BigDecimal(0));
+        }
+
+        //给应付款和支付款加上运费
+        orderStoreList.setCustomaryDues(orderStoreList.getCustomaryDues().add(freight));
+        //实付款
+        orderStoreList.setActualPayment(orderStoreList.getActualPayment().add(freight));
 
         //实际分销佣金
         BigDecimal actualBrokerage = new BigDecimal(0);
@@ -601,9 +754,9 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             if (iMarketingStoreDistributionSettingService.count(marketingStoreDistributionSettingLambdaQueryWrapper)>0){
                 //获取分销比例
                 MarketingStoreDistributionSetting marketingStoreDistributionSetting = iMarketingStoreDistributionSettingService.list(marketingStoreDistributionSettingLambdaQueryWrapper).get(0);
-                
+
                 orderStoreList.setDistributionCommission(orderStoreList.getActualPayment().subtract(costPrice));
-                
+
                 if (oConvertUtils.isNotEmpty(marketingStoreDistributionSetting) && StringUtils.isNotBlank(memberList.getPromoterType()) && StringUtils.isNotBlank(memberList.getPromoter())){
                     //判断推广人是否为用户
                     if (memberList.getPromoterType().equals("1")){
@@ -837,8 +990,21 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         //设置交易流水号
         orderStoreList.setSerialNumber(payOrderCarLog.getId());
         orderStoreList.setHftxSerialNumber(payOrderCarLog.getSerialNumber());
+
+        //赠送积分
+
+        iStoreOrderSettingService.success(orderStoreList);
+
         this.saveOrUpdate(orderStoreList);
+
+        //余额分账
         iStoreCashierRoutingService.independentAccountOrderBalance(orderStoreList);
+
+        /*店铺专区成功*/
+        if(orderStoreList.getOrderType().equals("8")){
+            iMarketingStorePrefectureGoodService.success(orderStoreList,payOrderCarLog.getId());
+        }
+
 
         //修改子订单状态
         OrderStoreSubList orderStoreSubList=new OrderStoreSubList();
@@ -882,6 +1048,10 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         if(orderStoreList.getOrderType().equals("7")&&StringUtils.isNotBlank(orderStoreList.getActiveId())&&orderStoreList.getGiftCardTotal().doubleValue()>0){
             iMarketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(),orderStoreList.getGiftCardTotal(),orderStoreList.getOrderNo(),"2");
         }
+
+        /*退回优惠券*/
+        iMarketingDiscountCouponService.sendBackOrderStoreMarketingDiscountCoupon(this.getById(id));
+
         QueryWrapper<OrderStoreSubList> orderStoreSubListQueryWrapper=new QueryWrapper<>();
         orderStoreSubListQueryWrapper.eq("order_store_list_id",id);
         List<OrderStoreSubList> orderStoreSubLists=iOrderStoreSubListService.list(orderStoreSubListQueryWrapper);
@@ -893,18 +1063,11 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreGoodRecordQueryWrapper.eq("order_store_sub_list_id",oss.getId());
             List<OrderStoreGoodRecord> orderStoreGoodRecords=iOrderStoreGoodRecordService.list(orderStoreGoodRecordQueryWrapper);
             orderStoreGoodRecords.forEach(osgr->{
-                String goodStoreListId=osgr.getGoodStoreListId();
                 String goodStoreSpecificationId=osgr.getGoodStoreSpecificationId();
-                GoodStoreList goodStoreList=iGoodStoreListService.getById(goodStoreListId);
-                if(goodStoreList!=null){
-                    goodStoreList.setRepertory(goodStoreList.getRepertory().add(osgr.getAmount()));
-                    goodStoreList.setSalesVolume(goodStoreList.getSalesVolume().subtract(osgr.getAmount()));
-                    iGoodStoreListService.saveOrUpdate(goodStoreList);
-                    GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(goodStoreSpecificationId);
-                    if(goodStoreSpecification!=null) {
-                        goodStoreSpecification.setRepertory(goodStoreSpecification.getRepertory().add(osgr.getAmount()));
-                        iGoodStoreSpecificationService.saveOrUpdate(goodStoreSpecification);
-                    }
+                GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(goodStoreSpecificationId);
+                if(goodStoreSpecification!=null) {
+                    goodStoreSpecification.setRepertory(goodStoreSpecification.getRepertory().add(osgr.getAmount()));
+                    iGoodStoreSpecificationService.saveOrUpdate(goodStoreSpecification);
                 }
             });
         });
@@ -935,33 +1098,35 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Override
     @Transactional
-    public void refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
+    public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
 
         OrderStoreList orderStoreList=this.getById(id);
         if(orderStoreList.getStatus().equals("0")||orderStoreList.getStatus().equals("4")){
-            return;
+            return Result.error("订单状态不正确");
         }
-        //退回款项
-        if(orderStoreList.getPayPrice().doubleValue()>0){
+        if (orderStoreList.getPayPrice().doubleValue() > 0.0D) {
+            Map balanceMap;
             try {
-                Map<String,Object> balanceMap=hftxPayUtils.getSettleAccountBalance();
-                if(!balanceMap.get("status").equals("succeeded")){
-                    log.info("汇付账户的余额查询出错");
-                    return;
+                balanceMap = this.hftxPayUtils.getSettleAccountBalance();
+                log.info(JSON.toJSONString("账户余额信息：" + balanceMap));
+                if (!balanceMap.get("status").equals("succeeded")) {
+                    return Result.error("汇付账户的余额查询出错");
                 }
-                if(Double.parseDouble(balanceMap.get("avl_balance").toString())<orderStoreList.getPayPrice().doubleValue()){
-                    log.info("汇付账户的余额不足");
-                    return;
+
+                if (Double.parseDouble(balanceMap.get("avl_balance").toString()) < orderStoreList.getPayPrice().doubleValue()) {
+                    Object var10000 = balanceMap.get("avl_balance");
+                    return Result.error("汇付账户的余额：" + var10000 + "；需退金额：" + orderStoreList.getPayPrice());
                 }
-            } catch (BaseAdaPayException e) {
-                e.printStackTrace();
+            } catch (BaseAdaPayException var6) {
+                var6.printStackTrace();
             }
-            Map<String, Object> resultMap=payUtils.refund(orderStoreList.getPayPrice(),orderStoreList.getSerialNumber(),orderStoreList.getHftxSerialNumber());
-            if(resultMap.get("status").equals("failed")){
-                log.info("现金退款失败");
-                return;
+
+            balanceMap = this.payUtils.refund(orderStoreList.getPayPrice(), orderStoreList.getSerialNumber(), orderStoreList.getHftxSerialNumber());
+            if (balanceMap.get("status").equals("failed")) {
+                return Result.error("现金退款失败");
             }
-            orderStoreList.setRefundJson(JSON.toJSONString(resultMap));
+
+            orderStoreList.setRefundJson(JSON.toJSONString(balanceMap));
         }
         this.saveOrUpdate(orderStoreList);
         //退回余额
@@ -970,6 +1135,8 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         iMemberWelfarePaymentsService.addWelfarePayments(orderStoreList.getMemberListId(),orderStoreList.getPayWelfarePayments(),"20",orderStoreList.getOrderNo(),"");
         //取消订单
         this.abrogateOrder(id,closeExplain,closeType);
+
+        return Result.ok("退款成功");
     }
 
 
@@ -977,17 +1144,9 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Override
     public void affirmOrder(String id) {
-        OrderStoreList orderStoreList=this.getById(id);
-        orderStoreList.setDeliveryTime(new Date());
-        orderStoreList.setStatus("3");
-        this.saveOrUpdate(orderStoreList);
-        QueryWrapper<OrderStoreSubList> orderStoreSubListQueryWrapper=new QueryWrapper<>();
-        orderStoreSubListQueryWrapper.eq("order_store_list_id",id);
-        List<OrderStoreSubList> orderStoreSubLists=iOrderStoreSubListService.list(orderStoreSubListQueryWrapper);
-        orderStoreSubLists.stream().forEach(oss->{
-            iOrderStoreSubListService.saveOrUpdate(oss.setStatus("3"));
-        });
 
+        this.updateById(new OrderStoreList().setId(id).setStatus("3").setDeliveryTime(new Date()));
+        iOrderStoreSubListService.update(new OrderStoreSubList().setStatus("3"),new LambdaQueryWrapper<OrderStoreSubList>().eq(OrderStoreSubList::getOrderStoreListId,id));
     }
 
     /**
@@ -1204,5 +1363,18 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     public  List<OrderStoreListExportDTO> getOrderStoreListDtoExport(Map<String,Object> orderStoreListVO){
        return baseMapper.getOrderStoreListDtoExport(orderStoreListVO);
     };
+
+    public static void main(String[] args) {
+        JSONObject orderJson = new JSONObject();
+        JSONArray storeGoods = new JSONArray();
+        JSONObject storeGood = new JSONObject();
+        storeGood.put("id","168f004bbe6893e07ac2aa4b2562c02d");
+        storeGood.put("discountId","89205518a4e9feb3aa43e2f118e6727c");
+        storeGoods.add(storeGood);
+        orderJson.put("storeGoods",storeGoods);
+
+        String jsonString = orderJson.toJSONString();
+        System.out.println(jsonString);
+    }
 
 }

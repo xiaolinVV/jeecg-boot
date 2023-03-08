@@ -164,13 +164,13 @@
           DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') AS myDate
         FROM
           provider_account_capital pac
-        WHERE pac.`del_flag` = 0
+        WHERE pac.`del_flag` = '0'
           AND pac.`sys_user_id` = #{providerWorkbenchVO.sysUserId}
           AND pac.`go_and_come` = 0
           and DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{providerWorkbenchVO.earningTime_begin}
         and DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{providerWorkbenchVO.earningTime_end}
         GROUP BY myDate
-        ORDER BY pac.`create_time` DESC
+        ORDER BY myDate DESC
     </select>
     <select id="getProviderAccountCapitalListList" resultType="org.jeecg.modules.provider.vo.ProviderAccountCapitalVO">
         SELECT * FROM (
@@ -184,7 +184,7 @@
             pac.`sys_user_id`
         FROM
             provider_account_capital pac
-        WHERE pac.`del_flag` = 0
+        WHERE pac.`del_flag` = '0'
               AND pac.`sys_user_id` = #{providerStatementAccount.sysUserId}
               AND DATE_FORMAT(pac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{providerStatementAccount.calendarDate}, '%Y-%m-%d')
         ORDER BY pac.`create_time` DESC,

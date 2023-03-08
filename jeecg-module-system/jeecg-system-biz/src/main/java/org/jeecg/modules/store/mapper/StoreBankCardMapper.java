@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.store.dto.StoreBankCardDTO;
 import org.jeecg.modules.store.entity.StoreBankCard;
-import org.jeecg.modules.store.vo.StoreBankCardVO;
 
 import java.util.List;
 
@@ -20,5 +19,5 @@ public interface StoreBankCardMapper extends BaseMapper<StoreBankCard> {
 
     List<StoreBankCardDTO> findBankCardById(@Param("id") String id);
 
-    IPage<StoreBankCardVO> queryPageList(Page<StoreBankCardVO> page,@Param("storeBankCardDTO") StoreBankCardDTO storeBankCardDTO);
+    IPage<StoreBankCard> queryPageList(Page<StoreBankCard> page,@Param("storeBankCardDTO") StoreBankCardDTO storeBankCardDTO);
 }

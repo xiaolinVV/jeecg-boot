@@ -28,7 +28,7 @@ public interface StoreManageMapper extends BaseMapper<StoreManage> {
      *
      * @return
      */
-    public List<Map<String,Object>> getAllStoreList();
+    public List<Map<String,Object>> getAllStoreList(@Param("userId") String userId);
 
     /**
      * 获取店铺详情
@@ -90,8 +90,6 @@ public interface StoreManageMapper extends BaseMapper<StoreManage> {
     List<Map<String,Object>> findStoreInfoByStoreName(@Param("storeName") String storeName);
 
     IPage<Map<String,Object>> findCityLifeStoreManageList(Page<Map<String,Object>> page,@Param("paramObjectMap") Map<String, Object> paramObjectMap);
-
-    List<Map<String,Object>> storeComplimentaryThree();
 
     IPage<Map<String,Object>> findCityLifeStoreManageListNew(Page<Map<String,Object>> page,@Param("paramObjectMap") Map<String, Object> paramObjectMap);
 

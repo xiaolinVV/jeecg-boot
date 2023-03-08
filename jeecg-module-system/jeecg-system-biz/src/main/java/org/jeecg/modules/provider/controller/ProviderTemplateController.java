@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
-import org.jeecg.common.system.api.ISysBaseAPI;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
@@ -24,7 +23,6 @@ import org.jeecg.modules.provider.service.IProviderTemplateService;
 import org.jeecg.modules.provider.vo.ProviderTemplateVO;
 import org.jeecg.modules.system.entity.SysArea;
 import org.jeecg.modules.system.service.ISysAreaService;
-import org.jeecg.modules.system.service.ISysUserService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -62,11 +60,20 @@ public class ProviderTemplateController {
     @Autowired
     private ISysAreaService sysAreaService;
     @Autowired
-    private ISysUserService sysUserService;
-    @Autowired
-    private ISysBaseAPI sysBaseAPI;
-    @Autowired
     private IGoodListService iGoodListService;
+
+
+    /**
+     * 根据供应商id获取运费模板
+     *
+     * @param sysUserId
+     * @return
+     */
+    @GetMapping("getProviderTemplateBySysUserId")
+    public Result<?> getProviderTemplateBySysUserId(String sysUserId){
+        return Result.ok(providerTemplateService.list(new LambdaQueryWrapper<ProviderTemplate>().eq(ProviderTemplate::getSysUserId,sysUserId)));
+    }
+
 
     /**
      * 分页列表查询

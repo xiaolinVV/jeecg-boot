@@ -9,8 +9,8 @@
           marketing_prefecture_recommend mpr
           LEFT JOIN marketing_prefecture mp
             ON mpr.`marketing_prefecture_id` = mp.`id`
-        WHERE mpr.`del_flag` = 0
-          AND mp.`del_flag` = 0
+        WHERE mpr.`del_flag` = '0'
+          AND mp.`del_flag` = '0'
           <if test="marketingPrefectureRecommendDTO.marketingPrefectureId != null and marketingPrefectureRecommendDTO.marketingPrefectureId != ''">
               AND mpr.marketing_prefecture_id LIKE concat('%',#{marketingPrefectureRecommendDTO.marketingPrefectureId},'%')
           </if>
@@ -46,7 +46,7 @@
           mpr.`recommend_name`
         FROM
           marketing_prefecture_recommend mpr
-        WHERE mpr.`del_flag` = 0
+        WHERE mpr.`del_flag` = '0'
           AND mpr.`marketing_prefecture_id` = #{marketingPrefectureId}
           ORDER BY mpr.appear_type ASC
     </select>
@@ -64,9 +64,9 @@
         marketing_prefecture_recommend_good mprg
         LEFT JOIN marketing_prefecture_good mpg
         ON mprg.`marketing_prefecture_good_id` = mpg.`id`
-        WHERE mprg.`del_flag` = 0
+        WHERE mprg.`del_flag` = '0'
         AND mprg.`marketing_prefecture_recommend_id` = mpr.id
-        AND mpg.`del_flag` = 0
+        AND mpg.`del_flag` = '0'
         <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
             AND mpg.`marketing_prefecture_type_id` = #{map.marketingPrefectureTypeId}
         </if>)+
@@ -78,16 +78,16 @@
         ON mprg.`marketing_prefecture_good_id` = mpg.`id`
         LEFT JOIN marketing_prefecture_type mpt
         ON mpt.id = mpg.marketing_prefecture_type_id
-        WHERE mprg.`del_flag` = 0
+        WHERE mprg.`del_flag` = '0'
         AND mprg.`marketing_prefecture_recommend_id` = mpr.id
-        AND mpg.`del_flag` = 0
+        AND mpg.`del_flag` = '0'
         <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
             AND mpt.pid = #{map.marketingPrefectureTypeId}
         </if>)
         ) AS recommendGoods
         FROM
         marketing_prefecture_recommend mpr
-        WHERE mpr.`del_flag` = 0
+        WHERE mpr.`del_flag` = '0'
         AND mpr.status = 1
         AND mpr.`marketing_prefecture_id` = #{map.id}
         AND mpr.`appear_type` = #{map.appearType}

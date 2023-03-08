@@ -20,11 +20,11 @@
         FROM
           store_bank_card sbc
         WHERE sbc.`store_manage_id` = #{id}
-          AND sbc.`del_flag` = 0
+          AND sbc.`del_flag` = '0'
           AND sbc.car_type = 0
     </select>
 
-    <select id="queryPageList" resultType="org.jeecg.modules.store.vo.StoreBankCardVO">
+    <select id="queryPageList" resultType="org.jeecg.modules.store.entity.StoreBankCard">
         SELECT * FROM (
         SELECT
         su.`avatar`,
@@ -46,9 +46,9 @@
         ON sbc.store_manage_id = sm.id
         LEFT JOIN sys_user su
         ON su.`id` = sm.`sys_user_id`
-        WHERE sbc.`del_flag` = 0
-        AND sm.`del_flag` = 0
-        AND su.`del_flag` = 0
+        WHERE sbc.`del_flag` = '0'
+        AND sm.`del_flag` = '0'
+        AND su.`del_flag` = '0'
         AND sbc.car_type = 0
         <if test="storeBankCardDTO.username != null and storeBankCardDTO.username != ''">
             AND su.username LIKE concat('%',#{storeBankCardDTO.username},'%')

@@ -3,13 +3,13 @@
 <mapper namespace="org.jeecg.modules.marketing.mapper.MarketingAdvertisingMapper">
     <!-- 根据广告位置查询 org.jeecg.modules.marketing.entity.MarketingAdvertisingMapper-->
     <select id="getMarketingAdvertisingByAdLocation" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising">
-		select * from  marketing_advertising  where ad_location = #{adLocation} and status =1 and del_flag =0 order by sort desc
+		select * from  marketing_advertising  where ad_location = #{adLocation} and status =1 and del_flag = '0' order by sort desc
 	</select>
     <select id="allAvailable" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising">
-		select * from  marketing_advertising  where  status =1 and del_flag =0 order by sort desc
+		select * from  marketing_advertising  where  status =1 and del_flag = '0' order by sort desc
 	</select>
     <select id="getMarketingAdvertisingList" resultType="org.jeecg.modules.marketing.entity.MarketingAdvertising" >
-          select * from  marketing_advertising  where status =1 and del_flag =0
+          select * from  marketing_advertising  where status =1 and del_flag = '0'
 		<if test="createBy!=null and createBy!=''">
 			and  create_by = #{createBy}
 		</if>

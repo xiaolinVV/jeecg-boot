@@ -16,12 +16,6 @@ import java.util.List;
  */
 public interface GoodStoreSpecificationMapper extends BaseMapper<GoodStoreSpecification> {
     List<GoodStoreSpecification> getGoodStoreSpecificationByGoodListId(@Param("goodStoreListId")String goodStoreListId);
-    /**
-     * 根据商品id删除对应规格
-     * @param goodId
-     * @param delFlag
-     */
-    void updateDelFlagByGoodId(@Param("goodListId")String goodId, @Param("delFlag")String delFlag);
 
     /**
      * 根据商品id查规格

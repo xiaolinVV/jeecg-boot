@@ -20,6 +20,8 @@ import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;
 import org.jeecg.modules.marketing.service.IMarketingAdvertisingService;
 import org.jeecg.modules.marketing.service.IMarketingDiscountService;
 import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;
+import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagSettingService;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureSetttingService;
 import org.jeecg.modules.member.entity.MemberAttentionStore;
 import org.jeecg.modules.member.service.IMemberAttentionStoreService;
 import org.jeecg.modules.order.utils.WeixinPayUtils;
@@ -110,6 +112,13 @@ public class FrontStoreManageController {
     private NotifyUrlUtils notifyUrlUtils;
 
 
+    @Autowired
+    private IMarketingStoreGiftbagSettingService iMarketingStoreGiftbagSettingService;
+
+    @Autowired
+    private IMarketingStorePrefectureSetttingService iMarketingStorePrefectureSetttingService;
+
+
 
     /**
      * 开店价格参数获取
@@ -145,6 +154,7 @@ public class FrontStoreManageController {
     public Result<?> index(String storeManageId,
                            @RequestHeader(defaultValue = "") String longitude,
                            @RequestHeader(defaultValue = "") String latitude,
+                           @RequestHeader("softModel") String softModel,
                            @RequestAttribute(value = "memberId",required = false) String memberId){
         //参数校验
         if(StringUtils.isBlank(storeManageId)){
@@ -217,6 +227,12 @@ public class FrontStoreManageController {
         }else{
             resultMap.put("storeFunctionSet",null);
         }
+
+        //礼包团控制
+        iMarketingStoreGiftbagSettingService.settingView(resultMap,softModel,storeManageId);
+
+        //店铺专区
+        iMarketingStorePrefectureSetttingService.settingView(resultMap,softModel,storeManageId);
 
         return Result.ok(resultMap);
     }

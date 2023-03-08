@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jeecg.modules.member.dto.MemberDesignationDTO;
 import org.jeecg.modules.member.entity.MemberDesignation;
-import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.mapper.MemberDesignationMapper;
 import org.jeecg.modules.member.service.IMemberDesignationCountService;
 import org.jeecg.modules.member.service.IMemberDesignationService;
@@ -52,6 +51,11 @@ public class MemberDesignationServiceImpl extends ServiceImpl<MemberDesignationM
     @Override
     public MemberDesignationVO getMemberDesignationById(String memberDesignationId) {
         return baseMapper.getMemberDesignationById(memberDesignationId);
+    }
+
+    @Override
+    public IPage<Map<String, Object>> getSelectDesignation(Page<Map<String, Object>> page, String memberDesignationGroupId) {
+        return baseMapper.getSelectDesignation(page,memberDesignationGroupId);
     }
 
 }

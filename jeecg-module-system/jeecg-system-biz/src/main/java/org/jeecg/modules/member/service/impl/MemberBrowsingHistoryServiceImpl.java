@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
-import org.jeecg.modules.good.entity.GoodList;
+import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.entity.GoodStoreList;
-import org.jeecg.modules.good.service.IGoodListService;
+import org.jeecg.modules.good.entity.GoodStoreSpecification;
+import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.good.service.IGoodStoreListService;
+import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
 import org.jeecg.modules.marketing.entity.MarketingPrefecture;
 import org.jeecg.modules.marketing.service.IMarketingPrefectureService;
 import org.jeecg.modules.member.dto.MemberBrowsingHistoryDto;
@@ -40,15 +42,18 @@ public class MemberBrowsingHistoryServiceImpl extends ServiceImpl<MemberBrowsing
 
     @Autowired
     private IGoodStoreListService iGoodStoreListService;
-
-    @Autowired
-    private IGoodListService iGoodListService;
-
     @Autowired
     private IMemberListService iMemberListService;
     @Autowired
     @Lazy
     private IMarketingPrefectureService iMarketingPrefectureService;
+
+    @Autowired
+    private IGoodSpecificationService iGoodSpecificationService;
+
+    @Autowired
+    private IGoodStoreSpecificationService iGoodStoreSpecificationService;
+
     @Override
     public IPage<MemberBrowsingHistoryDto> getMemberGoodsCollectionVo(Page<MemberBrowsingHistoryDto> page, MemberBrowsingHistoryVo memberBrowsingHistoryVo ){
         IPage<MemberBrowsingHistoryDto> page1 = baseMapper.getMemberGoodsCollectionVo(page,memberBrowsingHistoryVo);
@@ -98,14 +103,15 @@ public class MemberBrowsingHistoryServiceImpl extends ServiceImpl<MemberBrowsing
             memberBrowsingHistoryQueryWrapper.eq("good_store_list_id",goodId);
             memberBrowsingHistoryQueryWrapper.eq("good_type","0");
             memberBrowsingHistory=this.getOne(memberBrowsingHistoryQueryWrapper);
-            GoodStoreList goodStoreList=iGoodStoreListService.getById(goodId);
+
+            GoodStoreSpecification goodStoreSpecificationSmall=iGoodStoreSpecificationService.getSmallGoodSpecification(goodId);
             //根据情况添加数据
             if(memberBrowsingHistory!=null){
                 memberBrowsingHistory.setQuantity(memberBrowsingHistory.getQuantity().add(new BigDecimal(1)));
                 if(memberList.getMemberType().equals("0")) {
-                    memberBrowsingHistory.setBrowsingPrice(goodStoreList.getSmallPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodStoreSpecificationSmall.getPrice().toString());
                 }else{
-                    memberBrowsingHistory.setBrowsingPrice(goodStoreList.getSmallVipPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodStoreSpecificationSmall.getVipPrice().toString());
                 }
             }else{
                 memberBrowsingHistory=new MemberBrowsingHistory();
@@ -115,9 +121,9 @@ public class MemberBrowsingHistoryServiceImpl extends ServiceImpl<MemberBrowsing
                 memberBrowsingHistory.setGoodStoreListId(goodId);
                 memberBrowsingHistory.setBrowsingTime(new Date());
                 if(memberList.getMemberType().equals("0")) {
-                    memberBrowsingHistory.setBrowsingPrice(goodStoreList.getSmallPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodStoreSpecificationSmall.getPrice().toString());
                 }else{
-                    memberBrowsingHistory.setBrowsingPrice(goodStoreList.getSmallVipPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodStoreSpecificationSmall.getVipPrice().toString());
                 }
                 memberBrowsingHistory.setQuantity(new BigDecimal(1));
             }
@@ -136,14 +142,14 @@ public class MemberBrowsingHistoryServiceImpl extends ServiceImpl<MemberBrowsing
             }
 
             memberBrowsingHistory=this.getOne(memberBrowsingHistoryQueryWrapper);
-            GoodList goodList=iGoodListService.getById(goodId);
+            GoodSpecification goodSpecificationSmall=iGoodSpecificationService.getSmallGoodSpecification(goodId);
             //根据情况添加数据
             if(memberBrowsingHistory!=null){
                 memberBrowsingHistory.setQuantity(memberBrowsingHistory.getQuantity().add(new BigDecimal(1)));
-                if(memberList.getMemberType().equals("0")||goodList.getGoodForm().equals("1")) {
-                    memberBrowsingHistory.setBrowsingPrice(goodList.getSmallPrice());
+                if(memberList.getMemberType().equals("0")) {
+                    memberBrowsingHistory.setBrowsingPrice(goodSpecificationSmall.getPrice().toString());
                 }else{
-                    memberBrowsingHistory.setBrowsingPrice(goodList.getSmallVipPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodSpecificationSmall.getVipPrice().toString());
                 }
 
                 //免单商品
@@ -166,10 +172,10 @@ public class MemberBrowsingHistoryServiceImpl extends ServiceImpl<MemberBrowsing
                 memberBrowsingHistory.setGoodType("1");
                 memberBrowsingHistory.setGoodListId(goodId);
                 memberBrowsingHistory.setBrowsingTime(new Date());
-                if(memberList.getMemberType().equals("0")||goodList.getGoodForm().equals("1")) {
-                    memberBrowsingHistory.setBrowsingPrice(goodList.getSmallPrice());
+                if(memberList.getMemberType().equals("0")) {
+                    memberBrowsingHistory.setBrowsingPrice(goodSpecificationSmall.getPrice().toString());
                 }else{
-                    memberBrowsingHistory.setBrowsingPrice(goodList.getSmallVipPrice());
+                    memberBrowsingHistory.setBrowsingPrice(goodSpecificationSmall.getVipPrice().toString());
                 }
                 memberBrowsingHistory.setQuantity(new BigDecimal(1));
                 //免单商品

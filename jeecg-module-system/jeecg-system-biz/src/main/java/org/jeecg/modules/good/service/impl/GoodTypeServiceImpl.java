@@ -182,7 +182,6 @@ public class GoodTypeServiceImpl extends ServiceImpl<GoodTypeMapper, GoodType> i
         return childList;
     }
 
-    @Override
     public   List<Map<String,Object>> findTopGoodType(){
         return goodTypeMapper.findTopGoodType();
     }
@@ -255,7 +254,6 @@ public class GoodTypeServiceImpl extends ServiceImpl<GoodTypeMapper, GoodType> i
      * @param limit
      * @return
      */
-   @Override
    public List<Map<String,Object>> getGoodTypeNumberAndAvgDesc(Integer limit){
        List<Map<String,Object>> list =    goodTypeMapper.getGoodTypeNumberDesc(limit);
        if(list.size()>0){

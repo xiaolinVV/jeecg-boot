@@ -19,7 +19,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class StoreCashierRoutingDTO {
 
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -102,4 +102,16 @@ public class StoreCashierRoutingDTO {
 	private String memberListId;
 
 	private String nickName;
+
+	private String roleType;
+
+	private String affiliationStoreManageId;
+
+	private String storeName;
+
+	private String bankCardId;
+
+	private String storeSettleAccount;
+
+	private String memberSettleAccount;
 }

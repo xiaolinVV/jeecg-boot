@@ -1,6 +1,7 @@
 package org.jeecg.modules.good.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -25,6 +26,8 @@ import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -53,6 +56,47 @@ public class GoodTypeController {
     private IGoodTypeService goodTypeService;
     @Autowired
     private IGoodListService goodListService;
+
+    /**
+     * 根据分类id获取三级分类的id
+     * @param id
+     * @return
+     */
+    @GetMapping("getGoodTypeByThirdId")
+    @Cacheable(value = "getGoodTypeByThirdId",key = "#id")
+    public Result<?> getGoodTypeByThirdId(String id){
+        Map<String,Object> resultMap= Maps.newHashMap();
+        GoodType goodType3=goodTypeService.getById(id);
+        GoodType goodType2=goodTypeService.getById(goodType3.getParentId());
+        GoodType goodType=goodTypeService.getById(goodType2.getParentId());
+        resultMap.put("3",goodType3);
+        resultMap.put("2",goodType2);
+        resultMap.put("1",goodType);
+        return Result.ok(resultMap);
+    }
+
+
+
+    /**
+     * 获取树状所有商品类型数据
+     *
+     * @return
+     */
+    @GetMapping("getGoodTypeByTree")
+    @Cacheable(value = "getGoodTypeByTree")
+    public Result<?> getGoodTypeByTree(){
+        List<GoodType> goodTypes=goodTypeService.list(new LambdaQueryWrapper<GoodType>().eq(GoodType::getLevel,"1").eq(GoodType::getStatus,"1").orderByAsc(GoodType::getSort));
+        goodTypes.stream().forEach(g-> {
+            g.setChildren(goodTypeService.list(new LambdaQueryWrapper<GoodType>().eq(GoodType::getParentId,g.getId()).eq(GoodType::getStatus,"1").orderByAsc(GoodType::getSort)));
+            g.getChildren().stream().forEach(g1 ->{
+                g1.setChildren(goodTypeService.list(new LambdaQueryWrapper<GoodType>().eq(GoodType::getParentId,g1.getId()).eq(GoodType::getStatus,"1").orderByAsc(GoodType::getSort)));
+            } );
+        });
+        return Result.ok(goodTypes);
+    }
+
+
+
     /**
      * 分页列表查询
      * @param goodType
@@ -98,6 +142,7 @@ public class GoodTypeController {
      * @return
      */
     @PostMapping(value = "/add")
+    @CacheEvict(value= "getGoodTypeByTree", allEntries=true)
     public Result<GoodType> add(@RequestBody GoodType goodType) {
         Result<GoodType> result = new Result<GoodType>();
         try {
@@ -116,6 +161,7 @@ public class GoodTypeController {
      * @return
      */
     @PutMapping(value = "/edit")
+    @CacheEvict(value= "getGoodTypeByTree", allEntries=true)
     public Result<GoodType> edit(@RequestBody GoodType goodType) {
         Result<GoodType> result = new Result<GoodType>();
         try {
@@ -134,6 +180,7 @@ public class GoodTypeController {
      * @return
      */
     @DeleteMapping(value = "/delete")
+    @CacheEvict(value= "getGoodTypeByTree", allEntries=true)
     public Result<GoodType> delete(@RequestParam(name="id",required=true) String id) {
         Result<GoodType> result = new Result<GoodType>();
         try {
@@ -168,6 +215,7 @@ public class GoodTypeController {
      * @return
      */
     @DeleteMapping(value = "/deleteBatch")
+    @CacheEvict(value= "getGoodTypeByTree", allEntries=true)
     public Result<GoodType> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
         Result<GoodType> result = new Result<GoodType>();
         if(ids==null || "".equals(ids.trim())) {
@@ -268,6 +316,7 @@ public class GoodTypeController {
      */
 
     @GetMapping(value = "/updateStatus")
+    @CacheEvict(value= "getGoodTypeByTree", allEntries=true)
     public Result<GoodType> updateStatus(@RequestParam(name="id",required=true) String id,@RequestParam(name="status",required=true)String status,@RequestParam(name="stopRemark") String stopRemark) {
         Result<GoodType> result = new Result<GoodType>();
         GoodType goodType = goodTypeService.getById(id);

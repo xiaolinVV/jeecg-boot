@@ -3,6 +3,7 @@ package org.jeecg.modules.good.mapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.good.dto.GoodStoreDiscountDTO;
@@ -23,10 +24,25 @@ import java.util.Map;
 public interface GoodStoreListMapper extends BaseMapper<GoodStoreList> {
 
 
-    IPage<GoodStoreList> getGoodStoreListdelFlagOrAuditStatus(Page page, @Param("delFlag") String delFlag, @Param("auditStatus") String auditStatus, QueryWrapper<GoodStoreList> queryWrapper);
+    /*
+     * 后端列表
+     * */
+    public IPage<Map<String,Object>> queryPageList(Page<Map<String,Object>> page,@Param("paramMap") Map<String,Object> paramMap,@Param(Constants.WRAPPER) QueryWrapper wrapper);
+
+
+
+    /**
+     * 商品选择组件
+     *
+     * @param page
+     * @param paramMap
+     * @return
+     */
+    public IPage<Map<String,Object>> selectGood(Page<Map<String,Object>> page,@Param("paramMap") Map<String,Object> paramMap);
+
+
     List<GoodStoreList> getGoodStoreListById(@Param("id") String id);
     void updateDelFalg(@Param("id")String id,@Param("delFlag")String delFlag);
-    public  List<GoodStoreList>  getGoodStoreListOK(QueryWrapper<GoodStoreList> queryWrapper);
     IPage<GoodStoreListDto> getGoodListDto(Page page,@Param("goodListVo") GoodStoreListVo goodListVo,@Param("notauditStatus")String notauditStatus);
     IPage<GoodStoreListDto> getGoodListDtoDelFlag(Page page,@Param("goodListVo") GoodStoreListVo goodListVo);
 

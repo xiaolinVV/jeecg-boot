@@ -5,24 +5,19 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.util.OrderNoUtils;
-import org.jeecg.modules.marketing.entity.MarketingChannel;
 import org.jeecg.modules.marketing.entity.MarketingDiscount;
 import org.jeecg.modules.marketing.entity.MarketingDiscountCoupon;
-import org.jeecg.modules.marketing.service.IMarketingChannelService;
 import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
 import org.jeecg.modules.marketing.service.IMarketingDiscountService;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  * 优惠券登录后api接口
@@ -41,11 +36,6 @@ public class AfterMarketingDiscountController {
     @Autowired
     private IMarketingDiscountCouponService iMarketingDiscountCouponService;
 
-    @Autowired
-    private IMarketingChannelService iMarketingChannelService;
-
-
-
     /**
      * 领取优惠券
      * @return
@@ -53,9 +43,7 @@ public class AfterMarketingDiscountController {
     @RequestMapping("drawMarketingDiscountByIdAndMemberId")
     @ResponseBody
     public Result<String> drawMarketingDiscountByIdAndMemberId(String id,
-                                                               String channelName,
-                                                               HttpServletRequest request){
-        String memberId=request.getAttribute("memberId").toString();
+                                                               @RequestAttribute("memberId") String memberId){
         Result<String> result=new Result<>();
 
 
@@ -178,101 +166,7 @@ public class AfterMarketingDiscountController {
             }
         }
         //券的发放
-
-        MarketingDiscountCoupon marketingDiscountCoupon=new MarketingDiscountCoupon();
-        marketingDiscountCoupon.setDelFlag("0");
-        marketingDiscountCoupon.setPrice(marketingDiscount.getSubtract());
-        marketingDiscountCoupon.setName(marketingDiscount.getName());
-        marketingDiscountCoupon.setIsThreshold(marketingDiscount.getIsThreshold());
-        marketingDiscountCoupon.setMemberListId(memberId);
-        marketingDiscountCoupon.setSysUserId(marketingDiscount.getSysUserId());
-        marketingDiscountCoupon.setQqzixuangu(OrderNoUtils.getOrderNo());
-        marketingDiscountCoupon.setMarketingDiscountId(marketingDiscount.getId());
-        marketingDiscountCoupon.setIsPlatform(marketingDiscount.getIsPlatform());
-        marketingDiscountCoupon.setCompletely(marketingDiscount.getCompletely());
-        marketingDiscountCoupon.setIsGive(marketingDiscount.getIsGive());
-        marketingDiscountCoupon.setIsWarn(marketingDiscount.getIsWarn());
-        marketingDiscountCoupon.setWarnDays(marketingDiscount.getWarnDays());
-        marketingDiscountCoupon.setUserRestrict(marketingDiscount.getUserRestrict());
-        marketingDiscountCoupon.setDiscountExplain(marketingDiscount.getDiscountExplain());
-        marketingDiscountCoupon.setCoverPlan(marketingDiscount.getCoverPlan());
-        marketingDiscountCoupon.setPosters(marketingDiscount.getPosters());
-        marketingDiscountCoupon.setMainPicture(marketingDiscount.getMainPicture());
-        marketingDiscountCoupon.setIsUniqueness(marketingDiscount.getIsUniqueness());
-        marketingDiscountCoupon.setIsDistribution(marketingDiscount.getIsDistribution());
-        marketingDiscountCoupon.setGetRestrict(marketingDiscount.getGetRestrict());
-         //平台渠道判断
-        QueryWrapper<MarketingChannel> marketingChannelQueryWrapper=new QueryWrapper<>();
-        marketingChannelQueryWrapper.eq("english_name",channelName);
-        MarketingChannel marketingChannel=iMarketingChannelService.getOne(marketingChannelQueryWrapper);
-        if(marketingChannel!=null) {
-            marketingDiscountCoupon.setMarketingChannelId(marketingChannel.getId());
-            marketingDiscountCoupon.setTheChannel(marketingChannel.getName());
-        }else {
-            result.setResult("9");
-            result.error500("领券渠道不存在");
-            return result;
-        }
-
-
-        //标准用券方式
-        if(marketingDiscount.getVouchersWay().equals("0")){
-            //优惠券的时间生成
-            marketingDiscountCoupon.setStartTime(marketingDiscount.getStartTime());
-            marketingDiscountCoupon.setEndTime(marketingDiscount.getEndTime());
-        }
-
-        //领券当日起
-        if(marketingDiscount.getVouchersWay().equals("1")){
-            //优惠券的时间生成
-            Calendar calendar=Calendar.getInstance();
-            marketingDiscountCoupon.setStartTime(calendar.getTime());
-
-            if(marketingDiscount.getMonad().equals("天")){
-                calendar.add(Calendar.DATE,marketingDiscount.getDisData().intValue());
-            }
-            if(marketingDiscount.getMonad().equals("周")){
-                calendar.add(Calendar.WEEK_OF_MONTH,marketingDiscount.getDisData().intValue());
-            }
-            if(marketingDiscount.getMonad().equals("月")){
-                calendar.add(Calendar.MONTH,marketingDiscount.getDisData().intValue());
-            }
-
-            marketingDiscountCoupon.setEndTime(calendar.getTime());
-        }
-        //领券次日起
-        if(marketingDiscount.getVouchersWay().equals("2")){
-            //优惠券的时间生成
-            Calendar calendar=Calendar.getInstance();
-            calendar.add(Calendar.DATE,1);
-            marketingDiscountCoupon.setStartTime(calendar.getTime());
-
-            if(marketingDiscount.getMonad().equals("天")){
-                calendar.add(Calendar.DATE,marketingDiscount.getDisData().intValue());
-            }
-            if(marketingDiscount.getMonad().equals("周")){
-                calendar.add(Calendar.WEEK_OF_MONTH,marketingDiscount.getDisData().intValue());
-            }
-            if(marketingDiscount.getMonad().equals("月")){
-                calendar.add(Calendar.MONTH,marketingDiscount.getDisData().intValue());
-            }
-
-            marketingDiscountCoupon.setEndTime(calendar.getTime());
-        }
-
-        if(new Date().getTime()>=marketingDiscountCoupon.getStartTime().getTime()&&new Date().getTime()<=marketingDiscountCoupon.getEndTime().getTime()) {
-            //设置生效
-            marketingDiscountCoupon.setStatus("1");
-        }else{
-            marketingDiscountCoupon.setStatus("0");
-        }
-
-        iMarketingDiscountCouponService.save(marketingDiscountCoupon);
-        marketingDiscount.setReleasedQuantity(marketingDiscount.getReleasedQuantity().add(new BigDecimal(1)));
-        iMarketingDiscountService.saveOrUpdate(marketingDiscount);
-        //会员分享次数扣除
-        memberList.setShareTimes(memberList.getShareTimes().subtract(new BigDecimal(1)));
-        iMemberListService.saveOrUpdate(memberList);
+        iMarketingDiscountService.generate(marketingDiscount.getId(),new BigDecimal(1),memberId,false);
         result.setResult("0");
         result.success("优惠券领取成功");
         return  result;

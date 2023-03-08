@@ -29,9 +29,9 @@ import java.util.Date;
 @Accessors(chain = true)
 @ApiModel(value="marketing_certificate对象", description="兑换券")
 public class MarketingCertificate {
-    
+
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -200,4 +200,11 @@ public class MarketingCertificate {
 	 * 兑换方式；0：全部兑换；1：任选一个
 	 */
 	private String certificateType;
+	@Excel(name = "线上使用: 0 关闭 1开启", width = 15)
+	@ApiModelProperty(value = "线上使用: 0 关闭 1开启")
+	private Integer aboveUse;
+
+	@Excel(name = "线下使用: 0 关闭 1开启", width = 15)
+	@ApiModelProperty(value = "线下使用: 0 关闭 1开启")
+	private Integer belowUse;
 }

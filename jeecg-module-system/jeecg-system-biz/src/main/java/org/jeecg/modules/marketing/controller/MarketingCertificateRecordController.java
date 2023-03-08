@@ -350,6 +350,8 @@ public class MarketingCertificateRecordController {
                     marketingCertificateRecord.setPosters(marketingCertificate.getPosters());
                     marketingCertificateRecord.setCertificateType(marketingCertificate.getCertificateType());
                     marketingCertificateRecord.setIsBuyPlatform("1");
+                    marketingCertificateRecord.setAboveUse(marketingCertificate.getAboveUse());
+                    marketingCertificateRecord.setBelowUse(marketingCertificate.getBelowUse());
                     //平台渠道判断
                     QueryWrapper<MarketingChannel> marketingChannelQueryWrapper = new QueryWrapper<>();
                     marketingChannelQueryWrapper.eq("english_name", "NORMAL_TO_GET");

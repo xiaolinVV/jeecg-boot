@@ -1,15 +1,18 @@
 package org.jeecg.modules.good.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
@@ -21,9 +24,17 @@ import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.util.PermissionUtils;
 import org.jeecg.modules.good.dto.GoodStoreDiscountDTO;
 import org.jeecg.modules.good.dto.GoodStoreListDto;
+import org.jeecg.modules.good.dto.GoodStoreListNewDTO;
+import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodStoreList;
+import org.jeecg.modules.good.entity.GoodStoreSpecification;
 import org.jeecg.modules.good.service.IGoodStoreListService;
+import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
+import org.jeecg.modules.good.service.IGoodStoreTypeService;
+import org.jeecg.modules.good.util.GoodUtils;
 import org.jeecg.modules.good.vo.GoodStoreListVo;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.system.service.ISysUserRoleService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
@@ -40,6 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Date;
@@ -59,6 +71,161 @@ import java.util.Map;
 public class GoodStoreListController {
 	@Autowired
 	private IGoodStoreListService goodStoreListService;
+
+	@Autowired
+	private IGoodStoreSpecificationService iGoodStoreSpecificationService;
+
+	@Autowired
+	private IStoreManageService iStoreManageService;
+
+	@Autowired
+	private IGoodStoreTypeService iGoodStoreTypeService;
+
+
+	@Autowired
+	private GoodUtils goodUtils;
+
+
+	 /**
+	  * 商品选择组件
+	  *
+	  * @param goodName
+	  * @param goodTypeId
+	  * @param pageNo
+	  * @param pageSize
+	  * @return
+	  */
+	@GetMapping("selectGood")
+	public Result<?> selectGood(@RequestParam(defaultValue = "",name = "goodName",required = false) String goodName,
+								@RequestParam(defaultValue = "",name = "goodTypeId",required = false) String goodTypeId,
+								String storeManageId,
+								@RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+								 @RequestParam(name="pageSize", defaultValue="5") Integer pageSize){
+		Map<String,Object> paramMap= Maps.newHashMap();
+		paramMap.put("goodName",goodName);
+		paramMap.put("goodTypeId",goodTypeId);
+		paramMap.put("sysUserId",iStoreManageService.getById(storeManageId).getSysUserId());
+		log.info("查询条件："+JSON.toJSONString(paramMap));
+		IPage<Map<String, Object>> iPage= goodStoreListService.selectGood(new Page<>(pageNo,pageSize),paramMap);
+		iPage.getRecords().forEach(g->{
+			g.put("storeSpecifications",iGoodStoreSpecificationService.listMaps(new QueryWrapper<GoodStoreSpecification>()
+					.select("specification","price","repertory")
+					.lambda()
+					.eq(GoodStoreSpecification::getGoodStoreListId,g.get("id"))));
+		});
+		return Result.ok(iPage);
+	}
+
+
+
+
+	 /**
+	  * 分页列表查询
+	  *
+	  * @param goodList
+	  * @param pageNo
+	  * @param pageSize
+	  * @param req
+	  * @return
+	  */
+	 @AutoLog(value = "店铺商品列表-分页列表查询")
+	 @ApiOperation(value="店铺商品列表-分页列表查询", notes="店铺商品列表-分页列表查询")
+	 @GetMapping(value = "/listNew")
+	 public Result<?> queryPageListNew(GoodList goodList,
+									@RequestParam(name = "level",defaultValue = "-1",required = false) String level,
+									@RequestParam(name = "typeId",defaultValue = "",required = false) String typeId,
+									@RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+									@RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+									HttpServletRequest req) {
+		 QueryWrapper<GoodList> queryWrapper = QueryGenerator.initQueryWrapper(goodList, req.getParameterMap());
+		 Map<String,Object> paramMap= Maps.newHashMap();
+		 paramMap.put("level",level);
+		 paramMap.put("typeId",typeId);
+		 IPage<Map<String,Object>> pageList = goodStoreListService.queryPageList(new Page<>(pageNo,pageSize),paramMap, queryWrapper);
+		 //组织返回的数据
+		 pageList.getRecords().forEach(g->{
+			 //图片数据格式转换
+			 if(g.get("mainPicture")!=null){
+				 g.put("mainPicture",goodUtils.imgTransition(g.get("mainPicture").toString()));
+			 }
+			 if(g.get("detailsGoods")!=null){
+				 g.put("detailsGoods",goodUtils.imgTransition(g.get("detailsGoods").toString()));
+			 }
+
+
+			 if(g.get("specifications")==null){
+				 if(g.get("specification")!=null){
+					 g.put("specifications",goodUtils.oldSpecificationToNew(g.get("specification").toString(),false));
+				 }else{
+					 g.put("specifications",goodUtils.oldSpecificationToNew("",false));
+				 }
+			 }
+			 List<Map<String,Object>> shopInfo= Lists.newArrayList();
+			 List<Map<String,Object>> specificationsDecribes=Lists.newArrayList();
+
+			 List<GoodStoreSpecification> goodSpecifications=iGoodStoreSpecificationService.list(new LambdaQueryWrapper<GoodStoreSpecification>()
+					 .eq(GoodStoreSpecification::getGoodStoreListId,g.get("id"))
+					 .orderByDesc(GoodStoreSpecification::getCreateTime));
+
+			 Map<String,Object> shopInfoMap=Maps.newHashMap();
+
+			 if(goodSpecifications.size()>0) {
+
+				 if (g.get("isSpecification").toString().equals("0")) {
+					 GoodStoreSpecification goodSpecification = goodSpecifications.get(0);
+					 shopInfoMap.put("salesPrice", goodSpecification.getPrice());
+					 shopInfoMap.put("vipPrice", goodSpecification.getVipPrice());
+					 shopInfoMap.put("costPrice", goodSpecification.getCostPrice());
+					 shopInfoMap.put("repertory", goodSpecification.getRepertory());
+					 shopInfoMap.put("weight", goodSpecification.getWeight());
+					 shopInfoMap.put("skuNo", goodSpecification.getSkuNo());
+				 }
+				 if (g.get("isSpecification").toString().equals("1")) {
+
+					 BigDecimal repertory = new BigDecimal(0);
+
+					 for (GoodStoreSpecification goodSpecification : goodSpecifications) {
+						 Map<String, Object> specificationsDecribeMap = Maps.newHashMap();
+
+						 specificationsDecribeMap.put("pName", goodSpecification.getSpecification());
+						 specificationsDecribeMap.put("salesPrice", goodSpecification.getPrice());
+						 specificationsDecribeMap.put("vipPrice", goodSpecification.getVipPrice());
+						 specificationsDecribeMap.put("costPrice", goodSpecification.getCostPrice());
+						 specificationsDecribeMap.put("weight", goodSpecification.getWeight());
+						 specificationsDecribeMap.put("repertory", goodSpecification.getRepertory());
+						 specificationsDecribeMap.put("skuNo", goodSpecification.getSkuNo());
+						 specificationsDecribeMap.put("imgUrl", goodSpecification.getSpecificationPicture());
+						 repertory = repertory.add(goodSpecification.getRepertory());
+						 specificationsDecribes.add(specificationsDecribeMap);
+					 }
+
+					 shopInfoMap.put("salesPrice", g.get("minPrice") + "-" + g.get("maxPrice"));
+					 shopInfoMap.put("vipPrice", g.get("minVipPrice") + "-" + g.get("maxVipPrice"));
+					 shopInfoMap.put("costPrice", g.get("minCostPrice") + "-" + g.get("maxCostPrice"));
+					 shopInfoMap.put("repertory", repertory);
+					 shopInfoMap.put("weight", "0");
+					 shopInfoMap.put("skuNo", "");
+				 }
+			 }
+
+			 shopInfo.add(shopInfoMap);
+
+
+			 g.put("shopInfo",JSON.toJSONString(shopInfo));
+			 g.put("specificationsDecribes",JSON.toJSONString(specificationsDecribes));
+
+			 StoreManage storeManage=iStoreManageService.getStoreManageBySysUserId(g.get("sysUserId").toString());
+			 g.put("storeManageId",storeManage.getId());
+			 if (storeManage.getSubStoreName() == null) {
+				 g.put("storeName", storeManage.getStoreName());
+			 } else {
+				 g.put("storeName", storeManage.getStoreName() + "(" + storeManage.getSubStoreName() + ")");
+			 }
+		 });
+		 return Result.ok(pageList);
+	 }
+
+
 	
 	/**
 	  * 分页列表查询
@@ -202,46 +369,280 @@ public class GoodStoreListController {
 
 	 /**
 	  *   添加
-	 * @param goodStoreListVo
+	 * @param goodStoreListNewDTO
 	 * @return
 	 */
 	@AutoLog(value = "店铺商品列表-添加")
 	@ApiOperation(value="店铺商品列表-添加", notes="店铺商品列表-添加")
 	@PostMapping(value = "/add")
-	public Result<GoodStoreListVo> add(@RequestBody GoodStoreListVo goodStoreListVo) {
-		Result<GoodStoreListVo> result = new Result<GoodStoreListVo>();
-		try {
-			goodStoreListService.saveOrUpdate(goodStoreListVo);
-			result.success("添加成功！");
-		} catch (Exception e) {
-			log.error(e.getMessage(),e);
-			result.error500("操作失败");
+	public Result<?> add(@RequestBody GoodStoreListNewDTO goodStoreListNewDTO) {
+		log.info(JSON.toJSONString(goodStoreListNewDTO));
+		GoodStoreList goodList=new GoodStoreList();
+
+		/*上下架状态*/
+		goodList.setFrameStatus(goodStoreListNewDTO.getFrameStatus());
+
+		//审核状态
+		goodList.setAuditStatus("2");
+
+		//店铺
+		if(StringUtils.isBlank(goodStoreListNewDTO.getStoreManageId())){
+			return Result.error("请选择店铺");
 		}
-		return result;
+
+		StoreManage storeManage=iStoreManageService.getById(goodStoreListNewDTO.getStoreManageId());
+		
+		goodList.setSysUserId(storeManage.getSysUserId());
+
+
+		//请选择运费模板
+		if(StringUtils.isBlank(goodStoreListNewDTO.getStoreTemplateId())){
+			return Result.error("请选择运费模板");
+		}
+
+		goodList.setStoreTemplateId(goodStoreListNewDTO.getStoreTemplateId());
+
+		//市场价
+		if(goodStoreListNewDTO.getMarketPrice()==null || goodStoreListNewDTO.getMarketPrice().doubleValue()==0){
+			return Result.error("请填写市场价或者市场价必须高于0");
+		}
+		goodList.setMarketPrice(goodStoreListNewDTO.getMarketPrice().toString());
+		
+
+		//商品编号
+		JSONArray shopInfo=JSON.parseArray(goodStoreListNewDTO.getShopInfo());
+		JSONObject shopInfoo=(JSONObject)shopInfo.get(0);
+		if(StringUtils.isNotBlank(goodStoreListNewDTO.getGoodNo())&&goodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getSysUserId,storeManage.getSysUserId()).eq(GoodStoreList::getGoodNo,goodStoreListNewDTO.getGoodNo()))>0){
+			return Result.error("商品编号不能重复，请重新编写");
+		}
+		//商品编码
+		goodList.setGoodNo(goodStoreListNewDTO.getGoodNo());
+		//商品名称
+		if(StringUtils.isBlank(goodStoreListNewDTO.getGoodName())){
+			return Result.error("商品名称不能为空");
+		}
+		goodList.setGoodName(goodStoreListNewDTO.getGoodName());
+		//商品分类
+		if(StringUtils.isBlank(goodStoreListNewDTO.getGoodTypeId())){
+			return Result.error("请选择商品分类");
+		}
+		goodList.setGoodStoreTypeId(goodStoreListNewDTO.getGoodTypeId());
+		goodList.setGoodDescribe(goodStoreListNewDTO.getGoodDescribe());
+		goodList.setMainPicture(goodStoreListNewDTO.getMainImages());
+		goodList.setDetailsGoods(goodStoreListNewDTO.getDetailsImages());
+		goodList.setCommitmentCustomers(goodStoreListNewDTO.getCommitmentCustomers());
+		//是否有规格
+		JSONArray specifications= JSON.parseArray(goodStoreListNewDTO.getSpecifications());
+		goodList.setSpecifications(goodStoreListNewDTO.getSpecifications());
+		goodList.setStatus(goodStoreListNewDTO.getStatus());
+
+
+		/*添加搜索内容*/
+		List<String> searchInfos=Lists.newArrayList();
+		searchInfos.add(StringUtils.defaultString(goodList.getGoodName()));
+		searchInfos.add(StringUtils.defaultString(goodList.getNickName()));
+		searchInfos.add(StringUtils.defaultString(goodList.getGoodDescribe()));
+		searchInfos.add(iGoodStoreTypeService.getById(goodList.getGoodStoreTypeId()).getName());
+
+
+		if(specifications.size()==0){
+			//无规格
+			goodList.setIsSpecification("0");
+		}else{
+			//有规格
+			goodList.setIsSpecification("1");
+		}
+
+		goodList.setSearchInfo(JSON.toJSONString(searchInfos));
+
+		//保存数据
+		if(goodStoreListService.save(goodList)){
+			if(specifications.size()==0){
+				//无规格
+				GoodStoreSpecification goodSpecification=new GoodStoreSpecification();
+				goodSpecification.setGoodStoreListId(goodList.getId());
+				goodSpecification.setSpecification("无");
+				goodSpecification.setPrice(shopInfoo.getBigDecimal("salesPrice"));
+				goodSpecification.setVipPrice(shopInfoo.getBigDecimal("vipPrice"));
+				goodSpecification.setCostPrice(shopInfoo.getBigDecimal("costPrice"));
+				goodSpecification.setRepertory(shopInfoo.getBigDecimal("repertory"));
+				goodSpecification.setSkuNo(shopInfoo.getString("skuNo"));
+				goodSpecification.setWeight(new BigDecimal(shopInfoo.getString("weight")));
+				iGoodStoreSpecificationService.save(goodSpecification);
+			}else{
+				//有规格
+				JSONArray specificationsDecribes= JSON.parseArray(goodStoreListNewDTO.getSpecificationsDecribes());
+				for (Object s :specificationsDecribes){
+					JSONObject jsonObject=(JSONObject)s;
+					GoodStoreSpecification goodSpecification=new GoodStoreSpecification();
+					goodSpecification.setGoodStoreListId(goodList.getId());
+					goodSpecification.setSpecification(jsonObject.getString("pName"));
+					goodSpecification.setPrice(jsonObject.getBigDecimal("salesPrice"));
+					goodSpecification.setVipPrice(jsonObject.getBigDecimal("vipPrice"));
+					goodSpecification.setCostPrice(jsonObject.getBigDecimal("costPrice"));
+					goodSpecification.setRepertory(jsonObject.getBigDecimal("repertory"));
+					goodSpecification.setSkuNo(jsonObject.getString("skuNo"));
+					goodSpecification.setWeight(new BigDecimal(jsonObject.getString("weight")));
+					goodSpecification.setSpecificationPicture(jsonObject.getString("imgUrl"));
+					iGoodStoreSpecificationService.save(goodSpecification);
+				}
+			}
+		}else{
+			return Result.error("未知错误，请联系管理员");
+		}
+		return Result.ok("添加成功！");
 	}
 	
 	/**
 	  *  编辑
-	 * @param goodStoreList
+	 * @param goodStoreListNewDTO
 	 * @return
 	 */
 	@AutoLog(value = "店铺商品列表-编辑")
 	@ApiOperation(value="店铺商品列表-编辑", notes="店铺商品列表-编辑")
 	@PutMapping(value = "/edit")
-	public Result<GoodStoreList> edit(@RequestBody GoodStoreList goodStoreList) {
-		Result<GoodStoreList> result = new Result<GoodStoreList>();
-		GoodStoreList goodStoreListEntity = goodStoreListService.getById(goodStoreList.getId());
-		if(goodStoreListEntity==null) {
-			result.error500("未找到对应实体");
-		}else {
-			boolean ok = goodStoreListService.updateById(goodStoreList);
-			//TODO 返回false说明什么？
-			if(ok) {
-				result.success("修改成功!");
-			}
+	public Result<?> edit(@RequestBody GoodStoreListNewDTO goodStoreListNewDTO) {
+		log.info(JSON.toJSONString(goodStoreListNewDTO));
+		GoodStoreList goodList=goodStoreListService.getById(goodStoreListNewDTO.getId());
+
+
+		/*上下架状态*/
+		goodList.setFrameStatus(goodStoreListNewDTO.getFrameStatus());
+
+		//审核状态
+		goodList.setAuditStatus("2");
+
+
+		//店铺
+		if(StringUtils.isBlank(goodStoreListNewDTO.getStoreManageId())){
+			return Result.error("请选择店铺");
 		}
-		
-		return result;
+
+		StoreManage storeManage=iStoreManageService.getById(goodStoreListNewDTO.getStoreManageId());
+
+		goodList.setSysUserId(storeManage.getSysUserId());
+
+
+
+		//请选择运费模板
+		if(StringUtils.isBlank(goodStoreListNewDTO.getStoreTemplateId())){
+			return Result.error("请选择运费模板");
+		}
+
+		goodList.setStoreTemplateId(goodStoreListNewDTO.getStoreTemplateId());
+
+
+		//市场价
+		if(goodStoreListNewDTO.getMarketPrice()==null || goodStoreListNewDTO.getMarketPrice().doubleValue()==0){
+			return Result.error("请填写市场价或者市场价必须高于0");
+		}
+		goodList.setMarketPrice(goodStoreListNewDTO.getMarketPrice().toString());
+
+
+
+		//商品编号
+		JSONArray shopInfo=JSON.parseArray(goodStoreListNewDTO.getShopInfo());
+		JSONObject shopInfoo=(JSONObject)shopInfo.get(0);
+		if(StringUtils.isNotBlank(goodStoreListNewDTO.getGoodNo())&&goodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getGoodNo,goodStoreListNewDTO.getGoodNo()).eq(GoodStoreList::getSysUserId,storeManage.getSysUserId()).ne(GoodStoreList::getId,goodStoreListNewDTO.getId()))>0){
+			return Result.error("商品编号不能重复，请重新编写");
+		}
+		//商品编码
+		goodList.setGoodNo(goodStoreListNewDTO.getGoodNo());
+		//商品名称
+		if(StringUtils.isBlank(goodStoreListNewDTO.getGoodName())){
+			return Result.error("商品名称不能为空");
+		}
+		goodList.setGoodName(goodStoreListNewDTO.getGoodName());
+		//商品分类
+		if(StringUtils.isBlank(goodStoreListNewDTO.getGoodTypeId())){
+			return Result.error("请选择商品分类");
+		}
+		goodList.setGoodStoreTypeId(goodStoreListNewDTO.getGoodTypeId());
+		goodList.setGoodDescribe(goodStoreListNewDTO.getGoodDescribe());
+		goodList.setMainPicture(goodStoreListNewDTO.getMainImages());
+		goodList.setDetailsGoods(goodStoreListNewDTO.getDetailsImages());
+		goodList.setCommitmentCustomers(goodStoreListNewDTO.getCommitmentCustomers());
+		//是否有规格
+		JSONArray specifications= JSON.parseArray(goodStoreListNewDTO.getSpecifications());
+		goodList.setSpecifications(goodStoreListNewDTO.getSpecifications());
+		goodList.setStatus(goodStoreListNewDTO.getStatus());
+
+
+		/*添加搜索内容*/
+		List<String> searchInfos=Lists.newArrayList();
+		searchInfos.add(StringUtils.defaultString(goodList.getGoodName()));
+		searchInfos.add(StringUtils.defaultString(goodList.getNickName()));
+		searchInfos.add(StringUtils.defaultString(goodList.getGoodDescribe()));
+		searchInfos.add(iGoodStoreTypeService.getById(goodList.getGoodStoreTypeId()).getName());
+
+
+		if(specifications.size()==0){
+			//无规格
+			goodList.setIsSpecification("0");
+		}else{
+			//有规格
+			goodList.setIsSpecification("1");
+		}
+
+
+		goodList.setSearchInfo(JSON.toJSONString(searchInfos));
+
+		//保存数据
+		if(goodStoreListService.saveOrUpdate(goodList)){
+			//查询所有商品的规格信息
+			Map<String,GoodStoreSpecification> goodSpecificationMap=Maps.newHashMap();
+			iGoodStoreSpecificationService.list(new LambdaQueryWrapper<GoodStoreSpecification>().eq(GoodStoreSpecification::getGoodStoreListId,goodList.getId())).forEach(gs->{
+				goodSpecificationMap.put(gs.getSpecification(),gs);
+			});
+
+			if(specifications.size()==0){
+				//无规格
+				GoodStoreSpecification goodSpecification=new GoodStoreSpecification();
+				if(goodSpecificationMap.containsKey("无")){
+					goodSpecification=goodSpecificationMap.get("无");
+					goodSpecificationMap.remove("无");
+				}
+				goodSpecification.setGoodStoreListId(goodList.getId());
+				goodSpecification.setSpecification("无");
+				goodSpecification.setPrice(shopInfoo.getBigDecimal("salesPrice"));
+				goodSpecification.setVipPrice(shopInfoo.getBigDecimal("vipPrice"));
+				goodSpecification.setCostPrice(shopInfoo.getBigDecimal("costPrice"));
+				goodSpecification.setRepertory(shopInfoo.getBigDecimal("repertory"));
+				goodSpecification.setSkuNo(shopInfoo.getString("skuNo"));
+				goodSpecification.setWeight(new BigDecimal(shopInfoo.getString("weight")));
+				iGoodStoreSpecificationService.saveOrUpdate(goodSpecification);
+			}else{
+				//有规格
+				JSONArray specificationsDecribes= JSON.parseArray(goodStoreListNewDTO.getSpecificationsDecribes());
+				for (Object s :specificationsDecribes){
+					JSONObject jsonObject=(JSONObject)s;
+					GoodStoreSpecification goodSpecification=new GoodStoreSpecification();
+					if(goodSpecificationMap.containsKey(jsonObject.getString("pName"))){
+						goodSpecification=goodSpecificationMap.get(jsonObject.getString("pName"));
+						goodSpecificationMap.remove(jsonObject.getString("pName"));
+					}
+					goodSpecification.setGoodStoreListId(goodList.getId());
+					goodSpecification.setSpecification(jsonObject.getString("pName"));
+					goodSpecification.setPrice(jsonObject.getBigDecimal("salesPrice"));
+					goodSpecification.setVipPrice(jsonObject.getBigDecimal("vipPrice"));
+					goodSpecification.setCostPrice(jsonObject.getBigDecimal("costPrice"));
+					goodSpecification.setRepertory(jsonObject.getBigDecimal("repertory"));
+					goodSpecification.setSkuNo(jsonObject.getString("skuNo"));
+					goodSpecification.setWeight(new BigDecimal(jsonObject.getString("weight")));
+					goodSpecification.setSpecificationPicture(jsonObject.getString("imgUrl"));
+					iGoodStoreSpecificationService.saveOrUpdate(goodSpecification);
+				}
+			}
+			//删除规格信息
+			if(!goodSpecificationMap.isEmpty()){
+				goodSpecificationMap.entrySet().forEach(gs->{
+					iGoodStoreSpecificationService.removeById(gs.getValue().getId());
+				});
+			}
+		}else{
+			return Result.error("未知错误，请联系管理员");
+		}
+		return Result.ok("编辑成功!");
 	}
 	
 	/**

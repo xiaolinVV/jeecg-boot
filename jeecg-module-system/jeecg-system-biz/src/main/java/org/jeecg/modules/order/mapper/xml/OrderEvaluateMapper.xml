@@ -30,7 +30,7 @@
           order_evaluate oe
           LEFT JOIN good_list gl
             ON oe.good_list_id = gl.id
-            where oe.del_flag =0
+            where oe.del_flag = '0'
             <if test="orderListId != null and orderListId != ''">
                 and oe.order_list_id =#{orderListId}
             </if>

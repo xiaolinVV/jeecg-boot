@@ -1,19 +1,22 @@
 package org.jeecg.modules.store.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.vo.LoginUser;
+import org.jeecg.modules.pay.utils.HftxPayUtils;
 import org.jeecg.modules.store.dto.StoreBankCardDTO;
 import org.jeecg.modules.store.entity.StoreBankCard;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.mapper.StoreBankCardMapper;
 import org.jeecg.modules.store.service.IStoreBankCardService;
 import org.jeecg.modules.store.service.IStoreManageService;
-import org.jeecg.modules.store.vo.StoreBankCardVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,10 @@ public class StoreBankCardServiceImpl extends ServiceImpl<StoreBankCardMapper, S
     @Autowired
     @Lazy
     private IStoreManageService iStoreManageService;
+
+    @Autowired
+    private HftxPayUtils hftxPayUtils;
+
     @Override
     public List<StoreBankCardDTO> findBankCardById(String id) {
         return baseMapper.findBankCardById(id);
@@ -64,7 +71,64 @@ public class StoreBankCardServiceImpl extends ServiceImpl<StoreBankCardMapper, S
     }
 
     @Override
-    public IPage<StoreBankCardVO> queryPageList(Page<StoreBankCardVO> page, StoreBankCardDTO storeBankCardDTO) {
+    public IPage<StoreBankCard> queryPageList(Page<StoreBankCard> page, StoreBankCardDTO storeBankCardDTO) {
         return baseMapper.queryPageList(page,storeBankCardDTO);
+    }
+
+    @Override
+    public StoreBankCard getStoreBankCardByStoreManageId(String storeManageId, String carType) {
+        return this.getOne(new LambdaQueryWrapper<StoreBankCard>()
+                .eq(StoreBankCard::getStoreManageId,storeManageId)
+                .eq(StoreBankCard::getCarType,carType)
+                .last("limit 1"));
+    }
+
+    @Override
+    public Result<?> createMemberPrivate(StoreBankCard storeBankCard) {
+        //新增会员信息和结算账户对象
+        if (hftxPayUtils.createMemberPrivate(storeBankCard.getId(), storeBankCard.getCardholder())) {
+            //新增结算账户信息
+            Map<String, Object> paramMap = Maps.newHashMap();
+            paramMap.put("card_id", storeBankCard.getBankCard());
+            paramMap.put("card_name", storeBankCard.getCardholder());
+            paramMap.put("cert_id", storeBankCard.getIdentityNumber());
+            paramMap.put("tel_no", storeBankCard.getPhone());
+            paramMap.put("bank_acct_type", "2");
+            Map<String, Object> resultMap = hftxPayUtils.createSettleAccountPrivate(storeBankCard.getId(), paramMap);
+            if (resultMap.get("status").toString().equals("succeeded")) {
+                if (StringUtils.isNotBlank(resultMap.get("id").toString())) {
+                    storeBankCard.setSettleAccount(resultMap.get("id").toString());
+                    this.saveOrUpdate(storeBankCard);
+                    return Result.ok("设置成功");
+                } else {
+                    return Result.error(String.valueOf(resultMap.get("error_msg")));
+                }
+            } else {
+                return Result.error(String.valueOf(resultMap.get("error_msg")));
+            }
+        } else {
+            return Result.error("分账设置失败");
+        }
+    }
+
+    @Override
+    public Result<?> updateSettleAccountPrivate(StoreBankCard storeBankCard) {
+        //修改结算账户对象
+        Map<String, Object> paramMap = Maps.newHashMap();
+        paramMap.put("card_id", storeBankCard.getBankCard());
+        paramMap.put("card_name", storeBankCard.getCardholder());
+        paramMap.put("cert_id", storeBankCard.getIdentityNumber());
+        paramMap.put("tel_no", storeBankCard.getPhone());
+        paramMap.put("bank_acct_type", "2");
+        Map<String, Object> resultMap = hftxPayUtils.updateSettleAccountPrivate(storeBankCard.getId(), paramMap, storeBankCard.getSettleAccount());
+        if (resultMap.get("status").toString().equals("succeeded")) {
+            storeBankCard.setSettleAccount(resultMap.get("id").toString());
+            this.saveOrUpdate(storeBankCard);
+            return Result.ok("设置成功");
+        } else {
+            storeBankCard.setSettleAccount("");
+            this.saveOrUpdate(storeBankCard);
+            return Result.error(String.valueOf(resultMap.get("error_msg")));
+        }
     }
 }

@@ -28,7 +28,8 @@ public interface IMemberShoppingCartService extends IService<MemberShoppingCart>
      * @return
      */
     public String addGoodToShoppingCart(Integer isPlatform, String goodId, String specification, String memberId, Integer quantity, String isView,
-                                        String marketingPrefectureId, String marketingFreeGoodListId, String marketingGroupRecordId, String marketingStoreGiftCardMemberListId, String marketingRushGroupId,String marketingLeagueGoodListId);
+                                        String marketingPrefectureId, String marketingFreeGoodListId, String marketingGroupRecordId, String marketingStoreGiftCardMemberListId, String marketingRushGroupId,String marketingLeagueGoodListId,String marketingStorePrefectureGoodId
+                                        );
 
 
     /**

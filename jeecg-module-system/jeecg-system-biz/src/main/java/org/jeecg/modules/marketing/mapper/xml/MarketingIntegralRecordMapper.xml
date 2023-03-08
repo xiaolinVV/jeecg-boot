@@ -33,7 +33,7 @@
         FROM marketing_integral_record ${ew.customSqlSegment})mir
         LEFT JOIN member_list ml
         ON mir.`member_list_id` = ml.`id`
-        WHERE mir.`del_flag` = 0
+        WHERE mir.`del_flag` = '0'
         <if test="requestMap.nickName != null and requestMap.nickName != ''">
             AND ml.nick_name LIKE concat('%',#{requestMap.nickName},'%')
         </if>
@@ -64,7 +64,7 @@
                   mis.integral_name
                 FROM
                   marketing_integral_setting mis
-                WHERE mis.`del_flag` = 0
+                WHERE mis.`del_flag` = '0'
                 ORDER BY mis.`create_time` DESC
                 LIMIT 1),
                 0 + CAST(mitr.`award` AS CHAR),
@@ -76,7 +76,7 @@
                   mzgbs.`another_name`
                 FROM
                   marketing_zone_group_base_setting mzgbs
-                WHERE mzgbs.`del_flag` = 0
+                WHERE mzgbs.`del_flag` = '0'
                 ORDER BY mzgbs.`create_time` DESC
                 LIMIT 1),
                 '参团次数',
@@ -104,7 +104,7 @@
           marketing_integral_task_record mitr
         WHERE mitr.`member_list_id` = #{memberId}
           AND mitr.`status` = 1
-          AND mitr.`del_flag` = 0
+          AND mitr.`del_flag` = '0'
         ORDER BY mitr.create_time DESC
     </select>
 </mapper>

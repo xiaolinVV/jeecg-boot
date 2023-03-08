@@ -149,6 +149,8 @@ public class MarketingLiveLotteryRecordServiceImpl extends ServiceImpl<Marketing
                 marketingDiscountCoupon.setIsUniqueness(marketingDiscount.getIsUniqueness());
                 marketingDiscountCoupon.setIsDistribution(marketingDiscount.getIsDistribution());
                 marketingDiscountCoupon.setGetRestrict(marketingDiscount.getGetRestrict());
+                marketingDiscountCoupon.setDiscountLimitAmount(marketingDiscount.getDiscountLimitAmount());
+                marketingDiscountCoupon.setDiscountPercent(marketingDiscount.getDiscountPercent());
                 //平台渠道判断
                 MarketingChannel marketingChannel = iMarketingChannelService.getOne(new LambdaQueryWrapper<MarketingChannel>()
                         .eq(MarketingChannel::getDelFlag, "0")

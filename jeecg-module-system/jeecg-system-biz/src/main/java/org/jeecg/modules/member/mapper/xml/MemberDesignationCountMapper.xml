@@ -10,8 +10,8 @@
           member_designation_count mdc
           LEFT JOIN member_designation md
             ON mdc.`member_designation_id` = md.`id`
-        WHERE mdc.`del_flag` = 0
-          AND md.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
+          AND md.`del_flag` = '0'
           AND md.member_designation_group_id = #{memberDesignationGroupId}
           AND mdc.`member_list_id` = #{id}
     </select>
@@ -22,8 +22,8 @@
           member_list ml
           LEFT JOIN member_designation_count mdc
             ON ml.`id` = mdc.`member_list_id`
-        WHERE ml.`del_flag` = 0
-          AND mdc.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
+          AND mdc.`del_flag` = '0'
           AND ml.`t_manage_id` = #{map.tManageId}
           AND mdc.`member_designation_id` = #{map.memberDesignationId}
           AND mdc.`total_members` >= #{map.totalMembers}
@@ -36,7 +36,7 @@
           member_designation_count mdc
           LEFT JOIN member_designation md
             ON md.`id` = mdc.`member_designation_id`
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         <if test="memberDesignationCountDTO.memberListId!= null and memberDesignationCountDTO.memberListId">
             AND mdc.`member_list_id` = #{memberDesignationCountDTO.memberListId}
         </if>
@@ -52,7 +52,7 @@
           member_designation_count mdc
           LEFT JOIN member_designation md
             ON mdc.`member_designation_id` = md.`id`
-            WHERE mdc.`del_flag` = 0
+            WHERE mdc.`del_flag` = '0'
             AND mdc.`member_list_id` = #{id}
             AND md.`member_designation_group_id` = #{memberDesignationGroupId}
           ORDER BY md.sort

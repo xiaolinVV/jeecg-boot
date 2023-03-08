@@ -29,7 +29,7 @@ import java.util.Date;
 public class MemberBankCard {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -89,14 +89,6 @@ public class MemberBankCard {
 	@Excel(name = "卡类型；0：银行卡；1：支付宝", width = 15)
     @ApiModelProperty(value = "卡类型；0：银行卡；1：支付宝")
 	private String carType;
-	/**变更说明*/
-	@Excel(name = "变更说明", width = 15)
-    @ApiModelProperty(value = "变更说明")
-	private String updateExplain;
-	/**变更凭证*/
-	@Excel(name = "变更凭证", width = 15)
-    @ApiModelProperty(value = "变更凭证")
-	private String updateCertificate;
 	/**银行绑定手机号*/
 	@Excel(name = "银行绑定手机号", width = 15)
     @ApiModelProperty(value = "银行绑定手机号")
@@ -117,4 +109,13 @@ public class MemberBankCard {
 	@Excel(name = "开户分支行", width = 15)
 	@ApiModelProperty(value = "开户分支行")
 	private String openingBank;
+
+	/*
+	 * 汇付天下分账结算账户id
+	 * */
+	private String settleAccount;
+
+	private String bankCode;
+
+	private String accountType;
 }

@@ -29,9 +29,9 @@ import java.util.Date;
 @Accessors(chain = true)
 @ApiModel(value="marketing_certificate_record对象", description="兑换券记录")
 public class MarketingCertificateRecord {
-    
+
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -214,16 +214,6 @@ public class MarketingCertificateRecord {
 	@Excel(name = "海报图", width = 15)
 	@ApiModelProperty(value = "海报图")
 	private String posters;
-
-	/**经度*/
-	@Excel(name = "经度", width = 15)
-	@ApiModelProperty(value = "经度")
-	private BigDecimal longitude;
-
-	/**纬度*/
-	@Excel(name = "纬度", width = 15)
-	@ApiModelProperty(value = "纬度")
-	private BigDecimal latitude;
 	/**
 	 * 购买来源
 	 */
@@ -245,4 +235,11 @@ public class MarketingCertificateRecord {
 	@Excel(name = "券支付记录表id", width = 15)
 	@ApiModelProperty(value = "券支付记录表id")
 	private String payCertificateLogId;
+	@Excel(name = "线上使用: 0 关闭 1开启", width = 15)
+	@ApiModelProperty(value = "线上使用: 0 关闭 1开启")
+	private Integer aboveUse;
+
+	@Excel(name = "线下使用: 0 关闭 1开启", width = 15)
+	@ApiModelProperty(value = "线下使用: 0 关闭 1开启")
+	private Integer belowUse;
 }

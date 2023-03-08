@@ -7,7 +7,10 @@
 
                   SELECT
                 scr.*,
-                ( SELECT concat( nick_name, '(', `phone`, ')' ) AS ssss FROM member_list WHERE id = scr.`member_list_id` ) AS nickName
+                ( SELECT concat( nick_name, '(', `phone`, ')' ) AS ssss FROM member_list WHERE id = scr.`member_list_id` ) AS nickName,
+                 ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE id = scr.affiliation_store_manage_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+								 (SELECT settle_account from store_bank_card where del_flag='0' and id=scr.bank_card_id) AS storeSettleAccount,
+								 (SELECT settle_account from member_bank_card where del_flag='0' and id=scr.bank_card_id) AS memberSettleAccount
             FROM
                 `store_cashier_routing` scr
                 ${ew.customSqlSegment}

@@ -9,7 +9,7 @@
         FROM
           marketing_certificate_good mcg
         WHERE mcg.`marketing_certificate_id` = mc.`id`
-          AND mcg.`del_flag` = 0) AS goodQuantity,
+          AND mcg.`del_flag` = '0') AS goodQuantity,
         IF(
         mc.`reward_store` = 0,
         '0',
@@ -17,7 +17,7 @@
         COUNT(1)
         FROM
         marketing_certificate_store mcs
-        WHERE mcs.`del_flag` = 0
+        WHERE mcs.`del_flag` = '0'
         AND mcs.`marketing_certificate_id` = mc.`id`)
         ) storeQuantity,
         (SELECT
@@ -47,7 +47,7 @@
         mc.cover_plan AS coverPlans
       FROM
         marketing_certificate mc
-      WHERE mc.`del_flag` = 0
+      WHERE mc.`del_flag` = '0'
         <if test="marketingCertificateVO!=null and marketingCertificateVO.id!=null and marketingCertificateVO.id!=''">
             AND mc.id LIKE concat('%',concat(#{marketingCertificateVO.id},'%'))
         </if>
@@ -144,7 +144,7 @@
         m.*
         FROM
         marketing_certificate m) mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         AND mc.status = 1
         AND mc.is_nomal = 0
         <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
@@ -221,7 +221,7 @@
         m.*
         FROM
         marketing_certificate m) mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         AND mc.status = 1
         AND mc.is_nomal = 1
         <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
@@ -250,7 +250,7 @@
                 sfs.`front_logo`
                 FROM
                 sys_front_setting sfs
-                WHERE sfs.`del_flag` = 0
+                WHERE sfs.`del_flag` = '0'
                 LIMIT 1),
                 mc.main_picture
                 ) AS mainPicture,
@@ -288,7 +288,7 @@
                 sfs.`front_logo`
                 FROM
                 sys_front_setting sfs
-                WHERE sfs.`del_flag` = 0
+                WHERE sfs.`del_flag` = '0'
                 LIMIT 1),
                 mc.main_picture
                 ) AS mainPicture,
@@ -439,7 +439,7 @@
             WHERE m.certificate_type LIKE concat('%',#{marketingCertificateVO.certificateType},'%')
         </if>
         ) mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         AND mc.status = 1
         <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
             AND mc.name LIKE concat('%',#{marketingCertificateVO.certificateName},'%')
@@ -459,7 +459,7 @@
           ) AS marketPrice
         FROM
           marketing_certificate mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
           AND mc.is_nomal = 1
           and status='1'
         ORDER BY mc.`sort`
@@ -524,7 +524,7 @@
         COUNT(1)
         FROM
         marketing_certificate_seckill_list mcsl
-        WHERE mcsl.`del_flag` = 0
+        WHERE mcsl.`del_flag` = '0'
         AND mcsl.`marketing_certificate_id` = mc.id
         AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateVO.marketingCertificateSeckillActivityListId}) > 0,1,0) AS ifSelected
         FROM
@@ -538,7 +538,7 @@
         m.*
         FROM
         marketing_certificate m) mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         AND mc.status = 1
         AND mc.is_nomal = 1
         <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">
@@ -608,7 +608,7 @@
         COUNT(1)
         FROM
         marketing_certificate_group_list mcgl
-        WHERE mcgl.`del_flag` = 0
+        WHERE mcgl.`del_flag` = '0'
         AND mcgl.`marketing_certificate_id` = mc.id) > 0,1,0) AS ifSelected
         FROM
         (SELECT
@@ -621,7 +621,7 @@
         m.*
         FROM
         marketing_certificate m) mc
-        WHERE mc.`del_flag` = 0
+        WHERE mc.`del_flag` = '0'
         AND mc.status = 1
         AND mc.is_nomal = 1
         <if test="marketingCertificateVO!=null and marketingCertificateVO.certificateName!=null and marketingCertificateVO.certificateName!=''">

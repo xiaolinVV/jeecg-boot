@@ -29,7 +29,7 @@ public class ProviderAccountCapitalVO {
     /**
      * 主键ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     private String id;
     /**
      * 创建人
@@ -95,10 +95,10 @@ public class ProviderAccountCapitalVO {
      */
     private String linkPhone;
 
-    /**
-     * 供应商名称
-     */
-    private String providerName;
+//    /**
+//     * 供应商名称
+//     */
+//    private String providerName;
 
     /**
      * 供应商名称

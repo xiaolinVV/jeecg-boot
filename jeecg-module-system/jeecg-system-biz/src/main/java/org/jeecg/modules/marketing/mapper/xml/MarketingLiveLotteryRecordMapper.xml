@@ -81,7 +81,7 @@
         <if test="map.drawStatus != null and map.drawStatus != ''">
             AND mllr.`draw_status` = #{map.drawStatus}
         </if>
-        AND mllr.`del_flag` = 0
+        AND mllr.`del_flag` = '0'
         ORDER BY mllr.`get_time` DESC
     </select>
 </mapper>

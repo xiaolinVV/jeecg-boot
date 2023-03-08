@@ -13,7 +13,7 @@
         ON asa.`sys_user_id` = su.`id`
         LEFT JOIN alliance_manage am
         ON asa.`sys_user_id` = am.`sys_user_id`
-        WHERE asa.`del_flag` = 0
+        WHERE asa.`del_flag` = '0'
         <if test="agencyStatementAccountDTO != null and agencyStatementAccountDTO.sysUserId != null and agencyStatementAccountDTO.sysUserId != ''">
             AND asa.sys_user_id = #{agencyStatementAccountDTO.sysUserId}
         </if>

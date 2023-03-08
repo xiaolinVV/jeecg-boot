@@ -1,19 +1,17 @@
 package org.jeecg.modules.good.entity;
 
-import java.io.Serializable;
-import java.util.Date;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * @Description: 展品列表
@@ -29,7 +27,7 @@ import org.jeecgframework.poi.excel.annotation.Excel;
 public class GoodExhibits {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -41,7 +39,7 @@ public class GoodExhibits {
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建时间")
-	private Date createTime;
+	private java.util.Date createTime;
 	/**修改人*/
 	@Excel(name = "修改人", width = 15)
     @ApiModelProperty(value = "修改人")
@@ -51,7 +49,7 @@ public class GoodExhibits {
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "修改时间")
-	private Date updateTime;
+	private java.util.Date updateTime;
 	/**创建年*/
 	@Excel(name = "创建年", width = 15)
     @ApiModelProperty(value = "创建年")
@@ -67,6 +65,7 @@ public class GoodExhibits {
 	/**删除状态（0，正常，1已删除）*/
 	@Excel(name = "删除状态（0，正常，1已删除）", width = 15)
     @ApiModelProperty(value = "删除状态（0，正常，1已删除）")
+	@TableLogic
 	private String delFlag;
 	/**编号*/
 	@Excel(name = "编号", width = 15)
@@ -87,7 +86,7 @@ public class GoodExhibits {
 	/**描述*/
 	@Excel(name = "描述", width = 15)
     @ApiModelProperty(value = "描述")
-	private String describe;
+	private String exhibitsDescribe;
 	/**视频*/
 	@Excel(name = "视频", width = 15)
     @ApiModelProperty(value = "视频")
@@ -108,4 +107,6 @@ public class GoodExhibits {
 	@Excel(name = "状态；0：未通过；1：通过", width = 15)
     @ApiModelProperty(value = "状态；0：未通过；1：通过")
 	private String status;
+
+	private String statusExplain;
 }

@@ -6,15 +6,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
-import org.jeecg.modules.good.entity.GoodStoreList;
 import org.jeecg.modules.good.entity.GoodStoreSpecification;
-import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
-import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.provider.service.IProviderTemplateService;
 import org.jeecg.modules.store.service.IStoreTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +31,6 @@ import java.util.Map;
 public class BeckTemplateController {
 
     @Autowired
-    private IGoodStoreListService iGoodStoreListService;
-
-    @Autowired
     private IGoodStoreSpecificationService iGoodStoreSpecificationService;
 
     @Autowired
@@ -48,12 +41,6 @@ public class BeckTemplateController {
 
     @Autowired
     private IStoreTemplateService iStoreTemplateService;
-
-    @Autowired
-    private IGoodListService iGoodListService;
-
-    @Autowired
-    private IMemberListService iMemberListService;
 
     /**
      * 根据商品id查询运费情况
@@ -90,20 +77,10 @@ public class BeckTemplateController {
             result.error500("商品规格不能为空不能为空！！！   ");
             return  result;
         }
-
-        Object sysUserId=request.getAttribute("sysUserId");
         //查询运费
         //查询店铺商品运费
         if(isPlatform.intValue()==0){
-            GoodStoreList goodStoreList= iGoodStoreListService.getById(goodId);
-            if(goodStoreList.getRepertory().longValue()>0){
-                paramMap.put("isAvailable","1");
-                paramMap.put("carriage",null);
-            }else{
-                paramMap.put("isAvailable","0");
-                paramMap.put("carriage",null);
-            }
-            if(goodStoreList!=null){
+            if(goodId!=null){
                 QueryWrapper<GoodStoreSpecification> goodStoreSpecificationQueryWrapper=new QueryWrapper<>();
                 goodStoreSpecificationQueryWrapper.eq("good_store_list_id",goodId);
                 goodStoreSpecificationQueryWrapper.eq("specification",specification);
@@ -148,15 +125,6 @@ public class BeckTemplateController {
         }else
             //查询平台商品运费
             if(isPlatform.intValue()==1){
-
-                GoodList goodList= iGoodListService.getById(goodId);
-                if(goodList.getRepertory().longValue()>0){
-                    paramMap.put("isAvailable","1");
-                    paramMap.put("carriage",null);
-                }else{
-                    paramMap.put("isAvailable","0");
-                    paramMap.put("carriage",null);
-                }
                 if(goodId!=null){
                     QueryWrapper<GoodSpecification> goodSpecificationQueryWrapper=new QueryWrapper<>();
                     goodSpecificationQueryWrapper.eq("good_list_id",goodId);

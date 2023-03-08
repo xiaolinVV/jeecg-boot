@@ -3,6 +3,7 @@ package org.jeecg.modules.good.mapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
@@ -21,14 +22,19 @@ import java.util.Map;
  * @Version: V1.0
  */
 public interface GoodListMapper extends BaseMapper<GoodList> {
-IPage<GoodList> getGoodListdelFlagOrAuditStatus(Page page,@Param("delFlag") String delFlag,@Param("auditStatus") String auditStatus,QueryWrapper<GoodList> queryWrapper);
-GoodList getGoodListById(@Param("id") String id);
+
+
+
+    /*
+     * 后端列表
+     * */
+    public IPage<Map<String,Object>> queryPageList(Page<Map<String,Object>> page,@Param("paramMap") Map<String,Object> paramMap,@Param(Constants.WRAPPER) QueryWrapper wrapper);
+
+
+
+
+    GoodList getGoodListById(@Param("id") String id);
 void updateDelFalg(@Param("goodList")GoodList goodList,@Param("delFlag")String delFlag);
-    /**
-     * 上架，启用的商品集合
-     * @return
-     */
-    public  List<GoodList>  getGoodListOK(QueryWrapper<GoodList> queryWrapper);
 
     IPage<GoodListDto> getGoodListDto(Page page,@Param("goodListVo")GoodListVo goodListVo,@Param("notauditStatus")String notauditStatus);
 
@@ -72,14 +78,6 @@ void updateDelFalg(@Param("goodList")GoodList goodList,@Param("delFlag")String d
      */
    List<Map<String,Object>>  getEverydayGoodTypeId(@Param("createTime")String createTime,@Param("limit")Integer limit);
 
-
-    /**
-     * 每周特惠查询
-     * @param page
-     * @param paramMap
-     * @return
-     */
-    IPage<Map<String,Object>> getEveryWeekPreferential(Page<Map<String,Object>> page, @Param("paramMap") Map<String,Object> paramMap);
 
     IPage<GoodDiscountDTO> findGoodList(Page<GoodListVo> page,@Param("goodListVo") GoodListVo goodListVo);
 

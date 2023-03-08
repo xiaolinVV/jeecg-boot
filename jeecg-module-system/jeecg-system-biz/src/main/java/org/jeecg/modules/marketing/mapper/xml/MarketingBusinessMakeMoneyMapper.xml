@@ -19,6 +19,6 @@
           (SELECT * FROM marketing_business_make_money ${ew.customSqlSegment})mbmm
           LEFT JOIN marketing_business_capital mbc
             ON mbmm.`marketing_business_capital_id` = mbc.`id`
-        WHERE mbmm.`del_flag` = 0
+        WHERE mbmm.`del_flag` = '0'
     </select>
 </mapper>

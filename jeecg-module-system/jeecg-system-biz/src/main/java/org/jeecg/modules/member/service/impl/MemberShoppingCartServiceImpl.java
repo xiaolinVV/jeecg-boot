@@ -15,9 +15,11 @@ import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
 import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.service.*;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureGoodService;
 import org.jeecg.modules.member.dto.MemberShoppingCartDto;
 import org.jeecg.modules.member.entity.MemberShoppingCart;
 import org.jeecg.modules.member.mapper.MemberShoppingCartMapper;
+import org.jeecg.modules.member.service.IMemberGradeService;
 import org.jeecg.modules.member.service.IMemberShoppingCartService;
 import org.jeecg.modules.member.vo.MemberShoppingCartVo;
 import org.jeecg.modules.order.service.IOrderListService;
@@ -91,6 +93,12 @@ public class MemberShoppingCartServiceImpl extends ServiceImpl<MemberShoppingCar
     @Autowired
     private IMarketingLeagueSettingService iMarketingLeagueSettingService;
 
+    @Autowired
+    private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
+
+    @Autowired
+    private IMemberGradeService iMemberGradeService;
+
 
     @Override
     public IPage<MemberShoppingCartDto> getMemberShoppingCartVo(Page<MemberShoppingCartDto> page, MemberShoppingCartVo memberShoppingCartVo) {
@@ -129,7 +137,7 @@ public class MemberShoppingCartServiceImpl extends ServiceImpl<MemberShoppingCar
     @Override
     @Transactional
     public String addGoodToShoppingCart(Integer isPlatform,String goodId,String specification,String memberId,Integer quantity,String isView,
-                                        String marketingPrefectureId,String marketingFreeGoodListId,String marketingGroupRecordId,String marketingStoreGiftCardMemberListId,String marketingRushGroupId,String marketingLeagueGoodListId) {
+                                        String marketingPrefectureId,String marketingFreeGoodListId,String marketingGroupRecordId,String marketingStoreGiftCardMemberListId,String marketingRushGroupId,String marketingLeagueGoodListId,String marketingStorePrefectureGoodId) {
 
         MemberShoppingCart memberShoppingCart=null;
         //添加购物车
@@ -150,6 +158,7 @@ public class MemberShoppingCartServiceImpl extends ServiceImpl<MemberShoppingCar
                     .eq(MemberShoppingCart::getIsView,"1")
                     .eq(MemberShoppingCart::getGoodStoreSpecificationId,goodStoreSpecification.getId())
                     .eq(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId),MemberShoppingCart::getMarketingStoreGiftCardMemberListId,marketingStoreGiftCardMemberListId)
+                    .eq(StringUtils.isNoneBlank(marketingStorePrefectureGoodId),MemberShoppingCart::getMarketingStorePrefectureGoodId,marketingStorePrefectureGoodId)
                     .eq(MemberShoppingCart::getGoodType,"0"));
             //根据情况添加数据
             if(memberShoppingCart!=null){
@@ -173,6 +182,12 @@ public class MemberShoppingCartServiceImpl extends ServiceImpl<MemberShoppingCar
             //礼品卡商品
             if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){
                 memberShoppingCart.setMarketingStoreGiftCardMemberListId(marketingStoreGiftCardMemberListId);
+                isView="0";
+            }
+
+            /*店铺专区*/
+            if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
+                iMarketingStorePrefectureGoodService.settingMemberShoppingCar(memberShoppingCart,marketingStorePrefectureGoodId,goodStoreSpecification.getSpecification());
                 isView="0";
             }
 
@@ -228,6 +243,7 @@ public class MemberShoppingCartServiceImpl extends ServiceImpl<MemberShoppingCar
             if(StringUtils.isBlank(marketingPrefectureId)&&StringUtils.isBlank(marketingFreeGoodListId)&&StringUtils.isBlank(marketingLeagueGoodListId)) {
                 memberShoppingCart.setAddPrice(goodSpecification.getPrice());
                 memberShoppingCart.setMarketingPrefectureId(null);
+                iMemberGradeService.settingMemberShopCardinfo(memberShoppingCart,goodSpecification,memberId);
             }
             //专区商品
             if(StringUtils.isNotBlank(marketingPrefectureId)){

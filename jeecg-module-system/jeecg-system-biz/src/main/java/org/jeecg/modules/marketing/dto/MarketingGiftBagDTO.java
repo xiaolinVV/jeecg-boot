@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 public class MarketingGiftBagDTO {
     /**主键ID*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**创建人*/
@@ -214,5 +214,7 @@ public class MarketingGiftBagDTO {
      * 称号id
      */
     private String memberDesignationId;
-
+    @Excel(name = "分销福利金", width = 15)
+    @ApiModelProperty(value = "分销福利金")
+    private BigDecimal promoterWelfarePayments;
 }

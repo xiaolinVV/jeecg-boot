@@ -3,6 +3,7 @@ package org.jeecg.modules.order.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.member.entity.MemberShippingAddress;
 import org.jeecg.modules.order.dto.OrderStoreListDTO;
 import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
@@ -70,7 +71,7 @@ public interface IOrderStoreListService extends IService<OrderStoreList> {
      * @param closeExplain
      * @param closeType
      */
-    public void refundAndAbrogateOrder(String id, String closeExplain, String closeType);
+    public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType);
 
     /**
      * 确认收货

@@ -19,13 +19,6 @@ public interface GoodSpecificationMapper extends BaseMapper<GoodSpecification> {
     List<GoodSpecification> getGoodSpecificationByGoodListId(@Param("goodListId")String goodListId);
 
   /**
-   * 根据商品id删除对应规格
-   * @param goodId
-   * @param delFlag
-   */
-    void updateDelFlagByGoodId(@Param("goodListId")String goodId, @Param("delFlag")String delFlag);
-
-  /**
    * 根据商品id查规格
    * @param goodId
    * @return

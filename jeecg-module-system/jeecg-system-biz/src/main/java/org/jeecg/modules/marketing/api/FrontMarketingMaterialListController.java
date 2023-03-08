@@ -72,7 +72,7 @@ public class FrontMarketingMaterialListController {
         IPage<Map<String,Object>>  marketingMaterialPage  =  iMarketingMaterialListService.searchMarketingMaterial(page,paramMap);
         if(memberId!=null){
             marketingMaterialPage.getRecords().forEach(mmp->{
-                    Long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,mmp.get("id"))
+                    long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,mmp.get("id"))
                             .eq(MarketingMaterialDianzan::getMemberListId,memberId));
                     if(count>0){
                         mmp.put("isDianzan","1" );  //已点赞
@@ -120,7 +120,7 @@ public class FrontMarketingMaterialListController {
 
         if(memberId!=null){
             marketingMaterialPage.getRecords().forEach(mmp->{
-                Long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,mmp.get("id"))
+                long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,mmp.get("id"))
                         .eq(MarketingMaterialDianzan::getMemberListId,memberId));
                 if(count>0){
                     mmp.put("isDianzan","1" );  //已点赞
@@ -164,7 +164,7 @@ public class FrontMarketingMaterialListController {
 
        //添加点赞标识
         if(memberId!=null){
-                Long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,marketingMaterialMap.get("id").toString())
+            long count = iMarketingMaterialDianzanService.count(new LambdaQueryWrapper<MarketingMaterialDianzan>().eq(MarketingMaterialDianzan::getMarketingMaterialListId,marketingMaterialMap.get("id").toString())
                         .eq(MarketingMaterialDianzan::getMemberListId,memberId));
                 if(count>0){
                     marketingMaterialMap.put("isDianzan","1" );  //已点赞

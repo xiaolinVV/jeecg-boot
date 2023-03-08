@@ -2,20 +2,20 @@ package org.jeecg.modules.member.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.member.dto.MemberGradeDTO;
 import org.jeecg.modules.member.entity.MemberGrade;
+import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberGradeService;
+import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.vo.MemberGradeVO;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
@@ -50,6 +50,23 @@ import java.util.Map;
 public class MemberGradeController {
     @Autowired
     private IMemberGradeService memberGradeService;
+
+    @Autowired
+    private IMemberListService iMemberListService;
+
+
+    /**
+     * 修改会员等级
+     *
+     * @param memberId
+     * @param memberGradeId
+     * @return
+     */
+    @GetMapping("updateMemberGrade")
+    public Result<?> updateMemberGrade(String memberId,String memberGradeId){
+        iMemberListService.updateById(new MemberList().setId(memberId).setMemberGradeId(memberGradeId).setMemberType("1"));
+        return Result.ok("修改会员等级成功");
+    }
 
     /**
      * 分页列表查询
@@ -256,20 +273,4 @@ public class MemberGradeController {
         return result;
     }
 
-    @PostMapping("deleteAndExplain")
-    public Result<String> deleteAndExplain(@RequestBody MemberGrade memberGrade) {
-        Result<String> result = new Result<>();
-        if (StringUtils.isBlank(memberGrade.getId())) {
-            result.error500("参数错误");
-        }
-        boolean b = memberGradeService.update(new MemberGrade()
-                .setDelExplain(memberGrade.getDelExplain())
-                .setDelFlag("1"), new LambdaUpdateWrapper<MemberGrade>()
-                .eq(MemberGrade::getId, memberGrade.getId()));
-        if (b) {
-            return result.success("删除成功");
-        } else {
-            return result.error500("删除失败");
-        }
-    }
 }

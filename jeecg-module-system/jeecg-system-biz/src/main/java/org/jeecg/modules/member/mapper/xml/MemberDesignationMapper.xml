@@ -39,7 +39,7 @@
         GROUP_CONCAT(mdc.`name`)
         FROM
         member_designation mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`status` = 1
         AND FIND_IN_SET(
         mdc.id,
@@ -60,7 +60,7 @@
         ON md.`marketing_gift_bag_id` = mgb.`id`
         LEFT JOIN member_designation_group mdg
         ON md.member_designation_group_id = mdg.id
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         <if test="memberDesignationDTO.id != null and memberDesignationDTO.id != ''">
             AND md.id LIKE concat('%',#{memberDesignationDTO.id},'%')
         </if>
@@ -98,7 +98,7 @@
           md.participation
         FROM
           member_designation md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
           AND md.`status` = 1
           AND md.is_default = 0
           AND md.is_buy_giftbag = 1
@@ -113,7 +113,7 @@
         md.`id` AS memberDesignationId
         FROM
         member_designation md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.`status` = 1
         AND md.is_default = 0
         AND md.member_designation_group_id = #{memberDesignationGroupId}
@@ -180,7 +180,7 @@
         GROUP_CONCAT(mdc.`name`)
         FROM
         member_designation mdc
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND mdc.`status` = 1
         AND FIND_IN_SET(
         mdc.id,
@@ -195,8 +195,28 @@
         ) AS mdCustomRemark
         FROM
         member_designation md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.id = #{memberDesignationId}
         ) m
     </select>
+
+    <select id="getSelectDesignation" resultType="map">
+
+                SELECT
+            md.id,
+            md.`name`,
+            md.logo_addr AS logoAddr,
+            mdg.group_name AS groupName
+        FROM
+            member_designation md
+            LEFT JOIN member_designation_group mdg ON md.member_designation_group_id = mdg.id
+        WHERE
+            md.del_flag = '0'
+            and md.member_designation_group_id=#{memberDesignationGroupId}
+        ORDER BY
+            md.sort DESC
+
+
+    </select>
+
 </mapper>

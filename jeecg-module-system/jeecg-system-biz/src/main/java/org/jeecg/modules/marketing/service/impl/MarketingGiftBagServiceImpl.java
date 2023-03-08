@@ -40,9 +40,11 @@ import org.jeecg.modules.member.service.*;
 import org.jeecg.modules.pay.entity.PayGiftBagLog;
 import org.jeecg.modules.pay.service.IPayGiftBagLogService;
 import org.jeecg.modules.store.entity.StoreAccountCapital;
+import org.jeecg.modules.store.entity.StoreFranchiser;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.entity.StoreRechargeRecord;
 import org.jeecg.modules.store.service.IStoreAccountCapitalService;
+import org.jeecg.modules.store.service.IStoreFranchiserService;
 import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.store.service.IStoreRechargeRecordService;
 import org.jeecg.modules.system.entity.SysArea;
@@ -73,12 +75,6 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
 
     @Autowired
     private IMarketingDiscountService iMarketingDiscountService;
-
-    @Autowired
-    private IMarketingDiscountCouponService iMarketingDiscountCouponService;
-
-    @Autowired
-    private IMarketingChannelService iMarketingChannelService;
 
     @Autowired
     private IMemberWelfarePaymentsService iMemberWelfarePaymentsService;
@@ -177,14 +173,13 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
     @Autowired
     private IPayGiftBagLogService iPayGiftBagLogService;
 
+
+    @Autowired
+    private IStoreFranchiserService iStoreFranchiserService;
+
     @Override
     public IPage<Map<String, Object>> getMarketingGiftBagList(Page<Map<String, Object>> page, Map<String, Object> paramMap) {
         return baseMapper.getMarketingGiftBagList(page, paramMap);
-    }
-
-    @Override
-    public Map<String, Object> findMarketingGiftBagById(String id) {
-        return baseMapper.findMarketingGiftBagById(id);
     }
 
     @Override
@@ -280,48 +275,13 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
             //会员称号条件构造器
             LambdaQueryWrapper<MemberDesignationMemberList> memberDesignationMemberListLambdaQueryWrapper = new LambdaQueryWrapper<MemberDesignationMemberList>()
                     .eq(MemberDesignationMemberList::getMemberListId, memberList.getId())
-                    .eq(MemberDesignationMemberList::getMemberDesignationGroupId, giftBagemberDesignation.getMemberDesignationGroupId())
+                    .eq(MemberDesignationMemberList::getMemberDesignationId, giftBagemberDesignation.getId())
+                    .orderByAsc(MemberDesignationMemberList::getCreateTime)
                     .last("limit 1");
 
             if (iMemberDesignationMemberListService.count(memberDesignationMemberListLambdaQueryWrapper) > 0) {
                 //会员在这个group下面称号数如果大于0
                 MemberDesignationMemberList memberDesignationMemberList = iMemberDesignationMemberListService.getOne(memberDesignationMemberListLambdaQueryWrapper);
-                MemberDesignation memberDesignation = iMemberDesignationService.getById(memberDesignationMemberList.getMemberDesignationId());
-                if (memberDesignation.getSort().doubleValue() < giftBagemberDesignation.getSort().doubleValue()) {
-
-                    memberDesignationMemberList
-                            .setMemberDesignationId(giftBagemberDesignation.getId());
-
-                    iMemberDesignationMemberListService.updateById(memberDesignationMemberList
-                            .setTotalGiftSales(memberDesignationMemberList.getTotalGiftSales().add(marketingGiftBagRecord.getPrice()))
-                            .setBuyCount(memberDesignationMemberList.getBuyCount().add(new BigDecimal(1))));
-
-                    List<MemberDesignationCount> memberDesignationCountList = iMemberDesignationCountService.list(new LambdaQueryWrapper<MemberDesignationCount>()
-                            .eq(MemberDesignationCount::getMemberDesignationId, memberDesignation.getId())
-                            .eq(MemberDesignationCount::getMemberListId, memberList.getId())
-                    );
-                    if (memberDesignationCountList.size() > 0) {
-                        MemberDesignationCount memberDesignationCount = memberDesignationCountList.get(0);
-                        iMemberDesignationCountService.updateById(memberDesignationCount
-                                .setTotalMembers(memberDesignationCount.getTotalMembers().subtract(new BigDecimal(1))));
-                    }
-                    List<MemberDesignationCount> designationCountList = iMemberDesignationCountService.list(new LambdaQueryWrapper<MemberDesignationCount>()
-                            .eq(MemberDesignationCount::getMemberDesignationId, giftBagemberDesignation.getId())
-                            .eq(MemberDesignationCount::getMemberListId, memberList.getId())
-                    );
-                    if (designationCountList.size() > 0) {
-                        MemberDesignationCount memberDesignationCount = designationCountList.get(0);
-                        iMemberDesignationCountService.updateById(memberDesignationCount
-                                .setTotalMembers(memberDesignationCount.getTotalMembers().add(new BigDecimal(1))));
-                    } else {
-                        iMemberDesignationCountService.save(new MemberDesignationCount()
-                                .setMemberListId(memberList.getId())
-                                .setMemberDesignationId(giftBagemberDesignation.getId())
-                                .setTotalMembers(new BigDecimal(1))
-                        );
-                    }
-                    this.updateDesignationCount(memberDesignationMemberList, memberDesignation.getId(), marketingGiftBagRecord.getPrice());
-                } else {
                     iMemberDesignationMemberListService.updateById(memberDesignationMemberList
                             .setTotalGiftSales(memberDesignationMemberList.getTotalGiftSales().add(marketingGiftBagRecord.getPrice()))
                             .setBuyCount(memberDesignationMemberList.getBuyCount().add(new BigDecimal(1))));
@@ -333,7 +293,7 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
                     }
 
                     List<MemberDesignationCount> designationCountList = iMemberDesignationCountService.list(new LambdaQueryWrapper<MemberDesignationCount>()
-                            .eq(MemberDesignationCount::getMemberDesignationId, memberDesignation.getId())
+                            .eq(MemberDesignationCount::getMemberDesignationId, giftBagemberDesignation.getId())
                             .eq(MemberDesignationCount::getMemberListId, memberList.getId())
                     );
                     if (designationCountList.size() > 0) {
@@ -353,6 +313,7 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
                         MemberDesignationMemberList designationMemberList = iMemberDesignationMemberListService.getOne(new LambdaQueryWrapper<MemberDesignationMemberList>()
                                 .eq(MemberDesignationMemberList::getMemberDesignationGroupId, memberDesignationMemberList.getMemberDesignationGroupId())
                                 .eq(MemberDesignationMemberList::getMemberListId, tId)
+                                .orderByAsc(MemberDesignationMemberList::getCreateTime)
                                 .last("limit 1")
                         );
                         if(designationMemberList!=null) {
@@ -368,7 +329,7 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
                             tId = "";
                         }
                     }
-                }
+
             } else {
                 //会员没有称号
                 //判断是否有礼包推荐人
@@ -433,7 +394,6 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
                 } else {
 
                     List<MemberDesignation> memberDesignationList = iMemberDesignationService.list(new LambdaQueryWrapper<MemberDesignation>()
-                            .eq(MemberDesignation::getDelFlag, "0")
                             .eq(MemberDesignation::getMemberDesignationGroupId, giftBagemberDesignation.getMemberDesignationGroupId())
                             .orderByAsc(MemberDesignation::getSort));
 
@@ -487,62 +447,6 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
         });
     }
 
-    private void updateDesignationCount(MemberDesignationMemberList memberDesignationMemberList, String oldMemberDesignationId, BigDecimal price) {
-        String tId = "";
-
-        //是否有团队管理id
-        if (StringUtils.isNotBlank(memberDesignationMemberList.getTManageId())) {
-            tId = memberDesignationMemberList.getTManageId();
-        }
-        //获取上级id,封装成队列
-        while (StringUtils.isNotBlank(tId)) {
-
-            MemberDesignationMemberList designationMemberList = iMemberDesignationMemberListService.list(new LambdaQueryWrapper<MemberDesignationMemberList>()
-                    .eq(MemberDesignationMemberList::getDelFlag, "0")
-                    .eq(MemberDesignationMemberList::getMemberDesignationGroupId, memberDesignationMemberList.getMemberDesignationGroupId())
-                    .eq(MemberDesignationMemberList::getMemberListId, tId)
-            ).get(0);
-
-            iMemberDesignationMemberListService.updateById(designationMemberList
-                    .setTotalGiftSales(designationMemberList.getTotalGiftSales().add(price)));
-
-            List<MemberDesignationCount> memberDesignationCountList = iMemberDesignationCountService.list(new LambdaQueryWrapper<MemberDesignationCount>()
-                    .eq(MemberDesignationCount::getDelFlag, "0")
-                    .eq(MemberDesignationCount::getMemberDesignationId, memberDesignationMemberList.getMemberDesignationId())
-                    .eq(MemberDesignationCount::getMemberListId, designationMemberList.getMemberListId())
-            );
-
-            if (memberDesignationCountList.size() > 0) {
-                MemberDesignationCount memberDesignationCount = memberDesignationCountList.get(0);
-                iMemberDesignationCountService.saveOrUpdate(memberDesignationCount
-                        .setTotalMembers(memberDesignationCount.getTotalMembers().add(new BigDecimal(1))));
-            } else {
-                iMemberDesignationCountService.save(new MemberDesignationCount()
-                        .setDelFlag("0")
-                        .setMemberListId(designationMemberList.getMemberListId())
-                        .setMemberDesignationId(memberDesignationMemberList.getMemberDesignationId())
-                        .setTotalMembers(new BigDecimal(1))
-                );
-            }
-            List<MemberDesignationCount> designationCountList = iMemberDesignationCountService.list(new LambdaQueryWrapper<MemberDesignationCount>()
-                    .eq(MemberDesignationCount::getDelFlag, "0")
-                    .eq(MemberDesignationCount::getMemberListId, designationMemberList.getMemberListId())
-                    .eq(MemberDesignationCount::getMemberDesignationId, oldMemberDesignationId)
-            );
-            if (designationCountList.size() > 0) {
-                MemberDesignationCount memberDesignationCount = designationCountList.get(0);
-                iMemberDesignationCountService.updateById(memberDesignationCount
-                        .setTotalMembers(memberDesignationCount.getTotalMembers().subtract(new BigDecimal(1))));
-            }
-            if (StringUtils.isNotBlank(designationMemberList.getTManageId())) {
-                tId = designationMemberList.getTManageId();
-            } else {
-                tId = "";
-            }
-
-        }
-    }
-
     private void totalMemberAddNew(MemberDesignationMemberList memberDesignationMemberList, BigDecimal price) {
 
         String tId = "";
@@ -557,7 +461,9 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
             MemberDesignationMemberList designationMemberList = iMemberDesignationMemberListService.getOne(new LambdaQueryWrapper<MemberDesignationMemberList>()
                     .eq(MemberDesignationMemberList::getMemberDesignationGroupId, memberDesignationMemberList.getMemberDesignationGroupId())
                     .eq(MemberDesignationMemberList::getMemberListId, tId)
-            );
+                    .orderByAsc(MemberDesignationMemberList::getCreateTime)
+                    .last("limit 1")
+           ,false );
             if (designationMemberList!=null) {
                 iMemberDesignationMemberListService.updateById(designationMemberList
                         .setTotalMembers(designationMemberList.getTotalMembers().add(new BigDecimal(1)))
@@ -567,7 +473,7 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
                 MemberDesignationCount memberDesignationCount = iMemberDesignationCountService.getOne(new LambdaQueryWrapper<MemberDesignationCount>()
                         .eq(MemberDesignationCount::getMemberDesignationId, memberDesignationMemberList.getMemberDesignationId())
                         .eq(MemberDesignationCount::getMemberListId, designationMemberList.getMemberListId())
-                );
+                ,false);
 
                 if (memberDesignationCount!=null) {
                     iMemberDesignationCountService.saveOrUpdate(memberDesignationCount
@@ -649,106 +555,11 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
         marketingGiftBagDiscountQueryWrapper.eq("marketing_gift_bag_id", marketingGiftBag.getId());
         List<MarketingGiftBagDiscount> marketingGiftBagDiscounts = iMarketingGiftBagDiscountService.list(marketingGiftBagDiscountQueryWrapper);
         for (MarketingGiftBagDiscount mgb : marketingGiftBagDiscounts) {
-            //发放券
-            //券的发放
-            MarketingDiscount marketingDiscount = iMarketingDiscountService.getById(mgb.getMarketingDiscountId());
-            if (marketingDiscount != null) {
-                int discountCount = mgb.getDistributedAmount().intValue();
-                Calendar myCalendar = Calendar.getInstance();
-                while (discountCount > 0) {
-                    //优惠券量不足时候跳过领取
-                    if (marketingDiscount.getTotal().subtract(marketingDiscount.getReleasedQuantity()).longValue() <= 0) {
-                        continue;
-                    }
-                    MarketingDiscountCoupon marketingDiscountCoupon = new MarketingDiscountCoupon();
-                    marketingDiscountCoupon.setDelFlag("0");
-                    marketingDiscountCoupon.setPrice(marketingDiscount.getSubtract());
-                    marketingDiscountCoupon.setName(marketingDiscount.getName());
-                    marketingDiscountCoupon.setIsThreshold(marketingDiscount.getIsThreshold());
-                    marketingDiscountCoupon.setMemberListId(memberList.getId());
-                    marketingDiscountCoupon.setSysUserId(marketingDiscount.getSysUserId());
-                    marketingDiscountCoupon.setQqzixuangu(OrderNoUtils.getOrderNo());
-                    marketingDiscountCoupon.setMarketingDiscountId(marketingDiscount.getId());
-                    marketingDiscountCoupon.setIsPlatform(marketingDiscount.getIsPlatform());
-                    marketingDiscountCoupon.setCompletely(marketingDiscount.getCompletely());
-                    marketingDiscountCoupon.setIsGive(marketingDiscount.getIsGive());
-                    marketingDiscountCoupon.setIsWarn(marketingDiscount.getIsWarn());
-                    marketingDiscountCoupon.setWarnDays(marketingDiscount.getWarnDays());
-                    marketingDiscountCoupon.setUserRestrict(marketingDiscount.getUserRestrict());
-                    marketingDiscountCoupon.setDiscountExplain(marketingDiscount.getDiscountExplain());
-                    marketingDiscountCoupon.setCoverPlan(marketingDiscount.getCoverPlan());
-                    marketingDiscountCoupon.setPosters(marketingDiscount.getPosters());
-                    marketingDiscountCoupon.setMainPicture(marketingDiscount.getMainPicture());
-
-                    //平台渠道判断
-                    QueryWrapper<MarketingChannel> marketingChannelQueryWrapper = new QueryWrapper<>();
-                    marketingChannelQueryWrapper.eq("english_name", "NORMAL_TO_GET");
-                    MarketingChannel marketingChannel = iMarketingChannelService.getOne(marketingChannelQueryWrapper);
-                    if (marketingChannel != null) {
-                        marketingDiscountCoupon.setMarketingChannelId(marketingChannel.getId());
-                        marketingDiscountCoupon.setTheChannel(marketingChannel.getName());
-                    }
-                    //标准用券方式
-                    if (marketingDiscount.getVouchersWay().equals("0")) {
-                        //优惠券的时间生成
-                        marketingDiscountCoupon.setStartTime(marketingDiscount.getStartTime());
-                        marketingDiscountCoupon.setEndTime(marketingDiscount.getEndTime());
-                    }
-
-                    //领券当日起
-                    if (marketingDiscount.getVouchersWay().equals("1")) {
-                        //优惠券的时间生成
-                        if (mgb.getValidityType().equals("1")) {
-                            myCalendar.setTime(new Date());
-                        }
-                        marketingDiscountCoupon.setStartTime(myCalendar.getTime());
-
-                        if (marketingDiscount.getMonad().equals("天")) {
-                            myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
-                        }
-                        if (marketingDiscount.getMonad().equals("周")) {
-                            myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
-                        }
-                        if (marketingDiscount.getMonad().equals("月")) {
-                            myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
-                        }
-
-                        marketingDiscountCoupon.setEndTime(myCalendar.getTime());
-                    }
-                    //领券次日起
-                    if (marketingDiscount.getVouchersWay().equals("2")) {
-                        //优惠券的时间生成
-                        if (mgb.getValidityType().equals("1")) {
-                            myCalendar.setTime(new Date());
-                        }
-                        myCalendar.add(Calendar.DATE, 1);
-                        marketingDiscountCoupon.setStartTime(myCalendar.getTime());
-
-                        if (marketingDiscount.getMonad().equals("天")) {
-                            myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
-                        }
-                        if (marketingDiscount.getMonad().equals("周")) {
-                            myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
-                        }
-                        if (marketingDiscount.getMonad().equals("月")) {
-                            myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
-                        }
-
-                        marketingDiscountCoupon.setEndTime(myCalendar.getTime());
-                    }
-
-                    if (new Date().getTime() >= marketingDiscountCoupon.getStartTime().getTime() && new Date().getTime() <= marketingDiscountCoupon.getEndTime().getTime()) {
-                        //设置生效
-                        marketingDiscountCoupon.setStatus("1");
-                    } else {
-                        marketingDiscountCoupon.setStatus("0");
-                    }
-                    iMarketingDiscountCouponService.save(marketingDiscountCoupon);
-                    marketingDiscount.setReleasedQuantity(marketingDiscount.getReleasedQuantity().add(new BigDecimal(1)));
-                    iMarketingDiscountService.saveOrUpdate(marketingDiscount);
-                    discountCount--;
-                }
+            Boolean isContinuous=false;
+            if(mgb.getValidityType().equals("0")){
+                isContinuous=true;
             }
+            iMarketingDiscountService.generate(mgb.getMarketingDiscountId(),mgb.getDistributedAmount(),memberList.getId(),isContinuous);
         }
         log.info("礼包购买发放优惠券：" + marketingGiftBagDiscounts);
     }
@@ -763,13 +574,8 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
         marketingGiftBagCertificateQueryWrapper.eq("del_flag", "0");
         List<MarketingGiftBagCertificate> marketingGiftBagCertificates = iMarketingGiftBagCertificateService.list(marketingGiftBagCertificateQueryWrapper);
         for (MarketingGiftBagCertificate mgc : marketingGiftBagCertificates) {
-            //发放券
-            //券的发放
-            MarketingCertificate marketingCertificate = iMarketingCertificateService.getById(mgc.getMarketingCertificateId());
-            if (marketingCertificate != null) {
-                //生成兑换券
-                iMarketingCertificateService.generate(mgc.getMarketingCertificateId(), distributionChannel, mgc.getDistributedAmount(), memberId.toString(), BigDecimal.ZERO, BigDecimal.ZERO, true);
-            }
+            //生成兑换券
+            iMarketingCertificateService.generate(mgc.getMarketingCertificateId(), distributionChannel, mgc.getDistributedAmount(), memberId.toString(), true);
         }
         log.info("礼包购买发放兑换券：" + marketingGiftBagCertificates);
     }
@@ -1310,6 +1116,10 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
     public void paySuccess(Object memberId, String id) {
         PayGiftBagLog payGiftBagLog = iPayGiftBagLogService.getById(id);
 
+        if(payGiftBagLog.getPayStatus().equals("1")){
+            return;
+        }
+
         //礼包余额扣除
         //扣除余额
         iMemberListService.subtractBlance(payGiftBagLog.getMemberListId(), payGiftBagLog.getBalance(), payGiftBagLog.getId(), "17");
@@ -1392,6 +1202,82 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
 
             //资金分配
             this.marketingGiftBagDistributionCommissionUpdate(memberId, marketingGiftBag, marketingGiftBagRecord);
+            //分销福利金
+            if(marketingGiftBag.getPromoterWelfarePayments().doubleValue()>0&&StringUtils.isNotBlank(marketingGiftBagRecord.getTMemberId())){
+                MemberList memberList = iMemberListService.getById(marketingGiftBagRecord.getTMemberId());
+                if (marketingGiftBag.getPromoterWelfarePayments().intValue() > 0) {
+                    memberList.setWelfarePayments(memberList.getWelfarePayments().add(marketingGiftBag.getPromoterWelfarePayments()));
+                    //行成用户福利金记录
+                    MemberWelfarePayments memberWelfarePayments = new MemberWelfarePayments();
+                    memberWelfarePayments.setDelFlag("0");
+                    memberWelfarePayments.setMemberListId(memberList.getId());
+                    memberWelfarePayments.setSerialNumber(OrderNoUtils.getOrderNo());
+                    memberWelfarePayments.setBargainPayments(marketingGiftBag.getPromoterWelfarePayments());
+                    memberWelfarePayments.setWelfarePayments(memberList.getWelfarePayments());
+                    memberWelfarePayments.setWeType("1");
+                    memberWelfarePayments.setWpExplain("礼包分享福利金奖励[" + marketingGiftBagRecord.getId() + "]");
+                    memberWelfarePayments.setGoAndCome("平台");
+                    memberWelfarePayments.setBargainTime(new Date());
+                    memberWelfarePayments.setOperator("系统");
+                    memberWelfarePayments.setIsPlatform("1");
+                    memberWelfarePayments.setIsFreeze("0");
+                    memberWelfarePayments.setTradeNo(marketingGiftBagRecord.getId());
+                    memberWelfarePayments.setTradeType("27");
+                    memberWelfarePayments.setTradeStatus("5");
+                    iMemberWelfarePaymentsService.save(memberWelfarePayments);
+                    log.info("礼包购买一级推广送福利金：" + marketingGiftBag.getPromoterWelfarePayments() + "---会员信息：" + memberList.getNickName());
+
+                    iMarketingWelfarePaymentsService.save(new MarketingWelfarePayments()
+                            .setDelFlag("0")
+                            .setMemberListId(memberList.getId())
+                            .setSerialNumber(OrderNoUtils.getOrderNo())
+                            .setBargainPayments(marketingGiftBag.getPromoterWelfarePayments())
+                            .setWelfarePayments(memberList.getWelfarePayments())
+                            .setWeType("1")
+                            .setGiveExplain("礼包分享福利金奖励[" + memberWelfarePayments.getSerialNumber() + "]")
+                            .setGoAndCome(memberList.getPhone())
+                            .setBargainTime(new Date())
+                            .setOperator("系统")
+                            .setStatus("1")
+                            .setPayMode("2")
+                            .setSendUser("平台")
+                            .setIsPlatform("1")
+                            .setUserType("0")
+                            .setTradeNo(memberWelfarePayments.getSerialNumber())
+                            .setTradeType("8")
+                    );
+                }
+                iMemberListService.saveOrUpdate(memberList);
+            }
+
+            //分享奖励
+            if(marketingGiftBag.getShareRewards().doubleValue()>0){
+                if(StringUtils.isNotBlank(payGiftBagLog.getTMemberId())){
+                    iMemberListService.addBlance(payGiftBagLog.getTMemberId(),marketingGiftBag.getShareRewards(),marketingGiftBagRecord.getId(),"52");
+                }
+            }
+
+
+            //给经销商分钱
+            if(marketingGiftBag.getDealerAwards().doubleValue()>0){
+                if(StringUtils.isNotBlank(payGiftBagLog.getSysUserId())){
+                        StoreManage storeManage=iStoreManageService.getStoreManageBySysUserId(payGiftBagLog.getSysUserId());
+                        //获取本会员的经销商
+                        StoreFranchiser storeFranchiser=iStoreFranchiserService.findStoreFranchiser(payGiftBagLog.getMemberListId(),storeManage.getId());
+                        if(storeFranchiser!=null){
+                          iStoreFranchiserService.awardStoreFranchiser(storeFranchiser,marketingGiftBag.getDealerAwards(),payGiftBagLog.getMemberListId());
+                        }else{
+                            StoreFranchiser storeFranchiser1=iStoreFranchiserService.findStoreFranchiser(payGiftBagLog.getTMemberId(),storeManage.getId());
+                            if(storeFranchiser1!=null){
+                                iStoreFranchiserService.awardStoreFranchiser(storeFranchiser1,marketingGiftBag.getDealerAwards(),payGiftBagLog.getMemberListId());
+                                iStoreFranchiserService.joinStoreFranchiser(storeFranchiser1,payGiftBagLog.getMemberListId());
+                            }
+                        }
+
+                }
+
+            }
+
         }
 
     }

@@ -27,15 +27,6 @@ public interface MarketingGiftBagMapper extends BaseMapper<MarketingGiftBag> {
      */
     IPage<Map<String, Object>> getMarketingGiftBagList(Page<Map<String,Object>> page,@Param("paramMap") Map<String,Object> paramMap);
 
-
-    /**
-     * 根据礼包id获取信息
-     *
-     * @param id
-     * @return
-     */
-    Map<String,Object> findMarketingGiftBagById(@Param("id") String id);
-
     IPage<MarketingGiftBagVO> findMarketingGifiBagPageList(Page<MarketingGiftBagVO> page,@Param("marketingGiftBagVO") MarketingGiftBagVO marketingGiftBagVO);
 
     void deleteAndDelExplain(@Param("id") String id,@Param("delExplain") String delExplain);

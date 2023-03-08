@@ -27,7 +27,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class MarketingStoreGiftCardList {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -102,7 +102,7 @@ public class MarketingStoreGiftCardList {
 	/**礼品卡说明*/
 	@Excel(name = "礼品卡说明", width = 15)
     @ApiModelProperty(value = "礼品卡说明")
-	private Object carExplain;
+	private String carExplain;
 	/**状态；0：停用；1：启用*/
 	@Excel(name = "状态；0：停用；1：启用", width = 15)
     @ApiModelProperty(value = "状态；0：停用；1：启用")

@@ -36,6 +36,11 @@ public class MarketingStoreGiftCardMemberListServiceImpl extends ServiceImpl<Mar
     }
 
     @Override
+    public List<Map<String, Object>> getByMemberId(Map<String, Object> paramMap) {
+        return baseMapper.getByMemberId(paramMap);
+    }
+
+    @Override
     public List<Map<String, Object>> getGoodTypeOne(Map<String, Object> paramMap) {
         return baseMapper.getGoodTypeOne(paramMap);
     }

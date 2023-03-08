@@ -14,7 +14,7 @@
             ON mdml.`member_designation_id` = md.`id`
           LEFT JOIN member_designation_group mdg
             ON mdg.`id` = md.`member_designation_group_id`
-        WHERE mdml.`del_flag` = 0
+        WHERE mdml.`del_flag` = '0'
           AND mdml.`member_list_id` = #{memberId}
           ORDER BY mdml.create_time DESC,mdml.update_time DESC
     </select>
@@ -40,7 +40,7 @@
         COUNT(1)
         FROM
         member_designation_member_list mdml
-        WHERE mdml.`del_flag` = 0
+        WHERE mdml.`del_flag` = '0'
         AND mdml.`member_designation_group_id` = mdg.`id`
         AND mdml.`t_manage_id` = ml.`id`) AS memberSum,
         mdml.`member_join_time`,
@@ -59,7 +59,7 @@
         ON ml.`id` = mdg.`member_id`
         LEFT JOIN member_designation md
         ON md.`id` = mdml.`member_designation_id`
-        WHERE mdg.`del_flag` = 0
+        WHERE mdg.`del_flag` = '0'
     </select>
     <select id="findMemberDesignationMemberlist" resultType="org.jeecg.modules.member.vo.MemberDesignationMemberListVO">
         SELECT
@@ -83,7 +83,7 @@
         COUNT(1)
         FROM
         member_designation_member_list mdml
-        WHERE mdml.`del_flag` = 0
+        WHERE mdml.`del_flag` = '0'
         AND mdml.`member_designation_group_id` = mdg.`id`
         AND mdml.`t_manage_id` = ml.`id`) AS memberSum,
         mdml.`member_join_time`,
@@ -95,7 +95,7 @@
         COUNT(1)
         FROM
         member_designation_member_list mdmls
-        WHERE mdmls.`del_flag` = 0
+        WHERE mdmls.`del_flag` = '0'
         AND mdmls.`member_designation_group_id` = mdml.`member_designation_group_id`
         AND mdmls.`t_manage_id` = mdml.member_list_id)>0,'1','0') AS isViewUnderling,
         mdml.member_designation_group_id
@@ -107,8 +107,8 @@
         ON md.`id` = mdml.`member_designation_id`
         LEFT JOIN member_designation_group mdg
         ON mdml.`member_designation_group_id` = mdg.`id`
-        WHERE mdml.`del_flag` = 0
-        AND ml.`del_flag` = 0
+        WHERE mdml.`del_flag` = '0'
+        AND ml.`del_flag` = '0'
         <if test="memberDesignationMemberListVO.memberListId != null and memberDesignationMemberListVO.memberListId != ''">
             AND mdml.`t_manage_id` = #{memberDesignationMemberListVO.memberListId}
             AND mdml.`member_designation_group_id` = #{memberDesignationMemberListVO.memberDesignationGroupId}

@@ -30,7 +30,7 @@ import java.util.Date;
 @ApiModel(value="order_list对象", description="订单列表")
 public class OrderList {
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/

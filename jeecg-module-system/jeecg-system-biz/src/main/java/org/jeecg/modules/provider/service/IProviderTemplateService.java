@@ -35,13 +35,6 @@ public interface IProviderTemplateService extends IService<ProviderTemplate> {
      */
     boolean updateIsTemplate(ProviderTemplate providerTemplate);
 
-    /**
-     * 根据userId查询对应的角色
-     * @param userId
-     * @return
-     */
-    ProviderTemplate findRoleByUserId(String userId);
-
 
     IPage<ProviderTemplateDTO> getProviderTemplateList(Page<ProviderTemplateDTO> page, ProviderTemplateVO providerTemplateVO);
 

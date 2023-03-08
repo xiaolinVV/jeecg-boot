@@ -115,6 +115,21 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
     }
 
     @Override
+    public IPage<MarketingCertificateVO> findCertificateVO(Page<MarketingCertificateDTO> page, MarketingCertificateVO marketingCertificateVO) {
+        IPage<MarketingCertificateVO> marketingCertificateVOIPage = baseMapper.findCertificateVO(page,marketingCertificateVO);
+        marketingCertificateVOIPage.getRecords().forEach(c->{
+            if (StringUtils.isNotBlank(c.getMainPictures())){
+                String s = (String) JSON.parseObject(c.getMainPicture()).get("0");
+                c.setMainPictures(s);
+            }
+            if (c.getRewardStore().equals("0")){
+                c.setStoreQuantity("全平台");
+            }
+        });
+        return marketingCertificateVOIPage;
+    }
+
+    @Override
     public IPage<Map<String, Object>> findMarketingCertificateList(Page<Map<String, Object>> page,String name) {
         return baseMapper.findMarketingCertificateList(page,name);
     }
@@ -230,8 +245,6 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
                                                       String sysUserId,
                                                       BigDecimal quantity,
                                                       String memberId,
-                                                      BigDecimal longitude,
-                                                      BigDecimal latitude,
                                                       Boolean isContinuous) {
         MarketingCertificate marketingCertificate=this.getById(marketingCertificateId);
 
@@ -240,6 +253,13 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
         Calendar myCalendar = Calendar.getInstance();
 
         List<MarketingCertificateRecord> marketingCertificateRecords= Lists.newArrayList();
+
+
+        if(marketingCertificate==null){
+            return marketingCertificateRecords;
+        }
+
+
 
         //判断券剩余的数量够不够,不够弹出
         while (certificateCount > 0) {
@@ -286,9 +306,9 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
             marketingCertificateRecord.setRewardDayOne(marketingCertificate.getRewardDayOne());
             marketingCertificateRecord.setCoverPlan(marketingCertificate.getCoverPlan());
             marketingCertificateRecord.setPosters(marketingCertificate.getPosters());
-            marketingCertificateRecord.setLongitude(longitude);
-            marketingCertificateRecord.setLatitude(latitude);
-
+//选择线上线下核销
+            marketingCertificateRecord.setAboveUse(marketingCertificate.getAboveUse());
+            marketingCertificateRecord.setBelowUse(marketingCertificate.getBelowUse());
             //平台渠道判断
             QueryWrapper<MarketingChannel> marketingChannelQueryWrapper = new QueryWrapper<>();
             marketingChannelQueryWrapper.eq("english_name", "NORMAL_TO_GET");

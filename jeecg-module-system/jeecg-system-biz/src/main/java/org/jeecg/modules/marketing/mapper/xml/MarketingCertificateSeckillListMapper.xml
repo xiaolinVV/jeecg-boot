@@ -14,7 +14,7 @@
                 count(1)
               from
                 marketing_certificate_record mcr
-              where mcr.`del_flag` = 0
+              where mcr.`del_flag` = '0'
                 and mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
             ),2) * 100
           ) AS CHAR)AS residue
@@ -33,7 +33,7 @@
             marketing_certificate_seckill_list mcsl
             LEFT JOIN marketing_certificate mc
               ON mcsl.`marketing_certificate_id` = mc.`id`
-          WHERE mcsl.`del_flag` = 0
+          WHERE mcsl.`del_flag` = '0'
             AND mcsl.status = 1
             AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateSeckillActivityListId}
             ORDER BY mcsl.sort
@@ -57,7 +57,7 @@
           marketing_certificate_seckill_list mcsl
           LEFT JOIN marketing_certificate mc
             ON mcsl.`marketing_certificate_id` = mc.`id`
-        WHERE mcsl.`del_flag` = 0
+        WHERE mcsl.`del_flag` = '0'
         ORDER BY mcsl.`sort`)m ${ew.customSqlSegment}
     </select>
     <select id="pageListByMarketingCertificateSeckillActivityListId" resultType="map">
@@ -73,7 +73,7 @@
                 count(1)
               from
                 marketing_certificate_record mcr
-              where mcr.`del_flag` = 0
+              where mcr.`del_flag` = '0'
                 and mcr.`marketing_certificate_id` = m.marketing_certificate_id) + m.repertory
           ),2)* 100
         ) AS CHAR)AS residue
@@ -92,7 +92,7 @@
           marketing_certificate_seckill_list mcsl
           LEFT JOIN marketing_certificate mc
             ON mcsl.`marketing_certificate_id` = mc.`id`
-        WHERE mcsl.`del_flag` = 0
+        WHERE mcsl.`del_flag` = '0'
           AND mcsl.status = 1
           AND mcsl.`marketing_certificate_seckill_activity_list_id` = #{marketingCertificateSeckillActivityListId}
         ORDER BY mcsl.`sort`) m

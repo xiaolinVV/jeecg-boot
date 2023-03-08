@@ -13,7 +13,7 @@
           member_give_welfare_payments mgwp
           LEFT JOIN member_list ml
             ON mgwp.`member_list_id` = ml.`id`
-        WHERE mgwp.`del_flag` = 0
+        WHERE mgwp.`del_flag` = '0'
         <if test="requestMap.memberListId != null and requestMap.memberListId != ''">
             AND mgwp.member_list_id LIKE concat('%',#{requestMap.memberListId},'%')
         </if>

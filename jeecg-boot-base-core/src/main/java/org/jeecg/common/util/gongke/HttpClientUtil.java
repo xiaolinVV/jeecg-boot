@@ -40,6 +40,7 @@ public class HttpClientUtil {
     //证书到商户系统下载
     @Value("${jeecg.path.cert}")
     private  String cert;
+    @Autowired
     @Lazy
     @Resource
     private CommonAPI commonApi;

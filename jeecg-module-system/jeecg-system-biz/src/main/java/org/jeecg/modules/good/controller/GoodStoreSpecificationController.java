@@ -1,41 +1,37 @@
 package org.jeecg.modules.good.controller;
 
-import java.util.*;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.aspect.annotation.AutoLog;
+import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.good.entity.GoodStoreList;
 import org.jeecg.modules.good.entity.GoodStoreSpecification;
 import org.jeecg.modules.good.service.IGoodStoreListService;
 import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.extern.slf4j.Slf4j;
-
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import com.alibaba.fastjson.JSON;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.*;
 
  /**
  * @Description: 店铺商品规格
@@ -275,71 +271,5 @@ public class GoodStoreSpecificationController {
 		 }
 		 return result;
 	 }
-
-	 /**
-	  * 修改价格
-	  * @param json listgoodSpecification:规格集合
-	  * @return listGoodList：商品信息
-	  */
-	 @RequestMapping(value = "/updatePrice", method = RequestMethod.PUT)
-	 public Result<String> updatePrice(@RequestBody JSONObject json) {
-		 Result<String> result = new Result<String>();
-		 try {
-			 JSONArray listgoodStoreSpecification= json.getJSONArray("listgoodSpecification");
-			 JSONArray listGoodList= json.getJSONArray("listGoodList");
-			 List<GoodStoreSpecification> listgoodStoreSpecification1 = listgoodStoreSpecification.toJavaList(GoodStoreSpecification.class);
-			 List<GoodStoreList> listGoodStoreList1 = listGoodList.toJavaList(GoodStoreList.class);
-			 if(listgoodStoreSpecification1.size()>0){
-				 goodStoreSpecificationService.updateBatchById((Collection<GoodStoreSpecification>) listgoodStoreSpecification1);
-			 }
-			 if(listGoodStoreList1.size()>0){
-				 int result1;
-				 for(GoodStoreList goodStoreList:listGoodStoreList1){
-					 //最低商品价格
-					 if (goodStoreList.getPrice() != null && !"".equals(goodStoreList.getPrice())) {
-						 result1 = goodStoreList.getPrice().indexOf("-");
-						 if (result1 != -1) {
-							 String smallPrice = goodStoreList.getPrice().substring(0, goodStoreList.getPrice().indexOf("-"));
-							 goodStoreList.setSmallPrice(smallPrice);
-						 } else {
-							 goodStoreList.setSmallPrice(goodStoreList.getPrice());
-						 }
-					 }
-					 //最低vip价格
-					 if (goodStoreList.getVipPrice() != null && !"".equals(goodStoreList.getVipPrice())) {
-						 result1 = goodStoreList.getVipPrice().indexOf("-");
-						 if (result1 != -1) {
-							 String smallVipPrice = goodStoreList.getVipPrice().substring(0, goodStoreList.getVipPrice().indexOf("-"));
-							 goodStoreList.setSmallVipPrice(smallVipPrice);
-						 } else {
-							 goodStoreList.setSmallVipPrice(goodStoreList.getVipPrice());
-						 }
-					 }
-					 //最低成本价
-					 if (goodStoreList.getCostPrice() != null && !"".equals(goodStoreList.getCostPrice())) {
-						 result1 = goodStoreList.getCostPrice().indexOf("-");
-						 if (result1 != -1) {
-							 String smallCostPrice = goodStoreList.getCostPrice().substring(0, goodStoreList.getCostPrice().indexOf("-"));
-							 goodStoreList.setSmallCostPrice(smallCostPrice);
-						 } else {
-							 goodStoreList.setSmallCostPrice(goodStoreList.getCostPrice());
-						 }
-					 }
-
-				 }
-				 goodStoreListService.updateBatchById((Collection<GoodStoreList>)listGoodStoreList1);
-			 }
-
-			 result.success("修改完成！");
-		 }catch (Exception e){
-			 log.error(e.getMessage(), e);
-			 result.setSuccess(false);
-			 result.setMessage("出错了: " + e.getMessage());
-			 return result;
-		 }
-
-		 return result;
-	 }
-
 
 }

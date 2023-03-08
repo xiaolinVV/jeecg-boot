@@ -30,10 +30,10 @@
             ON mpg.`good_list_id` = gl.`id`
           LEFT JOIN marketing_prefecture_type mpt
             ON mpt.`id` = mpg.`marketing_prefecture_type_id`
-        WHERE mprg.`del_flag` = 0
+        WHERE mprg.`del_flag` = '0'
           AND mprg.`marketing_prefecture_recommend_id` = #{marketingPrefectureRecommendGoodDTO.marketingPrefectureRecommendId}
-          AND mpg.`del_flag` = 0
-          AND gl.`del_flag` = 0
+          AND mpg.`del_flag` = '0'
+          AND gl.`del_flag` = '0'
           <if test="marketingPrefectureRecommendGoodDTO.goodName != null and marketingPrefectureRecommendGoodDTO.goodName != ''">
               AND gl.good_name LIKE concat('%',#{marketingPrefectureRecommendGoodDTO.goodName},'%')
           </if>
@@ -53,15 +53,13 @@
     </select>
     <select id="getMarketingPrefectureRecommendGoodList" resultType="map">
       SELECT
-        gl.id AS id,
-        gl.main_picture AS mainPicture,
-        1 AS isPlatform,
-        gl.good_name AS goodName,
-        gl.small_price AS smallPrice,
-        gl.activities_type AS activitiesType,
-        gl.activity_price AS activityPrice,
-        gl.market_price AS marketPrice,
-        gl.supply_price AS supplyPrice,
+      gl.id AS id,
+      gl.main_picture AS mainPicture,
+      1 AS isPlatform,
+      gl.good_name AS goodName,
+      ( SELECT price FROM good_specification WHERE good_list_id = gl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallPrice,
+      gl.market_price AS marketPrice,
+      ( SELECT supply_price FROM good_specification WHERE good_list_id = gl.id AND del_flag = '0' ORDER BY supply_price ASC LIMIT 1 ) AS supplyPrice,
         IF(
           mp.is_discount = '0',
           0,
@@ -73,7 +71,7 @@
               ON mg.marketing_discount_id = ms.id
           WHERE ms.status = 1
             AND ms.del_flag = 0
-            AND ms.total > ms.released_quantity
+            AND ms.total &gt; ms.released_quantity
             AND mg.good_id = gl.id
             AND mg.is_platform = '1')
         ) AS discount,
@@ -94,7 +92,7 @@
             ON mprg.`marketing_prefecture_good_id` = m.`id`
           LEFT JOIN marketing_prefecture_type mpt
             ON mpt.id = m.marketing_prefecture_type_id
-        WHERE mprg.`del_flag` = 0
+        WHERE mprg.`del_flag` = '0'
           AND mprg.`marketing_prefecture_recommend_id` = #{map.marketingPrefectureRecommendId}
           AND m.del_flag = '0'
           <if test="map.marketingPrefectureTypeId != null and map.marketingPrefectureTypeId != ''">
@@ -108,7 +106,6 @@
           ON mp.id = mpg.marketing_prefecture_id
       WHERE gl.del_flag = 0
         AND gl.STATUS = 1
-        AND gl.good_form = '0'
         AND gl.audit_status = '2'
         AND gl.frame_status = '1'
         AND gl.main_picture IS NOT NULL
@@ -116,16 +113,13 @@
         AND mpg.status = '1'
     </select>
     <select id="getMarketingPrefectureRecommendGoodListOne" resultType="map">
-      SELECT
       gl.id AS id,
       gl.main_picture AS mainPicture,
       1 AS isPlatform,
       gl.good_name AS goodName,
-      gl.small_price AS smallPrice,
-      gl.activities_type AS activitiesType,
-      gl.activity_price AS activityPrice,
+      ( SELECT price FROM good_specification WHERE good_list_id = gl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallPrice,
       gl.market_price AS marketPrice,
-      gl.supply_price AS supplyPrice,
+      ( SELECT supply_price FROM good_specification WHERE good_list_id = gl.id AND del_flag = '0' ORDER BY supply_price ASC LIMIT 1 ) AS supplyPrice,
       IF(
       mp.is_discount = '0',
       0,
@@ -137,7 +131,7 @@
       ON mg.marketing_discount_id = ms.id
       WHERE ms.status = 1
       AND ms.del_flag = 0
-      AND ms.total > ms.released_quantity
+      AND ms.total &gt; ms.released_quantity
       AND mg.good_id = gl.id
       AND mg.is_platform = '1')
       ) AS discount,
@@ -158,7 +152,7 @@
       ON mprg.`marketing_prefecture_good_id` = m.`id`
       LEFT JOIN marketing_prefecture_type mpt
       ON m.`marketing_prefecture_type_id` = mpt.`id`
-      WHERE mprg.`del_flag` = 0
+      WHERE mprg.`del_flag` = '0'
       AND mprg.`marketing_prefecture_recommend_id` = #{map.marketingPrefectureRecommendId}
       AND m.del_flag = '0'
       AND m.STATUS = '1'
@@ -175,7 +169,7 @@
       ON mprg.`marketing_prefecture_good_id` = m.`id`
       LEFT JOIN marketing_prefecture_type mpt
       ON m.`marketing_prefecture_type_id` = mpt.`id`
-      WHERE mprg.`del_flag` = 0
+      WHERE mprg.`del_flag` = '0'
       AND mprg.`marketing_prefecture_recommend_id` = #{map.marketingPrefectureRecommendId}
       AND m.del_flag = '0'
       AND m.STATUS = '1'
@@ -190,7 +184,6 @@
       ON mp.id = mpg.marketing_prefecture_id
       WHERE gl.del_flag = 0
       AND gl.STATUS = 1
-      AND gl.good_form = '0'
       AND gl.audit_status = '2'
       AND gl.frame_status = '1'
       AND gl.main_picture IS NOT NULL

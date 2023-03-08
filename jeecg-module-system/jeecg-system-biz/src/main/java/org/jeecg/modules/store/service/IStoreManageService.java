@@ -24,12 +24,16 @@ import java.util.Map;
  */
 public interface IStoreManageService extends IService<StoreManage> {
 
+
+    public StoreManage getStoreManageBySysUserId(String sysUserId);
+
+
     /**
      * 获取所有的店铺列表
      *
      * @return
      */
-    public List<Map<String,Object>> getAllStoreList();
+    public List<Map<String,Object>> getAllStoreList(String userId);
 
 
     /**
@@ -118,8 +122,6 @@ public interface IStoreManageService extends IService<StoreManage> {
     List<Map<String,Object>> findStoreInfoByStoreName(String storeName);
 
     IPage<Map<String,Object>> findCityLifeStoreManageList(Page<Map<String,Object>> page, Map<String, Object> paramObjectMap);
-
-    List<Map<String,Object>> storeComplimentaryThree();
 
     IPage<Map<String,Object>> findCityLifeStoreManageListNew(Page<Map<String,Object>> page, Map<String, Object> paramObjectMap);
 

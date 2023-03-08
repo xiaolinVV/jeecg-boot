@@ -201,13 +201,14 @@ public class TotalPayUtils {
      * @param memberId
      * @return
      */
-    public Map<String,Object>  payOrderCarLogById(HttpServletRequest request,String payModel, BigDecimal welfarePayments,BigDecimal balance,String payOrderCarLogId,String memberId){
+    public Map<String,Object>  payOrderCarLogById(HttpServletRequest request,String payModel, BigDecimal welfarePayments,BigDecimal balance,String payOrderCarLogId,String memberId,String tMemberId){
         Map<String, Object> objectMap=Maps.newHashMap();
         BigDecimal integralValue=iMarketingWelfarePaymentsSettingService.getIntegralValue();
         //重组支付日志信息
         PayOrderCarLog payOrderCarLog=iPayOrderCarLogService.getById(payOrderCarLogId);
         payOrderCarLog.setId(null);
         payOrderCarLog.setBalance(balance);
+        payOrderCarLog.setTMemberId(tMemberId);
         payOrderCarLog.setWelfarePayments(welfarePayments);
         payOrderCarLog.setPayModel("2");
         iPayOrderCarLogService.save(payOrderCarLog);

@@ -16,8 +16,8 @@
           member_growth_record mgr
           LEFT JOIN member_list ml
             ON ml.`id` = mgr.`member_list_id`
-        WHERE mgr.`del_flag` = 0
-          AND ml.`del_flag` = 0
+        WHERE mgr.`del_flag` = '0'
+          AND ml.`del_flag` = '0'
           <if test="memberGrowthRecordDTO.orderNo != null and memberGrowthRecordDTO.orderNo!= ''">
               AND mgr.order_no LIKE concat('%',#{memberGrowthRecordDTO.orderNo},'%')
           </if>

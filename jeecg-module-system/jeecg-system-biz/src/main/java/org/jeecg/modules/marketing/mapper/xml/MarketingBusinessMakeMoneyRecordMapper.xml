@@ -12,7 +12,7 @@
           LEFT JOIN member_list ml
             ON mbmmr.`member_list_id` = ml.`id`
         WHERE mbmmr.`marketing_business_make_money_id` = #{marketingBusinessMakeMoneyId}
-          AND mbmmr.`del_flag` = 0
+          AND mbmmr.`del_flag` = '0'
         ORDER BY mbmmr.`create_time` DESC
     </select>
 </mapper>

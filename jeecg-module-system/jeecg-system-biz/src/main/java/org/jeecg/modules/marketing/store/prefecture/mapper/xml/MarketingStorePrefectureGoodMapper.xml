@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.store.prefecture.mapper.MarketingStorePrefectureGoodMapper">
+
+
+    <sql id="goodInfo">
+        gsl.id AS id,
+	gsl.main_picture AS mainPicture,
+	0 AS isPlatform,
+	gsl.good_name AS goodName,
+	( SELECT price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallPrice,
+	( SELECT SUM( sales_volume ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS salesVolume,
+	gsl.market_price AS marketPrice,
+	( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = gsl.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+	gsl.is_specification AS isSpecification,
+	 mspg.specifications,
+	 mspg.id as marketingStorePrefectureGoodId
+    </sql>
+
+
+    <sql id="goodWhere">
+        gsl.del_flag = '0'
+        AND gsl.frame_status = '1'
+        AND gsl.audit_status = '2'
+        AND gsl.`status` = '1'
+    </sql>
+
+
+    <select id="queryPageList" resultType="map">
+            SELECT
+        ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = gsl.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+        ( SELECT prefecture_name FROM marketing_store_prefecture_list WHERE id = mspg.marketing_store_prefecture_list_id ) AS prefectureName,
+        mspg.id,
+        gsl.good_name AS goodName,
+        gsl.main_picture AS mainPicture,
+        gsl.is_specification AS isSpecification,
+        mspg.specifications,
+        ( SELECT SUM( repertory ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS repertory,
+        mspg.`status`,
+        DATE_FORMAT( mspg.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime
+    FROM
+        ( SELECT * FROM marketing_store_prefecture_good ${ew.customSqlSegment}) mspg
+        LEFT JOIN good_store_list gsl ON mspg.good_store_list_id = gsl.id
+    WHERE
+       <include refid="goodWhere"></include>
+        AND mspg.del_flag = '0'
+        <if test="goodName!='' and goodName!=null">
+            and gsl.good_name LIKE CONCAT(CONCAT('%',#{goodName}),'%')
+        </if>
+    ORDER BY
+        mspg.update_time DESC
+    </select>
+
+
+    <select id="getMarketingStorePrefectureGoodList" resultType="map">
+                SELECT
+          <include refid="goodInfo"></include>
+        FROM
+            marketing_store_prefecture_good mspg
+            LEFT JOIN good_store_list gsl ON mspg.good_store_list_id = gsl.id
+        WHERE
+        <include refid="goodWhere"></include>
+            AND mspg.del_flag = '0'
+            AND mspg.`status` = '1'
+        and mspg.marketing_store_prefecture_list_id=#{marketingStorePrefectureGoodListId}
+        ORDER BY mspg.update_time DESC
+    </select>
+</mapper>

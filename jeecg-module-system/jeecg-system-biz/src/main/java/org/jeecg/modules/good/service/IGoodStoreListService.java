@@ -21,14 +21,30 @@ import java.util.Map;
  */
 public interface IGoodStoreListService extends IService<GoodStoreList> {
 
-    IPage<GoodStoreList> getGoodListdelFlagOrAuditStatus(Page<GoodStoreList> page, String delFlag, String auditStatus, QueryWrapper<GoodStoreList> queryWrapper);
+
+
+    /*
+     * 后端列表
+     * */
+    public IPage<Map<String,Object>> queryPageList(Page<Map<String,Object>> page,Map<String,Object> paramMap,QueryWrapper wrapper);
+
+
+
+
+    /**
+     * 商品选择组件
+     *
+     * @param page
+     * @param paramMap
+     * @return
+     */
+    public IPage<Map<String,Object>> selectGood(Page<Map<String,Object>> page,Map<String,Object> paramMap);
+
     public GoodStoreList getGoodStoreListById(String id);
     public void updateDelFalg(GoodStoreList goodStoreList,String delFlag);
-    public List<GoodStoreList> getGoodStoreListOK(QueryWrapper<GoodStoreList> queryWrapper);
 
     public GoodStoreListDto selectById(String id);
     boolean saveOrUpdate(GoodStoreListVo goodListVo);
-    GoodStoreListDto selectGoodListById(String id);
     IPage<GoodStoreListDto> getGoodListDto(Page<GoodStoreList> page, GoodStoreListVo goodListVo,String notauditStatus);
     IPage<GoodStoreListDto> getGoodListDtoDelFlag(Page<GoodStoreList> page, GoodStoreListVo goodListVo);
 

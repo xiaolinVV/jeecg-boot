@@ -38,7 +38,7 @@
                     AND ms.del_flag = 0 and ms.is_nomal='0'
                     AND ms.total &gt;ms.released_quantity
                 ORDER BY ms.released_quantity,
-                ms.create_time DESC
+                ms.sort ASC
     </select>
 
     <select id="findMarketingDiscountBySysUserId" resultType="map">
@@ -148,7 +148,7 @@
         COUNT(1)
         FROM
         marketing_channel_discount mcd
-        WHERE mcd.`del_flag` = 0
+        WHERE mcd.`del_flag` = '0'
         AND mcd.`marketing_discount_id` = md.`id`) AS channelInfo,
         IF(
         md.`vouchers_way` = 1,
@@ -162,7 +162,7 @@
         ) AS tomorow
         FROM
         marketing_discount md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.`is_platform` = 0
         <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!= ''">
             AND md.id LIKE concat('%',#{marketingDiscountVO.id},'%')
@@ -214,7 +214,7 @@
             COUNT(1)
           FROM
             marketing_channel_discount mcd
-          WHERE mcd.`del_flag` = 0
+          WHERE mcd.`del_flag` = '0'
             AND mcd.`marketing_discount_id` = md.`id`) AS channelInfo,
         IF(
         md.`vouchers_way` = 1,
@@ -228,7 +228,7 @@
         ) AS tomorow
         FROM
           marketing_discount md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
           AND md.`is_platform` = 1
         <if test="marketingDiscountVO!=null and marketingDiscountVO.id!=null and marketingDiscountVO.id!= ''">
             AND md.id LIKE concat('%',concat(#{marketingDiscountVO.id},'%'))
@@ -262,8 +262,8 @@
           marketing_discount md
           LEFT JOIN marketing_channel_discount mcd
             ON md.`id` = mcd.`marketing_discount_id`
-        WHERE md.`del_flag` = 0
-          AND mcd.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
+          AND mcd.`del_flag` = '0'
           AND md.id = #{id}
     </select>
     <select id="findMarketingDiscountVO" resultType="org.jeecg.modules.marketing.vo.MarketingDiscountVO">
@@ -341,9 +341,9 @@
             m.*
           FROM
             marketing_discount m) md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
           AND md.`status` = 1
-          AND md.is_nomal = 1
+          AND md.is_nomal != 0
           <if test="marketingDiscountVO!=null and marketingDiscountVO.discoountName!=null and marketingDiscountVO.discoountName!=''">
               AND md.name LIKE concat('%',#{marketingDiscountVO.discoountName},'%')
           </if>
@@ -363,7 +363,7 @@
           marketing_discount md
         SET
           md.`status` = 0
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
           AND md.`status` = 1
           AND md.`vouchers_way` = 0
           AND NOW() > md.`end_time`
@@ -444,7 +444,7 @@
         m.*
         FROM
         marketing_discount m) md
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
         AND md.`status` = 1
         <if test="marketingDiscountVO!=null and marketingDiscountVO.discoountName!=null and marketingDiscountVO.discoountName!=''">
             AND md.name LIKE concat('%',#{marketingDiscountVO.discoountName},'%')
@@ -522,7 +522,7 @@
           marketing_discount md
           LEFT JOIN store_manage sm
             ON md.`sys_user_id` = sm.`sys_user_id`
-        WHERE md.`del_flag` = 0
+        WHERE md.`del_flag` = '0'
           AND md.`status` = 1
           AND md.is_nomal = 0
         ORDER BY md.`is_platform` DESC,

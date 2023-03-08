@@ -50,6 +50,10 @@
         mdc.`qqzixuangu`,
         mdc.`name`,
         mdc.`the_channel`,
+        mdc.is_nomal as isNomal,
+        mdc.discount_limit_amount as discountLimitAmount,
+        mdc.discount_percent as discountPercent,
+        mdc.discount_use_amount as discountUseAmount,
         IF(
         mdc.`is_threshold` = 0,
         '无门槛',
@@ -163,6 +167,10 @@
         mdc.`qqzixuangu`,
         mdc.`name`,
         mdc.`the_channel`,
+        mdc.is_nomal as isNomal,
+        mdc.discount_limit_amount as discountLimitAmount,
+        mdc.discount_percent as discountPercent,
+        mdc.discount_use_amount as discountUseAmount,
         IF(
         mdc.`is_threshold` = 0,
         '无门槛',
@@ -264,12 +272,11 @@
         is_give AS isGive,
         qqzixuangu,
         is_platform AS isPlatform,
-        IF(LENGTH(TRIM(m.`main_picture`))<![CDATA[<]]> 1|| ISNULL(m.main_picture),(SELECT
-        sfs.`front_logo` ->> '$."0"'
-        FROM
-        sys_front_setting sfs
-        WHERE sfs.`del_flag` = 0
-        LIMIT 1),m.`main_picture` ->> '$."0"') AS logoAddr,
+        is_nomal as isNomal,
+        discount_limit_amount as discountLimitAmount,
+        discount_percent as discountPercent,
+        discount_use_amount as discountUseAmount,
+        IF(LENGTH(TRIM(m.`main_picture`))>0,m.`main_picture` ->> '$."0"','') AS logoAddr,
         status
         FROM
         `marketing_discount_coupon` m
@@ -305,7 +312,11 @@
           IF(LENGTH(TRIM(m.`main_picture`))>0,m.`main_picture` ->> '$."0"','') AS logoAddr,
           main_picture as mainPicture,
           is_uniqueness AS isUniqueness,
-          get_restrict AS getRestrict
+          get_restrict AS getRestrict,
+          discount_limit_amount as  discountLimitAmount,
+          discount_percent as discountPercent,
+          discount_use_amount as discountUseAmount,
+          is_nomal as isNomal
         FROM
           `marketing_discount_coupon` m
         WHERE
@@ -341,13 +352,20 @@
         ) AS logoAddr,
         STATUS,
         marketing_discount_id AS marketingDiscountId,
-        qr_addr as qrAddr
+        qr_addr as qrAddr,
+        is_nomal as isNomal,
+        discount_limit_amount as discountLimitAmount,
+        discount_percent as discountPercent,
+        m.discount_use_amount as discountUseAmount
         FROM
         `marketing_discount_coupon` m
         WHERE member_list_id = #{paramMap.memberId}
         AND STATUS = '1'
         AND NOW() &gt;= start_time
         AND NOW() &lt;= end_time
+        <if test="paramMap.sysUserId != null and paramMap.sysUserId != ''">
+            and sys_user_id = #{paramMap.sysUserId}
+        </if>
         AND del_flag = '0' ORDER BY start_time) mm
         LEFT JOIN `marketing_discount_good` mdg
         ON mm.marketingDiscountId = mdg.`marketing_discount_id`
@@ -359,7 +377,7 @@
         marketing_discount_coupon mdc
         SET
         mdc.`status` = "1"
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
         AND NOW() > mdc.`start_time`
         AND mdc.`status` = 0
     </update>
@@ -368,7 +386,7 @@
           marketing_discount_coupon mdc
         SET
           mdc.`status` = "3"
-        WHERE mdc.`del_flag` = 0
+        WHERE mdc.`del_flag` = '0'
           AND NOW() > mdc.`end_time`
           AND mdc.`status` = 1
     </update>

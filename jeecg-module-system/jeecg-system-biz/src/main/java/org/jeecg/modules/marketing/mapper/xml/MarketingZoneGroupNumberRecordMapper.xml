@@ -24,7 +24,7 @@
         FROM
           marketing_zone_group_number_record mzgnr
         WHERE mzgnr.marketing_zone_group_time_id = #{marketingZoneGroupTimeId}
-          AND mzgnr.`del_flag` = 0
+          AND mzgnr.`del_flag` = '0'
           <if test="goAndCome != null and goAndCome != ''">
             AND mzgnr.`go_and_come` = #{goAndCome}
           </if>

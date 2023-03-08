@@ -5,12 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.modules.member.entity.*;
+import org.jeecg.modules.member.entity.MemberDesignation;
+import org.jeecg.modules.member.entity.MemberDesignationMemberList;
+import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.*;
 import org.jeecg.modules.member.vo.MemberDesignationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -33,12 +34,10 @@ public class AfterMemberDesignationController {
 
     @Autowired
     private IMemberDesignationMemberListService iMemberDesignationMemberListService;
-    @Autowired
-    private IMemberDesignationGroupService iMemberDesignationGroupService;
+
     @RequestMapping("getMemberDesignationInfo")
     @ResponseBody
-    public Result<Map<String,Object>> getMemberDesignationInfo(@RequestHeader(defaultValue = "") String sysUserId,
-                                                               String id,
+    public Result<Map<String,Object>> getMemberDesignationInfo(String id,
                                                          HttpServletRequest request){
         String memberId=request.getAttribute("memberId").toString();
         log.info("id+++"+id);
@@ -90,7 +89,6 @@ public class AfterMemberDesignationController {
             //会员直推人数统计
 
             long memberDirectCount = iMemberDesignationMemberListService.count(new LambdaQueryWrapper<MemberDesignationMemberList>()
-                    .eq(MemberDesignationMemberList::getDelFlag, "0")
                     .eq(MemberDesignationMemberList::getOldTManageId, memberList.getId())
                     .eq(MemberDesignationMemberList::getMemberDesignationGroupId,memberDesignationMemberList.getMemberDesignationGroupId())
             );

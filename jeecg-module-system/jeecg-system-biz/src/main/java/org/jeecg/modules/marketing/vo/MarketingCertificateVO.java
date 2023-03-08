@@ -18,7 +18,7 @@ import java.util.Date;
 public class MarketingCertificateVO implements Serializable{
     private static final long serialVersionUID = 1L;
     /**主键ID*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
     private String id;
     /**创建人*/
@@ -256,4 +256,11 @@ public class MarketingCertificateVO implements Serializable{
     private String marketingCertificateSeckillActivityListId;
     //0可选择 1不可选择
     private String ifSelected;
+    @Excel(name = "线上使用: 0 关闭 1开启", width = 15)
+    @ApiModelProperty(value = "线上使用: 0 关闭 1开启")
+    private Integer aboveUse;
+
+    @Excel(name = "线下使用: 0 关闭 1开启", width = 15)
+    @ApiModelProperty(value = "线下使用: 0 关闭 1开启")
+    private Integer belowUse;
 }

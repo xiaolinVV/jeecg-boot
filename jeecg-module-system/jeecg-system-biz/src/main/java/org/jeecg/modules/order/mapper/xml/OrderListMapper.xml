@@ -280,7 +280,7 @@
           *
         FROM
         order_list ol
-        WHERE ol.`del_flag` = 0
+        WHERE ol.`del_flag` = '0'
         AND ol.`status` = 3
         AND ISNULL(ol.`completion_time`) = 1
         AND DATE_ADD(ol.`delivery_time`, INTERVAL #{hour} HOUR) <![CDATA[<=]]> NOW()
@@ -481,7 +481,7 @@
           ) AS STATUS
         FROM
           order_list ol
-        WHERE ol.`del_flag` = 0
+        WHERE ol.`del_flag` = '0'
           AND ol.`status` IN (0, 1, 2, 3, 5)
         ORDER BY ol.`create_time` DESC
         limit 100
@@ -518,7 +518,7 @@
         COUNT(1)
         FROM
         order_provider_list opl
-        WHERE opl.`del_flag` = 0
+        WHERE opl.`del_flag` = '0'
         AND opl.`status` = #{orderListVO.status}
         AND opl.`order_list_id` =ol.id) oplCount
         FROM  order_list ol
@@ -588,7 +588,7 @@
         COUNT(1)
         FROM
         order_provider_list opl
-        WHERE opl.`del_flag` = 0
+        WHERE opl.`del_flag` = '0'
         AND opl.`status` = #{orderListVO.status}
         AND opl.`order_list_id` =ol.id)> 0
         order by ol.create_time desc

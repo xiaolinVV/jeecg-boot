@@ -143,6 +143,7 @@
         store_manage m
         WHERE m.sys_user_id = mgbr.`distribution_channel`) AS channelName,
         mgbr.vip_privilege,
+        mgbr.distribution_channel as distributionChannel,
         mgb.welfare_payments,
         mgbr.distribution_privileges,
         mgbr.team_privileges,
@@ -160,9 +161,9 @@
         ON mgb.`id` = mgbr.`marketing_gift_bag_id`
         LEFT JOIN store_manage sm
         ON mgbr.`affiliation_store` = sm.`sys_user_id`
-        WHERE mgbr.`del_flag` = 0
+        WHERE mgbr.`del_flag` = '0'
         AND mgbr.pay_status = 1
-        AND ml.`del_flag` = 0
+        AND ml.`del_flag` = '0'
         <if test="marketingGiftBagRecordVO!=null and marketingGiftBagRecordVO.phone!=null and marketingGiftBagRecordVO.phone!=''">
             AND ml.phone LIKE concat('%',concat(#{marketingGiftBagRecordVO.phone},'%'))
         </if>
@@ -259,7 +260,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`sys_user_id` = mgbr.`affiliation_store`
             ) LIKE concat('%',#{marketingGiftBagRecordVO.storeName},'%')
         </if>

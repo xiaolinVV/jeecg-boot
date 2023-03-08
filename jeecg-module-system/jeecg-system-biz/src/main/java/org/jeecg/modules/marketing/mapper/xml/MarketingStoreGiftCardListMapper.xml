@@ -4,43 +4,103 @@
 
 
     <select id="selectStoreGoods" resultType="map" parameterType="map">
-            SELECT
-                gsl.id,
-                            gsl.main_picture AS mainPicture,
-                            gsl.good_name AS goodName,
-                            gsl.market_price AS marketPrice,
-                            gsl.price AS price,
-                            gsl.cost_price AS costPrice,
-                            gsl.vip_price AS vipPrice,
-                            gsl.repertory AS repertory,
-                gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
-                gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
-                gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
-                gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
-                CONCAT_WS(
-                '-',
-                gsts.goodStoreTypeOneName,
-                gsts.goodStoreTypeTwoName
-                ) AS goodStoreTypeNames
-                FROM
-                good_store_list gsl
-                LEFT JOIN
-                (SELECT
-                gst.*,
-                gst.id AS goodStoreTypeIdTwo,
-                gst.name AS goodStoreTypeTwoName,
-                gstOne.id AS goodStoreTypeIdOne,
-                gstOne.name AS goodStoreTypeOneName
-                FROM
-                good_store_type gst
-                LEFT JOIN good_store_type gstOne
-                ON gst.parent_id = gstOne.id) gsts
-                ON gsl.good_store_type_id = gsts.id
-                WHERE gsl.del_flag = 0
-                            AND gsl.`status` = 1
-                            AND gsl.frame_status = 1
-                            AND gsl.audit_status = 2
-                            AND gsl.repertory &gt;0
+        SELECT
+        gsl.id,
+        gsl.main_picture AS mainPicture,
+        gsl.good_name AS goodName,
+        gsl.market_price AS marketPrice,
+        CONCAT(
+        ( SELECT price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+        '-',(
+        SELECT
+        price
+        FROM
+        good_store_specification
+        WHERE
+        good_store_list_id = gsl.id
+        AND del_flag = '0'
+        ORDER BY
+        price DESC
+        LIMIT 1
+        )) AS price,
+        CONCAT((
+        SELECT
+        cost_price
+        FROM
+        good_store_specification
+        WHERE
+        good_store_list_id = gsl.id
+        AND del_flag = '0'
+        ORDER BY
+        cost_price ASC
+        LIMIT 1
+        ),
+        '-',(
+        SELECT
+        cost_price
+        FROM
+        good_store_specification
+        WHERE
+        good_store_list_id = gsl.id
+        AND del_flag = '0'
+        ORDER BY
+        cost_price DESC
+        LIMIT 1
+        )
+        ) AS costPrice,
+        CONCAT(
+        ( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+        '-',(
+        SELECT
+        price
+        FROM
+        good_store_specification
+        WHERE
+        good_store_list_id = gsl.id
+        AND del_flag = '0'
+        ORDER BY
+        price DESC
+        LIMIT 1
+        )) AS price,
+        CONCAT(
+        ( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+        '-',(
+        SELECT
+        price
+        FROM
+        good_store_specification
+        WHERE
+        good_store_list_id = gsl.id
+        AND del_flag = '0'
+        ORDER BY
+        price DESC
+        LIMIT 1
+        )) AS `vipPrice`,
+        ( SELECT SUM( repertory ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS repertory,
+        gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
+        gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
+        gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
+        gsts.goodStoreTypeOneName AS goodStoreTypeOneName,
+        CONCAT_WS( '-', gsts.goodStoreTypeOneName, gsts.goodStoreTypeTwoName ) AS goodStoreTypeNames
+        FROM
+        good_store_list gsl
+        LEFT JOIN (
+        SELECT
+        gst.*,
+        gst.id AS goodStoreTypeIdTwo,
+        gst.NAME AS goodStoreTypeTwoName,
+        gstOne.id AS goodStoreTypeIdOne,
+        gstOne.NAME AS goodStoreTypeOneName
+        FROM
+        good_store_type gst
+        LEFT JOIN good_store_type gstOne ON gst.parent_id = gstOne.id
+        ) gsts ON gsl.good_store_type_id = gsts.id
+        WHERE
+        gsl.del_flag = 0
+        AND gsl.`status` = 1
+        AND gsl.frame_status = 1
+        AND gsl.audit_status = 2
+        AND ( SELECT SUM( repertory ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) &gt;0
                 <if test="paramMap.sysUserId!='' and paramMap.sysUserId!=null">
                     and  gsl.sys_user_id=#{paramMap.sysUserId}
                 </if>
@@ -63,10 +123,74 @@
                             gsl.main_picture AS mainPicture,
                             gsl.good_name AS goodName,
                             gsl.market_price AS marketPrice,
-                            gsl.price AS price,
-                            gsl.cost_price AS costPrice,
-                            gsl.vip_price AS vipPrice,
-                            gsl.repertory AS repertory,
+                           CONCAT(
+		( SELECT price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+		'-',(
+		SELECT
+			price
+		FROM
+			good_store_specification
+		WHERE
+			good_store_list_id = gsl.id
+			AND del_flag = '0'
+		ORDER BY
+			price DESC
+			LIMIT 1
+		)) AS price,
+	CONCAT((
+		SELECT
+			cost_price
+		FROM
+			good_store_specification
+		WHERE
+			good_store_list_id = gsl.id
+			AND del_flag = '0'
+		ORDER BY
+			cost_price ASC
+			LIMIT 1
+			),
+		'-',(
+		SELECT
+			cost_price
+		FROM
+			good_store_specification
+		WHERE
+			good_store_list_id = gsl.id
+			AND del_flag = '0'
+		ORDER BY
+			cost_price DESC
+			LIMIT 1
+		)
+	) AS costPrice,
+	CONCAT(
+		( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+		'-',(
+		SELECT
+			price
+		FROM
+			good_store_specification
+		WHERE
+			good_store_list_id = gsl.id
+			AND del_flag = '0'
+		ORDER BY
+			price DESC
+			LIMIT 1
+		)) AS price,
+	CONCAT(
+		( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ),
+		'-',(
+		SELECT
+			price
+		FROM
+			good_store_specification
+		WHERE
+			good_store_list_id = gsl.id
+			AND del_flag = '0'
+		ORDER BY
+			price DESC
+			LIMIT 1
+		)) AS `vipPrice`,
+	( SELECT SUM( repertory ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS repertory,
                 gsts.goodStoreTypeIdTwo AS goodStoreTypeIdTwo,
                 gsts.goodStoreTypeIdOne AS goodStoreTypeIdOne,
                 gsts.goodStoreTypeTwoName AS goodStoreTypeTwoName,
@@ -100,7 +224,7 @@
                             AND gsl.`status` = 1
                             AND gsl.frame_status = 1
                             AND gsl.audit_status = 2
-                            AND gsl.repertory &gt;0
+                            AND ( SELECT SUM( repertory ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) &gt;0
                   and  msgcgl.marketing_store_gift_card_list_id=#{marketingStoreGiftCardListId}
 
     </select>
@@ -145,7 +269,7 @@
                 and msgcl.`status`=#{marketingStoreGiftCardListDTO.status}
             </if>
             <if test="marketingStoreGiftCardListDTO.storeName!='' and marketingStoreGiftCardListDTO.storeName!=null">
-                and sm.`store_name`r LIKE concat('%',concat(#{marketingStoreGiftCardListDTO.storeName},'%'))
+                and sm.`store_name` LIKE concat('%',concat(#{marketingStoreGiftCardListDTO.storeName},'%'))
             </if>
             <if test="marketingStoreGiftCardListDTO.createTimeStart!=null">
                 and msgcl.create_time &gt;=#{marketingStoreGiftCardListDTO.createTimeStart}

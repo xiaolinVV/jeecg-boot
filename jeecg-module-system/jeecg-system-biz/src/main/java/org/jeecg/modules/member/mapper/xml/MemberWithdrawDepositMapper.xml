@@ -150,7 +150,7 @@
           mwd.withdrawal_type AS withdrawalType
         FROM
           member_withdraw_deposit mwd
-        WHERE mwd.`del_flag` = 0
+        WHERE mwd.`del_flag` = '0'
         AND mwd.`member_list_id` = #{paramObjectMap.memberId}
         <if test="paramObjectMap.pattern != -1 and paramObjectMap.pattern == 1">
             AND mwd.`status` IN ('1','2')
@@ -215,7 +215,7 @@
           mwd.`order_no`
         FROM
           member_withdraw_deposit mwd
-          WHERE mwd.`del_flag` = 0
+          WHERE mwd.`del_flag` = '0'
           AND mwd.`id` = #{id}
     </select>
 </mapper>

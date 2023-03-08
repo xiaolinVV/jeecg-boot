@@ -10,7 +10,7 @@
           marketing_recommend_certificate mrc
           LEFT JOIN marketing_certificate mc
             ON mrc.`marketing_certificate_id` = mc.`id`
-        WHERE mrc.`del_flag` = 0
+        WHERE mrc.`del_flag` = '0'
         <if test="marketingRecommendCertificateDTO != null and marketingRecommendCertificateDTO.marketingCertificateId != null and marketingCertificateId.marketingCertificateId!=''">
             AND mrc.marketing_certificate_id LIKE concat('%',#{marketingRecommendCertificateDTO.marketingCertificateId},'%')
         </if>
@@ -70,8 +70,8 @@
         marketing_recommend_certificate mrc
         LEFT JOIN marketing_certificate mc
         ON mrc.`marketing_certificate_id` = mc.`id`
-        WHERE mrc.`del_flag` = 0
-        AND mc.`del_flag` = 0
+        WHERE mrc.`del_flag` = '0'
+        AND mc.`del_flag` = '0'
         AND mrc.`recommend_local` = 1
         AND mrc.`status` = 1
         AND mc.`status` = 1

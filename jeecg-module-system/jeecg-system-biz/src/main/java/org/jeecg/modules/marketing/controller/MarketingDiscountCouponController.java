@@ -529,7 +529,7 @@ public Result<?>  cancelAfterVerificationGoodList(GoodStoreListVo goodStoreListV
                 Calendar myCalendar = Calendar.getInstance();
 
                 while (discountCount>0){
-                    //优惠券量不足时候跳过领取
+                    //惠券量不足时候跳过领取
                     if (marketingDiscount.getTotal().subtract(marketingDiscount.getReleasedQuantity()).longValue() <= 0) {
                         continue;
                     }
@@ -552,7 +552,9 @@ public Result<?>  cancelAfterVerificationGoodList(GoodStoreListVo goodStoreListV
                     marketingDiscountCoupon.setCoverPlan(marketingDiscount.getCoverPlan());
                     marketingDiscountCoupon.setPosters(marketingDiscount.getPosters());
                     marketingDiscountCoupon.setMainPicture(marketingDiscount.getMainPicture());
-
+                    marketingDiscountCoupon.setDiscountLimitAmount(marketingDiscount.getDiscountLimitAmount());
+                    marketingDiscountCoupon.setDiscountPercent(marketingDiscount.getDiscountPercent());
+                    marketingDiscountCoupon.setIsNomal(marketingDiscount.getIsNomal());
                     //平台渠道判断
                     QueryWrapper<MarketingChannel> marketingChannelQueryWrapper = new QueryWrapper<>();
                     marketingChannelQueryWrapper.eq("english_name", "NORMAL_TO_GET");

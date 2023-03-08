@@ -18,7 +18,6 @@ import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
-import org.jeecg.modules.marketing.service.IMarketingPrefectureGoodSpecificationService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -52,9 +51,6 @@ public class GoodSpecificationController {
 	private IGoodSpecificationService goodSpecificationService;
 	@Autowired
 	private IGoodListService goodListService;
-
-	@Autowired
-	private IMarketingPrefectureGoodSpecificationService iMarketingPrefectureGoodSpecificationService;
 
 	/**
 	  * 分页列表查询
@@ -302,7 +298,10 @@ public class GoodSpecificationController {
 			 }
 			 if(listGoodList1.size()>0){
 				 int result1;
-				for(GoodList goodList:listGoodList1){
+
+
+				 //需要修正或者删除
+				/*for(GoodList goodList:listGoodList1){
 					//最低商品价格
 					if (goodList.getPrice() != null && !"".equals(goodList.getPrice())) {
 						result1 = goodList.getPrice().indexOf("-");
@@ -343,7 +342,7 @@ public class GoodSpecificationController {
 							goodList.setSmallSupplyPrice(goodList.getSupplyPrice());
 						}
 					}
-				}
+				}*/
 
 				 goodListService.updateBatchById((Collection<GoodList>)listGoodList1);
 

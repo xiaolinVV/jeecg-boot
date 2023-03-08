@@ -16,7 +16,7 @@
           abc.car_type
         FROM
           alliance_bank_card abc
-        WHERE abc.`del_flag` = 0
+        WHERE abc.`del_flag` = '0'
         AND abc.sys_user_id = #{sysUserId}
     </select>
     <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceBankCardVO">
@@ -31,9 +31,9 @@
         ON abc.`sys_user_id` = am.`sys_user_id`
         LEFT JOIN sys_user su
         ON su.`id` = am.`sys_user_id`
-        WHERE abc.`del_flag` = 0
-        AND am.`del_flag` = 0
-        AND su.`del_flag` = 0
+        WHERE abc.`del_flag` = '0'
+        AND am.`del_flag` = '0'
+        AND su.`del_flag` = '0'
         AND abc.car_type = 0
         <if test="allianceBankCardDTO.username != null and allianceBankCardDTO.username != ''">
             AND su.username LIKE concat('%',#{allianceBankCardDTO.username},'%')

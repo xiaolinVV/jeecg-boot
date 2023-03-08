@@ -9,6 +9,11 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 处于半废弃状态
+ */
+
+
 @Data
 public class GoodListDto {
   /**主键ID*/

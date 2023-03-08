@@ -1,19 +1,20 @@
 package org.jeecg.modules.good.entity;
 
-import java.io.Serializable;
-import java.util.Date;
-
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.DecimalMax;
+import java.math.BigDecimal;
 
 /**
  * @Description: 商品规格
@@ -29,7 +30,7 @@ import javax.validation.constraints.DecimalMax;
 public class GoodSpecification {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -41,7 +42,7 @@ public class GoodSpecification {
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建时间")
-	private Date createTime;
+	private java.util.Date createTime;
 	/**修改人*/
 	@Excel(name = "修改人", width = 15)
     @ApiModelProperty(value = "修改人")
@@ -51,7 +52,7 @@ public class GoodSpecification {
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "修改时间")
-	private Date updateTime;
+	private java.util.Date updateTime;
 	/**创建年*/
 	@Excel(name = "创建年", width = 15)
     @ApiModelProperty(value = "创建年")
@@ -77,26 +78,26 @@ public class GoodSpecification {
 	@Excel(name = "商品销售价格", width = 15)
     @ApiModelProperty(value = "商品销售价格")
 	@DecimalMax(value="9999999",message="商品销售价格应小于9999999")
-	private java.math.BigDecimal price;
+	private BigDecimal price;
 	/**商品会员价，按照利润比例，根据数据字段设置的比例自动填入*/
 	@Excel(name = "商品会员价，按照利润比例，根据数据字段设置的比例自动填入", width = 15)
     @ApiModelProperty(value = "商品会员价，按照利润比例，根据数据字段设置的比例自动填入")
 	@DecimalMax(value="9999999",message="商品会员价应小于9999999")
-	private java.math.BigDecimal vipPrice;
+	private BigDecimal vipPrice;
 	/**商品成本价*/
 	@Excel(name = "商品成本价", width = 15)
     @ApiModelProperty(value = "商品成本价")
 	@DecimalMax(value="9999999",message="商品成本价应小于9999999")
-	private java.math.BigDecimal costPrice;
+	private BigDecimal costPrice;
 	/**商品供货价*/
 	@Excel(name = "商品供货价", width = 15)
     @ApiModelProperty(value = "商品供货价")
 	@DecimalMax(value="9999999",message="商品供货价应小于9999999")
-	private java.math.BigDecimal supplyPrice;
+	private BigDecimal supplyPrice;
 	/**库存*/
 	@Excel(name = "库存", width = 15)
     @ApiModelProperty(value = "库存")
-	private java.math.BigDecimal repertory;
+	private BigDecimal repertory;
 	/**规格名称，按照顺序逗号隔开*/
 	@Excel(name = "规格名称，按照顺序逗号隔开", width = 15)
     @ApiModelProperty(value = "规格名称，按照顺序逗号隔开")
@@ -108,7 +109,7 @@ public class GoodSpecification {
 	/**重量*/
 	@Excel(name = "重量", width = 15)
     @ApiModelProperty(value = "重量")
-	private java.math.BigDecimal weight;
+	private BigDecimal weight;
 	/**规格图*/
 	@Excel(name = "规格图", width = 15)
 	@ApiModelProperty(value = "规格图")
@@ -117,4 +118,14 @@ public class GoodSpecification {
 	@Excel(name = "销量", width = 15)
 	@ApiModelProperty(value = "销量")
 	private String salesVolume;
+
+	private BigDecimal vipTwoPrice;
+
+	private BigDecimal vipThirdPrice;
+	private BigDecimal vipFouthPrice;
+
+	/**条形码*/
+	@Excel(name = "条形码", width = 15)
+	@ApiModelProperty(value = "条形码")
+	private String barCode;
 }

@@ -6,11 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.alliance.service.IAllianceSettingService;
+import org.jeecg.modules.good.service.IGoodSettingService;
 import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.service.*;
-import org.jeecg.modules.store.entity.StoreFunctionSet;
 import org.jeecg.modules.store.entity.StoreSetting;
-import org.jeecg.modules.store.service.IStoreFunctionSetService;
 import org.jeecg.modules.store.service.IStoreSettingService;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysFrontSettingService;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
 import java.util.Map;
 
 @RequestMapping("front/sysFrontSetting")
@@ -52,8 +50,6 @@ public class FrontSysFrontSetting {
     @Autowired
     private IMarketingStoreGiftCardBaseSettingService iMarketingStoreGiftCardBaseSettingService;
 
-    @Autowired
-    private IMarketingGroupIntegralBaseSettingService iMarketingGroupIntegralBaseSettingService;
 
     @Autowired
     private IMarketingZoneGroupBaseSettingService iMarketingZoneGroupBaseSettingService;
@@ -74,10 +70,10 @@ public class FrontSysFrontSetting {
     private IAllianceSettingService iAllianceSettingService;
 
     @Autowired
-    private IStoreFunctionSetService iStoreFunctionSetService;
+    private IGoodSettingService iGoodSettingService;
 
     /**
-     * 小程序控制前端返显接口
+     * 控制前端配置
      * @param softModel
      * @return
      */
@@ -139,10 +135,6 @@ public class FrontSysFrontSetting {
 
         String smallsoftGrzxDownload = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "smallsoft_grzx_download");
         sysFrontSettingMap.put("smallsoftGrzxDownload",smallsoftGrzxDownload);
-
-
-        String gameImgUrl = StringUtils.defaultString(iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "game_img_url"),"-1");
-        sysFrontSettingMap.put("gameImgUrl",gameImgUrl);
 
 
         String appShopVersion  = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "app_shop_version");
@@ -252,33 +244,8 @@ public class FrontSysFrontSetting {
         sysFrontSettingMap.put("marketingZoneGroupBaseSettingMap",marketingZoneGroupBaseSettingMap);
 
 
-        //抢购
-        MarketingRushBaseSetting  marketingRushBaseSetting=iMarketingRushBaseSettingService.getOne(new LambdaQueryWrapper<MarketingRushBaseSetting>()
-                .eq(MarketingRushBaseSetting::getStatus,"1"));
-        Map<String,Object> marketingRushBaseSettingMap=Maps.newHashMap();
-        //基础设置信息不能为空
-        if(marketingRushBaseSetting==null){
-            marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "0");
-        }else {
-            log.info("专区团分端控制：softModel=" + softModel);
-            if (marketingRushBaseSetting.getPointsDisplay().equals("0")) {
-                marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-            } else
-                //小程序
-                if (softModel.equals("0") && marketingRushBaseSetting.getPointsDisplay().equals("1")) {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-                } else if ((softModel.equals("1") || softModel.equals("1")) && marketingRushBaseSetting.getPointsDisplay().equals("2")) {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-                } else {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "0");
-                }
-            //显示中奖拼团
-            if (marketingRushBaseSettingMap.get("isViewMarketingRushBaseSetting").toString().equals("1")) {
-                marketingRushBaseSettingMap.put("indexAddress", marketingRushBaseSetting.getIndexAddress());
-                marketingRushBaseSettingMap.put("indexBigAddress", marketingRushBaseSetting.getIndexBigAddress());
-            }
-        }
-        sysFrontSettingMap.put("marketingRushBaseSettingMap",marketingRushBaseSettingMap);
+        //单品抢购
+        iMarketingRushBaseSettingService.settingView(sysFrontSettingMap,softModel);
 
         //礼品卡判断
         MarketingStoreGiftCardBaseSetting marketingStoreGiftCardBaseSetting=iMarketingStoreGiftCardBaseSettingService.getOne(new LambdaQueryWrapper<MarketingStoreGiftCardBaseSetting>().eq(MarketingStoreGiftCardBaseSetting::getStatus,"1"));
@@ -304,32 +271,6 @@ public class FrontSysFrontSetting {
 
         sysFrontSettingMap.put("marketingThirdIntegralSettingMap",marketingStoreGiftCardBaseSettingMap);
         sysFrontSettingMap.put("transactionPasswordState",iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "transaction_password_state"));
-        /**
-         * 拼购显隐
-         */
-        List<MarketingGroupIntegralBaseSetting> marketingGroupIntegralBaseSettings = iMarketingGroupIntegralBaseSettingService.list(new LambdaQueryWrapper<MarketingGroupIntegralBaseSetting>()
-                .eq(MarketingGroupIntegralBaseSetting::getDelFlag, "0"));
-        if (marketingGroupIntegralBaseSettings.size()>0){
-            MarketingGroupIntegralBaseSetting marketingGroupIntegralBaseSetting = marketingGroupIntegralBaseSettings.get(0);
-            if (marketingGroupIntegralBaseSetting.getPointsDisplay().equals("0")){
-                sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView",marketingGroupIntegralBaseSetting.getStatus());
-            }else {
-                if (marketingGroupIntegralBaseSetting.getPointsDisplay().equals("1")&&softModel.equals("0")){
-                    sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView",marketingGroupIntegralBaseSetting.getStatus());
-                }else {
-                    sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView","0");
-                }
-                if (marketingGroupIntegralBaseSetting.getPointsDisplay().equals("2")){
-                    if (softModel.equals("2")&&softModel.equals("1")){
-                        sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView",marketingGroupIntegralBaseSetting.getStatus());
-                    }else {
-                        sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView","0");
-                    }
-                }
-            }
-        }else {
-            sysFrontSettingMap.put("marketingGroupIntegralBaseSettingView","0");
-        }
         //获取任务设置
         MarketingIntegralTaskBaseSetting marketingIntegralTaskBaseSetting = iMarketingIntegralTaskBaseSettingService.getOne(new LambdaQueryWrapper<MarketingIntegralTaskBaseSetting>()
                 .eq(MarketingIntegralTaskBaseSetting::getDelFlag, "0")
@@ -383,8 +324,10 @@ public class FrontSysFrontSetting {
         //加盟商设置
         iAllianceSettingService.settingAllianceSettingView(sysFrontSettingMap);
 
-        //预订记录的权限判断
-        sysFrontSettingMap.put("roomsManagement",iStoreFunctionSetService.count(new LambdaQueryWrapper<StoreFunctionSet>().eq(StoreFunctionSet::getRoomsManagement,"1")));
+
+        //商品基础设置信息
+        iGoodSettingService.setView(sysFrontSettingMap);
+
 
         result.success("返回小程序前端设置成功");
         result.setResult(sysFrontSettingMap);

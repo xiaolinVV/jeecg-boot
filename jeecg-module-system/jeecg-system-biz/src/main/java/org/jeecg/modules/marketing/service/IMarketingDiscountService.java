@@ -8,6 +8,7 @@ import org.jeecg.modules.marketing.dto.MarketingDiscountDTO;
 import org.jeecg.modules.marketing.entity.MarketingDiscount;
 import org.jeecg.modules.marketing.vo.MarketingDiscountVO;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,21 @@ import java.util.Map;
  */
 public interface IMarketingDiscountService extends IService<MarketingDiscount> {
 
+
+    /**
+     * 优惠券的生成
+     *
+     * @param marketingDiscountId
+     * @param quantity
+     * @param memberId
+     * @param isContinuous
+     */
+    public void  generate(String marketingDiscountId,
+                          BigDecimal quantity,
+                          String memberId,
+                          Boolean isContinuous);
+
+
     public String renoveById(String id,String delExplain);
 
     /**
@@ -26,7 +42,7 @@ public interface IMarketingDiscountService extends IService<MarketingDiscount> {
      * @param isThreshold
      * @return
      */
-    public IPage<Map<String,Object>> findMarketingDiscountByIsThreshold(Page<Map<String,Object>> page,String isThreshold,String name);
+    public IPage<Map<String,Object>> findMarketingDiscountByIsThreshold(Page<Map<String,Object>> page, String isThreshold, String name);
 
 
 
@@ -44,6 +60,13 @@ public interface IMarketingDiscountService extends IService<MarketingDiscount> {
      */
     public IPage<Map<String,Object>> findMarketingDiscountByGoodId(Page<Map<String,Object>> page,Map<String,Object> paramMap);
 
+
+    /**
+     * 优惠券根据商品id
+     * @param paramMap
+     * @return
+     */
+    public List<Map<String, Object>> findMarketingDiscountByGoodId(Map<String,Object> paramMap);
 
     /**
      *根据店铺id查询优惠券信息
@@ -71,6 +94,9 @@ public interface IMarketingDiscountService extends IService<MarketingDiscount> {
     MarketingDiscountDTO findMarketingDiscountDTO(String id);
 
     List<MarketingDiscountVO> findMarketingDiscountVO(MarketingDiscountVO marketingDiscountVO);
+
+
+    IPage<MarketingDiscountVO> findMarketingDiscountVO(Page<MarketingDiscountVO> page,MarketingDiscountVO marketingDiscountVO);
 
 
     IPage<MarketingDiscountDTO> findMarketingDiscountStoreList(Page<MarketingDiscountDTO>page, MarketingDiscountVO marketingDiscountVO);

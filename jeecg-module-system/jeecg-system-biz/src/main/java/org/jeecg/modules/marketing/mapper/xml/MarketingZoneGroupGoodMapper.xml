@@ -38,7 +38,7 @@
             ON gtOne.`id` = gtTwo.`parent_id`
           LEFT JOIN marketing_zone_group mzg
             ON mzg.`id` = mzgg.`marketing_zone_group_id`
-        WHERE mzgg.`del_flag` = 0
+        WHERE mzgg.`del_flag` = '0'
         <if test="requestMap.goodNo != null and requestMap.goodNo != ''">
             AND gl.`good_no` LIKE concat('%',#{requestMap.goodNo},'%')
         </if>

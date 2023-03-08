@@ -30,6 +30,16 @@ public interface IMarketingStoreGiftCardMemberListService extends IService<Marke
 
 
     /**
+     * 根据会员iD获取礼品卡(全部)
+     *
+     * @param
+     * @param paramMap
+     * @return
+     */
+    public List<Map<String,Object>> getByMemberId(Map<String,Object> paramMap);
+
+
+    /**
      * 获取礼品卡店铺第一分类
      *
      * @param paramMap

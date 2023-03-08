@@ -15,10 +15,7 @@ import org.jeecg.modules.pay.service.IPayOrderCarLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -64,6 +61,7 @@ public class AfterPayOrderCarLogController {
                          String payModel, String memberListId,
                          @RequestParam(name = "welfarePayments",required = false,defaultValue = "0") BigDecimal welfarePayments,
                          @RequestParam(name = "balance",required = false,defaultValue = "0") BigDecimal balance,
+                         @RequestHeader(defaultValue = "") String tMemberId,
                          HttpServletRequest request){
         Result<Map<String,Object>> result=new Result<>();
         //参数校验
@@ -96,7 +94,7 @@ public class AfterPayOrderCarLogController {
             return result.error500("支付日志已支付");
         }
         //支付
-        Map<String,Object> objectMap=totalPayUtils.payOrderCarLogById(request,payModel,welfarePayments,balance,payOrderCarLog.getId(),memberId);
+        Map<String,Object> objectMap=totalPayUtils.payOrderCarLogById(request,payModel,welfarePayments,balance,payOrderCarLog.getId(),memberId,tMemberId);
 
         result.setResult(objectMap);
         return result;

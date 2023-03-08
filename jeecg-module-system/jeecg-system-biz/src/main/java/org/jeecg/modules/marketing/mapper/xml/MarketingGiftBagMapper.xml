@@ -174,54 +174,12 @@
         ORDER BY m.isViewBuy DESC ,m.giftBagType ASC
     </select>
 
-
-    <select id="findMarketingGiftBagById" resultType="map">
-        SELECT
-        gift_name AS giftName,
-        price,
-        id,
-        buy_limit AS buyLimit,
-        limit_times AS limitTimes,
-        view_scope AS viewscope,
-        main_picture as mainPicture,
-        repertory as repertory,
-        gift_deals as giftDeals,
-        gift_explain as giftExplain,
-        cover_plan as coverPlan,
-        posters as posters,
-        is_preposition AS isPreposition,
-          preposition_marketing_gift_bag AS prepositionMarketingGiftBag,
-          buy_vip_member_grade_id AS buyVipMemberGradeId,
-          IF(
-            is_preposition = 0,
-            '',
-            (SELECT
-              mgb.`gift_name`
-            FROM
-              marketing_gift_bag mgb
-            WHERE mgb.`id` = prepositionMarketingGiftBag)
-          ) AS prepositionName,
-          IF(
-            LOCATE(buy_limit,'1'),
-            IF(LENGTH(TRIM(buy_vip_member_grade_id)) > 0,(SELECT
-              GROUP_CONCAT(mg.`grade_name`)
-            FROM
-              member_grade mg
-            WHERE mg.`del_flag` = 0
-              AND mg.`id` IN (buy_vip_member_grade_id)),''),
-            ''
-          ) AS buyVipMemberGradeName
-        FROM
-        `marketing_gift_bag`
-        WHERE id=#{id}
-
-    </select>
     <select id="findMarketingGifiBagPageList" resultType="org.jeecg.modules.marketing.vo.MarketingGiftBagVO">
         SELECT
           *
         FROM
         marketing_gift_bag mgb
-        WHERE mgb.`del_flag` = 0
+        WHERE mgb.`del_flag` = '0'
         <if test="marketingGiftBagVO!=null and marketingGiftBagVO.giftName!=null and marketingGiftBagVO.giftName!=''">
             AND mgb.gift_name LIKE concat('%',concat(#{marketingGiftBagVO.giftName},'%'))
         </if>
@@ -271,7 +229,7 @@
           mgb.`create_time` AS createTime
         FROM
           marketing_gift_bag mgb
-        WHERE mgb.`del_flag` = 0
+        WHERE mgb.`del_flag` = '0'
           AND mgb.`status` = 1
           <if test="marketingGiftBagDTO.id != null and marketingGiftBagDTO.id != ''">
               AND mgb.id LIKE concat('%',#{marketingGiftBagDTO.id},'%')

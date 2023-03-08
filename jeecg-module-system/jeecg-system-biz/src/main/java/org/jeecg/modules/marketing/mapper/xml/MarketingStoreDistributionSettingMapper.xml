@@ -19,7 +19,7 @@
         marketing_store_distribution_setting msds
         LEFT JOIN store_manage sm
         ON msds.sys_user_id = sm.`sys_user_id`
-        WHERE msds.`del_flag` = 0
+        WHERE msds.`del_flag` = '0'
         <if test="marketingStoreDistributionSettingVO != null and marketingStoreDistributionSettingVO.storeManage!=null and marketingStoreDistributionSettingVO.storeManage!=''">
             AND sm.store_name LIKE concat('%',concat(#{marketingStoreDistributionSettingVO.storeManage},'%'))
         </if>
@@ -116,7 +116,7 @@
         ON ml.sys_smallcode_id = ss.id
         LEFT JOIN store_manage sm
         ON sm.sys_user_id = ml.sys_user_id
-        WHERE ml.`del_flag` = 0
+        WHERE ml.`del_flag` = '0'
         AND ml.`status` = 1
         <if test="marketingStoreDistributionSettingVO!=null and marketingStoreDistributionSettingVO.Uid != null and marketingStoreDistributionSettingVO.Uid != ''">
             AND sm.sys_user_id = #{marketingStoreDistributionSettingVO.Uid}

@@ -13,7 +13,7 @@
             marketing_integral_task_record mitr
             LEFT JOIN member_list ml
               ON mitr.`member_list_id` = ml.`id`
-          WHERE mitr.`del_flag` = 0
+          WHERE mitr.`del_flag` = '0'
           ORDER BY mitr.create_time DESC
           ) m ${ew.customSqlSegment}
     </select>

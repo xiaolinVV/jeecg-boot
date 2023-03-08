@@ -95,19 +95,6 @@ public class ProviderTemplateServiceImpl extends ServiceImpl<ProviderTemplateMap
         }
     }
 
-    public ProviderTemplate findRoleByUserId (String userId){
-        ProviderTemplate template = new ProviderTemplate();
-        List<String> roleByUserId = sysUserRoleMapper.getRoleByUserId(userId);
-        for (String s : roleByUserId) {
-            if ("jeecg".equals(s)||"admin".equals(s)){
-                template.setSysUserId(null);
-            }else if ("Supplier".equals(s)){
-                template.setSysUserId(userId);
-            }
-        }
-        return template;
-    }
-
 
     @Override
     public IPage<ProviderTemplateDTO> getProviderTemplateList(Page<ProviderTemplateDTO> page, ProviderTemplateVO providerTemplateVO) {

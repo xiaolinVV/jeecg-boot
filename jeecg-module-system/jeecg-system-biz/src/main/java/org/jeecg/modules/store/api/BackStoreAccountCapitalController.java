@@ -84,7 +84,7 @@ public class BackStoreAccountCapitalController {
             queryWrapperStoreAccountCapital.eq("go_and_come",goAndCome);
         }
         queryWrapperStoreAccountCapital.orderByDesc("create_time","balance");
-        IPage<Map<String, Object>> page=new Page<Map<String, Object>>(pageNo,pageSize);
+        Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
         IPage<Map<String,Object>> storeAccountCapitalListMap = iStoreAccountCapitalService.pageMaps(page,queryWrapperStoreAccountCapital);
         storeAccountCapitalListMap.getRecords().forEach(sac->{
             //处理资金流水金额

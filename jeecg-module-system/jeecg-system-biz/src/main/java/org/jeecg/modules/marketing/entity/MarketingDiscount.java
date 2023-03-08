@@ -31,7 +31,7 @@ import java.util.Date;
 public class MarketingDiscount {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -181,8 +181,8 @@ public class MarketingDiscount {
 	@Dict(dicCode = "member_type")
 	private String getRestrict;
 
-	@Excel(name = "券类型；0：常规；1：活动", width = 15,dicCode = "member_type")
-	@ApiModelProperty(value = "券类型；0：常规；1：活动")
+	@Excel(name = "券类型；0：常规；1：活动 2：折扣", width = 15,dicCode = "member_type")
+	@ApiModelProperty(value = "券类型；0：常规；1：活动 2：折扣")
 	private String isNomal;
 	/**主图*/
 	@Excel(name = "主图", width = 15)
@@ -208,4 +208,13 @@ public class MarketingDiscount {
 	@Excel(name = "排序，数字越小前端排序越靠前 ", width = 15)
 	@ApiModelProperty(value = "排序，数字越小前端排序越靠前 ")
 	private BigDecimal sort;
+
+	/**折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） */
+	@Excel(name = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） ", width = 15)
+	@ApiModelProperty(value = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券）")
+	private BigDecimal discountLimitAmount;
+	/**优惠折扣百分比：指参与折扣的力度（用于折扣券） */
+	@Excel(name = "优惠折扣百分比：指参与折扣的力度（用于折扣券）", width = 15)
+	@ApiModelProperty(value = "优惠折扣百分比：指参与折扣的力度（用于折扣券）")
+	private BigDecimal discountPercent;
 }

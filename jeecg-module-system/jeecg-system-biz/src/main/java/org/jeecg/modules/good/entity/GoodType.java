@@ -1,9 +1,6 @@
 package org.jeecg.modules.good.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -12,6 +9,9 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * @Description: 商品分类
@@ -24,10 +24,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @ApiModel(value="good_type对象", description="商品分类")
-public class GoodType {
+public class GoodType implements Serializable {
 
 	/**id*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
 	@ApiModelProperty(value = "id")
 	private String id;
 	/**创建人*/
@@ -99,5 +99,9 @@ public class GoodType {
 	@Excel(name = "停用说明", width = 15)
 	@ApiModelProperty(value = "停用说明")
 	private String stopRemark;
+
+
+	@TableField(exist = false)
+	private List<GoodType> children;
 
 }

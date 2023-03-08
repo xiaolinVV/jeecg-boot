@@ -11,9 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.good.entity.GoodList;
+import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.entity.GoodStoreList;
+import org.jeecg.modules.good.entity.GoodStoreSpecification;
 import org.jeecg.modules.good.service.IGoodListService;
+import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.good.service.IGoodStoreListService;
+import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
 import org.jeecg.modules.marketing.entity.MarketingPrefecture;
 import org.jeecg.modules.marketing.entity.MarketingPrefectureGood;
 import org.jeecg.modules.marketing.service.IMarketingDiscountService;
@@ -57,6 +61,14 @@ public class AfterMemberBrowsingHistoryController {
     private  IMarketingPrefectureGoodService iMarketingPrefectureGoodService;
     @Autowired
     private IMarketingPrefectureService iMarketingPrefectureService;
+
+    @Autowired
+    private IGoodSpecificationService iGoodSpecificationService;
+
+
+    @Autowired
+    private IGoodStoreSpecificationService getSmallGoodSpecification;
+
     /**
      * 根据ids删除收藏
      * @param ids
@@ -111,19 +123,22 @@ public class AfterMemberBrowsingHistoryController {
                 if(m.getGoodType().equals("0")){
                     //店铺商品
                     GoodStoreList goodStoreList=iGoodStoreListService.getById(m.getGoodStoreListId());
+
+                    GoodStoreSpecification goodStoreSpecificationSmall=getSmallGoodSpecification.getSmallGoodSpecification(goodStoreList.getId());
+
                     if(goodStoreList==null){
                         continue;
                     }
                     objectMap.put("mainPicture",goodStoreList.getMainPicture());
                     objectMap.put("goodName",goodStoreList.getGoodName());
                     if (memberList.getMemberType().equals("1")) {
-                        objectMap.put("price", goodStoreList.getSmallVipPrice());
+                        objectMap.put("price", goodStoreSpecificationSmall.getVipPrice());
                     } else {
-                        objectMap.put("price", goodStoreList.getSmallPrice());
+                        objectMap.put("price", goodStoreSpecificationSmall.getPrice());
                     }
                     objectMap.put("goodId",goodStoreList.getId());
 
-                    objectMap.put("repertory",goodStoreList.getRepertory());
+                    objectMap.put("repertory",getSmallGoodSpecification.getTotalRepertory(goodStoreList.getId()));
 
                     objectMap.put("frameStatus",goodStoreList.getFrameStatus());
 
@@ -135,6 +150,10 @@ public class AfterMemberBrowsingHistoryController {
                     if(goodList==null){
                         continue;
                     }
+
+                    GoodSpecification goodSpecificationSmall=iGoodSpecificationService.getSmallGoodSpecification(goodList.getId());
+
+
                     objectMap.put("mainPicture",goodList.getMainPicture());
                     objectMap.put("goodName",goodList.getGoodName());
                     //判断是否属专区商品
@@ -150,9 +169,9 @@ public class AfterMemberBrowsingHistoryController {
                            }else{
                                //平台商品价格
                                if (memberList.getMemberType().equals("1")) {
-                                   objectMap.put("price", goodList.getSmallVipPrice());
+                                   objectMap.put("price", goodSpecificationSmall.getVipPrice());
                                } else {
-                                   objectMap.put("price", goodList.getSmallPrice());
+                                   objectMap.put("price", goodSpecificationSmall.getPrice());
                                }
                            }
                        MarketingPrefecture marketingPrefecture =   iMarketingPrefectureService.getById(m.getMarketingPrefectureId());
@@ -165,11 +184,11 @@ public class AfterMemberBrowsingHistoryController {
                         }else{
                        //平台商品价格
                        if (memberList.getMemberType().equals("1")) {
-                           objectMap.put("price", goodList.getSmallVipPrice());
+                           objectMap.put("price", goodSpecificationSmall.getVipPrice());
                            //专区标签
                            objectMap.put("label", "");
                        } else {
-                           objectMap.put("price", goodList.getSmallPrice());
+                           objectMap.put("price", goodSpecificationSmall.getPrice());
                            //专区标签
                            objectMap.put("label", "");
                        }
@@ -177,7 +196,7 @@ public class AfterMemberBrowsingHistoryController {
 
                     objectMap.put("goodId",goodList.getId());
 
-                    objectMap.put("repertory",goodList.getRepertory());
+                    objectMap.put("repertory",iGoodSpecificationService.getTotalRepertory(goodList.getId()));
 
                     objectMap.put("frameStatus",goodList.getFrameStatus());
 

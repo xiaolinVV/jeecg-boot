@@ -27,10 +27,22 @@ public interface MarketingDiscountMapper extends BaseMapper<MarketingDiscount> {
 
   /**
    *
+   * 根据商品id查询优惠券列表
+   *
    * @param paramMap
    * @return
    */
   public IPage<Map<String,Object>> findMarketingDiscountByGoodId(Page<Map<String,Object>> page, @Param("paramMap") Map<String,Object> paramMap);
+
+
+
+  /**
+   *
+   * 根据商品id查询优惠券列表
+   * @param paramMap
+   * @return
+   */
+  public List<Map<String,Object>> findMarketingDiscountByGoodId(@Param("paramMap") Map<String,Object> paramMap);
 
 
   /**
@@ -66,6 +78,9 @@ public interface MarketingDiscountMapper extends BaseMapper<MarketingDiscount> {
   MarketingDiscountDTO findMarketingDiscountDTO(@Param("id") String id);
 
   List<MarketingDiscountVO> findMarketingDiscountVO(@Param("marketingDiscountVO") MarketingDiscountVO marketingDiscountVO);
+
+
+  IPage<MarketingDiscountVO> findMarketingDiscountVO(Page<MarketingDiscountVO> page,@Param("marketingDiscountVO") MarketingDiscountVO marketingDiscountVO);
 
   IPage<MarketingDiscountDTO> findMarketingDiscountStoreList(Page<MarketingDiscountDTO> page,@Param("marketingDiscountVO") MarketingDiscountVO marketingDiscountVO);
 

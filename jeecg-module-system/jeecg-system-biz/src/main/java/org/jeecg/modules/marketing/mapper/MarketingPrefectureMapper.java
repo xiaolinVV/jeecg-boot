@@ -28,13 +28,6 @@ public interface MarketingPrefectureMapper extends BaseMapper<MarketingPrefectur
      */
     List<Map<String,Object>> findPrefectureIndex(@Param("softModel") String softModel);
 
-    /**
-     * 过滤专区商品id
-     * @param paramMap
-     * @return
-     */
-    List<Map<String,Object>>  getFiltrationGoodId(@Param("paramMap")  Map<String,Object> paramMap);
-
     List<Map<String,Object>> getFiltrationGoodIds(@Param("paramMap") Map<String, Object> paramMap);
 
     List<Map<String,Object>> getMarketingPrefectureByRecommend();

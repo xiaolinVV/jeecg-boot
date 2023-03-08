@@ -9,6 +9,7 @@ import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -41,7 +42,7 @@ public class MarketingDiscountCouponVO {
 	@TableLogic
 	private String delFlag;
 	/**优惠金额*/
-	private java.math.BigDecimal price;
+	private BigDecimal price;
 	/**优惠券名称*/
 	private String name;
 	/**有无门槛；0：无；1：有*/
@@ -70,13 +71,13 @@ public class MarketingDiscountCouponVO {
 	/**使用时间(前端展示)*/
 	private String userTimes;
 	/**实际抵扣金额（核销默认全抵）*/
-	private java.math.BigDecimal practicalDeduction;
+	private BigDecimal practicalDeduction;
 	/**优惠券的id*/
 	private String marketingDiscountId;
 	/**0:店铺；1：平台*/
 	private String isPlatform;
 	/**满多少钱*/
-	private java.math.BigDecimal completely;
+	private BigDecimal completely;
 
 	private String giveMemberListId;
 	/**0:购买使用；1：核销使用*/
@@ -177,4 +178,21 @@ public class MarketingDiscountCouponVO {
 	private String niName;
 
 	private String issuer;
+	@Excel(name = "券类型；0：常规；1：活动", width = 15,dicCode = "member_type")
+	@ApiModelProperty(value = "券类型；0：常规；1：活动")
+	private String isNomal;
+
+	/**折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） */
+	@Excel(name = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券） ", width = 15)
+	@ApiModelProperty(value = "折扣上限金额，最多可以参与折扣的金额上限（用于折扣券）")
+	private BigDecimal discountLimitAmount;
+	/**优惠折扣百分比：指参与折扣的力度（用于折扣券） */
+	@Excel(name = "优惠折扣百分比：指参与折扣的力度（用于折扣券）", width = 15)
+	@ApiModelProperty(value = "优惠折扣百分比：指参与折扣的力度（用于折扣券）")
+	private BigDecimal discountPercent;
+
+	/**折扣券已使用金额 */
+	@Excel(name = "折扣券已使用金额", width = 15)
+	@ApiModelProperty(value = "折扣券已使用金额")
+	private BigDecimal discountUseAmount;
 }

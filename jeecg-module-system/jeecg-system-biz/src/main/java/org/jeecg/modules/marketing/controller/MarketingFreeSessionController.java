@@ -1,5 +1,6 @@
 package org.jeecg.modules.marketing.controller;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -69,12 +70,9 @@ public class MarketingFreeSessionController {
 				.orderByDesc(MarketingFreeSession::getEndTime)
 				.last("limit 1"));
 		if(marketingFreeSession==null){
-			result.setResult(DateUtils.date2Str(new Date(),DateUtils.date_sdf.get()));
+			result.setResult(DateUtil.today());
 		}
-		Calendar calendar=Calendar.getInstance();
-		calendar.setTime(marketingFreeSession.getEndTime());
-		calendar.add(Calendar.DATE,1);
-		result.setResult(DateUtils.date2Str(calendar.getTime(),DateUtils.date_sdf.get()));
+		result.setResult(DateUtil.formatDate(DateUtil.offsetDay(marketingFreeSession.getEndTime(),1)));
 		result.success("获取之后执行时间");
 		return result;
 	}

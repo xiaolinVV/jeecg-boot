@@ -95,7 +95,7 @@
         ON su.id = sur.`user_id`
         LEFT JOIN sys_role sr
         ON sr.`id` = sur.`role_id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
         <if test="agencyBalanceVO!=null and agencyBalanceVO.username!=null and agencyBalanceVO.username!=''">
             AND su.`username` LIKE concat('%',concat(#{agencyBalanceVO.username},'%'))
         </if>
@@ -132,7 +132,7 @@
             ON sur.`user_id` = am.`sys_user_id`
           LEFT JOIN sys_role sr
             ON sr.`id` = sur.`role_id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
           AND am.`sys_user_id` = #{userId}
     </select>
     <select id="findAgencyWorkbenchVO" resultType="org.jeecg.modules.agency.vo.AgencyWorkbenchVO">
@@ -171,9 +171,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.status = 5
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -188,9 +188,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.status  = 5
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -209,9 +209,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.status  = 5
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -226,7 +226,7 @@
                   SUM(aac.`amount`)
                 FROM
                   agency_account_capital aac
-                WHERE aac.`del_flag` = 0
+                WHERE aac.`del_flag` = '0'
                   AND aac.`sys_user_id` = am.sys_user_id
                   AND aac.`go_and_come` = 0 ) AS earnings,
               -- 累计收益
@@ -241,8 +241,8 @@
                     member_list ml
                     LEFT JOIN store_manage sm
                       ON ml.`sys_user_id` = sm.`sys_user_id`
-                  WHERE ml.`del_flag` = 0
-                    AND sm.`del_flag` = 0
+                  WHERE ml.`del_flag` = '0'
+                    AND sm.`del_flag` = '0'
                     AND sm.`pay_status` IN (1, 2)
                     AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
                     )
@@ -254,8 +254,8 @@
                     member_list ml
                     LEFT JOIN store_manage sm
                       ON ml.`sys_user_id` = sm.`sys_user_id`
-                  WHERE ml.`del_flag` = 0
-                    AND sm.`del_flag` = 0
+                  WHERE ml.`del_flag` = '0'
+                    AND sm.`del_flag` = '0'
                     AND sm.`pay_status` IN (1, 2)
                     AND FIND_IN_SET( SUBSTRING_INDEX(
                       SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -271,8 +271,8 @@
                     member_list ml
                     LEFT JOIN store_manage sm
                       ON ml.`sys_user_id` = sm.`sys_user_id`
-                  WHERE ml.`del_flag` = 0
-                    AND sm.`del_flag` = 0
+                  WHERE ml.`del_flag` = '0'
+                    AND sm.`del_flag` = '0'
                     AND sm.`pay_status` IN (1, 2)
                     AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
                     )
@@ -289,7 +289,7 @@
                       COUNT(1)
                     FROM
                        store_manage sm
-                    WHERE sm.`del_flag` = 0
+                    WHERE sm.`del_flag` = '0'
                       AND sm.`pay_status` IN (1, 2)
                       AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', 1),am.`sys_area_id`)
                       )
@@ -299,7 +299,7 @@
                       COUNT(1)
                     FROM
                       store_manage sm
-                    WHERE sm.`del_flag` = 0
+                    WHERE sm.`del_flag` = '0'
                       AND sm.`pay_status` IN (1, 2)
                       AND FIND_IN_SET( SUBSTRING_INDEX(
                         SUBSTRING_INDEX(sm.`sys_area_id`, ',', 2),
@@ -313,7 +313,7 @@
                       COUNT(1)
                     FROM
                       store_manage sm
-                    WHERE sm.`del_flag` = 0
+                    WHERE sm.`del_flag` = '0'
                       AND sm.`pay_status` IN (1, 2)
                       AND FIND_IN_SET( SUBSTRING_INDEX(sm.`sys_area_id`, ',', - 1),am.`sys_area_id`)
                       )
@@ -332,9 +332,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.`status` = 1
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -349,9 +349,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.`status` = 1
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -370,9 +370,9 @@
                     order_store_list osl
                     LEFT JOIN store_manage sm
                       ON osl.`sys_user_id` = sm.`sys_user_id`
-                  WHERE osl.`del_flag` = 0
+                  WHERE osl.`del_flag` = '0'
                     AND osl.`status` = 1
-                    AND sm.`del_flag` = 0
+                    AND sm.`del_flag` = '0'
                     AND sm.`status` = 1
                     AND sm.`attestation_status` IN (1, 2)
                     AND sm.`pay_status` IN (1, 2)
@@ -390,7 +390,7 @@
                 ON sur.`user_id` = su.`id`
               LEFT JOIN sys_role sr
                 ON sr.`id` = sur.`role_id`
-            WHERE am.`del_flag` = 0
+            WHERE am.`del_flag` = '0'
               AND am.sys_user_id = #{userId}
     </select>
     <select id="returnAgencyInfo" resultType="org.jeecg.modules.agency.vo.AgencyManageVO">
@@ -411,7 +411,7 @@
           agency_manage am
           LEFT JOIN sys_user su
             ON am.`sys_user_id` = su.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
           AND am.`sys_user_id` = #{userId}
     </select>
 
@@ -433,8 +433,8 @@
           agency_manage am
           LEFT JOIN sys_user su
             ON am.`sys_user_id` = su.`id`
-        WHERE am.`del_flag` = 0
-        AND su.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
+        AND su.`del_flag` = '0'
         AND am.status = 1
         AND su.phone LIKE concat('%',#{phone},'%')
         LIMIT 10

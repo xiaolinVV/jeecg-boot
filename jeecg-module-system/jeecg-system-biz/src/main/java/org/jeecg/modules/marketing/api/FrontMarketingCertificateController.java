@@ -300,7 +300,7 @@ public class FrontMarketingCertificateController {
                             + "." + StringUtils.rightPad(StringUtils.substringAfter(jb.getJSONObject("to").getString("lng"), "."), 6, "0"));
                     BigDecimal dis=new BigDecimal(jb.getString("distance"));
                     if(dis.doubleValue()>1000){
-                        s.put("distance", dis.divide(new BigDecimal(1000),2) + "km");
+                        s.put("distance", dis.divide(new BigDecimal(1000),2,RoundingMode.DOWN) + "km");
                     }else{
                         s.put("distance", dis + "m");
                     }

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.query.QueryGenerator;
@@ -64,6 +65,8 @@ public class OrderStoreListController {
 	private IOrderStoreSubListService orderStoreSubListService;
 	@Autowired
 	private IOrderStoreGoodRecordService orderStoreGoodRecordService;
+
+
 	/**
 	  * 分页列表查询
 	 * @param orderListVO
@@ -91,7 +94,7 @@ public class OrderStoreListController {
 		result.setResult(pageList);
 		return result;
 	}
-	
+
 	/**
 	  *   添加
 	 * @param orderStoreList
@@ -111,7 +114,7 @@ public class OrderStoreListController {
 		}
 		return result;
 	}
-	
+
 	/**
 	  *  编辑
 	 * @param orderStoreList
@@ -132,10 +135,10 @@ public class OrderStoreListController {
 				result.success("修改成功!");
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	  *   通过id删除
 	 * @param id
@@ -153,7 +156,7 @@ public class OrderStoreListController {
 		}
 		return Result.ok("删除成功!");
 	}
-	
+
 	/**
 	  *  批量删除
 	 * @param ids
@@ -172,7 +175,7 @@ public class OrderStoreListController {
 		}
 		return result;
 	}
-	
+
 	/**
 	  * 通过id查询
 	 * @param id
@@ -445,7 +448,11 @@ public class OrderStoreListController {
 		 }
 		 return result;
 	 }
-
+	 @RequestMapping({"refundAndAbrogateOrder"})
+	 @ResponseBody
+	 public Result<?> refundAndAbrogateOrder(String id, String closeExplain) {
+		 return StringUtils.isBlank(id) ? Result.error("订单id不能为空") : this.orderStoreListService.refundAndAbrogateOrder(id, closeExplain, "4");
+	 }
 	 /**
 	  * 通过id查询修改地址：
 	  *

@@ -572,10 +572,13 @@ public class BackGoodListController {
                     result.error500("商品不存在！");
                     return result;
                 }
+
+                GoodSpecification goodSpecification=iGoodSpecificationService.getSmallGoodSpecification(goodId);
+
                 //总利润(普通会员)
-                BigDecimal sumProfit = new BigDecimal(goodList.getSmallPrice()).subtract(new BigDecimal(goodList.getSmallCostPrice()));
+                BigDecimal sumProfit =goodSpecification.getPrice().subtract(goodSpecification.getCostPrice());
                 //平台净利润(普通会员)
-                BigDecimal retainedProfits = new BigDecimal(goodList.getSmallSupplyPrice()).subtract(new BigDecimal(goodList.getSmallCostPrice())).add(new BigDecimal(profitProportion).multiply(sumProfit).divide(new BigDecimal(100)));
+                BigDecimal retainedProfits = goodSpecification.getSupplyPrice().subtract(goodSpecification.getCostPrice()).add(new BigDecimal(profitProportion).multiply(sumProfit).divide(new BigDecimal(100)));
 
                 //归属店铺奖励(普通会员)
                 BigDecimal  storeAward = retainedProfits.multiply(marketingDistributionSetting.getAffiliationStoreAward().divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN);
@@ -585,9 +588,9 @@ public class BackGoodListController {
                 paramMap.put("channelAward",channelAward);
 
                 //总利润(VIP会员)
-                BigDecimal sumVIPProfit = new BigDecimal(goodList.getSmallVipPrice()).subtract(new BigDecimal(goodList.getSmallCostPrice()));
+                BigDecimal sumVIPProfit = goodSpecification.getVipPrice().subtract(goodSpecification.getCostPrice());
                 //平台净利润(VIP会员)
-                BigDecimal retainedVIPProfits = new BigDecimal(goodList.getSmallSupplyPrice()).subtract(new BigDecimal(goodList.getSmallCostPrice())).add(new BigDecimal(profitProportion).multiply(sumVIPProfit).divide(new BigDecimal(100)));
+                BigDecimal retainedVIPProfits = goodSpecification.getSupplyPrice().subtract(goodSpecification.getCostPrice()).add(new BigDecimal(profitProportion).multiply(sumVIPProfit).divide(new BigDecimal(100)));
 
                 //归属店铺奖励(VIP会员)
                 BigDecimal  storeVIPAward = retainedVIPProfits.multiply(marketingDistributionSetting.getAffiliationStoreAward().divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN);
@@ -635,21 +638,21 @@ public class BackGoodListController {
         Map<String,Object> paramMap=Maps.newHashMap();
         Object sysUserId=request.getAttribute("sysUserId");
         //店铺商品总数
-        Long goodSumCount =  iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
+        long goodSumCount =  iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
                 .eq(GoodStoreList::getSysUserId, sysUserId));
         //店铺 在售 商品数
-        Long goodSumSaleCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getAuditStatus,"2")
+        long goodSumSaleCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getAuditStatus,"2")
                 .eq(GoodStoreList::getSysUserId, sysUserId)
                 .eq(GoodStoreList::getFrameStatus,"1")
                 .eq(GoodStoreList::getStatus,"1"));
         //店铺 下架 商品数
-        Long goodSoldOutCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
+        long goodSoldOutCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
                 .eq(GoodStoreList::getSysUserId, sysUserId)
                 .eq(GoodStoreList::getAuditStatus,"2")
                 .eq(GoodStoreList::getFrameStatus,"0")
                 .eq(GoodStoreList::getStatus,"1"));
         //店铺 在审核 商品数
-        Long goodAuditCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
+        long goodAuditCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().ne(GoodStoreList::getAuditStatus,"0")
                 .eq(GoodStoreList::getSysUserId, sysUserId)
                 .eq(GoodStoreList::getFrameStatus,"1")
                 .eq(GoodStoreList::getStatus,"1")
@@ -657,7 +660,7 @@ public class BackGoodListController {
         //回收站商品
         Integer goodRecycleBinCount = iGoodStoreListService.getGoodStoreListdelFlag(sysUserId.toString());
         //在草稿箱商品
-        Long goodDraftsCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getAuditStatus,"0")
+        long goodDraftsCount = iGoodStoreListService.count(new LambdaQueryWrapper<GoodStoreList>().eq(GoodStoreList::getAuditStatus,"0")
                 .eq(GoodStoreList::getSysUserId, sysUserId));
         paramMap.put("goodSumCount",goodSumCount);//店铺商品总数
         paramMap.put("goodSumSaleCount",goodSumSaleCount); //店铺 在售 商品数
@@ -765,13 +768,6 @@ public class BackGoodListController {
          }
          //修改店铺商品数据
          goodStoreList.setMarketPrice(goodStoreListVo.getMarketPrice()); //市场价
-         goodStoreList.setPrice(goodStoreListVo.getPrice());//销售价
-         goodStoreList.setVipPrice(goodStoreListVo.getVipPrice());//会员价
-         goodStoreList.setCostPrice(goodStoreListVo.getCostPrice());//商品成本价
-         goodStoreList.setRepertory(goodStoreListVo.getRepertory());//库存
-         goodStoreList.setSmallPrice(goodStoreListVo.getSmallPrice());
-         goodStoreList.setSmallVipPrice(goodStoreListVo.getSmallVipPrice());
-         goodStoreList.setSmallCostPrice(goodStoreListVo.getSmallCostPrice());
          iGoodStoreListService.updateById(goodStoreList);
          goodStoreListVo.getGoodStoreSpecificationList().forEach(gss->{
              GoodStoreSpecification goodStoreSpecification = iGoodStoreSpecificationService.getById(gss.getId());

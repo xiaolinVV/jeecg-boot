@@ -23,7 +23,6 @@ public class ProviderAddressServiceImpl extends ServiceImpl<ProviderAddressMappe
 
     @Autowired(required = false)
     private ProviderAddressMapper providerAddressMapper;
-  @Override
   public  List<ProviderAddressDTO> getlistProviderAddress(Map<String,String> paramMap){
         return providerAddressMapper.getlistProviderAddress(paramMap);
     };

@@ -25,4 +25,14 @@ public interface IMemberDesignationService extends IService<MemberDesignation> {
     List<Map<String, Object>> getMemberDesignationListBySort(String sort,String memberDesignationGroupId);
 
     MemberDesignationVO getMemberDesignationById(String memberDesignationId);
+
+
+    /**
+     * 称号选择
+     *
+     * @param page
+     * @param memberDesignationGroupId
+     * @return
+     */
+    IPage<Map<String,Object>> getSelectDesignation(Page<Map<String,Object>> page,String memberDesignationGroupId);
 }

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.store.dto.StoreBankCardDTO;
 import org.jeecg.modules.store.entity.StoreBankCard;
-import org.jeecg.modules.store.vo.StoreBankCardVO;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,31 @@ public interface IStoreBankCardService extends IService<StoreBankCard> {
 
     Result<Map<String,Object>> findStoreBankCard();
 
-    IPage<StoreBankCardVO> queryPageList(Page<StoreBankCardVO> page, StoreBankCardDTO storeBankCardDTO);
+    IPage<StoreBankCard> queryPageList(Page<StoreBankCard> page, StoreBankCardDTO storeBankCardDTO);
+
+    /**
+     * 获取相关类型的店铺银行卡信息
+     *
+     * @param storeManageId
+     * @param carType
+     * @return
+     */
+    public StoreBankCard getStoreBankCardByStoreManageId(String storeManageId,String carType);
+
+    /**
+     * 创建汇付天下分账信息
+     *
+     * @param storeBankCard
+     * @return
+     */
+    public Result<?> createMemberPrivate(StoreBankCard storeBankCard);
+
+    /**
+     * 修改汇付天下分账信息
+     *
+     * @param storeBankCard
+     * @return
+     */
+    public Result<?> updateSettleAccountPrivate(StoreBankCard storeBankCard);
 
 }

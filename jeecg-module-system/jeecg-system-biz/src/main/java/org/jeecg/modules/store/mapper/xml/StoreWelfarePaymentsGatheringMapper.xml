@@ -33,7 +33,7 @@
         ON st.id = sm.store_type_id
         LEFT JOIN store_type stOne
         ON stOne.id = st.pid
-        WHERE swpg.`del_flag` = 0
+        WHERE swpg.`del_flag` = '0'
         <if test="storeWelfarePaymentsGatheringDTO.storeManageId != null and storeWelfarePaymentsGatheringDTO.storeManageId != ''">
             AND swpg.store_manage_id LIKE concat('%',#{storeWelfarePaymentsGatheringDTO.storeManageId},'%')
         </if>

@@ -114,7 +114,10 @@ public class HftxPayUtils {
         settleCountParams.put("app_id", appid);
         try {
             Map<String, Object> settleCount = SettleAccount.delete(settleCountParams);
+            log.info("删除结算信息数据："+JSON.toJSONString(settleCount));
             if(settleCount.get("status").toString().equals("succeeded")){
+                return this.createSettleAccountPrivate(memberId,paramMap);
+            }else{
                 return this.createSettleAccountPrivate(memberId,paramMap);
             }
         } catch (BaseAdaPayException e) {

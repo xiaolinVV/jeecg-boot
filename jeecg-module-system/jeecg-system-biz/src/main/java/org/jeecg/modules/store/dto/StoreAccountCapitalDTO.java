@@ -28,7 +28,7 @@ import java.util.Date;
 public class StoreAccountCapitalDTO {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
 	private String id;
 	/**创建人*/
 	private String createBy;

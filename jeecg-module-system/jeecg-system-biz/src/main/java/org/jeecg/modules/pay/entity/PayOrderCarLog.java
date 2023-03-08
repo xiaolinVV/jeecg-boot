@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 public class PayOrderCarLog {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -120,4 +120,7 @@ public class PayOrderCarLog {
 	private BigDecimal integral;
 
 	private BigDecimal integralPrice;//积分价值
+
+
+	private String TMemberId;
 }

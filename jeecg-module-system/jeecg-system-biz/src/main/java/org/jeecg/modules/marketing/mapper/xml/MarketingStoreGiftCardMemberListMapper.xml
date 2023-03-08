@@ -2,6 +2,42 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.marketing.mapper.MarketingStoreGiftCardMemberListMapper">
 
+
+
+    <sql id="goodInfo">
+        gsl.id AS id,
+	gsl.main_picture AS mainPicture,
+	0 AS isPlatform,
+	gsl.good_name AS goodName,
+	( SELECT price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallPrice,
+	( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallVipPrice,
+	( SELECT SUM( sales_volume ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS salesVolume,
+	gsl.market_price AS marketPrice,
+	( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = gsl.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
+	(
+	SELECT
+		COUNT( 1 )
+	FROM
+		marketing_discount_good mg
+		LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
+	WHERE
+		ms.STATUS = 1
+		AND ms.del_flag = 0
+		AND ms.total &gt; ms.released_quantity
+		AND mg.good_id = gsl.id
+		AND mg.is_platform = '0'
+	) AS discount,
+	gsl.is_specification AS isSpecification
+    </sql>
+
+
+    <sql id="goodWhere">
+        gsl.del_flag = '0'
+        AND gsl.frame_status = '1'
+        AND gsl.audit_status = '2'
+        AND gsl.`status` = '1'
+    </sql>
+
     <select id="getByMemberId" resultType="map" parameterType="map">
                 SELECT
             msgcml.id,
@@ -19,6 +55,10 @@
             AND msgcml.member_list_id=#{paramMap.memberId}
 
 	        AND msgcml.`status`=#{paramMap.status}
+
+	        <if test="paramMap.storeManageId!=null and paramMap.storeManageId!=''">
+                and msgcml.store_manage_id=#{paramMap.storeManageId}
+            </if>
 
             ORDER BY msgcml.create_time DESC,msgcml.id ASC
     </select>
@@ -92,46 +132,21 @@
 
     <select id="getGoodList" resultType="map" parameterType="map">
            SELECT
-            g.id AS id,
-            g.main_picture AS mainPicture,
-            0 AS isPlatform,
-            g.good_name AS goodName,
-            g.small_price AS smallPrice,
-            g.small_vip_price AS smallVipPrice,
-            g.activities_type AS activitiesType,
-            g.activity_price AS activityPrice,
-            ( SELECT CONCAT( store_name, "(", sub_store_name, ")" ) FROM `store_manage` WHERE sys_user_id = g.sys_user_id AND del_flag = "0" LIMIT 1 ) AS storeName,
-            (
-            SELECT
-            COUNT( 1 )
-            FROM
-            marketing_discount_good mg
-            LEFT JOIN marketing_discount ms ON mg.marketing_discount_id = ms.id
-            WHERE
-            ms.STATUS = 1
-            AND ms.del_flag = 0
-            AND ms.total &gt; ms.released_quantity
-            AND mg.good_id = g.id
-            AND mg.is_platform = '0'
-            ) AS discount,
-            g.is_specification AS isSpecification,
-        IFNULL(( SELECT quantity FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS carCount,
-        IFNULL(( SELECT id FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = g.id  ORDER BY create_time desc  limit 1 ),'0') AS memberShoppingCartId
+           <include refid="goodInfo"></include>,
+        IFNULL(( SELECT quantity FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = gsl.id  ORDER BY create_time desc  limit 1 ),'0') AS carCount,
+        IFNULL(( SELECT id FROM member_shopping_cart WHERE member_list_id = #{paramMap.memberId} and marketing_store_gift_card_member_list_id=#{paramMap.marketingStoreGiftCardMemberListId} AND is_view = '0' AND del_flag = '0' AND good_store_list_id = gsl.id  ORDER BY create_time desc  limit 1 ),'0') AS memberShoppingCartId
             FROM
 
                     marketing_store_gift_card_good_list msgcgl
                     LEFT JOIN
-            good_store_list g
-                    ON msgcgl.good_store_list_id=g.id
+            good_store_list gsl
+                    ON msgcgl.good_store_list_id=gsl.id
             WHERE
-            msgcgl.del_flag = 0
-            AND g.STATUS = 1
-            AND g.frame_status = 1
-            AND g.audit_status = 2
-            and g.good_store_type_id=#{paramMap.goodTypeId}
-
+            <include refid="goodWhere"></include>
+             and msgcgl.del_flag = 0
+            and gsl.good_store_type_id=#{paramMap.goodTypeId}
                     and msgcgl.marketing_store_gift_card_list_id=#{paramMap.marketingStoreGiftCardListId}
-            order by g.sales_volume desc,g.small_price,g.update_time desc
+            order by salesVolume desc,smallPrice,gsl.update_time desc
     </select>
     <select id="queryPageList" resultType="map">
         SELECT
@@ -155,7 +170,7 @@
         )
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
           msgcml.car_name AS carName,
           msgcml.denomination,
@@ -200,7 +215,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`id` = msgcml.`store_manage_id`
             ) LIKE concat('%',#{paramMap.storeName},'%')
         </if>
@@ -226,7 +241,7 @@
         )
         FROM
         store_manage sm
-        WHERE sm.`del_flag` = 0
+        WHERE sm.`del_flag` = '0'
         AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
         msgcml.car_name AS carName,
         msgcml.denomination,
@@ -269,7 +284,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`id` = msgcml.`store_manage_id`
             ) LIKE concat('%',#{paramMap.storeName},'%')
         </if>

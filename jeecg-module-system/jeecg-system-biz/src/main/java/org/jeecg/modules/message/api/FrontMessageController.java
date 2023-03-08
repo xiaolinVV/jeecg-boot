@@ -14,7 +14,6 @@ import org.jeecg.common.util.RedisUtil;
 import org.jeecg.modules.system.dto.SysUserDTO;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.service.ISysUserService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +30,9 @@ public class FrontMessageController {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private DySmsHelper dySmsHelper;
 
     @Autowired
     private ISysUserService iSysUserService;
@@ -52,6 +54,18 @@ public class FrontMessageController {
 
         //随机数
         String captcha = RandomUtil.randomNumbers(6);
+
+//        try {
+//            if(dySmsHelper.sendSms(phone, captcha, dySmsHelper.IDENTITY_TEMPLATE_CODE)){
+//                //验证码10分钟内有效
+//                redisUtil.set(phone, captcha, 600);
+//            }else{
+//                result.error500("验证码发送失败");
+//                return result;
+//            }
+//        } catch (ClientException e) {
+//            e.printStackTrace();
+//        }
         JSONObject templateParamJson = new JSONObject();
         templateParamJson.put("code", captcha);
         try {

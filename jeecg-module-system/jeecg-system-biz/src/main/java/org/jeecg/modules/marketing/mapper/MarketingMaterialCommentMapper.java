@@ -23,7 +23,7 @@ public interface MarketingMaterialCommentMapper extends BaseMapper<MarketingMate
      * @param marketingMaterialCommentVO
      * @return
      */
-    IPage<MarketingMaterialCommentDTO> getMarketingMaterialCommentDTO(Page page, @Param("marketingMaterialCommentVO") MarketingMaterialCommentVO marketingMaterialCommentVO);
+    IPage<MarketingMaterialCommentDTO> getMarketingMaterialCommentDTO(Page<MarketingMaterialCommentDTO> page, @Param("marketingMaterialCommentVO") MarketingMaterialCommentVO marketingMaterialCommentVO);
 
 
 

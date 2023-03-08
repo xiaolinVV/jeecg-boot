@@ -23,6 +23,11 @@ public interface MarketingCertificateMapper extends BaseMapper<MarketingCertific
 
     List<MarketingCertificateVO> findCertificateVO(@Param("marketingCertificateVO") MarketingCertificateVO marketingCertificateVO);
 
+
+    IPage<MarketingCertificateVO> findCertificateVO(Page<MarketingCertificateDTO> page,@Param("marketingCertificateVO") MarketingCertificateVO marketingCertificateVO);
+
+
+
     /**
      * 查询兑换券的列表
      *

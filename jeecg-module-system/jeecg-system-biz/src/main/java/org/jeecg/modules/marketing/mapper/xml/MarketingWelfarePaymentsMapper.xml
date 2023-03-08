@@ -36,10 +36,10 @@
         mwp.trade_type
         FROM
         marketing_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
         AND mwp.is_platform = 1
         ORDER BY mwp.`create_time` DESC) mp
-        WHERE mp.`del_flag` = 0
+        WHERE mp.`del_flag` = '0'
         <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.serialNumber != null and marketingWelfarePaymentsVO.serialNumber != ''">
             AND mp.serial_number LIKE concat('%',#{marketingWelfarePaymentsVO.serialNumber},'%')
         </if>
@@ -103,9 +103,9 @@
         LEFT JOIN store_manage sm
         ON mwp.`sys_user_id` = sm.`sys_user_id`
         LEFT JOIN sys_user su ON sm.`sys_user_id` = su.`id`
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
         AND mwp.is_platform = 0
-        AND sm.`del_flag` = 0
+        AND sm.`del_flag` = '0'
         <if test="marketingWelfarePaymentsVO != null and marketingWelfarePaymentsVO.uId!=null and marketingWelfarePaymentsVO.uId!=''">
               AND mwp.sys_user_id = #{marketingWelfarePaymentsVO.uId}
           </if>
@@ -234,8 +234,8 @@
         LEFT JOIN store_manage sm
         ON mwp.`sys_user_id` = sm.`sys_user_id`
         LEFT JOIN sys_user su ON sm.`sys_user_id` = su.`id`
-        WHERE mwp.`del_flag` = 0
-        AND sm.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
+        AND sm.`del_flag` = '0'
         <if test="marketingWelfarePaymentsVO!=null and marketingWelfarePaymentsVO.uId!=null and marketingWelfarePaymentsVO.uId!=''">
             AND mwp.sys_user_id = #{marketingWelfarePaymentsVO.uId}
         </if>
@@ -294,7 +294,7 @@
           mwp.`we_type` AS weType
         FROM
           marketing_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
           AND mwp.`sys_user_id` = #{sysUserId}
           <if test="weType!= 2">
               AND mwp.`we_type` = #{weType}
@@ -311,7 +311,7 @@
         mwp.`day` AS myDate
         FROM
         marketing_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
         AND mwp.`is_platform` = 1
         AND mwp.`bargain_time` <![CDATA[<=]]> #{map.data_end}
         AND mwp.`bargain_time` <![CDATA[>=]]> #{map.data_begin}
@@ -322,7 +322,7 @@
         mwp.`day` AS myDate
         FROM
         marketing_welfare_payments mwp
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
         AND mwp.`is_platform` = 0
         AND mwp.`we_type` = 0
         AND mwp.`balance_pay` > 0
@@ -350,7 +350,7 @@
           marketing_welfare_payments mwp
           LEFT JOIN store_manage sm
             ON mwp.`sys_user_id` = sm.`sys_user_id`
-        WHERE mwp.`del_flag` = 0
+        WHERE mwp.`del_flag` = '0'
           AND mwp.`we_type` = 0
           AND mwp.`is_platform` = 0
         GROUP BY storeName

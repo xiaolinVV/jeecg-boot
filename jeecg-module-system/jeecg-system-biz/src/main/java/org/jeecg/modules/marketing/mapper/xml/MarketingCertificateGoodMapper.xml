@@ -1,55 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.marketing.mapper.MarketingCertificateGoodMapper">
-
+    <sql id="goodListWhere">
+        gl.del_flag = 0
+        AND gl.STATUS = 1
+        AND gl.frame_status = 1
+        AND gl.audit_status = '2'
+        AND gl.main_picture IS NOT NULL
+    </sql>
     <select id="findGoodByCertificateId" resultType="org.jeecg.modules.marketing.dto.MarketingCertificateGoodDTO">
-                SELECT
-                  gl.`id`,
-                  gl.`main_picture`,
-                  gl.`good_name`,
-                  CONCAT(
-                    gtOne.`name`,
-                    '-',
-                    gtTwo.`name`,
-                    '-',
-                    gtTree.`name`
-                  ) AS typeName,
-                  gl.`market_price`,
-                  gl.`price`,
-                  gl.`cost_price`,
-                  gl.supply_price,
-                  gl.`vip_price`,
-                  gl.`repertory`,
-                  mcg.`create_time`,
-                  pm.name AS username,
-                  mcg.can_month,
-                  mcg.good_specification_id,
-                  mcg.quantity,
-                  gs.specification AS specifications
-                FROM
-                  marketing_certificate_good mcg
-                  LEFT JOIN good_list gl
-                    ON mcg.`good_list_id` = gl.`id`
-                  LEFT JOIN good_type gtTree
-                    ON gl.`good_type_id` = gtTree.`id`
-                  LEFT JOIN good_type gtTwo
-                    ON gtTree.`parent_id` = gtTwo.`id`
-                  LEFT JOIN good_type gtOne
-                    ON gtTwo.`parent_id` = gtOne.`id`
-                  LEFT JOIN provider_manage pm
-                    ON pm.sys_user_id = gl.sys_user_id
-                  LEFT JOIN good_specification gs
-                    ON gs.id = mcg.good_specification_id
-                WHERE gl.`del_flag` = 0
-                  AND gl.`status` = 1
-                  AND gl.`frame_status` = 1
-                  AND gl.`good_form` = 0
-                  AND gtTree.`level` = 3
-                  AND gtTwo.`level` = 2
-                  AND gtOne.`level` = 1
-                  AND mcg.del_flag = 0
-                  AND mcg.`marketing_certificate_id` = #{marketingCertificateId}
-                ORDER BY mcg.can_month ASC, mcg.`create_time` DESC
+        SELECT
+        gl.`id`,
+        gl.`main_picture`,
+        gl.`good_name`,
+        CONCAT( gtOne.`name`, '-', gtTwo.`name`, '-', gtTree.`name` ) AS typeName,
+        gl.`market_price`,
+        CONCAT((
+        SELECT
+        price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        price ASC
+        LIMIT 1
+        ),
+        '-',(
+        SELECT
+        price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        price DESC
+        LIMIT 1
+        )) price,
+        CONCAT((
+        SELECT
+        cost_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        cost_price ASC
+        LIMIT 1
+        ),
+        '-',(
+        SELECT
+        cost_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        cost_price DESC
+        LIMIT 1
+        )) AS cost_price,
+        CONCAT((
+        SELECT
+        supply_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        supply_price ASC
+        LIMIT 1
+        ),
+        '-',(
+        SELECT
+        supply_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        supply_price DESC
+        LIMIT 1
+        )) AS supply_price,
+        CONCAT((
+        SELECT
+        vip_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        vip_price ASC
+        LIMIT 1
+        ),
+        '-',(
+        SELECT
+        vip_price
+        FROM
+        good_specification
+        WHERE
+        good_list_id = gl.id
+        AND del_flag = '0'
+        ORDER BY
+        vip_price DESC
+        LIMIT 1
+        )) AS vip_price,
+        ( SELECT SUM( repertory ) FROM good_specification WHERE good_list_id = gl.id AND del_flag = '0' ) AS repertory,
+        mcg.`create_time`,
+        pm.NAME AS username,
+        mcg.can_month,
+        mcg.good_specification_id,
+        mcg.quantity,
+        gs.specification AS specifications
+        FROM
+        marketing_certificate_good mcg
+        LEFT JOIN good_list gl ON mcg.`good_list_id` = gl.`id`
+        LEFT JOIN good_type gtTree ON gl.`good_type_id` = gtTree.`id`
+        LEFT JOIN good_type gtTwo ON gtTree.`parent_id` = gtTwo.`id`
+        LEFT JOIN good_type gtOne ON gtTwo.`parent_id` = gtOne.`id`
+        LEFT JOIN provider_manage pm ON pm.sys_user_id = gl.sys_user_id
+        LEFT JOIN good_specification gs ON gs.id = mcg.good_specification_id
+        WHERE
+        <include refid="goodListWhere"></include>
+        AND mcg.`marketing_certificate_id` = #{marketingCertificateId}
+        AND mcg.del_flag = 0
+        ORDER BY mcg.can_month ASC, mcg.`create_time` DESC
     </select>
     <select id="findMarketingCertificateSeckillListGoodByCertificateId" resultType="map">
         SELECT
@@ -59,7 +140,7 @@
           marketing_certificate_good mcg
           LEFT JOIN good_list gl
             ON mcg.`good_list_id` = gl.`id`
-        WHERE mcg.`del_flag` = 0
+        WHERE mcg.`del_flag` = '0'
           AND mcg.`marketing_certificate_id` = #{id}
         limit 10
     </select>
@@ -68,7 +149,7 @@
           gl.id,
           gl.`main_picture` AS mainPicture,
           gl.good_name AS goodName,
-          gl.price,
+          gs.price,
           gs.specification
         FROM
           marketing_certificate_good mcg
@@ -76,7 +157,7 @@
             ON mcg.`good_list_id` = gl.`id`
           LEFT JOIN good_specification gs
             ON mcg.good_specification_id = gs.id
-        WHERE mcg.`del_flag` = 0
+        WHERE mcg.`del_flag` = '0'
           AND mcg.`marketing_certificate_id` = #{id}
     </select>
 </mapper>

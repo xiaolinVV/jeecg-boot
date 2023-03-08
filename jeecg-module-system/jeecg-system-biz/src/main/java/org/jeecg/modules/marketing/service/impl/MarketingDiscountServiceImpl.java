@@ -8,25 +8,23 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.vo.LoginUser;
+import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.marketing.dto.MarketingDiscountDTO;
-import org.jeecg.modules.marketing.entity.MarketingChannelDiscount;
-import org.jeecg.modules.marketing.entity.MarketingDiscount;
-import org.jeecg.modules.marketing.entity.MarketingDiscountGood;
+import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.mapper.MarketingChannelDiscountMapper;
 import org.jeecg.modules.marketing.mapper.MarketingDiscountGoodMapper;
 import org.jeecg.modules.marketing.mapper.MarketingDiscountMapper;
-import org.jeecg.modules.marketing.service.IMarketingChannelDiscountService;
-import org.jeecg.modules.marketing.service.IMarketingDiscountGoodService;
-import org.jeecg.modules.marketing.service.IMarketingDiscountService;
+import org.jeecg.modules.marketing.service.*;
 import org.jeecg.modules.marketing.vo.MarketingDiscountVO;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * @Description: 优惠券
@@ -47,6 +45,121 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
 
     @Autowired
     private IMarketingChannelDiscountService iMarketingChannelDiscountService;
+
+    @Autowired
+    private IMarketingChannelService iMarketingChannelService;
+
+    @Autowired
+    private IMarketingDiscountCouponService iMarketingDiscountCouponService;
+    @Autowired
+    private IStoreManageService iStoreManageService;
+
+    @Override
+    @Transactional
+    public void generate(String marketingDiscountId,BigDecimal quantity, String memberId, Boolean isContinuous) {
+        //发放券
+        //券的发放
+        MarketingDiscount marketingDiscount = this.getById(marketingDiscountId);
+        if (marketingDiscount != null) {
+            int discountCount = quantity.intValue();
+            Calendar myCalendar = Calendar.getInstance();
+            while (discountCount > 0) {
+                //优惠券量不足时候跳过领取
+                if (marketingDiscount.getTotal().subtract(marketingDiscount.getReleasedQuantity()).longValue() <= 0) {
+                    continue;
+                }
+                MarketingDiscountCoupon marketingDiscountCoupon = new MarketingDiscountCoupon();
+                marketingDiscountCoupon.setPrice(marketingDiscount.getSubtract());
+                marketingDiscountCoupon.setName(marketingDiscount.getName());
+                marketingDiscountCoupon.setIsThreshold(marketingDiscount.getIsThreshold());
+                marketingDiscountCoupon.setMemberListId(memberId);
+                marketingDiscountCoupon.setSysUserId(marketingDiscount.getSysUserId());
+                marketingDiscountCoupon.setQqzixuangu(OrderNoUtils.getOrderNo());
+                marketingDiscountCoupon.setMarketingDiscountId(marketingDiscount.getId());
+                marketingDiscountCoupon.setIsPlatform(marketingDiscount.getIsPlatform());
+                marketingDiscountCoupon.setCompletely(marketingDiscount.getCompletely());
+                marketingDiscountCoupon.setIsGive(marketingDiscount.getIsGive());
+                marketingDiscountCoupon.setIsWarn(marketingDiscount.getIsWarn());
+                marketingDiscountCoupon.setWarnDays(marketingDiscount.getWarnDays());
+                marketingDiscountCoupon.setUserRestrict(marketingDiscount.getUserRestrict());
+                marketingDiscountCoupon.setDiscountExplain(marketingDiscount.getDiscountExplain());
+                marketingDiscountCoupon.setCoverPlan(marketingDiscount.getCoverPlan());
+                marketingDiscountCoupon.setPosters(marketingDiscount.getPosters());
+                marketingDiscountCoupon.setMainPicture(marketingDiscount.getMainPicture());
+                marketingDiscountCoupon.setDiscountLimitAmount(marketingDiscount.getDiscountLimitAmount());
+                marketingDiscountCoupon.setDiscountPercent(marketingDiscount.getDiscountPercent());
+                marketingDiscountCoupon.setIsNomal(marketingDiscount.getIsNomal());
+                //平台渠道判断
+                QueryWrapper<MarketingChannel> marketingChannelQueryWrapper = new QueryWrapper<>();
+                marketingChannelQueryWrapper.eq("english_name", "NORMAL_TO_GET");
+                MarketingChannel marketingChannel = iMarketingChannelService.getOne(marketingChannelQueryWrapper);
+                if (marketingChannel != null) {
+                    marketingDiscountCoupon.setMarketingChannelId(marketingChannel.getId());
+                    marketingDiscountCoupon.setTheChannel(marketingChannel.getName());
+                }
+                //标准用券方式
+                if (marketingDiscount.getVouchersWay().equals("0")) {
+                    //优惠券的时间生成
+                    marketingDiscountCoupon.setStartTime(marketingDiscount.getStartTime());
+                    marketingDiscountCoupon.setEndTime(marketingDiscount.getEndTime());
+                }
+
+                //领券当日起
+                if (marketingDiscount.getVouchersWay().equals("1")) {
+                    //优惠券的时间生成
+                    if(!isContinuous){
+                        myCalendar = Calendar.getInstance();
+                    }
+                    marketingDiscountCoupon.setStartTime(myCalendar.getTime());
+
+                    if (marketingDiscount.getMonad().equals("天")) {
+                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                    }
+                    if (marketingDiscount.getMonad().equals("周")) {
+                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                    }
+                    if (marketingDiscount.getMonad().equals("月")) {
+                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                    }
+
+                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
+                }
+                //领券次日起
+                if (marketingDiscount.getVouchersWay().equals("2")) {
+                    //优惠券的时间生成
+                    if(!isContinuous){
+                        myCalendar = Calendar.getInstance();
+                    }
+                    myCalendar.add(Calendar.DATE, 1);
+                    marketingDiscountCoupon.setStartTime(myCalendar.getTime());
+
+                    if (marketingDiscount.getMonad().equals("天")) {
+                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                    }
+                    if (marketingDiscount.getMonad().equals("周")) {
+                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                    }
+                    if (marketingDiscount.getMonad().equals("月")) {
+                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                    }
+
+                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
+                }
+
+                if (new Date().getTime() >= marketingDiscountCoupon.getStartTime().getTime() && new Date().getTime() <= marketingDiscountCoupon.getEndTime().getTime()) {
+                    //设置生效
+                    marketingDiscountCoupon.setStatus("1");
+                } else {
+                    marketingDiscountCoupon.setStatus("0");
+                }
+                iMarketingDiscountCouponService.save(marketingDiscountCoupon);
+                marketingDiscount.setReleasedQuantity(marketingDiscount.getReleasedQuantity().add(new BigDecimal(1)));
+                this.saveOrUpdate(marketingDiscount);
+                discountCount--;
+            }
+        }
+    }
+
     /**
      * 删除并添加删除说明
      * @param id
@@ -83,6 +196,17 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
     @Override
     public IPage<Map<String, Object>> findMarketingDiscountByGoodId(Page<Map<String, Object>> page,Map<String,Object> paramMap) {
         return marketingDiscountMapper.findMarketingDiscountByGoodId(page, paramMap);
+    }
+
+
+    /**
+     * 优惠券根据商品id
+     * @param paramMap
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> findMarketingDiscountByGoodId(Map<String,Object> paramMap) {
+        return marketingDiscountMapper.findMarketingDiscountByGoodId(paramMap);
     }
 
     @Override
@@ -158,8 +282,18 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
     }
 
     @Override
+    public IPage<MarketingDiscountVO> findMarketingDiscountVO(Page<MarketingDiscountVO> page, MarketingDiscountVO marketingDiscountVO) {
+        return baseMapper.findMarketingDiscountVO(page,marketingDiscountVO);
+    }
+
+    @Override
     public IPage<MarketingDiscountDTO> findMarketingDiscountStoreList(Page<MarketingDiscountDTO> page,MarketingDiscountVO marketingDiscountVO) {
         IPage<MarketingDiscountDTO> marketingDiscountStoreList = baseMapper.findMarketingDiscountStoreList(page,marketingDiscountVO);
+        for (MarketingDiscountDTO record : marketingDiscountStoreList.getRecords()) {
+            if (StringUtils.isNotBlank(record.getSysUserId())){
+
+            }
+        }
         return marketingDiscountStoreList;
     }
 

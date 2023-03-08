@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.store.prefecture.mapper.MarketingStorePrefectureGiveMapper">
+
+
+    <select id="getMarketingStorePrefectureGiveList" resultType="map">
+                SELECT
+            CONCAT( sm.store_name, "(", IFNULL( sm.sub_store_name, '' ), ")" ) AS storeName,
+            sm.logo_addr AS logoAddr,
+            mspl.prefecture_name AS prefectureName,
+            CONCAT( '每',( CASE mspg.model WHEN 0 THEN '天' WHEN 1 THEN '月' END ), '每次可使用商品购买资格1次' ) AS modelExplain,
+            (
+            CASE
+                    mspg.model
+                    WHEN 0 THEN
+                IF
+                    ( mspg.tradeTime, TIMESTAMPDIFF( SECOND, NOW(), DATE_ADD( mspg.tradeTime, INTERVAL 1 DAY )), 0 )
+                    WHEN 1 THEN
+                IF
+                    ( mspg.tradeTime, TIMESTAMPDIFF( SECOND, NOW(), DATE_ADD( mspg.tradeTime, INTERVAL 1 MONTH )), 0 )
+                END
+                ) AS countDown,
+                mspg.total_times AS totalTimes,
+	            mspl.id AS	marketingStorePrefectureListId
+            FROM
+                marketing_store_prefecture_give mspg
+                LEFT JOIN marketing_store_prefecture_list mspl ON mspg.marketing_store_prefecture_list_id = mspl.id
+                LEFT JOIN store_manage sm ON sm.id = mspl.store_manage_id
+            WHERE
+                mspg.del_flag = '0'
+                AND mspg.member_list_id = #{memberId}
+
+            ORDER BY
+                mspg.create_time DESC
+    </select>
+</mapper>

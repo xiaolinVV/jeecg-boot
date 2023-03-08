@@ -11,7 +11,6 @@ import org.jeecg.common.util.DySmsEnum;
 import org.jeecg.common.util.DySmsHelper;
 import org.jeecg.common.util.RedisUtil;
 import org.jeecg.modules.system.service.ISysDictService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Controller;
@@ -31,6 +30,8 @@ public class BeforeStoreManageController {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private DySmsHelper dySmsHelper;
     /**
      * 根据坐标获取地址列表
      * @param address
@@ -129,6 +130,17 @@ public class BeforeStoreManageController {
         JSONObject templateParamJson = new JSONObject();
         templateParamJson.put("code", captcha);
 
+//        try {
+//            if(dySmsHelper.sendSms(phone, captcha, dySmsHelper.IDENTITY_TEMPLATE_CODE)){
+//                //验证码10分钟内有效
+//                redisUtil.set(phone, captcha, 600);
+//            }else{
+//                result.error500("验证码发送失败");
+//                return result;
+//            }
+//        } catch (ClientException e) {
+//            e.printStackTrace();
+//        }
         try {
             if(DySmsHelper.sendSms(phone, templateParamJson, DySmsEnum.IDENTITY_TEMPLATE_CODE)){
                 //验证码10分钟内有效

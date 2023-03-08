@@ -17,7 +17,7 @@
           store_payment sp
           LEFT OUTER JOIN store_manage sm
             ON sp.`store_manage_id` = sm.`id`
-        WHERE sp.`del_flag` = 0
+        WHERE sp.`del_flag` = '0'
         <if test="storePaymentVo != null and storePaymentVo.id != null and storePaymentVo.id != ''">
             and  sp.id LIKE concat('%',concat(#{storePaymentVo.id},'%'))
         </if>

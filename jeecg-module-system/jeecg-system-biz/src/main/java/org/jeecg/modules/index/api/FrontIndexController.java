@@ -74,9 +74,6 @@ public class FrontIndexController {
     private IMarketingPayIntegralSettingService iMarketingPayIntegralSettingService;
 
     @Autowired
-    private IMarketingGroupIntegralBaseSettingService iMarketingGroupIntegralBaseSettingService;
-
-    @Autowired
     private IMarketingZoneGroupBaseSettingService iMarketingZoneGroupBaseSettingService;
 
     @Autowired
@@ -273,33 +270,6 @@ public class FrontIndexController {
         }
         objectMap.put("marketingGroupBaseSettingMap",marketingGroupBaseSettingMap);
 
-        //拼购
-        MarketingGroupIntegralBaseSetting marketingGroupIntegralBaseSetting=iMarketingGroupIntegralBaseSettingService.getOne(new LambdaQueryWrapper<MarketingGroupIntegralBaseSetting>().eq(MarketingGroupIntegralBaseSetting::getStatus,"1"));
-        Map<String,Object> marketingGroupIntegralBaseSettingMap=Maps.newHashMap();
-        //基础设置信息不能为空
-        if(marketingGroupIntegralBaseSetting==null){
-            marketingGroupIntegralBaseSettingMap.put("isViewMarketingGroupIntegralBaseSetting", "0");
-        }else {
-            log.info("中奖拼团分端控制：softModel=" + softModel);
-            if (marketingGroupIntegralBaseSetting.getPointsDisplay().equals("0")) {
-                marketingGroupIntegralBaseSettingMap.put("isViewMarketingGroupIntegralBaseSetting", "1");
-            } else
-                //小程序
-                if (softModel.equals("0") && marketingGroupIntegralBaseSetting.getPointsDisplay().equals("1")) {
-                    marketingGroupIntegralBaseSettingMap.put("isViewMarketingGroupIntegralBaseSetting", "1");
-                } else if ((softModel.equals("1") || softModel.equals("1")) && marketingGroupIntegralBaseSetting.getPointsDisplay().equals("2")) {
-                    marketingGroupIntegralBaseSettingMap.put("isViewMarketingGroupIntegralBaseSetting", "1");
-                } else {
-                    marketingGroupIntegralBaseSettingMap.put("isViewMarketingGroupIntegralBaseSetting", "0");
-                }
-            //显示中奖拼团
-            if (marketingGroupIntegralBaseSettingMap.get("isViewMarketingGroupIntegralBaseSetting").toString().equals("1")) {
-                marketingGroupIntegralBaseSettingMap.put("adIndexAddr", marketingGroupIntegralBaseSetting.getAdIndexAddr());
-            }
-        }
-        objectMap.put("marketingGroupIntegralBaseSettingMap",marketingGroupIntegralBaseSettingMap);
-
-
         //专区团
         MarketingZoneGroupBaseSetting marketingZoneGroupBaseSetting=iMarketingZoneGroupBaseSettingService.getOne(new LambdaQueryWrapper<MarketingZoneGroupBaseSetting>()
                 .eq(MarketingZoneGroupBaseSetting::getStatus,"1"));
@@ -353,33 +323,8 @@ public class FrontIndexController {
         }
         objectMap.put("marketingLiveStreamingMap",marketingLiveStreamingMap);
 
-        //抢购
-        MarketingRushBaseSetting  marketingRushBaseSetting=iMarketingRushBaseSettingService.getOne(new LambdaQueryWrapper<MarketingRushBaseSetting>()
-                .eq(MarketingRushBaseSetting::getStatus,"1"));
-        Map<String,Object> marketingRushBaseSettingMap=Maps.newHashMap();
-        //基础设置信息不能为空
-        if(marketingRushBaseSetting==null){
-            marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "0");
-        }else {
-            log.info("专区团分端控制：softModel=" + softModel);
-            if (marketingRushBaseSetting.getPointsDisplay().equals("0")) {
-                marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-            } else
-                //小程序
-                if (softModel.equals("0") && marketingRushBaseSetting.getPointsDisplay().equals("1")) {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-                } else if ((softModel.equals("1") || softModel.equals("1")) && marketingRushBaseSetting.getPointsDisplay().equals("2")) {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "1");
-                } else {
-                    marketingRushBaseSettingMap.put("isViewMarketingRushBaseSetting", "0");
-                }
-            //显示中奖拼团
-            if (marketingRushBaseSettingMap.get("isViewMarketingRushBaseSetting").toString().equals("1")) {
-                marketingRushBaseSettingMap.put("indexAddress", marketingRushBaseSetting.getIndexAddress());
-                marketingRushBaseSettingMap.put("indexBigAddress", marketingRushBaseSetting.getIndexBigAddress());
-            }
-        }
-        objectMap.put("marketingRushBaseSettingMap",marketingRushBaseSettingMap);
+        //单品抢购
+        iMarketingRushBaseSettingService.settingView(objectMap,softModel);
 
         //券中心
         MarketingDiscountCertificateSetting marketingDiscountCertificateSetting=iMarketingDiscountCertificateSettingService.getOne(new LambdaQueryWrapper<>());

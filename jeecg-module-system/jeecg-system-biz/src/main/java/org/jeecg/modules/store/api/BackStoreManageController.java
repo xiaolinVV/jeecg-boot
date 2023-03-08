@@ -15,6 +15,7 @@ import org.jeecg.common.util.RedisUtil;
 import org.jeecg.common.util.weixin.WeixinUtils;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberListService;
+import org.jeecg.modules.member.utils.QrCodeUtils;
 import org.jeecg.modules.order.utils.WeixinPayUtils;
 import org.jeecg.modules.pay.utils.NotifyUrlUtils;
 import org.jeecg.modules.store.entity.StoreManage;
@@ -83,6 +84,9 @@ public class BackStoreManageController {
 
     @Autowired
     private NotifyUrlUtils notifyUrlUtils;
+
+    @Autowired
+    private QrCodeUtils qrCodeUtils;
 
     /**
      * 我的(get)
@@ -498,6 +502,18 @@ public class BackStoreManageController {
         Result<Map<String, Object>> result = new Result<>();
         String sysUserId = request.getAttribute("sysUserId").toString();
         Map<String, Object> stringObjectMap = iStoreManageService.findUseInfo(sysUserId);
+        //生成收银码
+        StoreManage storeManage=iStoreManageService.getById(stringObjectMap.get("id").toString());
+        if(storeManage!=null){
+            String address="";
+            if(StringUtils.isBlank(storeManage.getMoneyReceivingCode())){
+                address=qrCodeUtils.getMoneyReceivingCode(storeManage.getId());
+                storeManage.setMoneyReceivingCode(address);
+                iStoreManageService.saveOrUpdate(storeManage);
+                stringObjectMap = iStoreManageService.findUseInfo(sysUserId);
+            }
+        }
+
         if (StringUtils.isBlank(stringObjectMap.get("isOpenWelfarePayments").toString())){
             stringObjectMap.put("isViewOpenWelfarePayments","0");
         }else {
@@ -515,6 +531,8 @@ public class BackStoreManageController {
                 }
             }
         }
+
+
         //版本号
         String smallsoftStoreVersion = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "smallsoft_store_version");
         stringObjectMap.put("smallsoftStoreVersion",smallsoftStoreVersion);

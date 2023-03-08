@@ -26,7 +26,7 @@ import java.util.Date;
 public class MarketingCommingStore {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -97,7 +97,7 @@ public class MarketingCommingStore {
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "结束时间")
-	@TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED,whereStrategy = FieldStrategy.IGNORED)
+	@TableField(updateStrategy = FieldStrategy.IGNORED,insertStrategy = FieldStrategy.IGNORED)
 	private Date endTime;
 	/**状态；0：停用；1：启用*/
 	@Excel(name = "状态；0：停用；1：启用", width = 15)

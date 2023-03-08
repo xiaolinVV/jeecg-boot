@@ -21,6 +21,8 @@ import org.jeecg.modules.marketing.service.IMarketingGiftBagRecordService;
 import org.jeecg.modules.marketing.vo.MarketingGiftBagRecordVO;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberListService;
+import org.jeecg.modules.store.entity.StoreManage;
+import org.jeecg.modules.store.service.IStoreManageService;
 import org.jeecg.modules.system.service.ISysSmallcodeService;
 import org.jeecg.modules.weixin.api.AfterWeixinController;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
@@ -66,7 +68,27 @@ public class MarketingGiftBagRecordController {
 	@Autowired
 	private IMemberListService iMemberListService;
 
+	@Autowired
+	private IStoreManageService iStoreManageService;
 
+
+
+	/*修改礼包记录渠道*/
+	@GetMapping("updateDistributionChannel")
+	public Result<?> updateDistributionChannel(String id,String storeManageId){
+		StoreManage storeManage=iStoreManageService.getById(storeManageId);
+		if(storeManage==null){
+			return Result.error("找不到渠道信息");
+		}
+		MarketingGiftBagRecord marketingGiftBagRecord=new MarketingGiftBagRecord();
+		marketingGiftBagRecord.setDistributionChannel(storeManage.getSysUserId());
+		marketingGiftBagRecord.setId(id);
+		if(marketingGiftBagRecordService.updateById(marketingGiftBagRecord)){
+			return Result.ok("修改成功！！！");
+		}else{
+			return Result.error("修改失败！！！");
+		}
+	}
 
 
 	 /**
@@ -92,13 +114,16 @@ public class MarketingGiftBagRecordController {
 			memberInfoMap.put("TmemberHeadPortrait",memberList.getHeadPortrait());
 			memberInfoMap.put("sysUserId",memberList.getSysUserId());
 			paraMap.put("TmemberInfo",memberInfoMap);
+			paraMap.put("tMemberId",memberList.getId());
+			paraMap.put("tphone",memberList.getPhone());
+
 			String param=JSON.toJSONString(paraMap);
 			afterWeixinController.getQrCodeByPage("userAction/pages/vipMember/vipMember",param,memberList.getSysUserId(),memberList.getId());
 		}
 		return Result.ok(iSysSmallcodeService.getShareAddress(marketingGiftBagId,memberListId));
 	}
 
-	
+
 	/**
 	  * 分页列表查询
 	 * @param marketingGiftBagRecord
@@ -122,7 +147,7 @@ public class MarketingGiftBagRecordController {
 		result.setResult(pageList);
 		return result;
 	}
-	
+
 	/**
 	  *   添加
 	 * @param marketingGiftBagRecord
@@ -142,7 +167,7 @@ public class MarketingGiftBagRecordController {
 		}
 		return result;
 	}
-	
+
 	/**
 	  *  编辑
 	 * @param marketingGiftBagRecord
@@ -163,10 +188,10 @@ public class MarketingGiftBagRecordController {
 				result.success("修改成功!");
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	  *   通过id删除
 	 * @param id
@@ -184,7 +209,7 @@ public class MarketingGiftBagRecordController {
 		}
 		return Result.ok("删除成功!");
 	}
-	
+
 	/**
 	  *  批量删除
 	 * @param ids
@@ -203,7 +228,7 @@ public class MarketingGiftBagRecordController {
 		}
 		return result;
 	}
-	
+
 	/**
 	  * 通过id查询
 	 * @param id

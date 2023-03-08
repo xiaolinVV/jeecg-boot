@@ -166,7 +166,7 @@
         DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') AS myDate
         FROM
         agency_account_capital aac
-        WHERE aac.`del_flag` = 0
+        WHERE aac.`del_flag` = '0'
         and DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[>=]]> #{agencyWorkbenchVO.earningTime_begin}
         AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') <![CDATA[<=]]> #{agencyWorkbenchVO.earningTime_end}
         AND aac.`go_and_come` = 0
@@ -184,7 +184,7 @@
             aac.*
           FROM
             agency_account_capital aac
-          WHERE aac.`del_flag` = 0
+          WHERE aac.`del_flag` = '0'
             AND aac.`sys_user_id` = #{agencyStatementAccount.sysUserId}
             AND DATE_FORMAT(aac.`create_time`, '%Y-%m-%d') = DATE_FORMAT(#{agencyStatementAccount.calendarDate}, '%Y-%m-%d')) m
           LEFT JOIN sys_user su

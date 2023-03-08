@@ -23,7 +23,6 @@ public class OrderStoreTemplateServiceImpl extends ServiceImpl<OrderStoreTemplat
      * @param orderStoreSubListIdList
      * @return
      */
-   @Override
    public List<Map<String,Object>> getOrderStoreTemplateMaps(List<String> orderStoreSubListIdList){
         return baseMapper.getOrderStoreTemplateMaps(orderStoreSubListIdList);
     }

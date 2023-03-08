@@ -71,8 +71,8 @@
                 FROM
                   marketing_certificate m) mc
                 ON mgbc.`marketing_certificate_id` = mc.`id`
-            WHERE mgbc.`del_flag` = 0
-              AND mc.`del_flag` = 0
+            WHERE mgbc.`del_flag` = '0'
+              AND mc.`del_flag` = '0'
           AND mgbc.`marketing_gift_bag_id` = #{marketingGiftBagId}
     </select>
 </mapper>

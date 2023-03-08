@@ -76,7 +76,7 @@
           LEFT JOIN member_list ml
             ON mzgr.`member_list_id` = ml.`id`
         WHERE mzgr.`marketing_zone_group_manage_id` = #{id}
-          AND mzgr.`del_flag` = 0
+          AND mzgr.`del_flag` = '0'
     </select>
     <select id="getMarketingZoneGroupRecordByMemberId" resultType="map">
         SELECT

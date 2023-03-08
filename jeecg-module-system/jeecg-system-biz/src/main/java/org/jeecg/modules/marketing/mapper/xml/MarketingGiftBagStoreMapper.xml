@@ -14,8 +14,8 @@
           marketing_gift_bag_store mgbs
           LEFT JOIN store_manage sm
             ON mgbs.`sys_user_id` = sm.`sys_user_id`
-        WHERE mgbs.`del_flag` = 0
-          AND sm.`del_flag` = 0
+        WHERE mgbs.`del_flag` = '0'
+          AND sm.`del_flag` = '0'
           AND mgbs.marketing_gift_bag_id = #{marketingGiftBagId}
     </select>
 

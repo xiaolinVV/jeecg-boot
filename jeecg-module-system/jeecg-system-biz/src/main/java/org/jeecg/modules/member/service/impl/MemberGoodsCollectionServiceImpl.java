@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.jeecg.modules.good.service.IGoodListService;
-import org.jeecg.modules.good.service.IGoodStoreListService;
+import org.jeecg.modules.good.entity.GoodSpecification;
+import org.jeecg.modules.good.entity.GoodStoreSpecification;
+import org.jeecg.modules.good.service.IGoodSpecificationService;
+import org.jeecg.modules.good.service.IGoodStoreSpecificationService;
 import org.jeecg.modules.marketing.entity.MarketingPrefecture;
 import org.jeecg.modules.marketing.service.IMarketingPrefectureService;
 import org.jeecg.modules.member.dto.MemberGoodsCollectionDto;
@@ -36,15 +38,15 @@ import java.util.Map;
 public class MemberGoodsCollectionServiceImpl extends ServiceImpl<MemberGoodsCollectionMapper, MemberGoodsCollection> implements IMemberGoodsCollectionService {
 
     @Autowired
-    private IGoodStoreListService iGoodStoreListService;
-
-    @Autowired
-    private IGoodListService iGoodListService;
-
-    @Autowired
     private IMemberListService iMemberListService;
     @Autowired
     private IMarketingPrefectureService iMarketingPrefectureService;
+
+    @Autowired
+    private IGoodSpecificationService iGoodSpecificationService;
+
+    @Autowired
+    private IGoodStoreSpecificationService iGoodStoreSpecificationService;
 
     @Override
     public IPage<MemberGoodsCollectionDto> getMemberGoodsCollectionVo(Page<MemberGoodsCollectionDto> page, MemberGoodsCollectionVo memberGoodsCollectionVo){
@@ -94,22 +96,23 @@ public class MemberGoodsCollectionServiceImpl extends ServiceImpl<MemberGoodsCol
             memberGoodsCollectionQueryWrapper.eq("good_type","0");
             memberGoodsCollectionQueryWrapper.eq("good_store_list_id",goodId);
             memberGoodsCollection=this.getOne(memberGoodsCollectionQueryWrapper);
+            GoodStoreSpecification goodStoreSpecificationSmall=iGoodStoreSpecificationService.getSmallGoodSpecification(goodId);
             if(memberGoodsCollection!=null){
 
                 //商品存在
                 memberGoodsCollection.setCollectionTime(new Date());
                 if(memberList.getMemberType().equals("0")) {
-                    memberGoodsCollection.setCollectPrice(iGoodStoreListService.getById(goodId).getSmallPrice());
+                    memberGoodsCollection.setCollectPrice(goodStoreSpecificationSmall.getPrice().toString());
                 }else{
-                    memberGoodsCollection.setCollectPrice(iGoodStoreListService.getById(goodId).getSmallVipPrice());
+                    memberGoodsCollection.setCollectPrice(goodStoreSpecificationSmall.getVipPrice().toString());
                 }
             }else{
                 memberGoodsCollection=new MemberGoodsCollection();
                 memberGoodsCollection.setCollectionTime(new Date());
                 if(memberList.getMemberType().equals("0")) {
-                    memberGoodsCollection.setCollectPrice(iGoodStoreListService.getById(goodId).getSmallPrice());
+                    memberGoodsCollection.setCollectPrice(goodStoreSpecificationSmall.getPrice().toString());
                 }else{
-                    memberGoodsCollection.setCollectPrice(iGoodStoreListService.getById(goodId).getSmallVipPrice());
+                    memberGoodsCollection.setCollectPrice(goodStoreSpecificationSmall.getVipPrice().toString());
                 }
                 memberGoodsCollection.setDelFlag("0");
                 memberGoodsCollection.setMemberListId(memberId);
@@ -133,14 +136,16 @@ public class MemberGoodsCollectionServiceImpl extends ServiceImpl<MemberGoodsCol
                     memberGoodsCollectionQueryWrapper.isNull("marketing_prefecture_id");
                 }
                 memberGoodsCollection=this.getOne(memberGoodsCollectionQueryWrapper);
+                GoodSpecification goodSpecificationSmall=iGoodSpecificationService.getSmallGoodSpecification(goodId);
                 if(memberGoodsCollection!=null){
 
                     //商品存在
                     memberGoodsCollection.setCollectionTime(new Date());
+                    
                     if(memberList.getMemberType().equals("0")) {
-                        memberGoodsCollection.setCollectPrice(iGoodListService.getById(goodId).getSmallPrice());
+                        memberGoodsCollection.setCollectPrice(goodSpecificationSmall.getPrice().toString());
                     }else{
-                        memberGoodsCollection.setCollectPrice(iGoodListService.getById(goodId).getSmallVipPrice());
+                        memberGoodsCollection.setCollectPrice(goodSpecificationSmall.getVipPrice().toString());
                     }
                     //保存专区数据
                     MarketingPrefecture marketingPrefecture = iMarketingPrefectureService.getById(marketingPrefectureId);
@@ -155,9 +160,9 @@ public class MemberGoodsCollectionServiceImpl extends ServiceImpl<MemberGoodsCol
                     memberGoodsCollection=new MemberGoodsCollection();
                     memberGoodsCollection.setCollectionTime(new Date());
                     if(memberList.getMemberType().equals("0")) {
-                        memberGoodsCollection.setCollectPrice(iGoodListService.getById(goodId).getSmallPrice());
+                        memberGoodsCollection.setCollectPrice(goodSpecificationSmall.getPrice().toString());
                     }else{
-                        memberGoodsCollection.setCollectPrice(iGoodListService.getById(goodId).getSmallVipPrice());
+                        memberGoodsCollection.setCollectPrice(goodSpecificationSmall.getVipPrice().toString());
                     }
                     memberGoodsCollection.setDelFlag("0");
                     memberGoodsCollection.setMemberListId(memberId);

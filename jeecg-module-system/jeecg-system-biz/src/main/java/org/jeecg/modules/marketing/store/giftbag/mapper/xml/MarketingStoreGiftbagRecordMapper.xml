@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.marketing.store.giftbag.mapper.MarketingStoreGiftbagRecordMapper">
+
+
+    <select id="queryPageList" resultType="map" parameterType="map">
+                SELECT
+            msgr.id,
+            msgr.serial_number AS serialNumber,
+            ml.phone,
+            ml.nick_name AS nickName,
+            DATE_FORMAT( msgr.`create_time`, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+            pmsgl.total_fee AS totalFee,
+            pmsgl.balance,
+            pmsgl.pay_model AS payModel,
+            pmsgl.pay_price AS payPrice,
+        IF
+            ( sm.sub_store_name IS NULL, sm.store_name, CONCAT( sm.store_name, '(', sm.sub_store_name, ')' ) ) AS storeName
+        FROM
+            marketing_store_giftbag_record msgr
+            LEFT JOIN marketing_store_giftbag_list msgl ON msgr.marketing_store_giftbag_list_id = msgl.id
+            LEFT JOIN pay_marketing_store_giftbag_log pmsgl ON msgr.pay_marketing_store_giftbag_log_id = pmsgl.id
+            LEFT JOIN member_list ml ON msgr.memebr_list_id = ml.id
+            LEFT JOIN store_manage sm ON msgl.store_manage_id = sm.id
+
+        where msgr.del_flag='0'
+          <if test="paramMap.storeManageId!='' and paramMap.storeManageId!=null">
+             and  msgl.store_manage_id=#{paramMap.storeManageId}
+          </if>
+
+        ORDER BY
+            msgr.create_time DESC
+
+    </select>
+</mapper>

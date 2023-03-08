@@ -18,7 +18,7 @@
             )
           FROM
             store_manage sm
-          WHERE sm.`del_flag` = 0
+          WHERE sm.`del_flag` = '0'
             AND sm.`id` = msgcml.`store_manage_id`) AS storeName,
           msgcml.car_name AS carName,
           msgcr.go_and_come AS goAndCome,
@@ -60,7 +60,7 @@
             FROM
             store_manage sm
             WHERE
-            sm.`del_flag` = 0
+            sm.`del_flag` = '0'
             AND sm.`id` = msgcml.`store_manage_id`
             ) LIKE concat('%',#{requestMap.storeName},'%')
         </if>
@@ -95,7 +95,7 @@
         AND s.`item_value` = msgcr.`trade_type`) AS tradeType
         FROM
           marketing_store_gift_card_record msgcr
-        WHERE msgcr.`del_flag` = 0
+        WHERE msgcr.`del_flag` = '0'
           AND msgcr.`marketing_store_gift_card_member_list_id` = #{map.marketingStoreGiftCardMemberListId}
           <if test="map.goAndCome != null and map.goAndCome !=''">
               AND msgcr.`go_and_come` = #{map.goAndCome}

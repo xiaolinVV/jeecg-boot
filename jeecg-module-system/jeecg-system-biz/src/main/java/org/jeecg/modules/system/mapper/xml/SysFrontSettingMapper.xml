@@ -16,6 +16,6 @@
           sfs.good_label_app AS goodLabelApp
         FROM
           sys_front_setting sfs
-        WHERE sfs.`del_flag` = 0
+        WHERE sfs.`del_flag` = '0'
     </select>
 </mapper>

@@ -13,9 +13,9 @@
         ON pbc.`sys_user_id` = pm.`sys_user_id`
         LEFT JOIN sys_user su
         ON su.`id` = pm.`sys_user_id`
-        WHERE pbc.`del_flag` = 0
-        AND pm.`del_flag` = 0
-        AND su.`del_flag` = 0
+        WHERE pbc.`del_flag` = '0'
+        AND pm.`del_flag` = '0'
+        AND su.`del_flag` = '0'
         AND pbc.car_type = 0
         <if test="providerBankCardDTO.username != null and providerBankCardDTO.username != ''">
             AND su.username LIKE concat('%',#{providerBankCardDTO.username},'%')

@@ -13,23 +13,16 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.util.RedisUtil;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.agency.service.IAgencyAccountCapitalService;
-import org.jeecg.modules.agency.service.IAgencyManageService;
-import org.jeecg.modules.agency.service.IAgencyRechargeRecordService;
-import org.jeecg.modules.map.utils.TengxunMapUtils;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePayments;
 import org.jeecg.modules.marketing.entity.MarketingWelfarePaymentsSetting;
 import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsService;
 import org.jeecg.modules.marketing.service.IMarketingWelfarePaymentsSettingService;
 import org.jeecg.modules.member.entity.MemberList;
-import org.jeecg.modules.member.service.*;
+import org.jeecg.modules.member.service.IMemberListService;
+import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.store.entity.StoreManage;
-import org.jeecg.modules.store.service.IStoreAccountCapitalService;
 import org.jeecg.modules.store.service.IStoreManageService;
-import org.jeecg.modules.store.service.IStoreRechargeRecordService;
 import org.jeecg.modules.store.service.IStoreWelfarePaymentsRecordService;
-import org.jeecg.modules.system.service.ISysAreaService;
-import org.jeecg.modules.system.service.ISysDictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,32 +50,7 @@ public class BackMarketingWelfarePaymentsController {
 
     @Autowired
     private IMarketingWelfarePaymentsSettingService iMarketingWelfarePaymentsSettingService;
-    @Autowired
-    private IStoreRechargeRecordService iStoreRechargeRecordService;
-    @Autowired
-    private IStoreAccountCapitalService iStoreAccountCapitalService;
-    @Autowired
-    private ISysDictService iSysDictService;
-    @Autowired
-    private IMemberRechargeRecordService iMemberRechargeRecordService;
-    @Autowired
-    private IMemberDistributionRecordService iMemberDistributionRecordService;
-    @Autowired
-    private IMemberAccountCapitalService iMemberAccountCapitalService;
-    @Autowired
-    private TengxunMapUtils tengxunMapUtils;
 
-    @Autowired
-    private ISysAreaService iSysAreaService;
-
-    @Autowired
-    private IAgencyManageService iAgencyManageService;
-
-    @Autowired
-    private IAgencyRechargeRecordService iAgencyRechargeRecordService;
-
-    @Autowired
-    private IAgencyAccountCapitalService iAgencyAccountCapitalService;
     @Autowired
     private IMemberWelfarePaymentsService iMemberWelfarePaymentsService;
     @Autowired
@@ -144,7 +112,7 @@ public class BackMarketingWelfarePaymentsController {
         }
         StoreManage storeManage = iStoreManageService.list(storeManageQueryWrapper).get(0);
 
-        IPage<Map<String, Object>> page=new Page<Map<String, Object>>(pageNo,pageSize);
+        Page<Map<String, Object>> page = new Page<>(pageNo, pageSize);
         QueryWrapper<MarketingWelfarePayments> queryWrapperMarketingWelfarePayments = new QueryWrapper();
         queryWrapperMarketingWelfarePayments.select("id,create_time AS createTime,serial_number AS serialNumber,go_and_come AS goAndCome,bargain_payments AS bargainPayments,bargain_time AS bargainTime,welfare_pay AS welfarePay,balance_pay AS balancePay,give_explain AS giveExplain");
         queryWrapperMarketingWelfarePayments.eq("sys_user_id", sysUserId);

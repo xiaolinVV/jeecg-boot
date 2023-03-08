@@ -22,13 +22,21 @@ import java.util.Map;
  * @Version: V1.0
  */
 public interface IGoodListService extends IService<GoodList> {
-    IPage<GoodList> getGoodListdelFlagOrAuditStatus(Page<GoodList> page, String delFlag, String auditStatus, QueryWrapper<GoodList> queryWrapper);
+
+
+
+    /*
+     * 后端列表
+     * */
+    public IPage<Map<String,Object>> queryPageList(Page<Map<String,Object>> page, Map<String,Object> paramMap, QueryWrapper wrapper);
+
+
+
+
     public GoodList getGoodListById(String id);
     public void updateDelFalg(GoodList goodList,String delFlag);
-    public  List<GoodList>  getGoodListOK(QueryWrapper<GoodList> queryWrapper);
     public GoodListDto selectById(String id);
     boolean saveOrUpdate(GoodListVo goodListVo);
-    GoodListDto selectGoodListById(String id);
 
     /**
      * 平台商品分页查询
@@ -101,13 +109,6 @@ public interface IGoodListService extends IService<GoodList> {
      */
     List<Map<String,Object>>  getEverydayGoodTypeId(@Param("createTime")String createTime, @Param("limit")Integer limit);
 
-    /**
-     * 每周特惠查询
-     * @param page
-     * @param paramMap
-     * @return
-     */
-    IPage<Map<String,Object>> getEveryWeekPreferential(Page<Map<String,Object>> page, Map<String,Object> paramMap);
 
     IPage<GoodDiscountDTO> findGoodList(Page<GoodListVo>page,GoodListVo goodListVo);
 
@@ -125,20 +126,11 @@ public interface IGoodListService extends IService<GoodList> {
     List<Map<String,Object>>   getMarketingPrefectureGoodPitchOn(GoodListVo goodListVo);
 
     /**
-     * 查询规格商品里有0库存的商品ID和目前总库存
-     * @return
-     */
-    List<Map<String,Object>>  getGoodListIdAndRepertory();
-    /**
      * 定时器下架0库存的商品
      * @return
      */
     public void updateGoodListISRepertoryZero();
-    /**
-     *检查图片是否存在 定时器(测试用)
-     */
 
-     void isImgNull(Integer pageNo,Integer pageSize);
 
     /**
      * 判断是否要重新审核

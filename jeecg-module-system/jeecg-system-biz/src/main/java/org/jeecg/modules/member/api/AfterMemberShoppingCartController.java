@@ -78,7 +78,7 @@ public class AfterMemberShoppingCartController {
             result.error500("specification不能为空！！！");
             return result;
         }
-        String backResult=iMemberShoppingCartService.addGoodToShoppingCart(isPlatform,goodId,specification,memberId,quantity,"1",marketingPrefectureId,marketingFreeGoodListId,"",marketingStoreGiftCardMemberListId,"",null);
+        String backResult=iMemberShoppingCartService.addGoodToShoppingCart(isPlatform,goodId,specification,memberId,quantity,"1",marketingPrefectureId,marketingFreeGoodListId,"",marketingStoreGiftCardMemberListId,"",null,null);
 
 
         if(backResult.indexOf("SUCCESS")==-1){

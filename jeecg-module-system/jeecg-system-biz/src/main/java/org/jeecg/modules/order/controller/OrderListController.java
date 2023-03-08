@@ -61,24 +61,6 @@ public class OrderListController {
     private IOrderProviderGoodRecordService orderProviderGoodRecordService;
 
 
-    /**
-     * 取消并退款
-     *
-     * @param id
-     * @param closeExplain
-     * @return
-     */
-    @RequestMapping("refundAndAbrogateOrder")
-    @ResponseBody
-    public Result<?> refundAndAbrogateOrder(String id,String closeExplain){
-        if(StringUtils.isBlank(id)){
-            return Result.error("订单id不能为空");
-        }
-        orderListService.refundAndAbrogateOrder(id,closeExplain,"4");
-        return Result.ok("订单退款成功！！");
-    }
-
-
 
 
     /**
@@ -108,6 +90,11 @@ public class OrderListController {
         result.setSuccess(true);
         result.setResult(pageList);
         return result;
+    }
+    @RequestMapping({"refundAndAbrogateOrder"})
+    @ResponseBody
+    public Result<?> refundAndAbrogateOrder(String id, String closeExplain) {
+        return StringUtils.isBlank(id) ? Result.error("订单id不能为空") : this.orderListService.refundAndAbrogateOrder(id, closeExplain, "4");
     }
 
 

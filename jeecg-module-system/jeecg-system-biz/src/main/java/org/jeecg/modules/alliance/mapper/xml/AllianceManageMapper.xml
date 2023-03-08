@@ -21,7 +21,7 @@
             ON am.`sys_user_id` = su.`id`
           LEFT JOIN sys_smallcode ss
             ON am.`sys_smallcode_id` = ss.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
           AND am.sys_user_id = #{id}
     </select>
     <select id="queryPageList" resultType="org.jeecg.modules.alliance.vo.AllianceManageVO">
@@ -37,7 +37,7 @@
         ON am.`sys_user_id` = su.`id`
         LEFT JOIN sys_smallcode ss
         ON am.`sys_smallcode_id` = ss.`id`
-        WHERE am.`del_flag` = 0
+        WHERE am.`del_flag` = '0'
         <if test="allianceManageDTO.username != null and allianceManageDTO.username!= ''">
             AND su.`username` LIKE concat('%',#{allianceManageDTO.username},'%')
         </if>
@@ -85,14 +85,14 @@
             order_store_list osl
             LEFT JOIN store_manage sm
               ON osl.`sys_user_id` = sm.`sys_user_id`
-          WHERE osl.`del_flag` = 0
+          WHERE osl.`del_flag` = '0'
             AND osl.`status` = 5
             AND sm.`alliance_user_id` = am.`sys_user_id`) AS orderSum,
           (SELECT
             SUM(aac.`amount`)
           FROM
             alliance_account_capital aac
-          WHERE aac.`del_flag` = 0
+          WHERE aac.`del_flag` = '0'
             AND aac.`go_and_come` = 0
             AND aac.`sys_user_id` = am.`sys_user_id`) AS earnings,
           (SELECT
@@ -101,14 +101,14 @@
             member_list ml
             LEFT JOIN store_manage sm
               ON ml.`sys_user_id` = sm.`sys_user_id`
-          WHERE ml.`del_flag` = 0
-            AND sm.`del_flag` = 0
+          WHERE ml.`del_flag` = '0'
+            AND sm.`del_flag` = '0'
             AND sm.`alliance_user_id` = am.`sys_user_id`) AS memberSum,
           (SELECT
             COUNT(1)
           FROM
             store_manage sm
-          WHERE sm.`del_flag` = 0
+          WHERE sm.`del_flag` = '0'
             AND sm.`attestation_status` IN (1, 2)
             AND sm.`pay_status` IN (1, 2)
             AND sm.`alliance_user_id` = am.`sys_user_id`) AS storeSum,
@@ -118,7 +118,7 @@
             order_store_list osl
             LEFT JOIN store_manage sm
               ON osl.`sys_user_id` = sm.`sys_user_id`
-          WHERE osl.`del_flag` = 0
+          WHERE osl.`del_flag` = '0'
             AND osl.`status` = 1
             AND sm.`alliance_user_id` = am.`sys_user_id`) AS waitDeliverGoods
         FROM
@@ -129,7 +129,7 @@
             ON sur.`user_id` = su.`id`
           LEFT JOIN sys_role sr
             ON sur.`role_id` = sr.`id`
-        WHERE su.`del_flag` = 0
+        WHERE su.`del_flag` = '0'
           AND su.`id` = #{userId}
     </select>
     <select id="findAllianceManageByphone" resultType="map">
@@ -150,8 +150,8 @@
       alliance_manage am
       LEFT JOIN sys_user su
         ON am.`sys_user_id` = su.`id`
-    WHERE am.`del_flag` = 0
-      AND su.`del_flag` = 0
+    WHERE am.`del_flag` = '0'
+      AND su.`del_flag` = '0'
       AND su.`phone` LIKE concat('%',#{phone},'%')
       LIMIT 10
     </select>
@@ -191,7 +191,7 @@
             marketing_gift_bag_record mgbr
             LEFT JOIN marketing_gift_bag mgb
               ON mgbr.`marketing_gift_bag_id` = mgb.`id`
-          WHERE mgbr.`del_flag` = 0
+          WHERE mgbr.`del_flag` = '0'
             AND mgbr.`pay_status` = 1
             AND mgbr.distribution_channel = sm.`sys_user_id`
             AND (
@@ -222,7 +222,7 @@
             marketing_gift_bag_record mgbr
             LEFT JOIN marketing_gift_bag mgb
               ON mgbr.`marketing_gift_bag_id` = mgb.`id`
-          WHERE mgbr.`del_flag` = 0
+          WHERE mgbr.`del_flag` = '0'
             AND mgbr.`pay_status` = 1
             AND DATE_FORMAT(mgbr.`pay_time`, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
             AND mgbr.distribution_channel = sm.`sys_user_id`
@@ -235,7 +235,7 @@
         FROM
           store_manage sm
         WHERE sm.`alliance_user_id` =#{id}
-        AND sm.`del_flag` = 0
+        AND sm.`del_flag` = '0'
         AND sm.`pay_status` IN (1,2)
     </select>
 </mapper>

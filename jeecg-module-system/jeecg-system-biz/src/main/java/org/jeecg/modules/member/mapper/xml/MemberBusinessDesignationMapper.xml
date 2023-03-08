@@ -20,7 +20,7 @@
           LEFT JOIN marketing_business_designation mb
             ON mbd.`marketing_business_designation_id` = mb.`id`
         WHERE mbd.`t_member_id` = #{memberId}
-          AND mbd.`del_flag` = 0
+          AND mbd.`del_flag` = '0'
         ORDER BY mbd.`create_time` DESC
     </select>
     <select id="queryPageList" resultType="map">
@@ -58,7 +58,7 @@
             ON mb.`id` = mbd.`marketing_business_designation_id`
           LEFT JOIN member_list mlt
             ON mlt.id = mbd.`t_member_id`
-        WHERE mbd.`del_flag` = 0
+        WHERE mbd.`del_flag` = '0'
           <if test="requestMap.memberListId != null and requestMap.memberListId != ''">
               AND mbd.`t_member_id` = #{requestMap.memberListId}
           </if>

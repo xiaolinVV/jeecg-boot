@@ -12,9 +12,9 @@
             ON mtl.`marketing_textbook_column_id` = mtc.`id`
           LEFT JOIN sys_user su
             ON mtl.`sys_user_id` = su.`id`
-        WHERE mtl.`del_flag` = 0
-          AND mtc.`del_flag` = 0
-          AND su.`del_flag` = 0
+        WHERE mtl.`del_flag` = '0'
+          AND mtc.`del_flag` = '0'
+          AND su.`del_flag` = '0'
           <if test="marketingTextbookListDTO.id != null and marketingTextbookListDTO.id != ''">
               AND mtl.id LIKE concat('%',#{marketingTextbookListDTO.id},'%')
           </if>
@@ -52,7 +52,7 @@
           mtl.abstract_digest AS abstractDigest
         FROM
           marketing_textbook_list mtl
-        WHERE mtl.`del_flag` = 0
+        WHERE mtl.`del_flag` = '0'
           AND mtl.`is_publish` = 1
           AND mtl.marketing_textbook_column_id = #{id}
           ORDER BY mtl.`sort`
@@ -75,7 +75,7 @@
           mtl.`initial_praise` AS initialPraise
         FROM
           marketing_textbook_list mtl
-        WHERE mtl.`del_flag` = 0
+        WHERE mtl.`del_flag` = '0'
           AND mtl.`is_publish` = 1
           AND mtl.id = #{id}
     </select>
@@ -90,7 +90,7 @@
           mtl.abstract_digest AS abstractDigest
         FROM
           marketing_textbook_list mtl
-        WHERE mtl.`del_flag` = 0
+        WHERE mtl.`del_flag` = '0'
           AND mtl.`is_publish` = 1
           AND mtl.title LIKE concat('%',#{title},'%')
           ORDER BY mtl.`sort`

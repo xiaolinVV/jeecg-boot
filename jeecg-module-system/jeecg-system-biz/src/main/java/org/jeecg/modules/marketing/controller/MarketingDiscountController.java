@@ -416,6 +416,21 @@ public class MarketingDiscountController {
     }
 
 
+    /**
+     * 优惠券选择
+     *
+     * @param marketingDiscountVO
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
+    @GetMapping("findMarketingDiscountVOPage")
+    public Result<?> findMarketingDiscountVOPage(MarketingDiscountVO marketingDiscountVO,  @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                   @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize) {
+      return Result.ok(marketingDiscountService.findMarketingDiscountVO(new Page<>(pageNo,pageSize),marketingDiscountVO));
+    }
+
+
 
     /**
      * 复制优惠券地址

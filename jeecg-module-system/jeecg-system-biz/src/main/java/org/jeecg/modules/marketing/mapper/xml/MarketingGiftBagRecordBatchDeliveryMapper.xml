@@ -17,7 +17,7 @@
         WHERE mgbrbds.`id` = mgbrbd.`pid`),'~',mgbrbd.`batch_number`) AS batchNumber
         FROM
           marketing_gift_bag_record_batch_delivery mgbrbd
-        WHERE mgbrbd.`del_flag` = 0
+        WHERE mgbrbd.`del_flag` = '0'
         AND mgbrbd.`pid` != '0'
         AND mgbrbd.`marketing_gift_bag_record_batch_id` = #{map.id}
         <if test="map.phone != null and map.phone != ''">
@@ -31,7 +31,7 @@
           mgbrbd.`batch_number` AS batchNumber
         FROM
           marketing_gift_bag_record_batch_delivery mgbrbd
-        WHERE mgbrbd.`del_flag` = 0
+        WHERE mgbrbd.`del_flag` = '0'
           AND mgbrbd.`marketing_gift_bag_record_batch_id` = #{marketingGiftBagRecordBatchId}
         ORDER BY mgbrbd.`batch_number` ASC
     </select>

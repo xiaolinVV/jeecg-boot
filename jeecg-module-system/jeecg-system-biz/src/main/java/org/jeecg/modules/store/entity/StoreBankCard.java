@@ -29,7 +29,7 @@ import java.util.Date;
 public class StoreBankCard {
     
 	/**主键ID*/
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "主键ID")
 	private String id;
 	/**创建人*/
@@ -70,16 +70,16 @@ public class StoreBankCard {
 	@TableLogic
 	private String delFlag;
 	/**开户行名称*/
-	@Excel(name = "开户行名称", width = 15)
-    @ApiModelProperty(value = "开户行名称")
+	@Excel(name = "开户银行", width = 15)
+    @ApiModelProperty(value = "开户银行")
 	private String bankName;
 	/**银行卡号*/
 	@Excel(name = "银行卡号", width = 15)
     @ApiModelProperty(value = "银行卡号")
 	private String bankCard;
 	/**持卡人*/
-	@Excel(name = "持卡人", width = 15)
-    @ApiModelProperty(value = "持卡人")
+	@Excel(name = "户名（真实姓名）", width = 15)
+    @ApiModelProperty(value = "户名（真实姓名）")
 	private String cardholder;
 	/**店铺管理id*/
 	@Excel(name = "店铺管理id", width = 15)
@@ -89,21 +89,13 @@ public class StoreBankCard {
 	@Excel(name = "卡类型；0：银行卡；1：支付宝", width = 15)
 	@ApiModelProperty(value = "卡类型；0：银行卡；1：支付宝")
 	private String carType;
-	/**变更说明*/
-	@Excel(name = "变更说明", width = 15)
-	@ApiModelProperty(value = "变更说明")
-	private String updateExplain;
-	/**变更凭证*/
-	@Excel(name = "变更凭证", width = 15)
-	@ApiModelProperty(value = "变更凭证")
-	private String updateCertificate;
 	/**联系人手机号*/
 	@Excel(name = "联系人手机号", width = 15)
 	@ApiModelProperty(value = "联系人手机号")
 	private String phone;
 	/**身份证号*/
-	@Excel(name = "身份证号", width = 15)
-	@ApiModelProperty(value = "身份证号")
+	@Excel(name = "证件号", width = 15)
+	@ApiModelProperty(value = "证件号")
 	private String identityNumber;
 	/**所在城市*/
 	@Excel(name = "所在城市", width = 15)
@@ -117,4 +109,13 @@ public class StoreBankCard {
 	@Excel(name = "开户分支行", width = 15)
 	@ApiModelProperty(value = "开户分支行")
 	private String openingBank;
+
+	/*
+	* 汇付天下分账结算账户id
+	* */
+	private String settleAccount;
+
+	private String bankCode;
+
+	private String accountType;
 }

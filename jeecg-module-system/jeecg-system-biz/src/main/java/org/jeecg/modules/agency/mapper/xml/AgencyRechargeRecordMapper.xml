@@ -54,7 +54,7 @@
             ON arr.`sys_user_id` = am.`sys_user_id`
           LEFT JOIN sys_user su
             ON su.`id` = am.`sys_user_id`
-        WHERE arr.`del_flag` = 0
+        WHERE arr.`del_flag` = '0'
         <if test="agencyRechargeRecordDTO != null and agencyRechargeRecordDTO.sysUserId != null and agencyRechargeRecordDTO.sysUserId != ''">
             AND arr.sys_user_id = #{agencyRechargeRecordDTO.sysUserId}
         </if>

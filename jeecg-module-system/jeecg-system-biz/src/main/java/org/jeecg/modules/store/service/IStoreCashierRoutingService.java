@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.pay.entity.PayShouyinLog;
 import org.jeecg.modules.store.dto.StoreCashierRoutingDTO;
@@ -19,6 +20,10 @@ import java.util.Map;
  * @Version: V1.0
  */
 public interface IStoreCashierRoutingService extends IService<StoreCashierRouting> {
+
+
+
+    public Result<?> settingBankCard(StoreCashierRouting storeCashierRouting);
 
     /**
      *

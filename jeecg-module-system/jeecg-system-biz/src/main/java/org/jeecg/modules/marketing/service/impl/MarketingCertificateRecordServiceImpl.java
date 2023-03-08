@@ -241,8 +241,6 @@ public class MarketingCertificateRecordServiceImpl extends ServiceImpl<Marketing
                     payCertificateLog.getSysUserId(),
                     jsonObject.getBigDecimal("quantity"),
                     payCertificateLog.getMemberListId(),
-                    payCertificateLog.getLongitude(),
-                    payCertificateLog.getLatitude(),
                     false);
         }
 
@@ -281,8 +279,6 @@ public class MarketingCertificateRecordServiceImpl extends ServiceImpl<Marketing
                             "",
                             new BigDecimal(1),
                             cgl.getMemberListId(),
-                            new BigDecimal(0),
-                            new BigDecimal(0),
                             false).get(0);
                     iMarketingCertificateGroupRecordService.updateById(cgl
                             .setStatus("1")

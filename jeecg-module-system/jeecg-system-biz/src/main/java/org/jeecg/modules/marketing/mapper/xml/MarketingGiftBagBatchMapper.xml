@@ -6,7 +6,7 @@
           *
         FROM
           marketing_gift_bag_batch mgbb
-        WHERE mgbb.`del_flag` = 0
+        WHERE mgbb.`del_flag` = '0'
         <if test="marketingGiftBagBatchDTO.id != null and marketingGiftBagBatchDTO.id != ''">
             AND mgbb.id LIKE concat('%',#{marketingGiftBagBatchDTO.id},'%')
         </if>
@@ -54,7 +54,7 @@
         ) AS createTime
         FROM
           marketing_gift_bag_batch mgbb
-        WHERE mgbb.`del_flag` = 0
+        WHERE mgbb.`del_flag` = '0'
         <if test="marketingGiftBagBatchDTO.id != null and marketingGiftBagBatchDTO.id != ''">
             AND mgbb.id LIKE concat('%',#{marketingGiftBagBatchDTO.id},'%')
         </if>

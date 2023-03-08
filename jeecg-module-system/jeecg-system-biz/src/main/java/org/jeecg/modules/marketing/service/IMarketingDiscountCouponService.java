@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.jeecg.modules.marketing.dto.MarketingDiscountCouponDTO;
 import org.jeecg.modules.marketing.entity.MarketingDiscountCoupon;
 import org.jeecg.modules.marketing.vo.MarketingDiscountCouponVO;
+import org.jeecg.modules.order.entity.OrderList;
+import org.jeecg.modules.order.entity.OrderStoreList;
 
 import java.util.List;
 import java.util.Map;
@@ -53,5 +55,21 @@ public interface IMarketingDiscountCouponService extends IService<MarketingDisco
     IPage<MarketingDiscountCouponVO> findDiscountCouponTarrace(Page<MarketingDiscountCouponVO> page, MarketingDiscountCouponVO marketingDiscountCouponVO);
 
     void updateMarketingDiscountCouponJob();
+
+
+  /**
+   * 退回平台优惠券
+   *
+   * @param orderList
+   */
+  public void sendBackOrderMarketingDiscountCoupon(OrderList orderList);
+
+  /**
+   * 退回平台优惠券
+   *
+   * @param orderStoreList
+   */
+  public void sendBackOrderStoreMarketingDiscountCoupon(OrderStoreList orderStoreList);
+
 
 }

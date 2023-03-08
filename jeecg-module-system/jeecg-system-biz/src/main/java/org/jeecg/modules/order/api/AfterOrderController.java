@@ -1,7 +1,16 @@
 package org.jeecg.modules.order.api;
 
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,8 +23,10 @@ import org.jeecg.common.util.DateUtils;
 import org.jeecg.modules.good.entity.GoodSpecification;
 import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
+import org.jeecg.modules.marketing.dto.MarketingDisountGoodDTO;
 import org.jeecg.modules.marketing.entity.*;
 import org.jeecg.modules.marketing.service.*;
+import org.jeecg.modules.marketing.store.prefecture.service.IMarketingStorePrefectureGiveService;
 import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.entity.MemberShippingAddress;
 import org.jeecg.modules.member.entity.MemberShoppingCart;
@@ -44,6 +55,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 订单api控制器
@@ -116,6 +128,17 @@ public class AfterOrderController {
     @Autowired
     private IPayOrderCarLogService iPayOrderCarLogService;
 
+
+    @Autowired
+    private IMarketingGiftBagRecordService iMarketingGiftBagRecordService;
+
+
+    @Autowired
+    private IMarketingStorePrefectureGiveService iMarketingStorePrefectureGiveService;
+
+    @Autowired
+    private IMarketingDiscountGoodService marketingDiscountGoodService;
+
     /**
      * 兑换券线上兑换
      *
@@ -124,10 +147,12 @@ public class AfterOrderController {
      */
     @RequestMapping("submitCertificate")
     @ResponseBody
-    public Result<Map<String,Object>> submitCertificate(String marketingCertificateRecordId,
+    public Result<?> submitCertificate(String marketingCertificateRecordId,
                                                         String marketingCertificateGoodIds,
                                                         @RequestAttribute(value = "memberId",required = false) String memberId){
         Result<Map<String,Object>> result=new Result<>();
+
+//        return Result.error("功能升级中,请选择线下核销!");
 
         //检测参数不能为空
         if(StringUtils.isBlank(marketingCertificateRecordId)){
@@ -174,7 +199,7 @@ public class AfterOrderController {
             }
         }
 
-        return affirmOrder(StringUtils.join(shopCarIds,","),null,memberId);
+        return affirmOrder(StringUtils.join(shopCarIds,","),null,null,memberId);
     }
 
 
@@ -242,6 +267,7 @@ public class AfterOrderController {
 
         //参数校验
         if(isPlatform==null){
+
             result.error500("isPlatform是否平台类型参数不能为空！！！");
             return result;
         }
@@ -337,42 +363,42 @@ public class AfterOrderController {
             objectMap.put("isPlatform",isPlatform);
             objectMap.put("orderNo",orderStoreList.getOrderNo());
 
-            objectMap.put("createTime", DateUtils.datetimeFormat.get().format(orderStoreList.getCreateTime()));
+            objectMap.put("createTime", DateUtil.formatDateTime(orderStoreList.getCreateTime()));
 
             if(orderStoreList.getPayTime()!=null){
-                objectMap.put("payTime", DateUtils.datetimeFormat.get().format(orderStoreList.getPayTime()));
+                objectMap.put("payTime", DateUtil.formatDateTime(orderStoreList.getPayTime()));
             }else{
                 objectMap.put("payTime", "");
             }
 
             if(orderStoreList.getShipmentsTime()!=null){
-                objectMap.put("shipmentsTime", DateUtils.datetimeFormat.get().format(orderStoreList.getShipmentsTime()));
+                objectMap.put("shipmentsTime", DateUtil.formatDateTime(orderStoreList.getShipmentsTime()));
             }else{
                 objectMap.put("shipmentsTime", "");
             }
 
 
             if(orderStoreList.getDeliveryTime()!=null){
-                objectMap.put("deliveryTime", DateUtils.datetimeFormat.get().format(orderStoreList.getDeliveryTime()));
+                objectMap.put("deliveryTime", DateUtil.formatDateTime(orderStoreList.getDeliveryTime()));
             }else{
                 objectMap.put("deliveryTime", "");
             }
 
             if(orderStoreList.getCloseTime()!=null){
-                objectMap.put("closeTime", DateUtils.datetimeFormat.get().format(orderStoreList.getCloseTime()));
+                objectMap.put("closeTime", DateUtil.formatDateTime(orderStoreList.getCloseTime()));
             }else{
                 objectMap.put("closeTime", "");
             }
 
             if(orderStoreList.getCompletionTime()!=null){
-                objectMap.put("completionTime", DateUtils.datetimeFormat.get().format(orderStoreList.getCompletionTime()));
+                objectMap.put("completionTime", DateUtil.formatDateTime(orderStoreList.getCompletionTime()));
             }else{
                 objectMap.put("completionTime", "");
             }
 
 
             if(orderStoreList.getEvaluateTime()!=null){
-                objectMap.put("evaluateTime", DateUtils.datetimeFormat.get().format(orderStoreList.getEvaluateTime()));
+                objectMap.put("evaluateTime", DateUtil.formatDateTime(orderStoreList.getEvaluateTime()));
             }else{
                 objectMap.put("evaluateTime", "");
             }
@@ -419,41 +445,41 @@ public class AfterOrderController {
                 objectMap.put("id",orderList.getId());
                 objectMap.put("isPlatform",isPlatform);
                 objectMap.put("orderNo",orderList.getOrderNo());
-                objectMap.put("createTime", DateUtils.datetimeFormat.get().format(orderList.getCreateTime()));
+                objectMap.put("createTime", DateUtil.formatDateTime(orderList.getCreateTime()));
                 //付款时间
                 if(orderList.getPayTime()!=null){
-                    objectMap.put("payTime", DateUtils.datetimeFormat.get().format(orderList.getPayTime()));
+                    objectMap.put("payTime", DateUtil.formatDateTime(orderList.getPayTime()));
                 }else{
                     objectMap.put("payTime", "");
                 }
                 //发货时间
                 if(orderList.getShipmentsTime()!=null){
-                    objectMap.put("shipmentsTime", DateUtils.datetimeFormat.get().format(orderList.getShipmentsTime()));
+                    objectMap.put("shipmentsTime", DateUtil.formatDateTime(orderList.getShipmentsTime()));
                 }else{
                     objectMap.put("shipmentsTime", "");
                 }
 
                 if(orderList.getDeliveryTime()!=null){
-                    objectMap.put("deliveryTime", DateUtils.datetimeFormat.get().format(orderList.getDeliveryTime()));
+                    objectMap.put("deliveryTime", DateUtil.formatDateTime(orderList.getDeliveryTime()));
                 }else{
                     objectMap.put("deliveryTime", "");
                 }
 
                 if(orderList.getCloseTime()!=null){
-                    objectMap.put("closeTime", DateUtils.datetimeFormat.get().format(orderList.getCloseTime()));
+                    objectMap.put("closeTime", DateUtil.formatDateTime(orderList.getCloseTime()));
                 }else{
                     objectMap.put("closeTime", "");
                 }
 
                 if(orderList.getCompletionTime()!=null){
-                    objectMap.put("completionTime", DateUtils.datetimeFormat.get().format(orderList.getCompletionTime()));
+                    objectMap.put("completionTime", DateUtil.formatDateTime(orderList.getCompletionTime()));
                 }else{
                     objectMap.put("completionTime", "");
                 }
 
 
                 if(orderList.getEvaluateTime()!=null){
-                    objectMap.put("evaluateTime", DateUtils.datetimeFormat.get().format(orderList.getEvaluateTime()));
+                    objectMap.put("evaluateTime", DateUtil.formatDateTime(orderList.getEvaluateTime()));
                 }else{
                     objectMap.put("evaluateTime", "");
                 }
@@ -596,7 +622,8 @@ public class AfterOrderController {
      */
     @RequestMapping("promptlyAffirmOrder")
     @ResponseBody
-    public Result<Map<String,Object>> promptlyAffirmOrder(String goodId,
+    public Result<?> promptlyAffirmOrder(String goodId,
+                                         @RequestParam(required = false) String orderJson,
                                                           String specification,
                                                           Integer isPlatform,
                                                           Integer quantity,
@@ -606,7 +633,8 @@ public class AfterOrderController {
                                                           @RequestParam(value = "marketingStoreGiftCardMemberListId",defaultValue = "",required = false) String marketingStoreGiftCardMemberListId,
                                                           @RequestParam(value = "marketingRushGroupId",defaultValue = "",required = false) String marketingRushGroupId,
                                                           @RequestParam(name = "marketingLeagueGoodListId",defaultValue = "" ,required = false) String marketingLeagueGoodListId,
-                                                          @RequestParam(required = false) String memberShippingAddressId,
+                                                         @RequestParam(name = "marketingStorePrefectureGoodId",defaultValue = "" ,required = false) String marketingStorePrefectureGoodId,
+                                                         @RequestParam(required = false) String memberShippingAddressId,
                                                           @RequestAttribute(value = "memberId",required = false) String memberId){
         Result<Map<String,Object>> result=new Result<>();
 
@@ -650,13 +678,22 @@ public class AfterOrderController {
             }
         }
 
-      String backResult=iMemberShoppingCartService.addGoodToShoppingCart(isPlatform,goodId,specification,memberId,quantity,"0",marketingPrefectureId,marketingFreeGoodListId,marketingGroupRecordId,marketingStoreGiftCardMemberListId,marketingRushGroupId,marketingLeagueGoodListId);
+
+        /*店铺专区*/
+        if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
+            if(!iMarketingStorePrefectureGiveService.ifBuy(memberId,marketingStorePrefectureGoodId)){
+                result.error500("本限购专区购买条件不达标或者周期内已经购买");
+                return result;
+            }
+        }
+
+      String backResult=iMemberShoppingCartService.addGoodToShoppingCart(isPlatform,goodId,specification,memberId,quantity,"0",marketingPrefectureId,marketingFreeGoodListId,marketingGroupRecordId,marketingStoreGiftCardMemberListId,marketingRushGroupId,marketingLeagueGoodListId,marketingStorePrefectureGoodId);
 
         if(backResult.indexOf("SUCCESS")==-1){
             result.error500(backResult);
             return result;
         }
-        return affirmOrder(StringUtils.substringAfter(backResult,"="),memberShippingAddressId,memberId);
+        return affirmOrder(StringUtils.substringAfter(backResult,"="),memberShippingAddressId,orderJson,memberId);
     }
 
 
@@ -667,8 +704,9 @@ public class AfterOrderController {
      */
     @RequestMapping("affirmOrder")
     @ResponseBody
-    public Result<Map<String,Object>> affirmOrder(String ids,
+    public Result<?> affirmOrder(String ids,
                                                   String memberShippingAddressId,
+                                                  @RequestParam(required = false) String orderJson,
                                                   @RequestAttribute(value = "memberId",required = false) String memberId){
         Result<Map<String,Object>> result=new Result<>();
         Map<String,Object> objectMap= Maps.newHashMap();
@@ -752,8 +790,48 @@ public class AfterOrderController {
         //生成确认订单数据
         //店铺订单
         if(storeGoods.size()>0){
-
             for (Map<String,Object> s:storeGoods) {
+                String storeId = Convert.toStr(s.get("id")); //店铺ID
+
+                //折扣券优惠相关返回参数
+                Map<String, Object> settleMap = MapUtil.newHashMap();
+                BigDecimal marketingTotalPrice=new BigDecimal(0); //可优惠金额
+                BigDecimal noMarketingTotalPrice=new BigDecimal(0); //不可优惠金额
+                List<String> marketingGoodIds =  CollUtil.newArrayList(); //优惠商品
+                List<String> noMarketingGoodIds =  CollUtil.newArrayList();  //无优惠商品
+                BigDecimal coupon = BigDecimal.ZERO;
+
+                MarketingDiscountCoupon marketingDiscountCoupon = null;
+                List<String> marketingDiscountCouponGoodIds = CollUtil.newArrayList(); //优惠券对应的商品ID列表
+                //礼品卡ID不为空，计算折扣券优惠金额
+                if (StringUtils.isBlank(marketingStoreGiftCardMemberListId)) {
+                    if (StrUtil.isNotBlank(orderJson)) {
+                        //解析订单json
+                        JSONObject orderJsonObject= JSON.parseObject(orderJson);
+                        JSONArray storeGoods1=orderJsonObject.getJSONArray("storeGoods");
+                        JSONObject jsonGoods=null;
+                        for (Object s1:storeGoods1) {
+                            JSONObject ss=(JSONObject) s1;
+                            if(StrUtil.equals(ss.getString("id"),storeId)){
+                                jsonGoods=ss;
+                                break;
+                            }
+                        }
+
+                        if (jsonGoods != null) {
+                            String discountId = jsonGoods.getString("discountId");
+                            //优惠券ID 不为空，则计算优惠金额
+                            if (StrUtil.isNotBlank(discountId)) {
+                                marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
+                                if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
+                                        && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                                    List<MarketingDisountGoodDTO> storeGood = marketingDiscountGoodService.findStoreGood(marketingDiscountCoupon.getMarketingDiscountId());
+                                    marketingDiscountCouponGoodIds = storeGood.stream().map(MarketingDisountGoodDTO::getId).collect(Collectors.toList());
+                                }
+                            }
+                        }
+                    }
+                }
 
                 //总运费
                 BigDecimal freight=new BigDecimal(0);
@@ -781,6 +859,23 @@ public class AfterOrderController {
                         }
                     }
 
+                    if (StrUtil.isBlank(marketingStoreGiftCardMemberListId)) {
+                        //判断哪些商品有优惠、哪些商品没优惠、并且计算优惠金额
+                        if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"2")
+                                && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                            if (marketingDiscountCouponGoodIds.contains(Convert.toStr(my.get("goodId")))) {
+                                marketingGoodIds.add(Convert.toStr(my.get("goodId")));
+                                //可优惠总金额
+                                marketingTotalPrice = marketingTotalPrice.add(((BigDecimal) my.get("price")).multiply((BigDecimal) my.get("quantity")));
+                                my.put("hasDiscount","1");
+                            }else {
+                                noMarketingGoodIds.add(Convert.toStr(my.get("goodId")));
+                                noMarketingTotalPrice = noMarketingTotalPrice.add(((BigDecimal) my.get("price")).multiply((BigDecimal) my.get("quantity")));
+                                my.put("hasDiscount","0");
+                            }
+                        }
+                    }
+
                     //商品id对于的金额
                     if(goodPrices.get(my.get("goodId").toString())!=null){
                         goodPrices.put(my.get("goodId").toString(),((BigDecimal) goodPrices.get(my.get("goodId").toString())).add(((BigDecimal) my.get("price")).multiply((BigDecimal) my.get("quantity"))));
@@ -804,29 +899,73 @@ public class AfterOrderController {
                     }
                 }
 
-                //获取优惠券
-                Map<String,Object> paramMap=Maps.newHashMap();
-                paramMap.put("goodIds",StringUtils.join(goodsList,","));
-                paramMap.put("memberId",memberId);
-                List<Map<String,Object>> marketingDiscountCouponMaps= iMarketingDiscountCouponService.findMarketingDiscountCouponByGoodIds(paramMap);
-
-                //获取过滤的优惠券列表
+                //获取过滤的优惠券列表,使用了礼品卡，就不能再使用优惠券了 fix by zhangshaolin
                 List<Map<String,Object>> discounts=Lists.newArrayList();
-                for (Map<String,Object> mdc:marketingDiscountCouponMaps) {
-                    if(mdc.get("isThreshold").toString().equals("0")){
-                        mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
-                        discounts.add(mdc);
-                    }else{
-                        mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
-                        List<String> goodIds=Arrays.asList(StringUtils.split(mdc.get("goodIds").toString(),","));
-                        BigDecimal totalGoodsPrice=new BigDecimal(0);
-                        for (String g:goodIds) {
-                            totalGoodsPrice= totalGoodsPrice.add((BigDecimal) goodPrices.get(g));
+                if (StringUtils.isBlank(marketingStoreGiftCardMemberListId)) {
+                    //计算优惠券折扣多少钱
+                    if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
+                            && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                        BigDecimal discountLimitAmount = marketingDiscountCoupon.getDiscountLimitAmount();
+                        BigDecimal discountUseAmount = marketingDiscountCoupon.getDiscountUseAmount();
+                        BigDecimal discountPercent = marketingDiscountCoupon.getDiscountPercent();
+                        //可使用折扣余额
+                        BigDecimal discountBalance = NumberUtil.sub(discountLimitAmount, discountUseAmount);
+                        settleMap.put("marketingTotalPrice", marketingTotalPrice);
+                        settleMap.put("noMarketingTotalPrice", noMarketingTotalPrice);
+                        settleMap.put("marketingGoodIds", marketingGoodIds);
+                        settleMap.put("noMarketingGoodIds", noMarketingGoodIds);
+
+                        //判断订单金额不在上限金额的范围内
+                        if (marketingTotalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                            if (discountBalance.compareTo(BigDecimal.ZERO) > 0) {
+                                if (marketingTotalPrice.subtract(discountBalance).doubleValue() >= 0) {
+                                    coupon = NumberUtil.mul(NumberUtil.sub(new BigDecimal("1"), NumberUtil.div(discountPercent.toString(), "10")), discountBalance);
+                                    //控制优惠金额的优惠幅度
+                                    if (marketingTotalPrice.subtract(coupon).doubleValue() < 0) {
+                                        coupon = marketingTotalPrice;
+                                    }
+                                    settleMap.put("coupon", coupon);
+                                    settleMap.put("discountUseAmount",discountBalance);
+                                    settleMap.put("discountBalance",BigDecimal.ZERO);
+                                } else {
+                                    coupon = NumberUtil.mul(marketingTotalPrice, NumberUtil.sub(new BigDecimal("1"), NumberUtil.div(discountPercent.toString(), "10")));
+                                    //控制优惠金额的优惠幅度
+                                    if (marketingTotalPrice.subtract(coupon).doubleValue() < 0) {
+                                        coupon = marketingTotalPrice;
+                                    }
+                                    settleMap.put("coupon", coupon);
+                                    settleMap.put("discountUseAmount",marketingTotalPrice);
+                                    settleMap.put("discountBalance",NumberUtil.sub(discountBalance,marketingTotalPrice));
+                                }
+                            }
                         }
-                        BigDecimal completely=new BigDecimal(mdc.get("completely").toString());
-                        log.info("completely:"+completely.doubleValue()+"====totalGoodsPrice:"+totalGoodsPrice.doubleValue());
-                        if(totalGoodsPrice.doubleValue()>=completely.doubleValue()){
+                    }
+                    //返回优惠券列表
+                    Map<String,Object> paramMap=Maps.newHashMap();
+                    paramMap.put("goodIds",StringUtils.join(goodsList,","));
+                    paramMap.put("memberId",memberId);
+                    paramMap.put("sysUserId",Convert.toStr(s.get("id")));
+                    List<Map<String,Object>> marketingDiscountCouponMaps= iMarketingDiscountCouponService.findMarketingDiscountCouponByGoodIds(paramMap);
+                    for (Map<String,Object> mdc:marketingDiscountCouponMaps) {
+                        if (StrUtil.equals(Convert.toStr(mdc.get("isNomal")),"2")) {
                             discounts.add(mdc);
+                            continue;
+                        }
+                        if(mdc.get("isThreshold").toString().equals("0")){
+                            mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
+                            discounts.add(mdc);
+                        }else{
+                            mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
+                            List<String> goodIds=Arrays.asList(StringUtils.split(mdc.get("goodIds").toString(),","));
+                            BigDecimal totalGoodsPrice=new BigDecimal(0);
+                            for (String g:goodIds) {
+                                totalGoodsPrice= totalGoodsPrice.add((BigDecimal) goodPrices.get(g));
+                            }
+                            BigDecimal completely=new BigDecimal(mdc.get("completely").toString());
+                            log.info("completely:"+completely.doubleValue()+"====totalGoodsPrice:"+totalGoodsPrice.doubleValue());
+                            if(totalGoodsPrice.doubleValue()>=completely.doubleValue()){
+                                discounts.add(mdc);
+                            }
                         }
                     }
                 }
@@ -852,9 +991,10 @@ public class AfterOrderController {
                     s.put("giftCarCounts",0);
                     s.put("giftCarBalance",0);
                 }
-                allTotalPrice=allTotalPrice.subtract(goodGiftCardtotal);
+                allTotalPrice=allTotalPrice.subtract(goodGiftCardtotal).subtract(ObjectUtil.defaultIfNull(Convert.toBigDecimal(settleMap.get("coupon")),BigDecimal.ZERO));
                 s.put("discounts",discounts);
-                s.put("totalPrice",totalPrice.subtract(goodGiftCardtotal));
+                s.put("settleMap",settleMap);
+                s.put("totalPrice",totalPrice.subtract(goodGiftCardtotal).subtract(ObjectUtil.defaultIfNull(Convert.toBigDecimal(settleMap.get("coupon")),BigDecimal.ZERO)));
                 s.put("numberUnits",numberUnits);
                 s.put("freight",freight);
             }
@@ -923,7 +1063,6 @@ public class AfterOrderController {
                     if(marketingPrefectureGoodSpecification.getIsWelfare().equals("1")){
                         welfareProportion=new BigDecimal(100);
                     }
-
                     BigDecimal welfareProportionPrice=null;
 
                     GoodSpecification goodSpecification=iGoodSpecificationService.getById(g.get("goodSpecificationId").toString());
@@ -936,6 +1075,21 @@ public class AfterOrderController {
 
                     //判断专区会员直降
                     MarketingPrefecture marketingPrefecture=iMarketingPrefectureService.getById(g.get("marketingPrefectureId").toString());
+
+
+                    if(!marketingPrefecture.getStatus().equals("1")){
+                        return Result.error("专区已停用");
+                    }
+
+                    //判断专区和礼包的关系判断是否团队成员
+                    if(marketingPrefecture.getIsDesignation().equals("1")){
+                        long giftCount=iMarketingGiftBagRecordService.count(new LambdaQueryWrapper<MarketingGiftBagRecord>().eq(MarketingGiftBagRecord::getMemberListId,memberId));
+                        if(giftCount==0){
+                            return Result.error("你没有权限购买，请先购买礼包");
+                        }
+                    }
+
+
                     MemberList memberList=iMemberListService.getById(memberId);
 
                     //支持会员免福利金
@@ -983,6 +1137,10 @@ public class AfterOrderController {
             //获取过滤的优惠券列表
             List<Map<String,Object>> discounts=Lists.newArrayList();
             for (Map<String,Object> mdc:marketingDiscountCouponMaps) {
+                if (StrUtil.equals(Convert.toStr(mdc.get("isNomal")),"2")) {
+                    discounts.add(mdc);
+                    continue;
+                }
                 if(mdc.get("isThreshold").toString().equals("0")){
                     mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
                     discounts.add(mdc);
@@ -1132,7 +1290,7 @@ public class AfterOrderController {
         List<MemberShoppingCart> memberShoppingCarts=Lists.newArrayList();
 
 
-        log.info("确认订单，购物车id:"+ids);
+        log.info("确认订单，购物车id:{},orderJson: {}",ids,orderJson);
 
         Arrays.asList(StringUtils.split(ids,",")).parallelStream().forEach(id->{
             MemberShoppingCart memberShoppingCart= iMemberShoppingCartService.getById(id);

@@ -17,7 +17,7 @@
                 ON mcgr.`member_list_id` = ml.`id`
               LEFT JOIN marketing_certificate_record mcr
                 ON mcr.id = mcgr.marketing_certificate_record_id
-            WHERE mcgr.`del_flag` = 0 ) m ${ew.customSqlSegment}
+            WHERE mcgr.`del_flag` = '0' ) m ${ew.customSqlSegment}
     </select>
     <select id="getMemberList" resultType="map">
         SELECT
@@ -28,7 +28,7 @@
           marketing_certificate_group_record mcgr
           LEFT JOIN member_list ml
             ON mcgr.`member_list_id` = ml.`id`
-        WHERE mcgr.`del_flag` = 0
+        WHERE mcgr.`del_flag` = '0'
         ORDER BY mcgr.`create_time` DESC
         LIMIT 10
     </select>
@@ -40,7 +40,7 @@
           marketing_certificate_group_record mcgr
           LEFT JOIN member_list ml
             ON mcgr.`member_list_id` = ml.`id`
-        WHERE mcgr.`del_flag` = 0
+        WHERE mcgr.`del_flag` = '0'
           AND mcgr.marketing_certificate_group_manage_id = #{marketingCertificateGroupManageId}
         ORDER BY mcgr.group_identity DESC
     </select>

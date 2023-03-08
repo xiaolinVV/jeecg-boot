@@ -141,7 +141,7 @@
           mrr.`go_and_come`AS goAndCome
         FROM
           member_recharge_record mrr
-        WHERE mrr.`del_flag` = 0
+        WHERE mrr.`del_flag` = '0'
           AND mrr.`member_list_id` = #{map.id}
         <if test="map.isPlatform == 1">
             AND mrr.`pay_type` IN (0, 3, 4, 5, 6, 7, 8, 9)
@@ -171,7 +171,7 @@
           member_recharge_record mrr
           LEFT JOIN member_list ml
             ON mrr.`member_list_id` = ml.`id`
-        WHERE mrr.`del_flag` = 0
+        WHERE mrr.`del_flag` = '0'
         <if test="memberRechargeRecordDTO.orderNo != null and memberRechargeRecordDTO.orderNo!=''">
             AND mrr.order_no LIKE concat('%',#{memberRechargeRecordDTO.orderNo},'%')
         </if>
