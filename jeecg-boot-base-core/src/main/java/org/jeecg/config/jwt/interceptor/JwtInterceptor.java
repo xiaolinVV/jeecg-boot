@@ -13,6 +13,7 @@ import org.jeecg.config.jwt.model.TokenModel;
 import org.jeecg.config.jwt.service.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.Resource;
@@ -25,6 +26,7 @@ import java.io.PrintWriter;
  * jwt拦截器
  */
 @Log
+@Component
 public class JwtInterceptor implements HandlerInterceptor {
 
     @Lazy
