@@ -80,7 +80,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
             Object memberId=tokenManager.getMemberIdByToken(authHeader);
             if(oConvertUtils.isEmpty(memberId)){
-                result.setMessage("token解析失败");
+                result.setMessage("token解析失败，请重新登陆~");
                 result.setCode(666);
                 result.setSuccess(false);
                 response.setCharacterEncoding("utf-8");

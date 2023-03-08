@@ -104,7 +104,11 @@ public class RedisTokenManager implements TokenManager {
     public Object getMemberIdByToken(String token) {
         // 验证token
         Claims claims = null;
-        claims = Jwts.parser().setSigningKey(JwtConstants.JWT_SECRET).parseClaimsJws(token).getBody();
-        return claims.getId();
+        try {
+            claims = Jwts.parser().setSigningKey(JwtConstants.JWT_SECRET).parseClaimsJws(token).getBody();
+        }catch (Exception e){
+            System.out.println("token解析失败" + e);
+        }
+        return claims != null ? claims.getId() : null;
     }
 }
