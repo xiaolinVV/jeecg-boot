@@ -67,7 +67,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         if(requestPath.indexOf("/after/")>=0){
             if (authHeader == null) {
                 // 如果验证token失败，则返回401错误
-                result.setMessage("token解析失败");
+                result.setMessage("token为空，请先登录~");
                 result.setCode(666);
                 result.setSuccess(false);
                 response.setCharacterEncoding("utf-8");
@@ -111,7 +111,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 request.setAttribute(JwtConstants.CURRENT_USER_NAME, model.getMemberId());
                 return true;
             } else {
-                result.setMessage("token解析失败");
+                result.setMessage("token过期，请重新登陆~");
                 result.setCode(666);
                 result.setSuccess(false);
                 response.setCharacterEncoding("utf-8");
