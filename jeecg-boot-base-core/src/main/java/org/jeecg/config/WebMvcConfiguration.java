@@ -56,6 +56,9 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     @Autowired(required = false)
     private PrometheusMeterRegistry prometheusMeterRegistry;
 
+    @Resource
+    JwtInterceptor jwtInterceptor;
+
     /**
      * 静态资源的配置 - 使得可以从磁盘中读取 Html、图片、视频、音频等
      */
@@ -152,7 +155,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new JwtInterceptor()).addPathPatterns("/front/**","/after/**","/before/**","/back/**");
+        registry.addInterceptor(jwtInterceptor).addPathPatterns("/front/**","/after/**","/before/**","/back/**");
     }
 
 //    /**
