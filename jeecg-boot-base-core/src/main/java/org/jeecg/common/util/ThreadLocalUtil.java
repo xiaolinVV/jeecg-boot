@@ -1,6 +1,8 @@
 package org.jeecg.common.util;
 
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import com.alibaba.ttl.TransmittableThreadLocal;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +17,7 @@ public class ThreadLocalUtil {
     /**
      * 定义 ThreadLocal
      */
-    private static final ThreadLocal<ConcurrentHashMap<String, Object>> threadLocal = ThreadUtil.createThreadLocal(false);
+    private static final TransmittableThreadLocal<ConcurrentHashMap<String, Object>> threadLocal = new TransmittableThreadLocal<ConcurrentHashMap<String, Object>>();
 
 
     /**
@@ -99,5 +101,20 @@ public class ThreadLocalUtil {
     public static <T> T remove(String key) {
         ConcurrentHashMap<String, Object> map = getThreadLocal();
         return (T) map.remove(key);
+    }
+
+    public static void main(String[] args) {
+        TransmittableThreadLocal<String> threadLocal = new TransmittableThreadLocal();
+        threadLocal.set("初始化的值能继承吗？");
+        try {
+            System.out.println("父线程的ThreadLocal值：" + threadLocal.get());
+            ThreadUtil.execute(() -> {
+                System.out.println("子线程到了");
+                System.out.println("子线程的ThreadLocal值：" + threadLocal.get());
+            });
+        } finally {
+            ThreadLocalUtil.remove();
+        }
+
     }
 }

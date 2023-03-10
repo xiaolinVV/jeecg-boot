@@ -232,6 +232,12 @@
 			<artifactId>mybatis-plus-join-boot-starter</artifactId>
 			<version>1.4.2</version>
 		</dependency>
+		<!--使用线程池时，ThreadLocal 父线程到子线程值传递问题需要 TransmittableThreadLocal 来解决-->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>transmittable-thread-local</artifactId>
+			<version>2.14.2</version>
+		</dependency>
 	</dependencies>
 
 </project>
