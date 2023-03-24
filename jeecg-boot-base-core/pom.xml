@@ -275,6 +275,12 @@
 			<artifactId>mybatis-plus-join-boot-starter</artifactId>
 			<version>1.4.2</version>
 		</dependency>
+<!--		飞书通知-->
+		<dependency>
+			<groupId>club.javafamily</groupId>
+			<artifactId>feishu-notification-spring-boot-starter</artifactId>
+			<version>2.3.2-beta.10</version>
+		</dependency>
 	</dependencies>
 
 </project>

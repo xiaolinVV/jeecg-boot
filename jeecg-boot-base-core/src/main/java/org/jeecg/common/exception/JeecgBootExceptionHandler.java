@@ -1,10 +1,17 @@
 package org.jeecg.common.exception;
 
+import club.javafamily.nf.request.FeiShuCardNotifyRequest;
+import club.javafamily.nf.service.FeiShuNotifyHandler;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.enums.SentinelErrorInfoEnum;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.connection.PoolException;
@@ -27,6 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 @Slf4j
 public class JeecgBootExceptionHandler {
+
+	@Autowired
+	private FeiShuNotifyHandler feiShuNotifyHandler;
+
+	@Value("${spring.profiles.active}")
+	private String env;
 
 	/**
 	 * 处理自定义异常
@@ -77,6 +90,16 @@ public class JeecgBootExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	public Result<?> handleException(Exception e){
 		log.error(e.getMessage(), e);
+
+		String title = StrUtil.equals(env,"prod") ? "全惠付@v2正式环境异常告警" : "全惠付@v2开发环境异常告警";
+		String buttonUrl = StrUtil.equals(env,"prod") ? "https://gk.quanhuifu.com" : "https://test.api.quanhuifu.com/v2/";
+		String content = "告警时间: " + DateUtil.formatDateTime(DateUtil.date())
+				+ "\n异常信息: " + ExceptionUtil.stacktraceToString(e);
+		final FeiShuCardNotifyRequest request
+				= FeiShuCardNotifyRequest.of(title, content,
+				"立即前往系统查看 :玫瑰:️ ✅ \uD83D\uDDA5️", buttonUrl);
+		feiShuNotifyHandler.notify(request);
+
 		//update-begin---author:zyf ---date:20220411  for：处理Sentinel限流自定义异常
 		Throwable throwable = e.getCause();
 		SentinelErrorInfoEnum errorInfoEnum = SentinelErrorInfoEnum.getErrorByException(throwable);
