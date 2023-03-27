@@ -122,7 +122,6 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/swagger-ui.html", "anon");
         filterChainDefinitionMap.put("/swagger**/**", "anon");
         filterChainDefinitionMap.put("/webjars/**", "anon");
-        filterChainDefinitionMap.put("/v2/**", "anon");
 
         filterChainDefinitionMap.put("/sys/annountCement/show/**", "anon");
 
@@ -130,7 +129,7 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/jmreport/**", "anon");
         filterChainDefinitionMap.put("/**/*.js.map", "anon");
         filterChainDefinitionMap.put("/**/*.css.map", "anon");
-        
+
         //大屏模板例子
         filterChainDefinitionMap.put("/test/bigScreen/**", "anon");
         filterChainDefinitionMap.put("/bigscreen/template1/**", "anon");
@@ -175,6 +174,7 @@ public class ShiroConfig {
 
         //店铺模块不拦截
         filterChainDefinitionMap.put("/store/**/**","anon");
+        filterChainDefinitionMap.put("/v2/**", "anon");
 
         //店铺上传图片不拦截
         /*filterChainDefinitionMap.put("/back/storeManage/upload", "anon");*/
