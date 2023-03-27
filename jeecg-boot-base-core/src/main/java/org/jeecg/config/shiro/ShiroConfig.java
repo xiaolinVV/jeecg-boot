@@ -169,7 +169,7 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/captcha/**", "anon");
         filterChainDefinitionMap.put("/front/**", "anon");
         filterChainDefinitionMap.put("/wapi/**", "anon");
-        filterChainDefinitionMap.put("/after/**", "anon");
+        filterChainDefinitionMap.put("**/after/**", "anon");
         filterChainDefinitionMap.put("/before/**", "anon");
         filterChainDefinitionMap.put("/back/**", "anon");
 
