@@ -75,6 +75,37 @@ public class ShiroConfig {
                 }
             }
         }
+
+        /*------------------- 全惠付赚钱系统 api 接口排除 begin-------- **/
+
+        //中间件调用
+        filterChainDefinitionMap.put("/open/**", "anon");//中间件调用
+        //平台设置
+        filterChainDefinitionMap.put("/sysBackSetting/sysBackSetting/findSysBackSetting", "anon"); //平台设置
+        filterChainDefinitionMap.put("/MarketingDisplay/findStoreStatistics", "anon"); //入驻商家清单
+        filterChainDefinitionMap.put("/MarketingDisplay/manageSum", "anon"); //经营概况
+        filterChainDefinitionMap.put("/MarketingDisplay/monthStoreAndMember", "anon"); //店铺/会员月增长
+        filterChainDefinitionMap.put("/MarketingDisplay/storeComplimentary", "anon"); //店铺送福利金排行
+        filterChainDefinitionMap.put("/MarketingDisplay/orderSumList", "anon"); //商品销售订单
+        filterChainDefinitionMap.put("/MarketingDisplay/everydayStoreAndMember", "anon"); //每日新增店铺和会员
+        filterChainDefinitionMap.put("/MarketingDisplay/everydaySendOutWelfare", "anon"); //每日送出福利金
+
+        filterChainDefinitionMap.put("/captcha/**", "anon");
+        filterChainDefinitionMap.put("/front/**", "anon");
+        filterChainDefinitionMap.put("/wapi/**", "anon");
+        filterChainDefinitionMap.put("/after/**", "anon");
+        filterChainDefinitionMap.put("/before/**", "anon");
+        filterChainDefinitionMap.put("/back/**", "anon");
+
+        //店铺模块不拦截
+        filterChainDefinitionMap.put("/store/**/**","anon");
+        filterChainDefinitionMap.put("/v2/**", "anon");
+
+        //店铺上传图片不拦截
+        /*filterChainDefinitionMap.put("/back/storeManage/upload", "anon");*/
+
+        /*------------------- 全惠付赚钱系统 api 接口排除 end-------- **/
+
         // 配置不会被拦截的链接 顺序判断
         filterChainDefinitionMap.put("/sys/cas/client/validateLogin", "anon"); //cas验证登录
         filterChainDefinitionMap.put("/sys/randomImage/**", "anon"); //登录验证码接口排除
@@ -149,37 +180,6 @@ public class ShiroConfig {
 
         //测试模块排除
         filterChainDefinitionMap.put("/test/seata/**", "anon");
-
-
-        /*------------------- 全惠付赚钱系统 api 接口排除 begin-------- **/
-
-        //中间件调用
-        filterChainDefinitionMap.put("/open/**", "anon");//中间件调用
-        //平台设置
-        filterChainDefinitionMap.put("/sysBackSetting/sysBackSetting/findSysBackSetting", "anon"); //平台设置
-        filterChainDefinitionMap.put("/MarketingDisplay/findStoreStatistics", "anon"); //入驻商家清单
-        filterChainDefinitionMap.put("/MarketingDisplay/manageSum", "anon"); //经营概况
-        filterChainDefinitionMap.put("/MarketingDisplay/monthStoreAndMember", "anon"); //店铺/会员月增长
-        filterChainDefinitionMap.put("/MarketingDisplay/storeComplimentary", "anon"); //店铺送福利金排行
-        filterChainDefinitionMap.put("/MarketingDisplay/orderSumList", "anon"); //商品销售订单
-        filterChainDefinitionMap.put("/MarketingDisplay/everydayStoreAndMember", "anon"); //每日新增店铺和会员
-        filterChainDefinitionMap.put("/MarketingDisplay/everydaySendOutWelfare", "anon"); //每日送出福利金
-
-        filterChainDefinitionMap.put("/captcha/**", "anon");
-        filterChainDefinitionMap.put("/front/**", "anon");
-        filterChainDefinitionMap.put("/wapi/**", "anon");
-        filterChainDefinitionMap.put("/after/**", "anon");
-        filterChainDefinitionMap.put("/before/**", "anon");
-        filterChainDefinitionMap.put("/back/**", "anon");
-
-        //店铺模块不拦截
-        filterChainDefinitionMap.put("/store/**/**","anon");
-        filterChainDefinitionMap.put("/v2/**", "anon");
-
-        //店铺上传图片不拦截
-        /*filterChainDefinitionMap.put("/back/storeManage/upload", "anon");*/
-
-        /*------------------- 全惠付赚钱系统 api 接口排除 end-------- **/
 
         // 添加自己的过滤器并且取名为jwt
         Map<String, Filter> filterMap = new HashMap<String, Filter>(1);
