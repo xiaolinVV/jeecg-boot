@@ -190,7 +190,7 @@ jeecg:
     #证书地址
     cert: /data/cert
   shiro:
-    excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/category/**,/visual/**,/map/**,/jmreport/bigscreen2/**
+    excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/category/**,/visual/**,/map/**,/jmreport/bigscreen2/**,/open/**,/captcha/**,/front/**,/wapi/**,/after/**,/before/**,/back/**,/store/**/**
   #阿里云oss存储和大鱼短信秘钥配置
   oss:
     accessKey: ??

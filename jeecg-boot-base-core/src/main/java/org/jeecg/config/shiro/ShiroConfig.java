@@ -172,7 +172,6 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/after/**", "anon");
         filterChainDefinitionMap.put("/before/**", "anon");
         filterChainDefinitionMap.put("/back/**", "anon");
-        filterChainDefinitionMap.put("/after/marketingCertificateRecord/findMarketingCertificateRecordGoods", "anon");
 
         //店铺模块不拦截
         filterChainDefinitionMap.put("/store/**/**","anon");
