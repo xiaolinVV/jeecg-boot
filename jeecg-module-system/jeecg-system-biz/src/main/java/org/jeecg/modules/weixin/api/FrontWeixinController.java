@@ -1,5 +1,6 @@
 package org.jeecg.modules.weixin.api;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -8,9 +9,11 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.util.encryption.AesCbcUtil;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.common.util.weixin.WeixinUtils;
+import org.jeecg.config.jwt.def.JwtConstants;
 import org.jeecg.config.jwt.model.TokenModel;
 import org.jeecg.config.jwt.service.TokenManager;
 import org.jeecg.config.jwt.utils.WeixinQRUtils;
@@ -26,6 +29,7 @@ import org.jeecg.modules.system.entity.SysSmallcode;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysSmallcodeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -37,6 +41,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 微信登陆接口
@@ -75,6 +80,37 @@ public class FrontWeixinController {
 
     @Autowired
     private IMarketingLeagueMemberService iMarketingLeagueMemberService;
+
+    @Autowired
+    private IMemberListService memberListService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+
+    /**
+     * 获取请求token
+     * @param phone 刷新用户token
+     * @return
+     */
+    @RequestMapping("refreshToken")
+    @ResponseBody
+    public Result<?> refreshToken(String phone,HttpServletRequest request) {
+        String softModel = request.getHeader("softModel");
+        LambdaQueryWrapper<MemberList> listLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        listLambdaQueryWrapper.eq(MemberList::getPhone,phone).eq(MemberList::getStatus,"1");
+        MemberList memberList = memberListService.getOne(listLambdaQueryWrapper, false);
+        if (memberList == null) {
+            throw new JeecgBootException("手机号不存在,请先注册~");
+        }
+        String token = (String) redisTemplate.boundValueOps(softModel+"member="+memberList.getId()).get();
+        if (StrUtil.isNotBlank(token)) {
+            redisTemplate.boundValueOps(softModel+"member="+memberList.getId()).expire(JwtConstants.TOKEN_EXPIRES_HOUR, TimeUnit.HOURS);
+        }else {
+            token = tokenManager.createToken(memberList.getId(),softModel);
+        }
+        return Result.ok(token);
+    }
 
 
     /**
@@ -424,7 +460,7 @@ public class FrontWeixinController {
             iMemberListService.addShareQr(memberList,sysUserId);
         } else {
             SysSmallcode sysSmallcode = iSysSmallcodeService.getById(memberList.getSysSmallcodeId());
-            if (StringUtils.isBlank(sysSmallcode.getTMemberId())) {
+            if (sysSmallcode != null && StringUtils.isBlank(sysSmallcode.getTMemberId())) {
                 sysSmallcode.setTMemberId(memberList.getId());
                 iSysSmallcodeService.saveOrUpdate(sysSmallcode);
             }

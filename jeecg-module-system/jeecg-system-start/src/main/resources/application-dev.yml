@@ -301,7 +301,7 @@ third-app:
       # appSecret
       client-secret: ??
       agent-id: ??
-  javafamily:
+javafamily:
     notify:
       feishu:
         hook-url: https://open.feishu.cn/open-apis/bot/v2/hook/b2950b86-e2c7-4071-8101-50e3e137c6e5
