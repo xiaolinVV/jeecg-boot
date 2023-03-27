@@ -165,11 +165,12 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/MarketingDisplay/orderSumList", "anon"); //商品销售订单
         filterChainDefinitionMap.put("/MarketingDisplay/everydayStoreAndMember", "anon"); //每日新增店铺和会员
         filterChainDefinitionMap.put("/MarketingDisplay/everydaySendOutWelfare", "anon"); //每日送出福利金
+        filterChainDefinitionMap.put("/after/marketingCertificateRecord/findMarketingCertificateRecordGoods", "anon");
 
         filterChainDefinitionMap.put("/captcha/**", "anon");
         filterChainDefinitionMap.put("/front/**", "anon");
         filterChainDefinitionMap.put("/wapi/**", "anon");
-        filterChainDefinitionMap.put("**/after/**", "anon");
+        filterChainDefinitionMap.put("/after/**", "anon");
         filterChainDefinitionMap.put("/before/**", "anon");
         filterChainDefinitionMap.put("/back/**", "anon");
 
