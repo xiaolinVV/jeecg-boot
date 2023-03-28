@@ -97,6 +97,17 @@ public class JwtInterceptor implements HandlerInterceptor {
 
                 //判断账号是否冻结
                 LoginMemberList loginMemberList = commonApi.getMemberListById(model.getMemberId());
+                if (loginMemberList == null) {
+                    result.setMessage("账号不存在，请先完成注册~");
+                    result.setCode(500);
+                    result.setSuccess(false);
+                    response.setCharacterEncoding("utf-8");
+                    response.setContentType("text/html");
+                    PrintWriter out = response.getWriter();
+                    out.write(JSON.toJSONString(result));
+                    out.close();
+                    return false;
+                }
                 if(loginMemberList.getStatus().equals("0")){
                     result.setMessage("账号已冻结，请联系管理员");
                     result.setCode(500);
