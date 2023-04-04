@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -117,6 +118,28 @@ public class SysUserController {
     private IProviderManageService iProviderManageService;
     @Autowired
     private IAllianceManageService iAllianceManageService;
+
+    /**
+     * 根据角色编码获取会员列表
+     *
+     * @param roleCode
+     * @return
+     */
+    @GetMapping("getUserByRole")
+    public Result<?> getUserByRole(String roleCode){
+        List<SysUser> sysUsers= Lists.newArrayList();
+        SysRole sysRole=iSysRoleService.getOne(new LambdaQueryWrapper<SysRole>().eq(SysRole::getRoleCode,roleCode));
+        if(sysRole==null){
+            return Result.error("角色没找到");
+        }
+        sysUserRoleService.list(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getRoleId,sysRole.getId())).forEach(sysUserRole -> {
+            SysUser sysUser=sysUserService.getById(sysUserRole.getUserId());
+            if(sysUser!=null) {
+                sysUsers.add(sysUser);
+            }
+        });
+        return Result.ok(sysUsers);
+    }
 
     /**
      * 获取用户列表数据
