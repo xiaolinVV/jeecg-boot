@@ -1,6 +1,7 @@
 package org.jeecg.modules.good.api;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -29,6 +30,7 @@ import org.jeecg.modules.order.entity.OrderEvaluateStore;
 import org.jeecg.modules.order.service.IOrderEvaluateService;
 import org.jeecg.modules.order.service.IOrderEvaluateStoreService;
 import org.jeecg.modules.order.service.IOrderListService;
+import org.jeecg.modules.searchHistory.service.SearchHistoryService;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -166,6 +168,9 @@ public class FrontGoodListController {
     @Autowired
     private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
 
+    @Autowired
+    SearchHistoryService searchHistoryService;
+
 
 
     /**
@@ -198,14 +203,18 @@ public class FrontGoodListController {
         paramObjectMap.put("memberId",StringUtils.defaultString(memberId,""));
 
         //查询店铺店铺商品列表
-        if(isPlatform.intValue()==0){
+        if(isPlatform ==0){
 
             result.setResult(iGoodStoreListService.searchGoodList(page,paramObjectMap));
 
         }else
             //查询平台商品列表
-            if(isPlatform.intValue()==1){
-
+            if(isPlatform ==1){
+                // 个人搜索记录、热搜存储
+                if (StrUtil.isNotBlank(memberId) && StrUtil.isNotBlank(search)) {
+                    searchHistoryService.addSearchHistoryByUserId(memberId, search);
+                    searchHistoryService.incrementScore(search);
+                }
                 //1  商品排序方式：是否启用排序值排序。0：停用（停用后客户端商品列表按照默认原系统的排序方式）；1：启用（启用后客户端商品列表排序按照排序值升序排序）；
                 String goodsSortType = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "goods_sort_type");
                 if(goodsSortType.equals("1")&&pattern==0){
