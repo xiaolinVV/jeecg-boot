@@ -18,7 +18,7 @@ import java.util.List;
  */
 public interface MarketingStoreDistributionSettingMapper extends BaseMapper<MarketingStoreDistributionSetting> {
 
-    IPage<MarketingStoreDistributionSettingVO> findGiftBagStore(Page<MarketingStoreDistributionSettingVO> page, MarketingStoreDistributionSettingVO marketingStoreDistributionSettingVO);
+    IPage<MarketingStoreDistributionSettingVO> findGiftBagStore(Page<MarketingStoreDistributionSettingVO> page, @Param("marketingStoreDistributionSettingVO") MarketingStoreDistributionSettingVO marketingStoreDistributionSettingVO);
 
     IPage<MarketingStoreDistributionSettingVO> findStoreDistribution(Page<MarketingStoreDistributionSettingVO> page,@Param("marketingStoreDistributionSettingVO") MarketingStoreDistributionSettingVO marketingStoreDistributionSettingVO);
 

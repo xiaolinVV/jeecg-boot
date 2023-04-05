@@ -1,6 +1,7 @@
 package org.jeecg.modules.member.api;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -307,6 +308,7 @@ public class AfterMemberWithdrawDepositController {
     @RequestMapping("withdrawXchanger")
     @ResponseBody
     public Result<?> withdrawXchanger(@RequestParam(required = false,defaultValue = "0")String money){
+        money = StrUtil.blankToDefault(money,"0");
         HashMap<String, Object> map = new HashMap<>();
         //最小提现金额
         String withdrawMinimum = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "withdraw_minimum");
@@ -324,6 +326,7 @@ public class AfterMemberWithdrawDepositController {
         String withdrawServiceChargeGreaterFixed = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "withdraw_service_charge_greater_fixed");
         //大于阈值百分比（percent）
         String withdrawServiceChargeGreaterPercent = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "withdraw_service_charge_greater_percent");
+        withdrawServiceChargeGreaterPercent = StrUtil.blankToDefault(withdrawServiceChargeGreaterPercent,"0");
         if (Double.valueOf(money)<Double.valueOf(withdrawMinimum)){
             map.put("serviceCharge",withdrawServiceChargeLessFixed);
             map.put("amount",0);
@@ -350,7 +353,7 @@ public class AfterMemberWithdrawDepositController {
                     map.put("withdrawExplain",withdrawServiceChargeGreaterFixed);
                     map.put("withdrawType",2);
                 }else {
-                    map.put("serviceCharge",new BigDecimal(money).multiply(new BigDecimal(withdrawServiceChargeGreaterPercent).divide(new BigDecimal(100))).setScale(2, BigDecimal.ROUND_DOWN));
+                    map.put("serviceCharge",new BigDecimal(money).multiply(new BigDecimal(withdrawServiceChargeGreaterPercent).divide(new BigDecimal("100"))).setScale(2, BigDecimal.ROUND_DOWN));
                     map.put("amount",new BigDecimal(money).subtract(new BigDecimal(String.valueOf(map.get("serviceCharge")))));
                     map.put("withdrawExplain",withdrawServiceChargeGreaterPercent);
                     map.put("withdrawType",3);

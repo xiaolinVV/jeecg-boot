@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
@@ -42,9 +43,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Description: 商品列表
@@ -109,6 +108,9 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
 
     @Autowired
     private IMarketingStorePrefectureGoodService iMarketingStorePrefectureGoodService;
+
+    @Autowired
+    private IMarketingPrefectureGoodService marketingPrefectureGoodService;
 
 
 
@@ -403,7 +405,6 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
         gf.setSalesVolume(g.getSalesVolume());
         goodSpecificationService.save(gf);
     }
-
     @Override
     public IPage<GoodListDto> getGoodListDto(Page<GoodList> page, GoodListVo goodListVo, String notauditStatus) {
         //查询添加goodTypeId 处理
@@ -1024,7 +1025,73 @@ public class GoodListServiceImpl extends ServiceImpl<GoodListMapper, GoodList> i
     @Override
     public IPage<Map<String,Object>> searchGoodListStore(Page<Map<String,Object>> page,SearchTermsVO searchTermsVO){
         return baseMapper.searchGoodListStore( page, searchTermsVO);
-    };
+    }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<GoodList> updateFrameStatus(String ids, String frameStatus, String frameExplain) {
+        Result<GoodList> result = new Result<GoodList>();
+        if (org.apache.commons.lang3.StringUtils.isEmpty(ids)) {// ids == null || "".equals(ids.trim())
+            result.error500("参数不识别！");
+        } else {
+            GoodList goodList;
+            try {
+                List<String> listid = Arrays.asList(ids.split(","));
+                for (String id : listid) {
+                    goodList = getGoodListById(id);
+                    if (oConvertUtils.isEmpty(goodList)) {
+                        result.error500("未找到对应实体");
+                    } else {
+                        goodList.setFrameExplain(frameExplain);
+                        goodList.setFrameStatus(frameStatus);
+                        updateById(goodList);
+                        if (frameStatus.equals("0")) {
+                            //下架后修改专区商品商品
+                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
+                            queryWrapper.eq("del_flag", "0");
+                            queryWrapper.eq("good_list_id", goodList.getId());
+                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
+                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
+                                mpg.setSrcStatus("0");
+                                marketingPrefectureGoodService.updateById(mpg);
+                            }
+                        }
+                        if (frameStatus.equals("1")) {
+                            //上架后修改专区商品商品
+                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
+                            queryWrapper.eq("del_flag", "0");
+                            queryWrapper.eq("good_list_id", goodList.getId());
+                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
+                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
+                                mpg.setSrcStatus("1");
+                                marketingPrefectureGoodService.updateById(mpg);
+                            }
+                        }
 
+                    }
+                }
+                result.success("修改成功!");
+            } catch (Exception e) {
+                result.error500("修改失败！");
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Result<?> deleteAndDelExplain(String id, String delExplain) {
+        try {
+            GoodList goodList = getById(id);
+            goodList.setDelExplain(delExplain);
+            goodList.setDelTime(new Date());
+            //修改
+            updateById(goodList);
+            //删除
+            removeById(goodList.getId());
+        } catch (Exception e) {
+            log.error("删除失败", e.getMessage());
+            return Result.error("删除失败!");
+        }
+        return Result.ok("删除成功!");
+    }
 }

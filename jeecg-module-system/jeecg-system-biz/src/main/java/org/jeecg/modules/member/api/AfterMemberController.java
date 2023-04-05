@@ -28,6 +28,7 @@ import org.jeecg.modules.order.service.IOrderStoreListService;
 import org.jeecg.modules.pay.utils.NotifyUrlUtils;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.service.IStoreManageService;
+import org.jeecg.modules.system.entity.SysSmallcode;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysSmallcodeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -289,7 +290,8 @@ public class AfterMemberController {
 
         //二维码地址
         if(StringUtils.isNotBlank(memberList.getSysSmallcodeId())){
-            memberObjectMap.put("address",iSysSmallcodeService.getById(memberList.getSysSmallcodeId()).getAddress());
+            SysSmallcode sysSmallcode = iSysSmallcodeService.getById(memberList.getSysSmallcodeId());
+            memberObjectMap.put("address",sysSmallcode != null ? sysSmallcode.getAddress(): "");
         }else{
             memberObjectMap.put("address","");
         }
@@ -801,6 +803,15 @@ public class AfterMemberController {
         return result;
     }
 
+    /**
+     * 查看我的团队信息
+     * @param request
+     * @param id
+     * @param memberDesignationGroupId
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
     @RequestMapping("getMemberManageInfo")
     @ResponseBody
     public Result<Map<String,Object>> getMemberManageInfo(HttpServletRequest request,

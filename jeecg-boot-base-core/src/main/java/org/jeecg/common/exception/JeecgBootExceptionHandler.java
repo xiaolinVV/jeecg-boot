@@ -91,14 +91,14 @@ public class JeecgBootExceptionHandler {
 	public Result<?> handleException(Exception e){
 		log.error(e.getMessage(), e);
 
-		String title = StrUtil.equals(env,"prod") ? "全惠付@v2正式环境异常告警" : "全惠付@v2开发环境异常告警";
-		String buttonUrl = StrUtil.equals(env,"prod") ? "https://gk.quanhuifu.com" : "https://test.api.quanhuifu.com/v2/";
-		String content = "告警时间: " + DateUtil.formatDateTime(DateUtil.date())
-				+ "\n异常信息: " + ExceptionUtil.stacktraceToString(e);
-		final FeiShuCardNotifyRequest request
-				= FeiShuCardNotifyRequest.of(title, content,
-				"立即前往系统查看 :玫瑰:️ ✅ \uD83D\uDDA5️", buttonUrl);
-		feiShuNotifyHandler.notify(request);
+//		String title = StrUtil.equals(env,"prod") ? "全惠付@v2正式环境异常告警" : "全惠付@v2开发环境异常告警";
+//		String buttonUrl = StrUtil.equals(env,"prod") ? "https://gk.quanhuifu.com" : "https://test.api.quanhuifu.com/v2/";
+//		String content = "告警时间: " + DateUtil.formatDateTime(DateUtil.date())
+//				+ "\n异常信息: " + ExceptionUtil.stacktraceToString(e);
+//		final FeiShuCardNotifyRequest request
+//				= FeiShuCardNotifyRequest.of(title, content,
+//				"立即前往系统查看 :玫瑰:️ ✅ \uD83D\uDDA5️", buttonUrl);
+//		feiShuNotifyHandler.notify(request);
 
 		//update-begin---author:zyf ---date:20220411  for：处理Sentinel限流自定义异常
 		Throwable throwable = e.getCause();

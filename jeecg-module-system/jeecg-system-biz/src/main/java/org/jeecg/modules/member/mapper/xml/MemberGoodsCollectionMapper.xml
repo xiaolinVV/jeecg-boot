@@ -12,9 +12,9 @@
         ml.phone AS phone,
         ml.nick_name AS nick_name,
         gl.good_name AS good_name,
-        gl.price AS price,
-        gl.frame_status AS frame_status,
-        gl.activities_type AS activities_type
+        gl.market_price AS price,
+        gl.frame_status AS frame_status
+<!--        gl.activities_type AS activities_type-->
         FROM (member_goods_collection mgc  LEFT JOIN  member_list ml ON mgc.`member_list_id`=ml.`id`) LEFT JOIN good_list gl ON  mgc.`good_list_id`=gl.id
         where mgc.del_flag = 0
         <if test="memberGoodsCollectionVo != null and memberGoodsCollectionVo.phone != null and memberGoodsCollectionVo.phone != ''">
@@ -61,17 +61,23 @@
                     LEFT JOIN
                       (SELECT
                         good_name AS goodName,
-                        small_vip_price AS smallVipPrice,
-                        small_price AS smallPrice,
+                        (SELECT min(vip_price)
+                        FROM good_store_specification
+                        WHERE good_store_list_id = `good_store_list`.id
+                        AND del_flag = '0')                          AS smallVipPrice,
+                        (SELECT min(price)
+                        FROM good_store_specification
+                        WHERE good_store_list_id = `good_store_list`.id
+                        AND del_flag = '0')                          AS smallPrice,
                         main_picture as mainPicture,
                         (SELECT
                           member_type
                         FROM
                           `member_list`
                         WHERE id = #{paramMap.memberId}) AS memberType,
-                        activities_type AS activitiesType,
+<!--                        activities_type AS activitiesType,-->
                         id AS gid,
-                        repertory,
+<!--                        repertory,-->
                         frame_status AS frameStatus,
                         STATUS
                       FROM
@@ -100,17 +106,23 @@
                     LEFT JOIN
                       (SELECT
                         good_name AS goodName,
-                        small_vip_price AS smallVipPrice,
-                        small_price AS smallPrice,
+                        (SELECT min(vip_price)
+                        FROM good_specification
+                        WHERE good_list_id = `good_list`.id
+                        AND del_flag = '0')                          AS smallVipPrice,
+                        (SELECT min(price)
+                        FROM good_specification
+                        WHERE good_list_id = `good_list`.id
+                        AND del_flag = '0')                          AS smallPrice,
                         main_picture as mainPicture,
                         (SELECT
                           member_type
                         FROM
                           `member_list`
                         WHERE id = #{paramMap.memberId}) AS memberType,
-                        activities_type AS activitiesType,
+<!--                        activities_type AS activitiesType,-->
                         id AS gid,
-                        repertory,
+<!--                        repertory,-->
                         frame_status AS frameStatus,
                         STATUS
                       FROM
@@ -119,9 +131,9 @@
                   WHERE mgc.member_list_id = #{paramMap.memberId}
                     AND mgc.del_flag = '0'
                     AND mgc.good_type = '1') asd) bsd
-        <if test="paramMap.pattern==1">order by bsd.depreciate,bsd.discounts,bsd.activitiesType desc </if>
+        <if test="paramMap.pattern==1">order by bsd.depreciate,bsd.discounts </if>
         <if test="paramMap.pattern==2">order by bsd.depreciate desc</if>
-        <if test="paramMap.pattern==3">order by bsd.activitiesType desc</if>
+<!--        <if test="paramMap.pattern==3">order by bsd.activitiesType desc</if>-->
         <if test="paramMap.pattern==4">order by bsd.discounts desc</if>
 
     </select>

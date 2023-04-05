@@ -20,8 +20,8 @@
             ),
             mpt.type_name
           ),'无分类') AS typeName,
-          mpg.`prefecture_price`,
-          gl.`repertory`
+          mpg.`prefecture_price`
+<!--          gl.`repertory`-->
         FROM
           marketing_prefecture_recommend_good mprg
           LEFT JOIN marketing_prefecture_good mpg

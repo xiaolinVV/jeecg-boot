@@ -1,5 +1,6 @@
 package org.jeecg.modules.order.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.util.FileUtil;
 import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.common.util.oConvertUtils;
@@ -74,6 +76,7 @@ import org.jeecg.modules.system.service.ISysAreaService;
 import org.jeecg.modules.system.service.ISysBlanceService;
 import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.modules.system.service.ISysUserService;
+import org.jeecg.modules.taobao.service.IAli1688Service;
 import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -314,6 +317,9 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
     @Autowired
     private HftxPayUtils hftxPayUtils;
+
+    @Autowired
+    private IAli1688Service ali1688Service;
 
     @Value(value = "${jeecg.path.upload}")
     private String uploadpath;
@@ -2886,6 +2892,110 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         byte[] barray = bos.toByteArray();
         InputStream is = new ByteArrayInputStream(barray);
         FileUtil.responseFileStream(response, is, "xls");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<String> ordereDlivery(String listMap) {
+        Result<String> result = new Result<String>();
+        JSONObject jsonObject = JSONObject.parseObject(listMap);
+        List<Map<String, Object>> listObjectSec = jsonObject.getJSONArray("listMap").toJavaObject(List.class);
+        OrderProviderList orderProviderList = new OrderProviderList();
+        OrderProviderGoodRecord orderProviderGoodRecord;
+        List<Map<String, Object>> orderProviderGoodRecordInfoList;
+        String addorderProviderId;
+        if (listObjectSec.size() > 0) {
+            for (Map<String, Object> map : listObjectSec) {
+                //包裹数据
+                List<Map<String, Object>> listParcelMapSS = (List<Map<String, Object>>) (List) map.get("listParcel");
+                for (Map<String, Object> listParcelMap : listParcelMapSS) {
+
+                    //包裹内的商品修改供应商订单id
+                    orderProviderGoodRecordInfoList = (List<Map<String, Object>>) (List) listParcelMap.get("orderProviderGoodRecordInfo");
+
+                    if (orderProviderGoodRecordInfoList.size() > 0) {
+                        //查询供应商订单信息
+                        orderProviderList = orderProviderListService.getById(listParcelMap.get("id").toString());
+                        //添加包裹,并返回新增ID
+                        addorderProviderId = addorderProviderList(orderProviderList, listParcelMap.get("logisticsCompany").toString(), listParcelMap.get("trackingNumber").toString());
+
+                        for (Map<String, Object> orderProviderGoodRecordId : orderProviderGoodRecordInfoList) {
+                            //订单商品信息
+                            orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderProviderGoodRecordId.get("id").toString());
+                            if (orderProviderGoodRecord != null) {
+                                //修改商品的OrderProviderListId为包裹的已发货包裹
+                                orderProviderGoodRecord.setOrderProviderListId(addorderProviderId);
+                                orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+                            }
+                        }
+                    }
+                }
+                //调用方法
+                //是否全部发货,修改orderList的状态内容
+                if (org.apache.commons.lang.StringUtils.isNotBlank(orderProviderList.getId())){
+                    orderProviderListService.ShipmentOrderModification(orderProviderList);
+                }
+            }
+            result.success("发货成功!");
+        }
+        return result;
+    }
+
+    /**
+     * 添加已发货的供应商包裹信息
+     *
+     * @param orderProviderList
+     * @param logisticsCompany  物流公司
+     * @param trackingNumber    快递单号
+     */
+    public String addorderProviderList(OrderProviderList orderProviderList, String logisticsCompany, String trackingNumber) {
+        if (StrUtil.hasBlank(logisticsCompany,trackingNumber)) {
+            throw new JeecgBootException("物流公司/快递单号不能为空~");
+        }
+        //获取1688订单物流信息
+//        String taoOrderId = orderProviderList.getTaoOrderId();
+//        if (StrUtil.isBlank(taoOrderId)) {
+//            throw new JeecgBootException("该供应商订单还未下单，请先下单~");
+//        }
+//        AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo logisticsItemsInfo = ali1688Service.getAlibabaOpenplatformTradeModelNativeLogisticsItemsInfo(Convert.toLong(taoOrderId));
+//        if (logisticsItemsInfo == null) {
+//            throw new JeecgBootException("该供应商订单暂无物流信息~");
+//        }
+//        if (!StrUtil.equals(logisticsItemsInfo.getLogisticsCompanyNo(),logisticsCompany)) {
+//            throw new JeecgBootException("物流公司输入错误~");
+//        }
+//        if (!StrUtil.equals(logisticsItemsInfo.getLogisticsBillNo(),trackingNumber)) {
+//            throw new JeecgBootException("快递单号输入错误~");
+//        }
+        OrderProviderList opl = new OrderProviderList();
+        opl.setDelFlag(orderProviderList.getDelFlag());
+        opl.setMemberListId(orderProviderList.getMemberListId());
+        opl.setOrderListId(orderProviderList.getOrderListId());
+        opl.setSysUserId(orderProviderList.getSysUserId());
+        opl.setOrderNo(orderProviderList.getOrderNo());
+        opl.setDistribution(orderProviderList.getDistribution());
+        opl.setShipFee(orderProviderList.getShipFee());
+        opl.setProviderAddressIdSender(orderProviderList.getProviderAddressIdSender());
+        opl.setProviderAddressIdTui(orderProviderList.getProviderAddressIdTui());
+        opl.setLogisticsTracking(orderProviderList.getLogisticsTracking());
+        opl.setGoodsTotal(orderProviderList.getGoodsTotal());
+        opl.setGoodsTotalCost(orderProviderList.getGoodsTotalCost());
+        opl.setCustomaryDues(orderProviderList.getCustomaryDues());
+        opl.setActualPayment(orderProviderList.getActualPayment());
+//        opl.setTaoOrderId(orderProviderList.getTaoOrderId());
+        opl.setIsSend("1");
+        opl.setAutoDelivery("0");
+        //修改数据
+        opl.setParentId(orderProviderList.getId());
+        opl.setLogisticsCompany(logisticsCompany);
+        opl.setTrackingNumber(trackingNumber);
+        opl.setStatus("2");
+        orderProviderListService.save(opl);
+        return opl.getId();
+        //发送包裹消息（提醒包裹已发出）
+        /*EmailSendMsgHandle eh = new EmailSendMsgHandle();
+           MemberList memberList = memberListService.getById(opl.getMemberListId()) ;
+        eh.SendMsg("274794391@qq.com", "系统推送","您的包裹已发出");*/
     }
 }
 

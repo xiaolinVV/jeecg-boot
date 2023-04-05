@@ -231,8 +231,9 @@
         </if>
         <if test="marketingGiftBagRecordVO.promoterTwoName!=null and marketingGiftBagRecordVO.promoterTwoName!=''">
             AND (
-            ml.`promoter_type` = 1,
-            (SELECT
+<!--            ml.`promoter_type` = 1,-->
+<!--            (-->
+            SELECT
             IF(
             mls.`promoter_type` = 1,
             ( SELECT
@@ -245,7 +246,8 @@
             FROM
             member_list mls
             WHERE mls.id = ml.`promoter`)
-            ) LIKE concat('%',#{marketingGiftBagRecordVO.promoterTwoName},'%')
+<!--            ) -->
+            LIKE concat('%',#{marketingGiftBagRecordVO.promoterTwoName},'%')
         </if>
         <if test="marketingGiftBagRecordVO.storeName!=null and marketingGiftBagRecordVO.storeName!=''">
             AND (

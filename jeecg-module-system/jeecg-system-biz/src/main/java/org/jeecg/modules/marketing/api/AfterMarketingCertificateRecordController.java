@@ -224,7 +224,7 @@ public class AfterMarketingCertificateRecordController {
 
 
     /**
-     *
+     * 查询用户折扣券列表
      * @param pattern  兑换券状态；1：未使用；2：已使用；3：已过期；4：已失效;
      * @param pageNo
      * @param pageSize

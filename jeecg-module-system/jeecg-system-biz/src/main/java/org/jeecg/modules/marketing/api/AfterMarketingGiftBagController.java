@@ -119,6 +119,8 @@ public class AfterMarketingGiftBagController {
                 if(tMemberId.equals(memberId)){
                     return result.error500("推荐人不可以是自己");
                 }
+            }else {
+                tMemberId = "";
             }
 
             //查询会员是否有待付款的礼包
@@ -302,6 +304,13 @@ public class AfterMarketingGiftBagController {
         result.success("获取礼包详情成功");
         return result;
     }
+
+    /**
+     * 判断是否有分享礼包权限
+     * @param marketingGiftBagId
+     * @param request
+     * @return
+     */
     @RequestMapping("isViewShare")
     @ResponseBody
     public Result<?> isViewShare(String marketingGiftBagId,

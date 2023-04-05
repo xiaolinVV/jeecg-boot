@@ -86,10 +86,10 @@ public class AfterPayOrderCarLogController {
                 .eq(PayOrderCarLog::getMemberListId,memberListId).eq(PayOrderCarLog::getPayStatus,"0")
                 .orderByDesc(PayOrderCarLog::getCreateTime)
                 .last("limit 1"));
-        log.info("收银台，支付的时候日志id："+payOrderCarLog.getId()+"；余额："+balance+"；积分:"+welfarePayments+"；会员手机："+memberList.getPhone()+"；总金额："+payOrderCarLog.getAllTotalPrice());
         if(payOrderCarLog==null){
             return result.error500("支付日志id不存在");
         }
+        log.info("收银台，支付的时候日志id："+payOrderCarLog.getId()+"；余额："+balance+"；积分:"+welfarePayments+"；会员手机："+memberList.getPhone()+"；总金额："+payOrderCarLog.getAllTotalPrice());
         if(payOrderCarLog.getPayStatus().equals("1")){
             return result.error500("支付日志已支付");
         }

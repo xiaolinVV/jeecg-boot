@@ -8,7 +8,10 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.member.entity.MemberDesignation;
 import org.jeecg.modules.member.entity.MemberDesignationMemberList;
 import org.jeecg.modules.member.entity.MemberList;
-import org.jeecg.modules.member.service.*;
+import org.jeecg.modules.member.service.IMemberDesignationCountService;
+import org.jeecg.modules.member.service.IMemberDesignationMemberListService;
+import org.jeecg.modules.member.service.IMemberDesignationService;
+import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.vo.MemberDesignationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -35,6 +38,12 @@ public class AfterMemberDesignationController {
     @Autowired
     private IMemberDesignationMemberListService iMemberDesignationMemberListService;
 
+    /**
+     * 查看称号详情
+     * @param id
+     * @param request
+     * @return
+     */
     @RequestMapping("getMemberDesignationInfo")
     @ResponseBody
     public Result<Map<String,Object>> getMemberDesignationInfo(String id,
@@ -116,7 +125,12 @@ public class AfterMemberDesignationController {
         return result;
     }
 
-
+    /**
+     * 查看称号规则
+     * @param id
+     * @param request
+     * @return
+     */
     @RequestMapping("memberDesignationRule")
     @ResponseBody
     public Result<List<Map<String,Object>>> memberDesignationRule(String id,
@@ -146,6 +160,12 @@ public class AfterMemberDesignationController {
         result.success("称号规则");
         return result;
     }
+
+    /**
+     * 我的称号列表
+     * @param request
+     * @return
+     */
     @RequestMapping("findMemberDesignationList")
     @ResponseBody
     public Result<?> findMemberDesignationList(HttpServletRequest request){

@@ -31,7 +31,7 @@ public class FrontMarketingTextbookListController {
                                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
                                                                        HttpServletRequest request){
         Result<IPage<Map<String,Object>>> result=new Result<>();
-        Page<Map<String,Object>> page = new Page<>(pageNo, pageSize);
+        Page<Map<String,Object>> page = new Page<>(pageNo, 100);
         result.setResult(iMarketingTextbookListService.findMarketingTextbookList(page,id));
         result.success("返回素材列表");
         return result;

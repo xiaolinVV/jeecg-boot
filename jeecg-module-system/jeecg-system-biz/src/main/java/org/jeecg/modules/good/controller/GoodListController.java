@@ -1,5 +1,6 @@
 package org.jeecg.modules.good.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -183,18 +184,20 @@ public class GoodListController {
             Map<String,Object> shopInfoMap=Maps.newHashMap();
 
             if(g.get("isSpecification").toString().equals("0")){
-                GoodSpecification goodSpecification=goodSpecifications.get(0);
-                shopInfoMap.put("salesPrice",goodSpecification.getPrice());
-                shopInfoMap.put("vipPrice",goodSpecification.getVipPrice());
-                shopInfoMap.put("vipTwoPrice",goodSpecification.getVipTwoPrice());
-                shopInfoMap.put("vipThirdPrice",goodSpecification.getVipThirdPrice());
-                shopInfoMap.put("vipFouthPrice",goodSpecification.getVipFouthPrice());
-                shopInfoMap.put("costPrice",goodSpecification.getCostPrice());
-				shopInfoMap.put("repertory",goodSpecification.getRepertory());
-                shopInfoMap.put("supplyPrice",goodSpecification.getSupplyPrice());
-                shopInfoMap.put("weight",goodSpecification.getWeight());
-                shopInfoMap.put("skuNo",goodSpecification.getSkuNo());
-                shopInfoMap.put("barCode",goodSpecification.getBarCode());
+                GoodSpecification goodSpecification= CollUtil.get(goodSpecifications,0);
+                if (goodSpecification != null) {
+                    shopInfoMap.put("salesPrice",goodSpecification.getPrice());
+                    shopInfoMap.put("vipPrice",goodSpecification.getVipPrice());
+                    shopInfoMap.put("vipTwoPrice",goodSpecification.getVipTwoPrice());
+                    shopInfoMap.put("vipThirdPrice",goodSpecification.getVipThirdPrice());
+                    shopInfoMap.put("vipFouthPrice",goodSpecification.getVipFouthPrice());
+                    shopInfoMap.put("costPrice",goodSpecification.getCostPrice());
+                    shopInfoMap.put("repertory",goodSpecification.getRepertory());
+                    shopInfoMap.put("supplyPrice",goodSpecification.getSupplyPrice());
+                    shopInfoMap.put("weight",goodSpecification.getWeight());
+                    shopInfoMap.put("skuNo",goodSpecification.getSkuNo());
+                    shopInfoMap.put("barCode",goodSpecification.getBarCode());
+                }
             }
             if(g.get("isSpecification").toString().equals("1")){
 
@@ -1143,52 +1146,7 @@ public class GoodListController {
     public Result<GoodList> updateFrameStatus(@RequestParam(name = "ids", required = true) String ids,
                                               @RequestParam(name = "frameStatus", required = true) String frameStatus,
                                               @RequestParam(name = "frameExplain", required = true) String frameExplain) {
-        Result<GoodList> result = new Result<GoodList>();
-        if (StringUtils.isEmpty(ids)) {// ids == null || "".equals(ids.trim())
-            result.error500("参数不识别！");
-        } else {
-            GoodList goodList;
-            try {
-                List<String> listid = Arrays.asList(ids.split(","));
-                for (String id : listid) {
-                    goodList = goodListService.getGoodListById(id);
-                    if (oConvertUtils.isEmpty(goodList)) {
-                        result.error500("未找到对应实体");
-                    } else {
-                        goodList.setFrameExplain(frameExplain);
-                        goodList.setFrameStatus(frameStatus);
-                        goodListService.updateById(goodList);
-                        if (frameStatus.equals("0")) {
-                            //停用后修改专区商品商品
-                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
-                            queryWrapper.eq("del_flag", "0");
-                            queryWrapper.eq("good_list_id", goodList.getId());
-                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
-                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
-                                mpg.setSrcStatus("0");
-                                marketingPrefectureGoodService.updateById(mpg);
-                            }
-                        }
-                        if (frameStatus.equals("1")) {
-                            //停用后修改专区商品商品
-                            QueryWrapper<MarketingPrefectureGood> queryWrapper = new QueryWrapper();
-                            queryWrapper.eq("del_flag", "0");
-                            queryWrapper.eq("good_list_id", goodList.getId());
-                            List<MarketingPrefectureGood> marketingPrefectureGoodList = marketingPrefectureGoodService.list(queryWrapper);
-                            for (MarketingPrefectureGood mpg : marketingPrefectureGoodList) {
-                                mpg.setSrcStatus("1");
-                                marketingPrefectureGoodService.updateById(mpg);
-                            }
-                        }
-
-                    }
-                }
-                result.success("修改成功!");
-            } catch (Exception e) {
-                result.error500("修改失败！");
-            }
-        }
-        return result;
+       return goodListService.updateFrameStatus(ids, frameStatus, frameExplain);
     }
 
     /**
@@ -1325,19 +1283,7 @@ public class GoodListController {
     @ApiOperation(value = "商品列表-通过id删除", notes = "商品列表-通过id删除")
     @DeleteMapping(value = "/deleteAndDelExplain")
     public Result<?> deleteAndDelExplain(@RequestParam(name = "id", required = true) String id, String delExplain) {
-        try {
-            GoodList goodList = goodListService.getById(id);
-            goodList.setDelExplain(delExplain);
-            goodList.setDelTime(new Date());
-            //修改
-            goodListService.updateById(goodList);
-            //删除
-            goodListService.removeById(goodList.getId());
-        } catch (Exception e) {
-            log.error("删除失败", e.getMessage());
-            return Result.error("删除失败!");
-        }
-        return Result.ok("删除成功!");
+       return goodListService.deleteAndDelExplain(id, delExplain);
     }
 
     /**

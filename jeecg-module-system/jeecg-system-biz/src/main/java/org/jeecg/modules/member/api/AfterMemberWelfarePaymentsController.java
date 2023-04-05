@@ -138,6 +138,15 @@ public class AfterMemberWelfarePaymentsController {
         result.success("返回会员可用福利金明细");
         return result;
     }
+
+    /**
+     * 待结算福利金明细
+     * @param pattern
+     * @param request
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
     @RequestMapping("findfrozenAandUnusableById")
     @ResponseBody
     public Result<IPage<Map<String,Object>>> findfrozenAandUnusableById(String pattern,
@@ -156,6 +165,16 @@ public class AfterMemberWelfarePaymentsController {
         result.setResult(findfrozenAandUnusableById);
         return result;
     }
+
+    /**
+     * 赠送福利金
+     * @param id    会员id可以为空，没有id,就为通过手机号赠送福利金,有id,就为扫码赠送福利金
+     * @param phone 会员手机号
+     * @param amont 赠送福利金
+     * @param giveExplain 赠送理由
+     * @param request
+     * @return
+     */
     @RequestMapping("PresentedMemberWelfarePayments")
     @ResponseBody
     @Transactional
@@ -264,6 +283,13 @@ public class AfterMemberWelfarePaymentsController {
         result.success("返回会员福利金付款码");
         return result;
     }
+
+    /**
+     * 根据手机号查询会员
+     * @param phone
+     * @param request
+     * @return
+     */
     @RequestMapping("likeMemberByPhone")
     @ResponseBody
     public Result<List<Map<String,Object>>> likeMemberByPhone(String phone,

@@ -124,10 +124,10 @@ public class AfterPayMarketingStoreGiftbagLogController {
                 .eq(PayMarketingStoreGiftbagLog::getPayStatus,"0")
                 .orderByDesc(PayMarketingStoreGiftbagLog::getCreateTime)
                 .last("limit 1"));
-        log.info("收银台，支付的时候日志id："+payMarketingStoreGiftbagLog.getId()+"；余额："+balance+"；积分:"+welfarePayments+"；会员手机："+memberList.getPhone()+"；总金额："+payMarketingStoreGiftbagLog.getTotalFee());
         if(payMarketingStoreGiftbagLog==null){
             return result.error500("支付日志id不存在");
         }
+        log.info("收银台，支付的时候日志id："+payMarketingStoreGiftbagLog.getId()+"；余额："+balance+"；积分:"+welfarePayments+"；会员手机："+memberList.getPhone()+"；总金额："+payMarketingStoreGiftbagLog.getTotalFee());
         if(payMarketingStoreGiftbagLog.getPayStatus().equals("1")){
             return result.error500("支付日志已支付");
         }

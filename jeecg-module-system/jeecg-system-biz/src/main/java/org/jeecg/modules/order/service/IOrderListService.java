@@ -214,5 +214,12 @@ public interface IOrderListService extends IService<OrderList> {
      */
     void exportXls(OrderListVO queryWrapper, HttpServletResponse response) throws IOException;
 
+    /**
+     * 订单发货
+     * @param listMap
+     * @return
+     */
+    Result<String> ordereDlivery(String listMap);
+
 
 }

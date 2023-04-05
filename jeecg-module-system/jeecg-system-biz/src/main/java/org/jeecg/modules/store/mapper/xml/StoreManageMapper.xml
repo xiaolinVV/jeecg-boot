@@ -2,98 +2,102 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.store.mapper.StoreManageMapper">
 
-    <select id="getAllStoreList" resultType="map" >
+    <select id="getAllStoreList" resultType="map">
 
-                    SELECT
-                sm.id,
-            IF
-                (
-                    LENGTH(
-                    TRIM( sm.`sub_store_name` )) &gt;
-                0,
-                CONCAT( sm.`store_name`, '(', ifnull(sm.`sub_store_name`,''), ')' ),
-                sm.`store_name`
-            ) AS storeName,
-            sm.boss_phone AS bossPhone
-            FROM
-                `store_manage` sm
-            WHERE
-                 sm.`status` = '1'
-                AND sm.attestation_status IN ( 1, 2 )
-                AND sm.del_flag = '0'
-<if test="userId != null and userId != ''">
-    sm.sys_user_id = #{userId}
-</if>
+        SELECT
+        sm.id,
+        IF
+        (
+        LENGTH(
+        TRIM( sm.`sub_store_name` )) &gt;
+        0,
+        CONCAT( sm.`store_name`, '(', ifnull(sm.`sub_store_name`,''), ')' ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.boss_phone AS bossPhone
+        FROM
+        `store_manage` sm
+        WHERE
+        sm.`status` = '1'
+        AND sm.attestation_status IN ( 1, 2 )
+        AND sm.del_flag = '0'
+        <if test="userId != null and userId != ''">
+            AND sm.sys_user_id = #{userId}
+        </if>
     </select>
 
 
     <select id="getStoreManageById" resultType="map">
-                SELECT
-            sm.id,
-        IF
-            (
-                LENGTH(
-                TRIM( sm.`sub_store_name` )) &gt; 0,
-                CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
-                sm.`store_name`
-            ) AS storeName,
-            sm.logo_addr AS logoAddr,
-            CONCAT(sm.area_address,sm.store_address) AS storeAddress,
-            sm.comprehensive_evaluation AS comprehensiveEvaluation,
-            sm.longitude,
-            sm.sys_user_id AS sysUserId,
-            sm.latitude,
-            sm.STATUS,
-            sm.is_open_welfare_payments AS isOpenWelfarePayments,
-            sm.if_view_welfare_payments AS ifViewWelfarePayments,
-            ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt; released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
-            sm.sort,
-            sm.take_out_phone AS takeOutPhone,
-            sm.introduce,
-            sm.business_hours_explain AS businessHoursExplain,
-            sm.according_store AS accordingStore,
-            sm.store_picture AS storePicture
-        FROM
-            `store_manage` sm
-        WHERE
-            sm.id =#{storeManageId}
-            AND sm.del_flag = '0'
+        SELECT sm.id,
+               IF
+                   (
+                           LENGTH(
+                                   TRIM(sm.`sub_store_name`)) &gt; 0,
+                           CONCAT(sm.`store_name`, '(', sm.`sub_store_name`, ')'),
+                           sm.`store_name`
+                   )                                     AS storeName,
+               sm.logo_addr                              AS logoAddr,
+               CONCAT(sm.area_address, sm.store_address) AS storeAddress,
+               sm.comprehensive_evaluation               AS comprehensiveEvaluation,
+               sm.longitude,
+               sm.sys_user_id                            AS sysUserId,
+               sm.latitude,
+               sm.STATUS,
+               sm.is_open_welfare_payments               AS isOpenWelfarePayments,
+               sm.if_view_welfare_payments               AS ifViewWelfarePayments,
+               (SELECT COUNT(1)
+                FROM `marketing_discount`
+                WHERE STATUS = 1
+                  AND del_flag = '0'
+                  AND total &gt; released_quantity
+                  AND sys_user_id = sm.sys_user_id)      AS disCount,
+               sm.sort,
+               sm.take_out_phone                         AS takeOutPhone,
+               sm.introduce,
+               sm.business_hours_explain                 AS businessHoursExplain,
+               sm.according_store                        AS accordingStore,
+               sm.store_picture                          AS storePicture
+        FROM `store_manage` sm
+        WHERE sm.id = #{storeManageId}
+          AND sm.del_flag = '0'
     </select>
 
 
     <select id="getStoreManageByRecommend" resultType="map">
 
 
-                  SELECT
-                sm.id,
-            IF
-                (
-                    LENGTH(
-                    TRIM( sm.`sub_store_name` )) &gt; 0,
-                    CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
-                    sm.`store_name`
-                ) AS storeName,
-                sm.logo_addr AS logoAddr,
-                sm.store_address AS storeAddress,
-                sm.comprehensive_evaluation AS comprehensiveEvaluation,
-                sm.longitude,
-                sm.sys_user_id AS sysUserId,
-                sm.latitude,
-                sm.STATUS,
-                sm.is_open_welfare_payments AS isOpenWelfarePayments,
-                sm.if_view_welfare_payments AS ifViewWelfarePayments,
-                ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt; released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
-                POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2 ) AS extent,
-                sm.sort,
-                sm.area_address AS areaAddress,
-                sm.take_out_phone AS takeOutPhone
-            FROM
-                `store_manage` sm
-            WHERE
-                sm.`status` = '1'
-                AND sm.attestation_status IN ( 1, 2 )
-                AND sm.del_flag = '0'
-                AND sm.is_recommend='1'
+        SELECT
+        sm.id,
+        IF
+        (
+        LENGTH(
+        TRIM( sm.`sub_store_name` )) &gt; 0,
+        CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.logo_addr AS logoAddr,
+        sm.store_address AS storeAddress,
+        sm.comprehensive_evaluation AS comprehensiveEvaluation,
+        sm.longitude,
+        sm.sys_user_id AS sysUserId,
+        sm.latitude,
+        sm.STATUS,
+        sm.is_open_welfare_payments AS isOpenWelfarePayments,
+        sm.if_view_welfare_payments AS ifViewWelfarePayments,
+        ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt;
+        released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
+        POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2
+        ) AS extent,
+        sm.sort,
+        sm.area_address AS areaAddress,
+        sm.take_out_phone AS takeOutPhone
+        FROM
+        `store_manage` sm
+        WHERE
+        sm.`status` = '1'
+        AND sm.attestation_status IN ( 1, 2 )
+        AND sm.del_flag = '0'
+        AND sm.is_recommend='1'
 
         <if test="paramMap.pattern==0">
             order by extent asc
@@ -106,9 +110,8 @@
     </select>
 
 
-
     <select id="findStoreManageList" resultType="map" parameterType="map">
-       SELECT
+        SELECT
         sm.id,
         IF(
         LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
@@ -129,8 +132,10 @@
         sm.status,
         sm.is_open_welfare_payments AS isOpenWelfarePayments,
         sm.if_view_welfare_payments AS ifViewWelfarePayments,
-        ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt; released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
-        POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2 ) AS extent
+        ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt;
+        released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
+        POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2
+        ) AS extent
         FROM
         `store_manage` sm
         WHERE sm.status = '1'
@@ -159,7 +164,7 @@
         </if>
 
         <if test="paramMap.pattern==3">
-            ORDER BY ifViewWelfarePayments,ifViewWelfarePayments DESC
+            ORDER BY ifViewWelfarePayments DESC
         </if>
 
 
@@ -177,33 +182,32 @@
         ORDER BY sm.`create_time` DESC
     </select>
     <select id="findStore" resultType="org.jeecg.modules.store.vo.StoreManageVO">
-        SELECT
-          sm.`id`,
-          sm.`store_name`,
-          sm.`sub_store_name`,
-          sm.`logo_addr`,
-          sm.`store_picture`,
-          sm.`service_range`,
-          sm.`take_out_phone`,
-          ss.`address`,
-          sm.if_view_welfare_payments,
-          sm.is_view_vip_price,
-          su.`username` AS userName,
-          sm.business_hours_explain
-        FROM
-          store_manage sm
-          LEFT JOIN sys_smallcode ss
-            ON sm.sys_smallcode_id = ss.`id`
-          LEFT JOIN sys_user su
-            ON su.`id` = sm.`sys_user_id`
+        SELECT sm.`id`,
+               sm.`store_name`,
+               sm.`sub_store_name`,
+               sm.`logo_addr`,
+               sm.`store_picture`,
+               sm.`service_range`,
+               sm.`take_out_phone`,
+               ss.`address`,
+               sm.if_view_welfare_payments,
+               sm.is_view_vip_price,
+               su.`username` AS userName,
+               sm.business_hours_explain
+        FROM store_manage sm
+                 LEFT JOIN sys_smallcode ss
+                           ON sm.sys_smallcode_id = ss.`id`
+                 LEFT JOIN sys_user su
+                           ON su.`id` = sm.`sys_user_id`
         WHERE sm.`del_flag` = '0'
-          AND sm.`sys_user_id` =#{userId}
+          AND sm.`sys_user_id` = #{userId}
     </select>
-    <select id="queryStoreManagePage" resultType="org.jeecg.modules.store.dto.StoreManageDTO" parameterType="org.jeecg.modules.store.vo.StoreManageVO">
+    <select id="queryStoreManagePage" resultType="org.jeecg.modules.store.dto.StoreManageDTO"
+            parameterType="org.jeecg.modules.store.vo.StoreManageVO">
         SELECT * FROM (
         SELECT
         sm.*,
-        (select count(1) from  store_label_relation where store_manage_id=sm.id) as labelCount,
+        (select count(1) from store_label_relation where store_manage_id=sm.id) as labelCount,
         ss.`address` AS ssAddress,
         su.`username` AS userName,
         (
@@ -344,10 +348,6 @@
         </if>
 
 
-
-
-
-
     </select>
     <select id="findPageList" resultType="org.jeecg.modules.store.dto.StoreManageDTO">
         SELECT
@@ -388,8 +388,8 @@
     <select id="findStoreBalance" resultType="org.jeecg.modules.store.dto.StoreManageDTO">
         SELECT * from (
         SELECT
-          sm.id,
-          su.`username` AS userName,
+        sm.id,
+        su.`username` AS userName,
         IF(
         LENGTH(TRIM(sm.`sub_store_name`)) > 0,
         CONCAT(
@@ -400,16 +400,16 @@
         ),
         sm.`store_name`
         ) AS storeName,
-          sm.`area_address`,
-          sm.`boss_name`,
-          sm.`boss_phone`,
-          sm.`balance`,
-          sm.status,
-          if(sm.status='0','停用','启用') AS statusName
+        sm.`area_address`,
+        sm.`boss_name`,
+        sm.`boss_phone`,
+        sm.`balance`,
+        sm.status,
+        if(sm.status='0','停用','启用') AS statusName
         FROM
-          store_manage sm
-          LEFT JOIN sys_user su
-            ON sm.`sys_user_id` = su.`id`
+        store_manage sm
+        LEFT JOIN sys_user su
+        ON sm.`sys_user_id` = su.`id`
         WHERE sm.`del_flag` = '0'
         AND sm.`pay_status` IN (1, 2)
         <if test="storeManageVO!=null and storeManageVO.userName!=null and storeManageVO.userName!= ''">
@@ -434,297 +434,268 @@
         </if>
     </select>
     <select id="findStoreWorkbenchVO" resultType="org.jeecg.modules.store.vo.StoreWorkbenchVO">
-            SELECT
-              sm.id, -- 店铺id
-              sm.sys_user_id,
-              sm.`logo_addr`,
-              -- logo
+        SELECT sm.id,                                                         -- 店铺id
+               sm.sys_user_id,
+               sm.`logo_addr`,
+               -- logo
                sm.`boss_name`,
-            --   -- 联系人
+               --   -- 联系人
                CONCAT(
-                 sm.`store_name`,
-                 '(',
-                 sm.`sub_store_name`,
-                 ')'
-               ) AS storeName,
-            --   -- 店铺名称
+                       sm.`store_name`,
+                       '(',
+                       sm.`sub_store_name`,
+                       ')'
+                   )                                        AS storeName,
+               --   -- 店铺名称
                sr.`role_name`,
-            --   -- 角色
+               --   -- 角色
                sm.`attestation_status`,
-            --   -- 认证状态
+               --   -- 认证状态
                (
-                 CASE
-                   sm.`open_type`
-                   WHEN 0
-                   THEN CONCAT(
-                     '包年(',
-                     sm.`end_time`,
-                     '到期)'
-                   )
-                   WHEN 1
-                   THEN '终生'
-                   ELSE ''
-                 END
-               ) AS openUp,
-            --   -- 开通
+                   CASE
+                       sm.`open_type`
+                       WHEN 0
+                           THEN CONCAT(
+                               '包年(',
+                               sm.`end_time`,
+                               '到期)'
+                           )
+                       WHEN 1
+                           THEN '终生'
+                       ELSE ''
+                       END
+                   )                                        AS openUp,
+               --   -- 开通
                sm.`status`,
-            --   -- 状态
-              (
-                CASE
-                  sm.`status`
-                  WHEN 0
-                  THEN '停用'
-                  WHEN 1
-                  THEN '启用'
-                  ELSE '异常'
-                END
-              ) AS statusName,
-            --   --  状态备注
-              (SELECT
-                COUNT(1)
-              FROM
-                order_store_list osl
-              WHERE osl.`del_flag` = '0'
-                AND osl.`status` IN (1, 2, 3)
-                AND osl.`sys_user_id` = sm.`sys_user_id`) AS orderSum,
-            --   -- 有效订单
-              (SELECT
-                SUM(sac.`amount`)
-              FROM
-                store_account_capital sac
-              WHERE sac.`del_flag` = '0'
-                AND sac.`go_and_come` = 0
-                AND sac.`store_manage_id` = sm.`id`) AS earnings,
-            --   -- 累计收入
-              (SELECT
-                COUNT(1)
-              FROM
-                member_list ml
-              WHERE ml.`del_flag` = '0'
-                AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberSum,
-            --   -- 累计会员
-              (SELECT
-                SUM(mwp.`bargain_payments`)
-              FROM
-                marketing_welfare_payments mwp
-              WHERE mwp.`del_flag` = '0'
-                AND mwp.`is_platform` = 0
-                AND mwp.`status` = 1
-                AND mwp.`sys_user_id` = sm.`sys_user_id`) AS welfareSum,
-            --   -- 已送福利金
-              (SELECT
-                COUNT(1)
-              FROM
-                order_store_list osl
-              WHERE osl.`del_flag` = '0'
-                AND osl.`status` = 1
-                AND osl.`sys_user_id` = sm.`sys_user_id`) AS waitDeliverGoods,
-            --   -- 待发货
-              (SELECT
-                COUNT(1)
-              FROM
-                good_store_list gsl
-              WHERE gsl.`del_flag` = '0'
-                AND gsl.`sys_user_id` = sm.`sys_user_id`
-                AND gsl.`status` = 1
-                AND gsl.`frame_status` = 1
-                AND gsl.`audit_status` = 2) AS forGoods,
-            --   -- 在售商品
-              (SELECT
-                COUNT(1)
-              FROM
-                marketing_discount_coupon mdc
-              WHERE mdc.`del_flag` = '0'
-                AND mdc.`is_platform` = 0
-                AND mdc.`sys_user_id` = sm.`sys_user_id`) AS byGetDiscount,
-            --   -- 已被领取优惠券
-              (SELECT
-                COUNT(1)
-              FROM
-                marketing_discount_coupon mdc
-              WHERE mdc.`del_flag` = '0'
-                AND mdc.`is_platform` = 0
-                AND mdc.`sys_user_id` = sm.`sys_user_id`
-                AND mdc.`status` = 2) AS byUseDiscount, -- 已被使用优惠券
-                (SELECT
-                COUNT(1)
-              FROM
-                member_list ml
-              WHERE ml.`del_flag` = '0'
-              AND ml.member_type = 0
-                AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberP,
-                (SELECT
-                COUNT(1)
-              FROM
-                member_list ml
-              WHERE ml.`del_flag` = '0'
-              AND ml.member_type = 1
-                AND ml.`sys_user_id` = sm.`sys_user_id`) AS memberV
-            FROM
-              store_manage sm
-              LEFT JOIN sys_user_role sur
-                ON sm.`sys_user_id` = sur.`user_id`
-              LEFT JOIN sys_role sr
-                ON sur.`role_id` = sr.`id`
-            WHERE sm.`del_flag` = '0'
-        AND sm.`sys_user_id` = #{userId}
+               --   -- 状态
+               (
+                   CASE
+                       sm.`status`
+                       WHEN 0
+                           THEN '停用'
+                       WHEN 1
+                           THEN '启用'
+                       ELSE '异常'
+                       END
+                   )                                        AS statusName,
+               --   --  状态备注
+               (SELECT COUNT(1)
+                FROM order_store_list osl
+                WHERE osl.`del_flag` = '0'
+                  AND osl.`status` IN (1, 2, 3)
+                  AND osl.`sys_user_id` = sm.`sys_user_id`) AS orderSum,
+               --   -- 有效订单
+               (SELECT SUM(sac.`amount`)
+                FROM store_account_capital sac
+                WHERE sac.`del_flag` = '0'
+                  AND sac.`go_and_come` = 0
+                  AND sac.`store_manage_id` = sm.`id`)      AS earnings,
+               --   -- 累计收入
+               (SELECT COUNT(1)
+                FROM member_list ml
+                WHERE ml.`del_flag` = '0'
+                  AND ml.`sys_user_id` = sm.`sys_user_id`)  AS memberSum,
+               --   -- 累计会员
+               (SELECT SUM(mwp.`bargain_payments`)
+                FROM marketing_welfare_payments mwp
+                WHERE mwp.`del_flag` = '0'
+                  AND mwp.`is_platform` = 0
+                  AND mwp.`status` = 1
+                  AND mwp.`sys_user_id` = sm.`sys_user_id`) AS welfareSum,
+               --   -- 已送福利金
+               (SELECT COUNT(1)
+                FROM order_store_list osl
+                WHERE osl.`del_flag` = '0'
+                  AND osl.`status` = 1
+                  AND osl.`sys_user_id` = sm.`sys_user_id`) AS waitDeliverGoods,
+               --   -- 待发货
+               (SELECT COUNT(1)
+                FROM good_store_list gsl
+                WHERE gsl.`del_flag` = '0'
+                  AND gsl.`sys_user_id` = sm.`sys_user_id`
+                  AND gsl.`status` = 1
+                  AND gsl.`frame_status` = 1
+                  AND gsl.`audit_status` = 2)               AS forGoods,
+               --   -- 在售商品
+               (SELECT COUNT(1)
+                FROM marketing_discount_coupon mdc
+                WHERE mdc.`del_flag` = '0'
+                  AND mdc.`is_platform` = 0
+                  AND mdc.`sys_user_id` = sm.`sys_user_id`) AS byGetDiscount,
+               --   -- 已被领取优惠券
+               (SELECT COUNT(1)
+                FROM marketing_discount_coupon mdc
+                WHERE mdc.`del_flag` = '0'
+                  AND mdc.`is_platform` = 0
+                  AND mdc.`sys_user_id` = sm.`sys_user_id`
+                  AND mdc.`status` = 2)                     AS byUseDiscount, -- 已被使用优惠券
+               (SELECT COUNT(1)
+                FROM member_list ml
+                WHERE ml.`del_flag` = '0'
+                  AND ml.member_type = 0
+                  AND ml.`sys_user_id` = sm.`sys_user_id`)  AS memberP,
+               (SELECT COUNT(1)
+                FROM member_list ml
+                WHERE ml.`del_flag` = '0'
+                  AND ml.member_type = 1
+                  AND ml.`sys_user_id` = sm.`sys_user_id`)  AS memberV
+        FROM store_manage sm
+                 LEFT JOIN sys_user_role sur
+                           ON sm.`sys_user_id` = sur.`user_id`
+                 LEFT JOIN sys_role sr
+                           ON sur.`role_id` = sr.`id`
+        WHERE sm.`del_flag` = '0'
+          AND sm.`sys_user_id` = #{userId}
     </select>
     <select id="myStore" resultType="map">
-        SELECT
-          sm.`logo_addr` AS logoAddr,
-          CONCAT(
-            sm.`store_name`,
-            '(',
-            sm.`sub_store_name`,
-            ')'
-          ) AS storeName,
-          (
-            CASE
-              sm.`open_type`
-              WHEN 0
-              THEN '包年'
-              WHEN 1
-              THEN '终生'
-              ELSE ''
-            END
-          ) AS openType,
-          (
-            CASE
-              sm.`open_type`
-              WHEN 0
-              THEN CONCAT('(',DATE_FORMAT(sm.`end_time`,'%Y-%m-%d'), '到期', ')')
-              WHEN 1
-              THEN NULL
-              ELSE ''
-            END
-          ) AS endTime,
-          (
-            CASE
-              sm.`attestation_status`
-              WHEN - 1
-              THEN '未认证'
-              WHEN 0
-              THEN '待审核'
-              WHEN 1
-              THEN '已认证'
-              WHEN 2
-              THEN '免认证'
-              WHEN 3
-              THEN '未通过'
-              WHEN 4
-              THEN '过期'
-              ELSE '异常'
-            END
-          ) AS statusName,
-          sm.`attestation_status` AS attestationStatus,
-          su.`username`
-        FROM
-          store_manage sm
-          LEFT JOIN sys_user su
-            ON sm.`sys_user_id` = su.`id`
+        SELECT sm.`logo_addr`          AS logoAddr,
+               CONCAT(
+                       sm.`store_name`,
+                       '(',
+                       sm.`sub_store_name`,
+                       ')'
+                   )                   AS storeName,
+               (
+                   CASE
+                       sm.`open_type`
+                       WHEN 0
+                           THEN '包年'
+                       WHEN 1
+                           THEN '终生'
+                       ELSE ''
+                       END
+                   )                   AS openType,
+               (
+                   CASE
+                       sm.`open_type`
+                       WHEN 0
+                           THEN CONCAT('(', DATE_FORMAT(sm.`end_time`, '%Y-%m-%d'), '到期', ')')
+                       WHEN 1
+                           THEN NULL
+                       ELSE ''
+                       END
+                   )                   AS endTime,
+               (
+                   CASE
+                       sm.`attestation_status`
+                       WHEN - 1
+                           THEN '未认证'
+                       WHEN 0
+                           THEN '待审核'
+                       WHEN 1
+                           THEN '已认证'
+                       WHEN 2
+                           THEN '免认证'
+                       WHEN 3
+                           THEN '未通过'
+                       WHEN 4
+                           THEN '过期'
+                       ELSE '异常'
+                       END
+                   )                   AS statusName,
+               sm.`attestation_status` AS attestationStatus,
+               su.`username`
+        FROM store_manage sm
+                 LEFT JOIN sys_user su
+                           ON sm.`sys_user_id` = su.`id`
         WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
 
     <select id="findStoreInfo" resultType="map">
-        SELECT
-          sm.`id`,
-          su.`username`,
-          sm.`store_name` AS storeName,
-          sm.`sub_store_name` AS subStoreName,
-          sm.`logo_addr` AS logoAddr,
-          sm.`store_picture` AS storePicture,
-          sm.`service_range` AS serviceRange,
-          sm.`take_out_phone` AS takeOutPhone,
-          sm.`business_hours_explain` AS businessHoursExplain,
-          sm.`if_view_welfare_payments` AS ifViewWelfarePayments,
-          sm.`is_view_vip_price` AS isViewVipPrice,
-          CONCAT(sm.`latitude`,',',sm.`longitude`) AS longitudeAndLatitude
-        FROM
-          store_manage sm
-          LEFT JOIN sys_user su
-            ON sm.`sys_user_id` = su.`id`
+        SELECT sm.`id`,
+               su.`username`,
+               sm.`store_name`                            AS storeName,
+               sm.`sub_store_name`                        AS subStoreName,
+               sm.`logo_addr`                             AS logoAddr,
+               sm.`store_picture`                         AS storePicture,
+               sm.`service_range`                         AS serviceRange,
+               sm.`take_out_phone`                        AS takeOutPhone,
+               sm.`business_hours_explain`                AS businessHoursExplain,
+               sm.`if_view_welfare_payments`              AS ifViewWelfarePayments,
+               sm.`is_view_vip_price`                     AS isViewVipPrice,
+               CONCAT(sm.`latitude`, ',', sm.`longitude`) AS longitudeAndLatitude
+        FROM store_manage sm
+                 LEFT JOIN sys_user su
+                           ON sm.`sys_user_id` = su.`id`
         WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="returnAuthentication" resultType="map">
-        SELECT
-          sm.`id`,
-          sm.`store_name` AS storeName,
-          sm.`sub_store_name` AS subStoreName,
-          sm.`sys_area_id` AS sysAreaId,
-          sm.`area_address` AS areaAddress,
-          sm.`store_address` AS storeAddress,
-          sm.`straight`,
-          sm.`main_type` AS mainType,
-          sm.`take_out_phone` AS takeOutPhone,
-          sm.`logo_addr` AS logoAddr,
-          sm.`store_picture` AS storePicture,
-          sm.`according_store` AS accordingStore,
-          sm.`social_credit_code` AS socialCreditCode,
-          sm.`license_for_enterprise` AS licenseForEnterprise,
-          sm.`agent_type` AS agentType,
-          sm.`agent_name` AS agentName,
-          sm.`id_code` AS idCode,
-          sm.`id_picture_z` AS idPictureZ,
-          sm.`id_picture_f` AS idPictureF,
-          sm.`id_hand` AS idHand,
-          sm.`agent_authorization` AS agentAuthorization
-        FROM
-          store_manage sm
+        SELECT sm.`id`,
+               sm.`store_name`             AS storeName,
+               sm.`sub_store_name`         AS subStoreName,
+               sm.`sys_area_id`            AS sysAreaId,
+               sm.`area_address`           AS areaAddress,
+               sm.`store_address`          AS storeAddress,
+               sm.`straight`,
+               sm.`main_type`              AS mainType,
+               sm.`take_out_phone`         AS takeOutPhone,
+               sm.`logo_addr`              AS logoAddr,
+               sm.`store_picture`          AS storePicture,
+               sm.`according_store`        AS accordingStore,
+               sm.`social_credit_code`     AS socialCreditCode,
+               sm.`license_for_enterprise` AS licenseForEnterprise,
+               sm.`agent_type`             AS agentType,
+               sm.`agent_name`             AS agentName,
+               sm.`id_code`                AS idCode,
+               sm.`id_picture_z`           AS idPictureZ,
+               sm.`id_picture_f`           AS idPictureF,
+               sm.`id_hand`                AS idHand,
+               sm.`agent_authorization`    AS agentAuthorization
+        FROM store_manage sm
         WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="returnSecurity" resultType="map">
-        SELECT
-          su.`username` AS userName,
-          su.`phone`
-        FROM
-          store_manage sm
-          LEFT JOIN sys_user su
-            ON sm.`sys_user_id` = su.`id`
+        SELECT su.`username` AS userName,
+               su.`phone`
+        FROM store_manage sm
+                 LEFT JOIN sys_user su
+                           ON sm.`sys_user_id` = su.`id`
         WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
     <select id="findCertificateStore" resultType="map">
         SELECT
-          *
+        *
         FROM
-          (SELECT
-            IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
-            CONCAT(
-            sm.`store_name`,
-            '(',
-            sm.`sub_store_name`,
-            ')'
-            ),
-            sm.`store_name`
-            ) AS storeName,
-            sm.`store_address` AS storeAddress,
-            sm.`longitude`,
-            sm.`latitude`,
-            sm.`take_out_phone` AS takeOutPhone,
-            sm.logo_addr AS logoAddr,
-            POWER(
-              POWER(sm.longitude - #{objectObjectHashMap.longitude}, 2) + POWER(sm.latitude - #{objectObjectHashMap.latitude}, 2),
-              1 / 2
-            ) AS extent,
-            sm.sys_user_id AS sysUserId
-          FROM
-            `store_manage` sm
-          WHERE sm.del_flag = 0
-            AND sm.`status` = 1
-            AND sm.`attestation_status` IN (1,2)
-            <if test="objectObjectHashMap.id!=null and objectObjectHashMap.id!=''">
-                AND sm.sys_user_id IN (SELECT
-                mcs.`sys_user_id`
-                FROM
-                marketing_certificate_store mcs
-                WHERE mcs.`del_flag` = '0'
-                AND mcs.`marketing_certificate_id` = #{objectObjectHashMap.id})
-            </if>
-            ) m
+        (SELECT
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.`store_address` AS storeAddress,
+        sm.`longitude`,
+        sm.`latitude`,
+        sm.`take_out_phone` AS takeOutPhone,
+        sm.logo_addr AS logoAddr,
+        POWER(
+        POWER(sm.longitude - #{objectObjectHashMap.longitude}, 2) + POWER(sm.latitude - #{objectObjectHashMap.latitude},
+        2),
+        1 / 2
+        ) AS extent,
+        sm.sys_user_id AS sysUserId
+        FROM
+        `store_manage` sm
+        WHERE sm.del_flag = 0
+        AND sm.`status` = 1
+        AND sm.`attestation_status` IN (1,2)
+        <if test="objectObjectHashMap.id!=null and objectObjectHashMap.id!=''">
+            AND sm.sys_user_id IN (SELECT
+            mcs.`sys_user_id`
+            FROM
+            marketing_certificate_store mcs
+            WHERE mcs.`del_flag` = '0'
+            AND mcs.`marketing_certificate_id` = #{objectObjectHashMap.id})
+        </if>
+        ) m
         <if test="objectObjectHashMap.sysUserId != null and objectObjectHashMap.sysUserId != ''">
             WHERE m.sysUserId = #{objectObjectHashMap.sysUserId}
         </if>
@@ -732,15 +703,13 @@
     </select>
 
     <select id="findUseInfo" resultType="map">
-        SELECT
-          sm.id,
-          sm.`balance`,
-          sm.`account_frozen` AS accountFrozen,
-          sm.`unusable_frozen` AS unusableFrozen,
-          sm.is_open_welfare_payments AS isOpenWelfarePayments,
-          sm.money_receiving_code as  moneyReceivingCode
-        FROM
-          store_manage sm
+        SELECT sm.id,
+               sm.`balance`,
+               sm.`account_frozen`         AS accountFrozen,
+               sm.`unusable_frozen`        AS unusableFrozen,
+               sm.is_open_welfare_payments AS isOpenWelfarePayments,
+               sm.money_receiving_code     as moneyReceivingCode
+        FROM store_manage sm
         WHERE sm.`del_flag` = '0'
           AND sm.`sys_user_id` = #{sysUserId}
     </select>
@@ -841,70 +810,70 @@
     </select>
     <select id="getStoreByBossPhone" resultType="map">
         SELECT
-          sm.`id`,
-          IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
-            CONCAT(
-              sm.`store_name`,
-              '(',
-              sm.`sub_store_name`,
-              ')'
-            ),
-            sm.`store_name`
-          ) AS NAME,
-          sm.boss_phone,
-          sm.sys_user_id
+        sm.`id`,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS NAME,
+        sm.boss_phone,
+        sm.sys_user_id
         FROM
-          store_manage sm
+        store_manage sm
         WHERE sm.`del_flag` = '0'
-          AND sm.status = 1
-          AND sm.attestation_status IN (1,2)
-          AND sm.pay_status IN (1,2)
+        AND sm.status = 1
+        AND sm.attestation_status IN (1,2)
+        AND sm.pay_status IN (1,2)
         <if test="bossPhone != null and bossPhone != ''">
             AND sm.`boss_phone` LIKE CONCAT('%',#{bossPhone},'%')
         </if>
-          LIMIT 10
+        LIMIT 10
     </select>
 
     <select id="findStoreInfoByStoreName" resultType="map">
         SELECT * FROM (SELECT
-          sm.`id` AS storeManageId,
-          IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
-            CONCAT(
-              sm.`store_name`,
-              '(',
-              sm.`sub_store_name`,
-              ')'
-            ),
-            sm.`store_name`
-          ) AS storeName,
-          su.`username`,
-          sm.`boss_name` AS bossName,
-          sm.`boss_phone` AS bossPhone,
-          sm.`area_address` AS areaAddress,
-          sm.`store_address` AS storeAddress,
-          (SELECT
-            s.item_text
-          FROM
-            sys_dict_item s
-          WHERE s.dict_id =
-            (SELECT
-              id
-            FROM
-              sys_dict
-            WHERE dict_code = 'store_main_type')
-            AND s.`item_value` = sm.`main_type`) AS mainType
+        sm.`id` AS storeManageId,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        su.`username`,
+        sm.`boss_name` AS bossName,
+        sm.`boss_phone` AS bossPhone,
+        sm.`area_address` AS areaAddress,
+        sm.`store_address` AS storeAddress,
+        (SELECT
+        s.item_text
         FROM
-          store_manage sm
-          LEFT JOIN sys_user su
-            ON sm.`sys_user_id` = su.`id`
+        sys_dict_item s
+        WHERE s.dict_id =
+        (SELECT
+        id
+        FROM
+        sys_dict
+        WHERE dict_code = 'store_main_type')
+        AND s.`item_value` = sm.`main_type`) AS mainType
+        FROM
+        store_manage sm
+        LEFT JOIN sys_user su
+        ON sm.`sys_user_id` = su.`id`
         WHERE sm.`del_flag` = '0'
-          AND sm.`pay_status` IN (1, 2)
-          AND sm.`attestation_status` IN (1, 2)) m
-          <if test="storeName != null">
-              WHERE m.storeName LIKE concat('%',#{storeName},'%')
-          </if>
+        AND sm.`pay_status` IN (1, 2)
+        AND sm.`attestation_status` IN (1, 2)) m
+        <if test="storeName != null">
+            WHERE m.storeName LIKE concat('%',#{storeName},'%')
+        </if>
         LIMIT 20
     </select>
     <select id="findCityLifeStoreManageList" resultType="map">
@@ -1070,41 +1039,42 @@
 
     <select id="getLabelStoreManage" resultType="map">
 
-            SELECT
-            sm.id,
-            IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
-            CONCAT(
-            sm.`store_name`,
-            '(',
-            sm.`sub_store_name`,
-            ')'
-            ),
-            sm.`store_name`
-            ) AS storeName,
-            sm.logo_addr AS logoAddr,
-            sm.store_address AS storeAddress,
-            sm.comprehensive_evaluation AS comprehensiveEvaluation,
-            sm.longitude,
-            sm.sys_user_id as sysUserId,
-            sm.latitude,
-            sm.status,
-            sm.is_open_welfare_payments AS isOpenWelfarePayments,
-            sm.if_view_welfare_payments AS ifViewWelfarePayments,
-            ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total&gt; released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount
-            FROM
-        `store_manage` sm LEFT JOIN store_label_relation slr  ON slr.store_manage_id=sm.id
-            WHERE
-                    sm.status = '1'
-                    <if test="paramMap.storeLabelId!=null and paramMap.storeLabelId!=''">
-                      AND  slr.store_label_id=#{paramMap.storeLabelId}
-                    </if>
+        SELECT
+        sm.id,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.logo_addr AS logoAddr,
+        sm.store_address AS storeAddress,
+        sm.comprehensive_evaluation AS comprehensiveEvaluation,
+        sm.longitude,
+        sm.sys_user_id as sysUserId,
+        sm.latitude,
+        sm.status,
+        sm.is_open_welfare_payments AS isOpenWelfarePayments,
+        sm.if_view_welfare_payments AS ifViewWelfarePayments,
+        ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total&gt;
+        released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount
+        FROM
+        `store_manage` sm LEFT JOIN store_label_relation slr ON slr.store_manage_id=sm.id
+        WHERE
+        sm.status = '1'
+        <if test="paramMap.storeLabelId!=null and paramMap.storeLabelId!=''">
+            AND slr.store_label_id=#{paramMap.storeLabelId}
+        </if>
 
-                    <if test="paramMap.floorName!=null and paramMap.floorName!=''">
-                        AND  sm.floor_name=#{paramMap.floorName}
-                    </if>
-            AND sm.attestation_status IN (1,2)
-            AND sm.del_flag = '0'
+        <if test="paramMap.floorName!=null and paramMap.floorName!=''">
+            AND sm.floor_name=#{paramMap.floorName}
+        </if>
+        AND sm.attestation_status IN (1,2)
+        AND sm.del_flag = '0'
         <if test="paramMap.discount==1">
             ORDER BY disCount DESC
         </if>
@@ -1114,132 +1084,112 @@
 
     </select>
     <select id="getPartnerSum" resultType="org.jeecg.modules.member.vo.MemberDesignationGroupVO">
-        SELECT
-          IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) > 0,
-            CONCAT(
-              sm.`store_name`,
-              '(',
-              sm.`sub_store_name`,
-              ')'
-            ),
-            sm.`store_name`
-          ) AS storeName,
-          mdg.`total_members`,
-          sm.id
-        FROM
-          member_designation_group mdg
-          LEFT JOIN store_manage sm
-            ON mdg.`store_manage_id` = sm.`id`
+        SELECT IF(
+                           LENGTH(TRIM(sm.`sub_store_name`)) > 0,
+                           CONCAT(
+                                   sm.`store_name`,
+                                   '(',
+                                   sm.`sub_store_name`,
+                                   ')'
+                               ),
+                           sm.`store_name`
+                   ) AS storeName,
+               mdg.`total_members`,
+               sm.id
+        FROM member_designation_group mdg
+                 LEFT JOIN store_manage sm
+                           ON mdg.`store_manage_id` = sm.`id`
         WHERE sm.`alliance_user_id` = #{id}
         ORDER BY mdg.`total_members` DESC
     </select>
 
     <select id="getStoreList" resultType="map">
-             SELECT
-            sm.id,
-            IF(
-            LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
-            CONCAT(
-            sm.`store_name`,
-            '(',
-            sm.`sub_store_name`,
-            ')'
-            ),
-            sm.`store_name`
-            ) AS storeName,
-            sm.logo_addr AS logoAddr,
-            sm.store_address AS storeAddress,
-            sm.sys_user_id as  sysUserId
-            FROM
-            `store_manage` sm
-            WHERE sm.status = '1'
-            AND sm.attestation_status IN (1,2)
-            AND sm.del_flag = '0'
-            <if test="sysUserId!='' and sysUserId!=null">
-              AND sm.sys_user_id=#{sysUserId}
-            </if>
+        SELECT
+        sm.id,
+        IF(
+        LENGTH(TRIM(sm.`sub_store_name`)) &gt; 0,
+        CONCAT(
+        sm.`store_name`,
+        '(',
+        sm.`sub_store_name`,
+        ')'
+        ),
+        sm.`store_name`
+        ) AS storeName,
+        sm.logo_addr AS logoAddr,
+        sm.store_address AS storeAddress,
+        sm.sys_user_id as sysUserId
+        FROM
+        `store_manage` sm
+        WHERE sm.status = '1'
+        AND sm.attestation_status IN (1,2)
+        AND sm.del_flag = '0'
+        <if test="sysUserId!='' and sysUserId!=null">
+            AND sm.sys_user_id=#{sysUserId}
+        </if>
     </select>
 
     <select id="getPrivilege" resultType="map">
-            SELECT
-    IF
-        (
-            LENGTH(
-            TRIM( sm.`sub_store_name` )) &gt; 0,
-            CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
-            sm.`store_name`
-        ) AS storeName,
-        sm.sys_user_id AS sysUserId,
-        sm.logo_addr AS logoAddr,
-        md.logo_addr AS mlogoAddr
-    FROM
-        member_designation_member_list mdml
-        LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
-        LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
-        LEFT JOIN member_designation md ON mdml.member_designation_id = md.id
-    WHERE
-        mdml.member_list_id = #{memberId}
-        AND mdml.del_flag = '0'
-        and sm.id is not null
-    ORDER BY
-        mdml.create_time DESC
+        SELECT IF
+                   (
+                           LENGTH(
+                                   TRIM(sm.`sub_store_name`)) &gt; 0,
+                           CONCAT(sm.`store_name`, '(', sm.`sub_store_name`, ')'),
+                           sm.`store_name`
+                   )          AS storeName,
+               sm.sys_user_id AS sysUserId,
+               sm.logo_addr   AS logoAddr,
+               md.logo_addr   AS mlogoAddr
+        FROM member_designation_member_list mdml
+                 LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
+                 LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
+                 LEFT JOIN member_designation md ON mdml.member_designation_id = md.id
+        WHERE mdml.member_list_id = #{memberId}
+          AND mdml.del_flag = '0'
+          and sm.id is not null
+        ORDER BY mdml.create_time DESC
     </select>
 
     <select id="getPrivilegeInfo" resultType="map">
-                SELECT
-        IF
-            (
-                LENGTH(
-                TRIM( sm.`sub_store_name` )) &gt; 0,
-                CONCAT( sm.`store_name`, '(', sm.`sub_store_name`, ')' ),
-                sm.`store_name`
-            ) AS storeName,
-            sm.sys_user_id AS sysUserId,
-            sm.logo_addr AS logoAddr,
-            md.logo_addr AS mlogoAddr,
-            sm.id as  storeId,
-            (
-            SELECT
-                count( 1 )
-            FROM
-                marketing_store_gift_card_member_list
-            WHERE
-                member_list_id = mdml.member_list_id
-                AND `status` = '1'
-                AND del_flag = '0'
-            ) AS giftCardCount,
-            (
-            SELECT
-                count( 1 )
-            FROM
-                marketing_certificate_record
-            WHERE
-                del_flag = '0'
-                AND member_list_id = mdml.member_list_id
-                AND `status` = '1'
-            ) AS certificateCount,
-            (
-            SELECT
-                count( 1 )
-            FROM
-                marketing_discount_coupon
-            WHERE
-                del_flag = '0'
-                AND member_list_id = mdml.member_list_id
-                AND `status` = '1'
-            ) AS discountCount
-        FROM
-            member_designation_member_list mdml
-            LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
-            LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
-            LEFT JOIN member_designation md ON mdml.member_designation_id = md.id
-        WHERE
-            mdml.member_list_id =  #{paramMap.memberId}
-            and sm.sys_user_id=#{paramMap.sysUserId}
-            AND mdml.del_flag = '0'
-        ORDER BY
-            mdml.create_time DESC
-            LIMIT 1
+        SELECT IF
+                   (
+                           LENGTH(
+                                   TRIM(sm.`sub_store_name`)) &gt; 0,
+                           CONCAT(sm.`store_name`, '(', sm.`sub_store_name`, ')'),
+                           sm.`store_name`
+                   )          AS storeName,
+               sm.sys_user_id AS sysUserId,
+               sm.logo_addr   AS logoAddr,
+               md.logo_addr   AS mlogoAddr,
+               sm.id          as storeId,
+               (
+                   SELECT count(1)
+                   FROM marketing_store_gift_card_member_list
+                   WHERE member_list_id = mdml.member_list_id
+                     AND `status` = '1'
+                     AND del_flag = '0'
+               )              AS giftCardCount,
+               (
+                   SELECT count(1)
+                   FROM marketing_certificate_record
+                   WHERE del_flag = '0'
+                     AND member_list_id = mdml.member_list_id
+                     AND `status` = '1'
+               )              AS certificateCount,
+               (
+                   SELECT count(1)
+                   FROM marketing_discount_coupon
+                   WHERE del_flag = '0'
+                     AND member_list_id = mdml.member_list_id
+                     AND `status` = '1'
+               )              AS discountCount
+        FROM member_designation_member_list mdml
+                 LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
+                 LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
+                 LEFT JOIN member_designation md ON mdml.member_designation_id = md.id
+        WHERE mdml.member_list_id = #{paramMap.memberId}
+          and sm.sys_user_id = #{paramMap.sysUserId}
+          AND mdml.del_flag = '0'
+        ORDER BY mdml.create_time DESC LIMIT 1
     </select>
 </mapper>

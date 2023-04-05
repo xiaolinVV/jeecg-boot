@@ -129,7 +129,7 @@
             AND ml.qqzixuangu LIKE concat('%',concat(#{marketingDiscountCouponVO.qqzixuangu},'%'))
         </if>
         <if test="marketingDiscountCouponVO!=null and marketingDiscountCouponVO.name!=null and marketingDiscountCouponVO.name!=''">
-            AND ml.name LIKE concat('%',concat(#{marketingDiscountCouponVO.name},'%'))
+            AND mdc.name LIKE concat('%',concat(#{marketingDiscountCouponVO.name},'%'))
         </if>
         <if test="marketingDiscountCouponVO!=null and marketingDiscountCouponVO.status!=null and marketingDiscountCouponVO.status!=''">
             AND mdc.status = #{marketingDiscountCouponVO.status}

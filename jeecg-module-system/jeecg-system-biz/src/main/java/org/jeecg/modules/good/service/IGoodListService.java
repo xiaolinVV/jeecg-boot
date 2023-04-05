@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.apache.ibatis.annotations.Param;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.good.dto.GoodDiscountDTO;
 import org.jeecg.modules.good.dto.GoodListDto;
 import org.jeecg.modules.good.entity.GoodList;
@@ -173,5 +174,16 @@ public interface IGoodListService extends IService<GoodList> {
      * @return
      */
     public IPage<Map<String,Object>> searchGoodListStore(Page<Map<String,Object>> page,  SearchTermsVO searchTermsVO);
+
+    /**
+     * 批量修改上下架
+     * @param ids 商品id,逗号分隔
+     * @param frameStatus 上下架；0：下架；1：上架
+     * @param frameExplain 上下架说明
+     * @return
+     */
+    Result<GoodList> updateFrameStatus(String ids, String frameStatus, String frameExplain);
+
+    Result<?> deleteAndDelExplain(String id, String delExplain);
 
 }

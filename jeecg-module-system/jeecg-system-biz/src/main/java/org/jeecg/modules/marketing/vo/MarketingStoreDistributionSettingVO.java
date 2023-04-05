@@ -181,4 +181,5 @@ public class MarketingStoreDistributionSettingVO {
 
 	private String updateTime_begin;
 	private String updateTime_end;
+	private String storeManage;
 }

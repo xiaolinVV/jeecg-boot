@@ -224,7 +224,7 @@ public class Ali1688Utils {
                 resultMap.put("orderProviderListId", orderProviderListMap.get("id"));
                 resultMap.put("taoOrderId", createOrderResult.getResult().getResult().getOrderId());
                 resultMap.put("code","1");
-                resultMap.put("message","发货成功");
+                resultMap.put("message","下单成功");
             }else{
                 resultMap.put("orderProviderListId", orderProviderListMap.get("id"));
                 resultMap.put("code","0");

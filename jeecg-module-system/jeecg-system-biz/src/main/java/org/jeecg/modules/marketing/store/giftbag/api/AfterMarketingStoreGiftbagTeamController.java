@@ -1,6 +1,7 @@
 package org.jeecg.modules.marketing.store.giftbag.api;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,6 +10,7 @@ import com.google.common.collect.Maps;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.marketing.store.giftbag.entity.*;
 import org.jeecg.modules.marketing.store.giftbag.service.*;
+import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.store.entity.StoreManage;
 import org.jeecg.modules.store.service.IStoreManageService;
@@ -84,9 +86,11 @@ public class AfterMarketingStoreGiftbagTeamController {
                     .eq(MarketingStoreGiftbagTeamMember::getMarketingStoreGiftbagTeamId,marketingStoreGiftbagTeam.getId())
                     .orderByAsc(MarketingStoreGiftbagTeamMember::getIdentity)).forEach(ms->{
                         Map<String,Object> memberMap=Maps.newHashMap();
-                        memberMap.put("IdentityName",iMarketingStoreGiftbagIdentityService.getOne(new LambdaQueryWrapper<MarketingStoreGiftbagIdentity>()
-                                .eq(MarketingStoreGiftbagIdentity::getLevel,ms.getIdentity())).getIdentityName());
-                        memberMap.put("headPortrait",iMemberListService.getById(ms.getMemberListId()).getHeadPortrait());
+                MarketingStoreGiftbagIdentity storeGiftbagIdentity = iMarketingStoreGiftbagIdentityService.getOne(new LambdaQueryWrapper<MarketingStoreGiftbagIdentity>()
+                        .eq(MarketingStoreGiftbagIdentity::getLevel, ms.getIdentity()));
+                memberMap.put("IdentityName",storeGiftbagIdentity != null ? StrUtil.emptyIfNull(storeGiftbagIdentity.getIdentityName()):"");
+                MemberList memberList = iMemberListService.getById(ms.getMemberListId());
+                memberMap.put("headPortrait",memberList != null ? StrUtil.emptyIfNull(memberList.getHeadPortrait()) :"");
                 membersMaps.add(memberMap);
             });
             m.put("membersMaps",membersMaps);

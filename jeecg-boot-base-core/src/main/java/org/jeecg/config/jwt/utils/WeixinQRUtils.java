@@ -77,7 +77,7 @@ public class WeixinQRUtils {
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         HttpEntity requestEntity = new HttpEntity(param, headers);
         ResponseEntity<byte[]> entity = rest.exchange(url, HttpMethod.POST, requestEntity, byte[].class, new Object[0]);
-        log.debug("调用小程序生成微信永久小程序码URL接口返回结果:" + new String(entity.getBody()));
+        log.info("调用小程序生成微信永久小程序码URL接口返回结果:" + new String(entity.getBody()));
         byte[] result = entity.getBody();
 
         String ctxPath = uploadpath;

@@ -7,7 +7,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
@@ -105,7 +104,7 @@ public class AfterMarketingDiscountCouponController {
     private String uploadpath;
 
     /**
-     * 挂起赠送接口
+     * 赠送优惠券
      * @param id
      * @param request
      * @return
@@ -141,7 +140,7 @@ public class AfterMarketingDiscountCouponController {
 
 
     /**
-     * 赠送优惠券
+     * 领取优惠券
      *
      * @param giveMemberId
      * @param request
@@ -194,7 +193,7 @@ public class AfterMarketingDiscountCouponController {
 
 
     /**
-     *
+     *  查询会员优惠券列表
      * @param pattern  优惠券状态；1：未使用；2：已使用；3：已过期；4：已失效;5：已赠送
      * @param pageNo
      * @param pageSize

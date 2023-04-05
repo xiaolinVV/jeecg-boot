@@ -1,5 +1,7 @@
 package org.jeecg.modules.good.service.impl;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -42,7 +44,8 @@ public class GoodSpecificationServiceImpl extends ServiceImpl<GoodSpecificationM
 
     @Override
     public BigDecimal getTotalRepertory(String goodListId) {
-        return new BigDecimal(String.valueOf(this.getMap(new QueryWrapper<GoodSpecification>().select("sum(repertory) as repertory").lambda().eq(GoodSpecification::getGoodListId,goodListId)).get("repertory")));
+        Map<String, Object> repertoryMap = this.getMap(new QueryWrapper<GoodSpecification>().select("sum(repertory) as repertory").lambda().eq(GoodSpecification::getGoodListId, goodListId));
+        return Convert.toBigDecimal(MapUtil.emptyIfNull(repertoryMap).get("repertory"),BigDecimal.ZERO);
     }
 
 

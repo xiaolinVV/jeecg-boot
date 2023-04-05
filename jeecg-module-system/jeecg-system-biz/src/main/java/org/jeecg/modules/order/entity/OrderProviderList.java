@@ -165,4 +165,9 @@ public class OrderProviderList {
 	 * 淘宝1688订单编号
 	 */
 	private String taoOrderId;
+
+	/**
+	 * 是否自动发货 0=否 1=是
+	 */
+	private String autoDelivery;
 }

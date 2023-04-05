@@ -74,6 +74,10 @@ public class GoodSpecification {
 	@Excel(name = "商品id", width = 15)
     @ApiModelProperty(value = "商品id")
 	private String goodListId;
+	/**商品编号*/
+	@Excel(name = "商品编号", width = 15)
+    @ApiModelProperty(value = "商品编号")
+	private String goodNo;
 	/**商品销售价格*/
 	@Excel(name = "商品销售价格", width = 15)
     @ApiModelProperty(value = "商品销售价格")
@@ -106,6 +110,10 @@ public class GoodSpecification {
 	@Excel(name = "sku编码", width = 15)
     @ApiModelProperty(value = "sku编码")
 	private String skuNo;
+	/**skuid*/
+	@Excel(name = "skuid", width = 15)
+    @ApiModelProperty(value = "skuid")
+	private String skuId;
 	/**重量*/
 	@Excel(name = "重量", width = 15)
     @ApiModelProperty(value = "重量")

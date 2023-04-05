@@ -278,7 +278,7 @@ public class FrontStoreManageController {
         if (storeManageMapList.getRecords().size()>0) {
             Map<String, Object> mapsMap = Maps.newHashMap();
 
-            storeManageMapList.getRecords().stream().forEach(s -> {
+            storeManageMapList.getRecords().forEach(s -> {
                 //获取商品
                 Page<Map<String, Object>> storePage = new Page<Map<String, Object>>(1, 3);
                 s.put("storeGoods", iGoodStoreListService.findGoodListBySysUserId(storePage, s.get("sysUserId").toString()).getRecords());

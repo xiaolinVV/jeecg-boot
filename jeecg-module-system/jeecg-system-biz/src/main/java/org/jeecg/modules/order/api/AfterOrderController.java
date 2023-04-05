@@ -51,10 +51,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -594,7 +591,7 @@ public class AfterOrderController {
         paramObjectMap.put("status",status);
         //查询订单数据
         IPage<Map<String,Object>> orderListMapIPage=iOrderListService.getOrderListByMemberIdAndStatus(page,paramObjectMap);
-        orderListMapIPage.getRecords().stream().forEach(o->{
+        orderListMapIPage.getRecords().forEach(o->{
             //给订单查询商品数据
             //平台商品
             if(o.get("isPlatform").toString().equals("1")) {
@@ -723,20 +720,11 @@ public class AfterOrderController {
             return result;
         }
 
-
         //查询购物车商品
-        List<MemberShoppingCart> memberShoppingCarts=Lists.newArrayList();
-
-        Arrays.asList(StringUtils.split(ids,",")).stream().forEach(id->{
-            MemberShoppingCart memberShoppingCart= iMemberShoppingCartService.getById(id);
-            if(memberShoppingCart!=null){
-                memberShoppingCarts.add(memberShoppingCart);
-            }
-        });
-
+        Collection<MemberShoppingCart> memberShoppingCarts=iMemberShoppingCartService.listByIds(StrUtil.split(ids,StrUtil.C_COMMA));
 
         //商品归类处理
-        Map<String,Object> stringObjectMap= iGoodListService.getCarGoodByMemberId(memberShoppingCarts,memberId);
+        Map<String,Object> stringObjectMap= iGoodListService.getCarGoodByMemberId(CollUtil.newArrayList(memberShoppingCarts),memberId);
 
         //店铺商品
         List<Map<String,Object>> storeGoods=(List<Map<String,Object>>) stringObjectMap.get("storeGoods");
@@ -1284,23 +1272,12 @@ public class AfterOrderController {
             return result;
         }
 
-
-
-        //查询购物车商品
-        List<MemberShoppingCart> memberShoppingCarts=Lists.newArrayList();
-
-
         log.info("确认订单，购物车id:{},orderJson: {}",ids,orderJson);
-
-        Arrays.asList(StringUtils.split(ids,",")).parallelStream().forEach(id->{
-            MemberShoppingCart memberShoppingCart= iMemberShoppingCartService.getById(id);
-            if(memberShoppingCart!=null){
-                memberShoppingCarts.add(memberShoppingCart);
-            }
-        });
+        //查询购物车商品
+        Collection<MemberShoppingCart> memberShoppingCarts=iMemberShoppingCartService.listByIds(StrUtil.split(ids,StrUtil.C_COMMA));
 
         //商品归类处理
-        Map<String,Object> stringObjectMap= iGoodListService.getCarGoodByMemberId(memberShoppingCarts,memberId);
+        Map<String,Object> stringObjectMap= iGoodListService.getCarGoodByMemberId(CollUtil.newArrayList(memberShoppingCarts),memberId);
 
         //店铺商品
         List<Map<String,Object>> storeGoods=(List<Map<String,Object>>) stringObjectMap.get("storeGoods");
@@ -1320,6 +1297,10 @@ public class AfterOrderController {
 
         //查询收货地址
         MemberShippingAddress memberShippingAddress=iMemberShippingAddressService.getById(memberShippingAddressId);
+        if(memberShippingAddress == null){
+            result.error500("收货地址不存在！！！");
+            return result;
+        }
 
 
         //将所有订单信息记录到支付日志
@@ -1356,10 +1337,7 @@ public class AfterOrderController {
         //支付
         objectMap.putAll(totalPayUtils.payOrder(allTotalPrice,payOrderLog,memberId,request,softModel));
         //删除购物车商品
-        List<String> mIds=Lists.newArrayList();
-        memberShoppingCarts.stream().forEach(m->{
-            mIds.add(m.getId());
-        });
+        List<String> mIds= memberShoppingCarts.stream().map(MemberShoppingCart::getId).collect(Collectors.toList());
         //删除购物车
         if(mIds.size()>0) {
             iMemberShoppingCartService.removeByIds(mIds);

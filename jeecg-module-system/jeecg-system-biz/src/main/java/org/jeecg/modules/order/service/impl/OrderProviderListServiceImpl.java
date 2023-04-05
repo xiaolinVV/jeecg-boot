@@ -1,11 +1,10 @@
 package org.jeecg.modules.order.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.ocean.rawsdk.common.SDKResult;
 import com.alibaba.trade.param.AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo;
-import com.alibaba.trade.param.AlibabaTradeGetBuyerViewParam;
-import com.alibaba.trade.param.AlibabaTradeGetBuyerViewResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,6 +35,7 @@ import org.jeecg.modules.provider.entity.ProviderManage;
 import org.jeecg.modules.provider.mapper.ProviderTemplateMapper;
 import org.jeecg.modules.provider.service.IProviderManageService;
 import org.jeecg.modules.system.service.ISysDictService;
+import org.jeecg.modules.taobao.service.IAli1688Service;
 import org.jeecg.modules.taobao.utils.Ali1688Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -87,6 +87,9 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     @Autowired
     private IMemberListService iMemberListService;
 
+    @Autowired
+    private IAli1688Service ali1688Service;
+
 
     @Override
     public List<OrderProviderListDTO> selectorderListId(String orderListId, String sysUserId, String parentId, String notParentId) {
@@ -103,6 +106,7 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     public String listSkip(String orderProviderId) {
         OrderProviderList orderProviderList = baseMapper.selectById(orderProviderId);//getById(orderProviderId)
         if (orderProviderList != null) {
+            //全国快递物流查询 - 快递查询接口：https://market.aliyun.com/products/57126001/cmapi021863.html#sku=yuncode1586300000
             String host = "https://wuliu.market.alicloudapi.com";
             String path = "/kdi";
             String method = "GET";
@@ -118,28 +122,28 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
             if ("SHSM".equals(orderProviderList.getLogisticsCompany())) {
                 return "{\"status\":\"0\",\"msg\":\"ok\",\"result\":{\"number\":\"无\",\"type\":\"SHSM\",\"list\":[{\"time\":\"无\",\"status\":\"送货上门\"}],\"deliverystatus\":\"3\",\"issign\":\"1\",\"expName\":\"送货上门\",\"expSite\":\"www.yto.net.cn \",\"expPhone\":\"95554\",\"logo\":\"http:\\/\\/img3.fegine.com\\/express\\/yto.jpg\",\"courier\":\"\",\"courierPhone\":\"\",\"updateTime\":\"无\",\"takeTime\":\"无\"}}";
             } else {
-                String string=null;
-                if(StringUtils.isBlank(orderProviderList.getTaoOrderId())){
-                querys.put("no", orderProviderList.getTrackingNumber());// !!! 请求参数 快递单号tracking_number orderProviderList.getTrackingNumber()
-                querys.put("type", orderProviderList.getLogisticsCompany());// !!! 请求参数 快递名称对应缩写 logistics_company orderProviderList.getLogisticsCompany()
-                try {
-                    HttpResponse response = HttpUtils.doGet(host, path, method, headers, querys);
-                   string = EntityUtils.toString(response.getEntity());
-                    JSONObject jsonObjectHttp = JSONObject.parseObject(string);
+                String string = null;
+                if (StringUtils.isBlank(orderProviderList.getTaoOrderId())) {
+                    querys.put("no", orderProviderList.getTrackingNumber());// !!! 请求参数 快递单号tracking_number orderProviderList.getTrackingNumber()
+                    querys.put("type", orderProviderList.getLogisticsCompany());// !!! 请求参数 快递名称对应缩写 logistics_company orderProviderList.getLogisticsCompany()
+                    try {
+                        HttpResponse response = HttpUtils.doGet(host, path, method, headers, querys);
+                        string = EntityUtils.toString(response.getEntity());
+                        JSONObject jsonObjectHttp = JSONObject.parseObject(string);
 
-                    if (jsonObjectHttp.get("status").equals("0")) {
-                        //已签收
-                        JSONObject jsonObjectResult = JSONObject.parseObject(jsonObjectHttp.get("result").toString());
-                        if ("1".equals(jsonObjectResult.get("issign"))) {
-                            orderProviderList.setStatus("3");
-                        }
+                        if (jsonObjectHttp.get("status").equals("0")) {
+                            //已签收
+                            JSONObject jsonObjectResult = JSONObject.parseObject(jsonObjectHttp.get("result").toString());
+                            if ("1".equals(jsonObjectResult.get("issign"))) {
+                                orderProviderList.setStatus("3");
+                            }
 
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }else{
-                    string= JSON.toJSONString(ali1688Utils.getLogisticsTraceInfo(Long.parseLong(orderProviderList.getTaoOrderId())));
+                } else {
+                    string = JSON.toJSONString(ali1688Utils.getLogisticsTraceInfo(Long.parseLong(orderProviderList.getTaoOrderId())));
                 }
                 //添加物流数据
                 orderProviderList.setLogisticsTracking(string);
@@ -153,7 +157,7 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     }
 
     @Override
-    public Map<String, Object> getOrderProviderLisById(String id){
+    public Map<String, Object> getOrderProviderLisById(String id) {
         return baseMapper.getOrderProviderLisById(id);
     }
 
@@ -170,16 +174,16 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
             List<OrderProviderListDTO> orderProviderLists = baseMapper.selectByParentId(orderProviderListDTO.getId());
 
 
-            OrderProviderList orderProviderList1=this.getById(orderProviderListDTO.getId());
-            if(StringUtils.isNotBlank(orderProviderList1.getTaoOrderId())){
+            OrderProviderList orderProviderList1 = this.getById(orderProviderListDTO.getId());
+            if (StringUtils.isNotBlank(orderProviderList1.getTaoOrderId())) {
                 //下单状态
-                long count=iOrderProviderGoodRecordService.count(new LambdaQueryWrapper<OrderProviderGoodRecord>().eq(OrderProviderGoodRecord::getOrderProviderListId,orderProviderListDTO.getId()).isNull(OrderProviderGoodRecord::getTaoOrderId));
-                if(count>0){
+                long count = iOrderProviderGoodRecordService.count(new LambdaQueryWrapper<OrderProviderGoodRecord>().eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderListDTO.getId()).isNull(OrderProviderGoodRecord::getTaoOrderId));
+                if (count > 0) {
                     orderProviderListDTO.setOrderStatus("1");
-                }else{
+                } else {
                     orderProviderListDTO.setOrderStatus("2");
                 }
-            }else{
+            } else {
                 orderProviderListDTO.setOrderStatus("0");
             }
 
@@ -210,7 +214,7 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
             orderProviderListDTO.setOrderList(orderListDTO);
             //获取运费模板
             List<Map<String, Object>> orderProviderTemplateMap = orderProviderTemplateMapper.getOrderProviderTemplateMap(orderProviderListDTO.getId());
-            if (orderProviderTemplateMap.size() < 0) {
+            if (CollUtil.isEmpty(orderProviderTemplateMap)) {
                 orderProviderTemplateMap = providerTemplateMapper.getProviderTemplateMap(orderProviderListDTO.getId());
             }
             orderProviderListDTO.setProviderTemplateMaps(orderProviderTemplateMap);
@@ -223,60 +227,50 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     @Override
     @Transactional
     public void taobaoShipments(String taobaoOrderId) {
-        OrderProviderGoodRecord orderProviderGoodRecord=iOrderProviderGoodRecordService.getOne(new LambdaQueryWrapper<OrderProviderGoodRecord>()
-                .eq(OrderProviderGoodRecord::getTaoOrderId,taobaoOrderId)
+        OrderProviderGoodRecord orderProviderGoodRecord = iOrderProviderGoodRecordService.getOne(new LambdaQueryWrapper<OrderProviderGoodRecord>()
+                .eq(OrderProviderGoodRecord::getTaoOrderId, taobaoOrderId)
                 .orderByDesc(OrderProviderGoodRecord::getCreateTime)
                 .last("limit 1"));
-        log.info("进入发货状态："+taobaoOrderId);
-        if(orderProviderGoodRecord==null){
+        log.info("进入发货状态：" + taobaoOrderId);
+        if (orderProviderGoodRecord == null) {
             return;
         }
-        OrderProviderList orderProviderList=this.getById(orderProviderGoodRecord.getOrderProviderListId());
-        //获取1688订单详情
-        AlibabaTradeGetBuyerViewParam alibabaTradeGetBuyerViewParam = new AlibabaTradeGetBuyerViewParam();
-        alibabaTradeGetBuyerViewParam.setOrderId(Long.valueOf(taobaoOrderId));
-        alibabaTradeGetBuyerViewParam.setWebSite("1688");
-        SDKResult<AlibabaTradeGetBuyerViewResult> result = ali1688Utils.getApiExecutor()
-                .execute(alibabaTradeGetBuyerViewParam, ali1688Utils.createToken());
-        if (result.getResult().getSuccess().equals("true")) {
-
-            //获取物流信息
-            AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo itemsInfo = result.getResult()
-                    .getResult()
-                    .getNativeLogistics()
-                    .getLogisticsItems()[0];
-
-                    orderProviderList.setParentId(orderProviderList.getId())
+        OrderProviderList orderProviderList = this.getById(orderProviderGoodRecord.getOrderProviderListId());
+        //获取物流信息
+        AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo itemsInfo =  ali1688Service.getAlibabaOpenplatformTradeModelNativeLogisticsItemsInfo(Convert.toLong(taobaoOrderId));
+        if (itemsInfo != null) {
+            orderProviderList.setParentId(orderProviderList.getId())
                     .setId(null)
                     .setLogisticsCompany(itemsInfo.getLogisticsCompanyNo())
                     .setTrackingNumber(itemsInfo.getLogisticsBillNo())
                     .setStatus("2")
                     .setIsSend("1")
-                    .setTaoOrderId(taobaoOrderId);
-                    this.save(orderProviderList);
+                    .setTaoOrderId(taobaoOrderId)
+                    .setAutoDelivery("1");
+            this.save(orderProviderList);
 
-                    iOrderProviderGoodRecordService.saveOrUpdate(orderProviderGoodRecord.setOrderProviderListId(orderProviderList.getId()));
-                //判断订单的状态
-                long count=iOrderProviderGoodRecordService.count(new LambdaQueryWrapper<OrderProviderGoodRecord>().eq(OrderProviderGoodRecord::getOrderProviderListId,orderProviderList.getParentId()));
-                OrderList orderList=iOrderListService.getById(orderProviderList.getOrderListId());
-                OrderProviderList orderProviderList1=this.getById(orderProviderList.getParentId());
-                if(orderList.getShipmentsTime()==null){
-                    orderList.setShipmentsTime(new Date());
-                }
-                //直接发货
-                if(count==0){
-                    orderList.setStatus("2");
-                    orderProviderList1.setStatus("2");
-                    orderList.setIsSender("0");
-                    iOrderListService.saveOrUpdate(orderList);
-                    this.saveOrUpdate(orderProviderList1);
-                }
-                //部分发货
-                if(count>0){
-                    orderList.setIsSender("1");
-                    iOrderListService.saveOrUpdate(orderList);
-                }
+            iOrderProviderGoodRecordService.saveOrUpdate(orderProviderGoodRecord.setOrderProviderListId(orderProviderList.getId()));
+            //判断订单的状态
+            long count = iOrderProviderGoodRecordService.count(new LambdaQueryWrapper<OrderProviderGoodRecord>().eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderList.getParentId()));
+            OrderList orderList = iOrderListService.getById(orderProviderList.getOrderListId());
+            OrderProviderList orderProviderList1 = this.getById(orderProviderList.getParentId());
+            if (orderList.getShipmentsTime() == null) {
+                orderList.setShipmentsTime(new Date());
             }
+            //直接发货
+            if (count == 0) {
+                orderList.setStatus("2");
+                orderProviderList1.setStatus("2");
+                orderList.setIsSender("0");
+                iOrderListService.saveOrUpdate(orderList);
+                this.saveOrUpdate(orderProviderList1);
+            }
+            //部分发货
+            if (count > 0) {
+                orderList.setIsSender("1");
+                iOrderListService.saveOrUpdate(orderList);
+            }
+        }
 
     }
 
@@ -289,16 +283,16 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     @Override
     public void ShipmentOrderModification(OrderProviderList orderProviderList) {
         if (orderProviderGoodRecordMapper.selectCount(new LambdaQueryWrapper<OrderProviderGoodRecord>()
-                .eq(OrderProviderGoodRecord::getDelFlag,"0")
-                .eq(OrderProviderGoodRecord::getOrderProviderListId,orderProviderList.getId())
-        )<=0){
+                .eq(OrderProviderGoodRecord::getDelFlag, "0")
+                .eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderList.getId())
+        ) <= 0) {
             this.updateById(orderProviderList.setStatus("2"));
             OrderList orderList = orderListMapper.selectById(orderProviderList.getOrderListId());
             LambdaQueryWrapper<OrderProviderList> orderProviderListLambdaQueryWrapper = new LambdaQueryWrapper<OrderProviderList>()
                     .eq(OrderProviderList::getDelFlag, "0")
                     .eq(OrderProviderList::getOrderListId, orderList.getId())
-                    .eq(OrderProviderList::getParentId,"0");
-            if (this.count(orderProviderListLambdaQueryWrapper)==this.count(orderProviderListLambdaQueryWrapper.eq(OrderProviderList::getStatus,"2"))){
+                    .eq(OrderProviderList::getParentId, "0");
+            if (this.count(orderProviderListLambdaQueryWrapper) == this.count(orderProviderListLambdaQueryWrapper.eq(OrderProviderList::getStatus, "2"))) {
                 orderListMapper.updateById(orderList.setStatus("2"));
             }
         }
@@ -306,52 +300,52 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
 
     @Override
     public List<Map<String, Object>> getOrderProviderListAndGoodListByOrderId(String orderListId) {
-        List<Map<String,Object>> mapList= Lists.newArrayList();
+        List<Map<String, Object>> mapList = Lists.newArrayList();
         //获取供应商订单信息
         baseMapper.selectList(new LambdaQueryWrapper<OrderProviderList>()
-                .eq(OrderProviderList::getOrderListId,orderListId)).forEach(op->{
-                    Map<String,Object> opMap= Maps.newHashMap();
-                    opMap.put("providerManageName",iProviderManageService.getOne(new LambdaQueryWrapper<ProviderManage>().eq(ProviderManage::getSysUserId,op.getSysUserId())).getName());//供应商名称
-                    opMap.put("orderNo",op.getOrderNo());//供应商订单编号
-                    List<Map<String,Object>> goodMapList=Lists.newArrayList();
-                    //获取供应商订单的商品
-                    iOrderProviderGoodRecordService.list(new LambdaQueryWrapper<OrderProviderGoodRecord>()
-                            .eq(OrderProviderGoodRecord::getOrderProviderListId,op.getId())).forEach(opl->{
-                                Map<String,Object> orderProviderListMap=Maps.newHashMap();
-                                orderProviderListMap.put("goodNo",opl.getGoodNo());//商品编号
-                                orderProviderListMap.put("mainPicture",opl.getMainPicture());
-                                orderProviderListMap.put("goodName",opl.getGoodName());
-                                orderProviderListMap.put("specification",opl.getSpecification());
-                                orderProviderListMap.put("unitPrice",opl.getUnitPrice());
-                                orderProviderListMap.put("amount",opl.getAmount());
-                                orderProviderListMap.put("total",opl.getTotal());
-                                orderProviderListMap.put("weight",opl.getWeight());
-                                goodMapList.add(orderProviderListMap);
-                    });
-                    opMap.put("goodMapList",goodMapList);
-                    mapList.add(opMap);
+                .eq(OrderProviderList::getOrderListId, orderListId)).forEach(op -> {
+            Map<String, Object> opMap = Maps.newHashMap();
+            opMap.put("providerManageName", iProviderManageService.getOne(new LambdaQueryWrapper<ProviderManage>().eq(ProviderManage::getSysUserId, op.getSysUserId())).getName());//供应商名称
+            opMap.put("orderNo", op.getOrderNo());//供应商订单编号
+            List<Map<String, Object>> goodMapList = Lists.newArrayList();
+            //获取供应商订单的商品
+            iOrderProviderGoodRecordService.list(new LambdaQueryWrapper<OrderProviderGoodRecord>()
+                    .eq(OrderProviderGoodRecord::getOrderProviderListId, op.getId())).forEach(opl -> {
+                Map<String, Object> orderProviderListMap = Maps.newHashMap();
+                orderProviderListMap.put("goodNo", opl.getGoodNo());//商品编号
+                orderProviderListMap.put("mainPicture", opl.getMainPicture());
+                orderProviderListMap.put("goodName", opl.getGoodName());
+                orderProviderListMap.put("specification", opl.getSpecification());
+                orderProviderListMap.put("unitPrice", opl.getUnitPrice());
+                orderProviderListMap.put("amount", opl.getAmount());
+                orderProviderListMap.put("total", opl.getTotal());
+                orderProviderListMap.put("weight", opl.getWeight());
+                goodMapList.add(orderProviderListMap);
+            });
+            opMap.put("goodMapList", goodMapList);
+            mapList.add(opMap);
         });
         return mapList;
     }
 
     @Override
     public Map<String, BigDecimal> placeOrder(String orderProviderListIds) {
-        Map<String,BigDecimal> resultObjectMap= Maps.newHashMap();
-        BigDecimal successCount=BigDecimal.ZERO;
-        BigDecimal errorCount=BigDecimal.ZERO;
-        resultObjectMap.put("successCount",successCount);
-        resultObjectMap.put("errorCount",errorCount);
-        Arrays.asList(StringUtils.split(orderProviderListIds,",")).forEach(orderProviderListId->{
-            Map<String,Object> orderProviderListMap =this.getOrderProviderLisById(orderProviderListId);
-            if(orderProviderListMap!=null) {
+        Map<String, BigDecimal> resultObjectMap = Maps.newHashMap();
+        BigDecimal successCount = BigDecimal.ZERO;
+        BigDecimal errorCount = BigDecimal.ZERO;
+        resultObjectMap.put("successCount", successCount);
+        resultObjectMap.put("errorCount", errorCount);
+        Arrays.asList(StringUtils.split(orderProviderListIds, ",")).forEach(orderProviderListId -> {
+            Map<String, Object> orderProviderListMap = this.getOrderProviderLisById(orderProviderListId);
+            if (orderProviderListMap != null) {
                 OrderProviderList orderProviderList = this.getById(orderProviderListId);
-                if(StringUtils.isNotBlank(orderProviderList.getTaoOrderId())){
-                    log.info("本供应商订单已经下过单："+orderProviderListId);
+                if (StringUtils.isNotBlank(orderProviderList.getTaoOrderId())) {
+                    log.info("本供应商订单已经下过单：" + orderProviderListId);
                     resultObjectMap.put("errorCount", resultObjectMap.get("errorCount").add(BigDecimal.ONE));
-                }else {
+                } else {
                     iOrderProviderGoodRecordService.getGoodListByOrderProviderListId(orderProviderListId).forEach(goodListMap -> {
-                        if(goodListMap.get("skuNo").equals("无")){
-                            goodListMap.put("skuNo","");
+                        if (goodListMap.get("skuNo").equals("无")) {
+                            goodListMap.put("skuNo", "");
                         }
                         if (goodListMap.get("isSend").equals("0")) {
                             Map<String, Object> resultMap = ali1688Utils.placeOrder(orderProviderListMap, goodListMap);
@@ -382,8 +376,8 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
                         }
                     });
                 }
-            }else{
-                resultObjectMap.put("errorCount",resultObjectMap.get("errorCount").add(BigDecimal.ONE));
+            } else {
+                resultObjectMap.put("errorCount", resultObjectMap.get("errorCount").add(BigDecimal.ONE));
             }
         });
         return resultObjectMap;
@@ -391,18 +385,18 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
 
     @Override
     public Map<String, BigDecimal> replenishment(String orderProviderGoodRecordId) {
-        Map<String,BigDecimal> resultObjectMap= Maps.newHashMap();
-        BigDecimal successCount=BigDecimal.ZERO;
-        BigDecimal errorCount=BigDecimal.ZERO;
-        resultObjectMap.put("successCount",successCount);
-        resultObjectMap.put("errorCount",errorCount);
+        Map<String, BigDecimal> resultObjectMap = Maps.newHashMap();
+        BigDecimal successCount = BigDecimal.ZERO;
+        BigDecimal errorCount = BigDecimal.ZERO;
+        resultObjectMap.put("successCount", successCount);
+        resultObjectMap.put("errorCount", errorCount);
 
-        OrderProviderList orderProviderList=this.getById(iOrderProviderGoodRecordService.getById(orderProviderGoodRecordId).getOrderProviderListId());
+        OrderProviderList orderProviderList = this.getById(iOrderProviderGoodRecordService.getById(orderProviderGoodRecordId).getOrderProviderListId());
 
-        Map<String,Object> orderProviderListMap =this.getOrderProviderLisById(orderProviderList.getId());
-        Map<String,Object> goodListMap =iOrderProviderGoodRecordService.iOrderProviderGoodRecordById(orderProviderGoodRecordId);
-        if(goodListMap.get("skuNo").equals("无")){
-            goodListMap.put("skuNo","");
+        Map<String, Object> orderProviderListMap = this.getOrderProviderLisById(orderProviderList.getId());
+        Map<String, Object> goodListMap = iOrderProviderGoodRecordService.iOrderProviderGoodRecordById(orderProviderGoodRecordId);
+        if (goodListMap.get("skuNo").equals("无")) {
+            goodListMap.put("skuNo", "");
         }
         if (!goodListMap.get("isSend").equals("1")) {
             Map<String, Object> resultMap = ali1688Utils.placeOrder(orderProviderListMap, goodListMap);
@@ -413,7 +407,7 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
                 orderProviderGoodRecord.setIsSend("1");
                 orderProviderGoodRecord.setMessage(String.valueOf("message"));
                 iOrderProviderGoodRecordService.saveOrUpdate(orderProviderGoodRecord);
-                resultObjectMap.put("successCount",resultObjectMap.get("successCount").add(BigDecimal.ONE));
+                resultObjectMap.put("successCount", resultObjectMap.get("successCount").add(BigDecimal.ONE));
                 if (StringUtils.isBlank(orderProviderList.getTaoOrderId())) {
                     orderProviderList.setTaoOrderId(resultMap.get("taoOrderId").toString());
                 } else {
@@ -426,10 +420,10 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
                 orderProviderGoodRecord.setIsSend("2");
                 orderProviderGoodRecord.setMessage(String.valueOf("message"));
                 iOrderProviderGoodRecordService.saveOrUpdate(orderProviderGoodRecord);
-                resultObjectMap.put("errorCount",resultObjectMap.get("errorCount").add(BigDecimal.ONE));
+                resultObjectMap.put("errorCount", resultObjectMap.get("errorCount").add(BigDecimal.ONE));
             }
-        }else{
-            resultObjectMap.put("errorCount",resultObjectMap.get("errorCount").add(BigDecimal.ONE));
+        } else {
+            resultObjectMap.put("errorCount", resultObjectMap.get("errorCount").add(BigDecimal.ONE));
         }
         return resultObjectMap;
     }
