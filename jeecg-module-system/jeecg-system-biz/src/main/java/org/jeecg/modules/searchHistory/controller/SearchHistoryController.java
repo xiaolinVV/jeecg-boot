@@ -37,7 +37,7 @@ public class SearchHistoryController {
      * 删除个人历史数据
      */
     @PostMapping("/del")
-    public Result<?> delSearchHistoryByUserId(@RequestParam(value = "userId",required = false) String userId, @RequestParam("searchKey") String searchKey,HttpServletRequest request) {
+    public Result<?> delSearchHistoryByUserId(@RequestParam(value = "userId",required = false) String userId, @RequestParam(value = "searchKey",required = false) String searchKey,HttpServletRequest request) {
         String memberId = Convert.toStr(request.getAttribute("memberId"));
         userId = StrUtil.blankToDefault(userId, memberId);
         return Result.ok(searchHistoryService.delSearchHistoryByUserId(userId, searchKey));

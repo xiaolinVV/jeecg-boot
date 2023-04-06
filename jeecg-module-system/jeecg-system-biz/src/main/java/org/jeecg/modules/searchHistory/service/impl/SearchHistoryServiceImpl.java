@@ -50,7 +50,13 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
     @Override
     public Long delSearchHistoryByUserId(String userid, String searchkey) {
         String shistory = RedisKeyUtils.getSearchHistoryKey(userid);
-        return redisSearchTemplate.opsForHash().delete(shistory, searchkey);
+        Long delete = 0L;
+        if (StrUtil.isNotBlank(searchkey)) {
+            delete = redisSearchTemplate.opsForHash().delete(shistory, searchkey);
+        }else {
+            redisSearchTemplate.delete(shistory);
+        }
+        return delete;
     }
 
     //获取个人历史数据列表
