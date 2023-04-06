@@ -46,4 +46,9 @@ public interface IAli1688Service {
      * @return
      */
     AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo getAlibabaOpenplatformTradeModelNativeLogisticsItemsInfo(Long taobaoOrderId);
+
+    /**
+     *
+     */
+    void syncSkuId();
 }

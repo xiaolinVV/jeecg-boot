@@ -1,21 +1,24 @@
 package org.jeecg.modules.taobao.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.ocean.rawsdk.common.SDKResult;
 import com.alibaba.product.param.*;
 import com.alibaba.trade.param.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
-import org.jeecg.modules.good.entity.GoodType;
 import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.good.service.IGoodTypeService;
@@ -25,12 +28,16 @@ import org.jeecg.modules.taobao.service.IAli1688Service;
 import org.jeecg.modules.taobao.utils.Ali1688Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author 张少林
@@ -63,42 +70,16 @@ public class IAli1688ServiceImpl implements IAli1688Service {
         //供应链用户id
         String sysUserId = "220ebc6c395bdb6cfc7c5b721746a79c";//1688供应商
 
-        SDKResult<AlibabaCpsMediaProductInfoResult> productInfoResult = null;
-        if (StrUtil.isBlank(title)) {
-            productInfoResult = getProductInfoResult(offerId);
-            if (productInfoResult.getResult() == null) {
-                log.info("商品不存在" + offerId);
-                return false;
-            }
-            if (!productInfoResult.getResult().getSuccess()) {
-                log.error("错误商品id：" + offerId + "；错误代码：" + productInfoResult.getResult().getErrorCode() + "；错误信息：" + productInfoResult.getResult().getErrorMsg());
-                return false;
-            }
-            // TODO: 2023/3/30 这里的分类标题应该要取我的选品库的分组名称 @zhangshaolin
-            title = productInfoResult.getResult().getProductInfo().getCategoryName();
-        }
-
-        long count = iGoodTypeService.count(new LambdaQueryWrapper<GoodType>().eq(GoodType::getName, title).eq(GoodType::getStatus, "1").eq(GoodType::getLevel, "3"));
-        if (count == 0) {
-            log.info("没有被允许的商品分类：offerId=" + offerId + "；title=" + title);
+        //先判断平台中是否存在商品
+        LambdaQueryWrapper<GoodList> goodListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        goodListLambdaQueryWrapper.eq(GoodList::getGoodNo, offerId).eq(GoodList::getDelFlag, "0");
+        GoodList existGoodList = goodListService.getOne(goodListLambdaQueryWrapper, false);
+        if (existGoodList == null) {
             return false;
         }
+        String goodTypeId = existGoodList.getGoodTypeId();
 
-        String goodTypeId = iGoodTypeService.getOne(new LambdaQueryWrapper<GoodType>()
-                .eq(GoodType::getName, title).eq(GoodType::getStatus, "1")
-                .eq(GoodType::getLevel, "3")
-                .orderByDesc(GoodType::getCreateTime).last("limit 1")).getId();
-
-        String marketingPrefectureTypeId = "";
-
-        //常量
-        String baseUrl = "cbu01.alicdn.com/";
-
-        //获取商品详情
-        if (productInfoResult == null) {
-            productInfoResult = getProductInfoResult(offerId);
-        }
-        log.info("采集的商品信息：" + JSON.toJSONString(productInfoResult.getResult()));
+        SDKResult<AlibabaCpsMediaProductInfoResult> productInfoResult = getProductInfoResult(offerId);
         if (productInfoResult.getResult() == null) {
             log.info("商品不存在" + offerId);
             return false;
@@ -107,9 +88,27 @@ public class IAli1688ServiceImpl implements IAli1688Service {
             log.error("错误商品id：" + offerId + "；错误代码：" + productInfoResult.getResult().getErrorCode() + "；错误信息：" + productInfoResult.getResult().getErrorMsg());
             return false;
         }
+
+//        title = productInfoResult.getResult().getProductInfo().getCategoryName();
+
+//        int count = iGoodTypeService.count(new LambdaQueryWrapper<GoodType>().eq(GoodType::getName, title).eq(GoodType::getStatus, "1").eq(GoodType::getLevel, "3"));
+//        if (count == 0) {
+//            log.info("没有被允许的商品分类：offerId=" + offerId + "；title=" + title);
+//            return false;
+//        }
+
+//        String goodTypeId = iGoodTypeService.getOne(new LambdaQueryWrapper<GoodType>()
+//                .eq(GoodType::getName, title).eq(GoodType::getStatus, "1")
+//                .eq(GoodType::getLevel, "3")
+//                .orderByDesc(GoodType::getCreateTime).last("limit 1")).getId();
+
+        String marketingPrefectureTypeId = "";
+
+        //常量
+        String baseUrl = "cbu01.alicdn.com/";
+
         if (productInfoResult.getResult().getSuccess()) {
             AlibabaProductProductInfo alibabaProductProductInfo = productInfoResult.getResult().getProductInfo();
-
 
             GoodList goodList = new GoodList();
             goodList.setSysUserId(sysUserId);//供应链用户id
@@ -522,7 +521,7 @@ public class IAli1688ServiceImpl implements IAli1688Service {
         alibabaCpsMediaProductInfoParam.setNeedIntelligentInfo(true);
         alibabaCpsMediaProductInfoParam.setOfferId(offerId);
         SDKResult<AlibabaCpsMediaProductInfoResult> productInfoResult = ali1688Utils.getApiExecutor().execute(alibabaCpsMediaProductInfoParam, ali1688Utils.createToken());
-        log.info("采集的商品信息：" + JSON.toJSONString(productInfoResult.getResult()));
+//        log.info("采集的商品信息：" + JSON.toJSONString(productInfoResult.getResult()));
         return productInfoResult;
     }
 
@@ -553,5 +552,67 @@ public class IAli1688ServiceImpl implements IAli1688Service {
                 .map(AlibabaOpenplatformTradeModelNativeLogisticsInfo::getLogisticsItems)
                 .orElse(null);
         return ArrayUtil.get(logisticsItemsInfos, 0);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void syncSkuId() {
+        LambdaQueryWrapper<GoodList> goodListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        goodListLambdaQueryWrapper.eq(GoodList::getSysUserId, "220ebc6c395bdb6cfc7c5b721746a79c")
+                .eq(GoodList::getDelFlag, "0")
+                .eq(GoodList::getIsSpecification, "1")
+                .orderByDesc(GoodList::getCreateTime);
+        int pageNo = 1;
+        while (true) {
+            //分页查询商品列表
+            IPage<GoodList> page = new Page<>(pageNo, 30, false);
+            List<GoodList> goodLists = goodListService.page(page, goodListLambdaQueryWrapper).getRecords();
+            log.info("平台商品信息：pageNo=" + pageNo + "页数量" + goodLists.size());
+            if (CollUtil.isEmpty(goodLists)) {
+                break;
+            }
+            List<String> goodIds = goodLists.stream().map(GoodList::getId).collect(Collectors.toList());
+            //查询对应规格列表
+            LambdaQueryWrapper<GoodSpecification> goodSpecificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            goodSpecificationLambdaQueryWrapper.in(GoodSpecification::getGoodListId, goodIds);
+            Map<String, List<GoodSpecification>> goodSpeListMap = goodSpecificationService.list(goodSpecificationLambdaQueryWrapper).stream().collect(Collectors.groupingBy(GoodSpecification::getGoodListId));
+            for (GoodList goodList : goodLists) {
+                Long offerId = Convert.toLong(goodList.getGoodNo());
+                ThreadUtil.sleep(RandomUtil.randomDouble(1, 3), TimeUnit.SECONDS);
+                SDKResult<AlibabaCpsMediaProductInfoResult> productInfoResult = getProductInfoResult(offerId);
+
+                if (productInfoResult.getResult() == null) {
+                    log.info("商品不存在" + offerId);
+                    continue;
+                }
+                if (!productInfoResult.getResult().getSuccess()) {
+                    log.error("错误商品id：" + offerId + "；错误代码：" + productInfoResult.getResult().getErrorCode() + "；错误信息：" + productInfoResult.getResult().getErrorMsg());
+                    continue;
+                }
+                List<GoodSpecification> goodSpecifications = goodSpeListMap.getOrDefault(goodList.getId(), CollUtil.newArrayList());
+
+                AlibabaProductProductInfo alibabaProductProductInfo = productInfoResult.getResult().getProductInfo();
+                //sku的具体信息
+                AlibabaProductProductSKUInfo[] alibabaProductProductSKUInfos = alibabaProductProductInfo.getSkuInfos();
+                if (ArrayUtil.isEmpty(alibabaProductProductSKUInfos)) {
+                    log.info("没有具体规格信息");
+                    continue;
+                }
+                Map<String, AlibabaProductProductSKUInfo> productProductSKUInfoMap = Arrays.stream(alibabaProductProductSKUInfos).collect(Collectors.toMap(AlibabaProductProductSKUInfo::getSpecId, alibabaProductProductSKUInfo -> alibabaProductProductSKUInfo));
+
+                List<GoodSpecification> updateGoodSpecifications = goodSpecifications.stream().filter(goodSpecification -> productProductSKUInfoMap.containsKey(goodSpecification.getSkuNo())).peek(goodSpecification -> {
+                    AlibabaProductProductSKUInfo alibabaProductProductSKUInfo = productProductSKUInfoMap.get(goodSpecification.getSkuNo());
+                    goodSpecification.setSkuId(Convert.toStr(alibabaProductProductSKUInfo.getSkuId()));
+                }).collect(Collectors.toList());
+
+                if (CollUtil.isNotEmpty(updateGoodSpecifications)) {
+                    goodSpecificationService.updateBatchById(updateGoodSpecifications);
+                }
+            }
+//            if (pageNo == 20) {
+//                break;
+//            }
+            pageNo++;
+        }
     }
 }

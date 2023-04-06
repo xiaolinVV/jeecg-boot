@@ -199,10 +199,10 @@ public class FrontMarketingPrefectureGoodController {
         Result<IPage<Map<String,Object>>> result=new Result<>();
 
         //参数验证
-        if(StringUtils.isBlank(id)){
-            result.error500("平台专区商品类型id为空！！！");
-            return  result;
-        }
+//        if(StringUtils.isBlank(id)){
+//            result.error500("平台专区商品类型id为空！！！");
+//            return  result;
+//        }
 
         //组织查询参数
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);

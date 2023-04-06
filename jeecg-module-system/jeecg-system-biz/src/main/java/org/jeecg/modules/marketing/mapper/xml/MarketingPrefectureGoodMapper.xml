@@ -323,7 +323,11 @@
         *
         FROM
         `marketing_prefecture_good`
-        WHERE marketing_prefecture_id = #{paramMap.id}) mpg
+        WHERE 1=1
+        <if test="paramMap.id != null and paramMap.id != ''">
+            and marketing_prefecture_id = #{paramMap.id}
+        </if>
+        ) mpg
         LEFT JOIN
         good_list gl
         ON mpg.good_list_id = gl.id
