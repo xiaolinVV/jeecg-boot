@@ -925,6 +925,9 @@
         <if test="paramObjectMap.itemValue != null and paramObjectMap.itemValue != ''">
             AND sm.main_type = #{paramObjectMap.itemValue}
         </if>
+        <if test="paramObjectMap.storeTypeId != null  and paramObjectMap.storeTypeId != ''">
+            and sm.store_type_id = #{paramObjectMap.storeTypeId}
+        </if>
         ) m
         <if test="paramObjectMap.storeName!=null and paramObjectMap.storeName!=''">
             WHERE m.storeName LIKE concat('%',concat(#{paramObjectMap.storeName},'%'))

@@ -489,6 +489,7 @@ public class FrontStoreManageController {
     @RequestMapping("findCityLifeStoreManageList")
     @ResponseBody
     public Result<IPage<Map<String,Object>>> findCityLifeStoreManageList(@RequestParam(name = "storeName",defaultValue = "",required = false) String storeName,
+                                                                         @RequestParam(name = "storeTypeId",defaultValue = "",required = false) String storeTypeId,
                                                                  Integer pattern,
                                                                  String itemValue,
                                                                  String longitude,
@@ -511,6 +512,7 @@ public class FrontStoreManageController {
         paramObjectMap.put("latitude",latitude);
         paramObjectMap.put("storeName",storeName);
         paramObjectMap.put("itemValue",itemValue);
+        paramObjectMap.put("storeTypeId",storeTypeId);
         IPage<Map<String,Object>> storeManageMapList=iStoreManageService.findCityLifeStoreManageList(page,paramObjectMap);
         if (storeManageMapList.getRecords().size()>0){
             Map<String,Object> mapsMap=Maps.newHashMap();

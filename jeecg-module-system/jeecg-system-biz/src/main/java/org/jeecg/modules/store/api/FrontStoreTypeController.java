@@ -1,5 +1,6 @@
 package org.jeecg.modules.store.api;
 
+import cn.hutool.core.lang.Dict;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 店铺分类
@@ -72,8 +74,8 @@ public class FrontStoreTypeController {
     }
     @RequestMapping("findStoreTypeList")
     @ResponseBody
-    public Result<List<Map<String,Object>>> findStoreTypeList(HttpServletRequest request){
-        Result<List<Map<String, Object>>> result = new Result<>();
+    public Result<Dict> findStoreTypeList(HttpServletRequest request){
+        Result<Dict> result = new Result<>();
         List<Map<String, Object>> maps = iStoreTypeService.listMaps(new QueryWrapper<StoreType>()
                 .select("id,type_name as typeName")
                 .eq("del_flag","0")
@@ -82,16 +84,19 @@ public class FrontStoreTypeController {
                 .eq("pid","0")
                 .orderByAsc("sort")
         );
-        maps.forEach(m->{
+        List<Map<String, Object>> twoStoreTypeList = maps.stream().peek(m -> {
             List<Map<String, Object>> getstoreTypeListById = iStoreTypeService.getstoreTypeListById(m.get("id").toString());
             long i = 0;
             for (Map<String, Object> stringObjectMap : getstoreTypeListById) {
-                i+=(Long) stringObjectMap.get("storeSum");
+                i += (Long) stringObjectMap.get("storeSum");
             }
-            m.put("storeTypeList",getstoreTypeListById);
-            m.put("storeSum",i);
-        });
-        result.setResult(maps);
+            m.put("storeTypeList", getstoreTypeListById);
+            m.put("storeSum", i);
+        }).flatMap(stringObjectMap -> {
+            List<Map<String, Object>> storeTypeList = (List<Map<String, Object>>) stringObjectMap.get("storeTypeList");
+            return storeTypeList.stream();
+        }).collect(Collectors.toList());
+        result.setResult(Dict.create().set("twoStoreTypeList",twoStoreTypeList).set("oneStoreTypeList",maps));
         result.success("返回城市生活分类");
         return result;
     }
