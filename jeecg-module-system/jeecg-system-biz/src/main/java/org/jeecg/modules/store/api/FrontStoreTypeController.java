@@ -42,7 +42,7 @@ public class FrontStoreTypeController {
     @RequestMapping("findStoreTypeByid")
     @ResponseBody
     public Result<List<Map<String,Object>>> getStoreTypeListMapById(@RequestParam("id") String id,
-                                                              HttpServletRequest request){
+                                                                    HttpServletRequest request){
         Result<List<Map<String,Object>>> result = new Result<>();
         HashMap<String, Object> map = new HashMap<>();
         if (StringUtils.isNotBlank(id)){
@@ -77,7 +77,7 @@ public class FrontStoreTypeController {
     public Result<Dict> findStoreTypeList(HttpServletRequest request){
         Result<Dict> result = new Result<>();
         List<Map<String, Object>> maps = iStoreTypeService.listMaps(new QueryWrapper<StoreType>()
-                .select("id,type_name as typeName")
+                .select("id,type_name as typeName,logo_addr as logoAddr")
                 .eq("del_flag","0")
                 .eq("status","1")
                 .eq("level","1")
