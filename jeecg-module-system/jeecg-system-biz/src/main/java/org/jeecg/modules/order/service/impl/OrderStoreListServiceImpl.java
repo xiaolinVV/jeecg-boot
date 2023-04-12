@@ -1,7 +1,6 @@
 package org.jeecg.modules.order.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.comparator.CompareUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
@@ -42,7 +41,9 @@ import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
 import org.jeecg.modules.order.dto.OrderStoreListDTO;
 import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
 import org.jeecg.modules.order.dto.OrderStoreSubListDTO;
-import org.jeecg.modules.order.entity.*;
+import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
+import org.jeecg.modules.order.entity.OrderStoreList;
+import org.jeecg.modules.order.entity.OrderStoreSubList;
 import org.jeecg.modules.order.mapper.OrderStoreListMapper;
 import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
@@ -496,13 +497,15 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         //优惠券ID 不为空，则计算优惠金额
         if (StrUtil.isNotBlank(discountId)) {
             marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
-            if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
+            if (marketingDiscountCoupon != null
                     && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
                 List<MarketingDisountGoodDTO> storeGoodList = marketingDiscountGoodService.findStoreGood(marketingDiscountCoupon.getMarketingDiscountId());
                 marketingDiscountCouponGoodIds = storeGoodList.stream().map(MarketingDisountGoodDTO::getId).collect(Collectors.toList());
             }
         }
 
+        // 参与优惠券优惠的店铺商品列表，暂存，用于后面更新商品实付金额 --- by zhangshaolin
+        List<OrderStoreGoodRecord> marketingOrderStoreGoodRecords = CollUtil.newArrayList();
         for (Map<String,Object> m:myStoreGoods) {
             GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(m.get("goodSpecificationId").toString());
             GoodStoreList goodStoreList=iGoodStoreListService.getById(m.get("goodId").toString());
@@ -522,6 +525,8 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreGoodRecord.setUnitPrice((BigDecimal) m.get("price"));
             orderStoreGoodRecord.setAmount((BigDecimal) m.get("quantity"));
             orderStoreGoodRecord.setTotal(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
+            orderStoreGoodRecord.setCustomaryDues(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
+            orderStoreGoodRecord.setActualPayment(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
             //商品总重量
             orderStoreGoodRecord.setWeight(goodStoreSpecification.getWeight().multiply(new BigDecimal(m.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
             iOrderStoreGoodRecordService.save(orderStoreGoodRecord);
@@ -541,12 +546,13 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             }
             if (StrUtil.isBlank(marketingStoreGiftCardMemberListId)) {
                 //判断哪些商品有优惠、哪些商品没优惠、并且计算优惠金额
-                if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"2")
+                if (marketingDiscountCoupon != null
                         && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
                     if (marketingDiscountCouponGoodIds.contains(Convert.toStr(m.get("goodId")))) {
                         marketingGoodIds.add(Convert.toStr(m.get("goodId")));
                         //可优惠总金额
                         marketingTotalPrice = marketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
+                        marketingOrderStoreGoodRecords.add(orderStoreGoodRecord);
                     }else {
                         noMarketingGoodIds.add(Convert.toStr(m.get("goodId")));
                         noMarketingTotalPrice = noMarketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
@@ -683,7 +689,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                 if (StrUtil.equals(isNomal,"0") || StrUtil.equals(isNomal,"1")) {
                     //满减券,判断消费满多少钱优惠多少钱
                     BigDecimal completely = marketingDiscountCoupon.getCompletely();
-                    if (totalPrice.subtract(completely).doubleValue() >= 0) {
+                    if (marketingTotalPrice.subtract(completely).doubleValue() >= 0) {
                         orderStoreList.setCoupon(marketingDiscountCoupon.getPrice());
                     }
                     //标识优惠券已使用
@@ -703,8 +709,30 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setCoupon(totalPrice);
         }
 
+        // 更新订单商品表实付金额 @zhangshaolin
+        if (CollUtil.isNotEmpty(marketingOrderStoreGoodRecords)) {
+            //订单优惠后实付款，不含运费
+            BigDecimal actualPayment = marketingTotalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(), new BigDecimal("0")));
+            BigDecimal tempSum = new BigDecimal(0);
+            for (int i = 0; i < marketingOrderStoreGoodRecords.size(); i++) {
+                OrderStoreGoodRecord orderStoreGoodRecord = marketingOrderStoreGoodRecords.get(i);
+                BigDecimal total = orderStoreGoodRecord.getTotal();
+                if (i == marketingOrderStoreGoodRecords.size() - 1) {
+                    BigDecimal orderGoodActualPayment = NumberUtil.sub(actualPayment,tempSum);
+                    orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
+                    orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                } else {
+                    BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(total, marketingTotalPrice), actualPayment);
+                    orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
+                    orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                    tempSum = NumberUtil.add(tempSum,orderGoodActualPayment);
+                }
+            }
+            orderStoreGoodRecordService.updateBatchById(marketingOrderStoreGoodRecords);
+        }
+
         //无优惠的总价
-        totalPrice=totalPrice.add(freight);
+//        totalPrice=totalPrice.add(freight);
 
         //判断礼品卡的优惠
         if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){

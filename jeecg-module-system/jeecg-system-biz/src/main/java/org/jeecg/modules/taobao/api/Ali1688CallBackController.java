@@ -202,7 +202,7 @@ public class Ali1688CallBackController {
                         LambdaQueryWrapper<GoodSpecification> goodSpecificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
                         goodSpecificationLambdaQueryWrapper.eq(GoodSpecification::getGoodListId, goodList.getId()).eq(GoodSpecification::getSkuId, skuId).eq(GoodSpecification::getDelFlag, "0");
                         GoodSpecification goodSpecification = goodSpecificationService.getOne(goodSpecificationLambdaQueryWrapper, false);
-                        if (goodSpecification != null) {
+                        if (goodSpecification != null && skuOnSale != null) {
                             goodSpecification.setRepertory(new BigDecimal(skuOnSale));
                             goodSpecificationService.updateById(goodSpecification);
                         }

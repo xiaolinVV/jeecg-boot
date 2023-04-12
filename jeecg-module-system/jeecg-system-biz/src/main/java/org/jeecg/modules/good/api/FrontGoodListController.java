@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import lombok.extern.java.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.vo.DictModel;
 import org.jeecg.common.util.DateUtils;
 import org.jeecg.modules.good.entity.*;
@@ -539,6 +540,9 @@ public class FrontGoodListController {
                 }
                 //获取商品信息
                 Map<String,Object> goodlistMap=iGoodListService.findGoodListByGoodId(goodId);
+                if (goodlistMap == null) {
+                    throw new JeecgBootException("商品id：" + goodId + " 对应的商品不存在");
+                }
 
                 /*兼容数据转换*/
                 if(isTransition.equals("1")){

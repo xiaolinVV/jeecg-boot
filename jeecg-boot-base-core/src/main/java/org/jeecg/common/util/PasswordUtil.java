@@ -188,5 +188,10 @@ public class PasswordUtil {
 		return (byte) "0123456789ABCDEF".indexOf(c);
 	}
 
+	public static void main(String[] args) {
+		String userpassword = PasswordUtil.encrypt("admin", "123456.", "g779wRyx");
+		System.out.println(userpassword);
+	}
+
 
 }

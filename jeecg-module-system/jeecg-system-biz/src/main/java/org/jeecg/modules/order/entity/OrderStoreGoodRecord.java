@@ -117,6 +117,14 @@ public class OrderStoreGoodRecord {
 	@Excel(name = "总计金额（小计）", width = 15)
     @ApiModelProperty(value = "总计金额（小计）")
 	private BigDecimal total;
+	/**应付款（平台应付款项）*/
+	@Excel(name = "应付款（平台应付款项）", width = 15)
+	@ApiModelProperty(value = "应付款（平台应付款项）")
+	private BigDecimal customaryDues;
+	/**平台实付款项*/
+	@Excel(name = "平台实付款项", width = 15)
+	@ApiModelProperty(value = "平台实付款项")
+	private BigDecimal actualPayment;
 	@Excel(name = "重量", width = 15)
 	@ApiModelProperty(value = "重量")
 	private BigDecimal weight;

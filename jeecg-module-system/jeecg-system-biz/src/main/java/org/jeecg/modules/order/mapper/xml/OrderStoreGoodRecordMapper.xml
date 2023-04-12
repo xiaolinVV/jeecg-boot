@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.order.mapper.OrderStoreGoodRecordMapper">
     <select id="getOrderStoreGoodRecordByOrderId" resultType="map">
-        SELECT main_picture AS mainPicture,good_name AS goodName,specification ,price,amount FROM `order_store_good_record`
+        SELECT id,main_picture AS mainPicture,good_name AS goodName,specification ,price,amount,customary_dues as customaryDues, actual_payment as actualPayment FROM `order_store_good_record`
         WHERE order_store_sub_list_id IN(SELECT id FROM `order_store_sub_list` WHERE order_store_list_id=#{orderId})
 
     </select>

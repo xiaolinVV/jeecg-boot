@@ -811,7 +811,7 @@ public class AfterOrderController {
                             //优惠券ID 不为空，则计算优惠金额
                             if (StrUtil.isNotBlank(discountId)) {
                                 marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
-                                if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
+                                if (marketingDiscountCoupon != null
                                         && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
                                     List<MarketingDisountGoodDTO> storeGood = marketingDiscountGoodService.findStoreGood(marketingDiscountCoupon.getMarketingDiscountId());
                                     marketingDiscountCouponGoodIds = storeGood.stream().map(MarketingDisountGoodDTO::getId).collect(Collectors.toList());
@@ -849,7 +849,7 @@ public class AfterOrderController {
 
                     if (StrUtil.isBlank(marketingStoreGiftCardMemberListId)) {
                         //判断哪些商品有优惠、哪些商品没优惠、并且计算优惠金额
-                        if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"2")
+                        if (marketingDiscountCoupon != null
                                 && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
                             if (marketingDiscountCouponGoodIds.contains(Convert.toStr(my.get("goodId")))) {
                                 marketingGoodIds.add(Convert.toStr(my.get("goodId")));
@@ -890,9 +890,10 @@ public class AfterOrderController {
                 //获取过滤的优惠券列表,使用了礼品卡，就不能再使用优惠券了 fix by zhangshaolin
                 List<Map<String,Object>> discounts=Lists.newArrayList();
                 if (StringUtils.isBlank(marketingStoreGiftCardMemberListId)) {
-                    //计算优惠券折扣多少钱
-                    if (marketingDiscountCoupon != null && StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")
-                            && StrUtil.equals(marketingDiscountCoupon.getStatus(), "1") && StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                    if (marketingDiscountCoupon == null || !marketingDiscountCoupon.getStatus().equals("1") || !StrUtil.equals(storeId,marketingDiscountCoupon.getSysUserId())) {
+                        log.info("优惠券不可用");
+                    }
+                    else if (StrUtil.equals(marketingDiscountCoupon.getIsNomal(), "2")){
                         BigDecimal discountLimitAmount = marketingDiscountCoupon.getDiscountLimitAmount();
                         BigDecimal discountUseAmount = marketingDiscountCoupon.getDiscountUseAmount();
                         BigDecimal discountPercent = marketingDiscountCoupon.getDiscountPercent();
@@ -925,6 +926,19 @@ public class AfterOrderController {
                                     settleMap.put("discountUseAmount",marketingTotalPrice);
                                     settleMap.put("discountBalance",NumberUtil.sub(discountBalance,marketingTotalPrice));
                                 }
+                            }
+                        }
+                    }else if (StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"0") || StrUtil.equals(marketingDiscountCoupon.getIsNomal(),"1")){
+                        if (marketingTotalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                            settleMap.put("marketingTotalPrice", marketingTotalPrice);
+                            settleMap.put("noMarketingTotalPrice", noMarketingTotalPrice);
+                            settleMap.put("marketingGoodIds", marketingGoodIds);
+                            settleMap.put("noMarketingGoodIds", noMarketingGoodIds);
+                            //满减券,判断消费满多少钱优惠多少钱
+                            BigDecimal completely = marketingDiscountCoupon.getCompletely();
+                            if (marketingTotalPrice.subtract(completely).doubleValue() >= 0) {
+                                coupon = marketingDiscountCoupon.getPrice();
+                                settleMap.put("coupon", coupon);
                             }
                         }
                     }
