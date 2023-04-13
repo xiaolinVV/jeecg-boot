@@ -59,21 +59,20 @@ public class AfterMemberGoodsCollectionController {
         Map<String,Object> paramObjectMap= Maps.newHashMap();
         paramObjectMap.put("memberId",memberId);
         paramObjectMap.put("pattern",pattern);
-
         IPage<Map<String,Object>> mapIPage=iMemberGoodsCollectionService.findMemberGoodsCollections(page,paramObjectMap);
-        mapIPage.getRecords().stream().forEach(m->{
-            //获取优惠券
-            //组织查询参数
-            Page<Map<String,Object>> dispage = new Page<Map<String,Object>>(1, 3);
-            Map<String,Object> paramMap= Maps.newHashMap();
-            paramMap.put("goodId",m.get("goodId"));
-            paramMap.put("isPlatform",m.get("isPlatform"));
-            m.put("discounts",iMarketingDiscountService.findMarketingDiscountByGoodId(dispage,paramMap).getRecords());
-
-            //添加专区标签
-
-
-        });
+//        mapIPage.getRecords().stream().forEach(m->{
+//            //获取优惠券
+//            //组织查询参数
+//            Page<Map<String,Object>> dispage = new Page<Map<String,Object>>(1, 3);
+//            Map<String,Object> paramMap= Maps.newHashMap();
+//            paramMap.put("goodId",m.get("goodId"));
+//            paramMap.put("isPlatform",m.get("isPlatform"));
+//            m.put("discounts",iMarketingDiscountService.findMarketingDiscountByGoodId(dispage,paramMap).getRecords());
+//
+//            //添加专区标签
+//
+//
+//        });
 
         result.setResult(mapIPage);
         result.success("获取商品收藏列表");
