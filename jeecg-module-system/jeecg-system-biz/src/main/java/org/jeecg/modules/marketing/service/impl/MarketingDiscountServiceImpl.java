@@ -214,6 +214,11 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
         return marketingDiscountMapper.findMarketingDiscountBySysUserId(page,sysUserId);
     }
 
+    @Override
+    public List<Map<String, Object>> findMarketingDiscountBySysUserIds(List<String> sysUserIds) {
+        return marketingDiscountMapper.findMarketingDiscountBySysUserIds(sysUserIds);
+    }
+
     /**
      * 优惠券新增
 

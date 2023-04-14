@@ -7,6 +7,7 @@
 	gsl.main_picture AS mainPicture,
 	0 AS isPlatform,
 	gsl.good_name AS goodName,
+    gsl.sys_user_id as  sysUserId,
 	( SELECT price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallPrice,
 	( SELECT vip_price FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ORDER BY price ASC LIMIT 1 ) AS smallVipPrice,
 	( SELECT SUM( sales_volume ) FROM good_store_specification WHERE good_store_list_id = gsl.id AND del_flag = '0' ) AS salesVolume,
@@ -430,6 +431,23 @@
         WHERE
         <include refid="goodWhere"></include>
           AND sys_user_id = #{sysUserId} ORDER BY salesVolume DESC,smallPrice,update_time
+    </select>
+    <select id="findGoodListBySysUserIds" resultType="map">
+        SELECT
+         <include refid="goodInfo"></include>
+        FROM
+          good_store_list gsl
+        WHERE
+        <include refid="goodWhere"></include>
+        <if test="sysUserIds != null and sysUserIds.size() != 0">
+            AND sys_user_id in
+            <foreach collection="sysUserIds" separator="," open="(" close=")" item="item" index="index">
+                #{item}
+            </foreach>
+        </if>
+
+
+        ORDER BY salesVolume DESC,smallPrice,update_time
     </select>
 
     <select id="findGoodListByGoodId" resultType="map">

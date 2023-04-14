@@ -73,6 +73,8 @@ public interface IGoodStoreListService extends IService<GoodStoreList> {
      */
     public IPage<Map<String,Object>> findGoodListBySysUserId(Page<Map<String,Object>> page,String sysUserId);
 
+    public List<Map<String, Object>> findGoodListBySysUserIds(List<String> sysUserIds);
+
     /**
      * 搜索商品列表
      * @param page

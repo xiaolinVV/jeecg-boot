@@ -61,6 +61,7 @@ public interface GoodStoreListMapper extends BaseMapper<GoodStoreList> {
      * @return
      */
     public IPage<Map<String,Object>> findGoodListBySysUserId(Page<Map<String,Object>> page, @Param("sysUserId")String sysUserId);
+    public List<Map<String,Object>> findGoodListBySysUserIds(@Param("sysUserIds")List<String> sysUserIds);
     /**
      *每日上新返回goodTypeId 集合 根据个数倒叙
      * @param createTime

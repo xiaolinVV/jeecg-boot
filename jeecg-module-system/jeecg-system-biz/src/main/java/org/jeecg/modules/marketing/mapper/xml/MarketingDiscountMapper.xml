@@ -74,6 +74,43 @@
           m.create_time DESC
     </select>
 
+    <select id="findMarketingDiscountBySysUserIds" resultType="map">
+        SELECT
+        m.id,
+        m.NAME,
+        m.is_threshold AS isThreshold,
+        m.completely AS completely,
+        m.subtract AS subtract,
+        DATE_FORMAT(m.start_time, '%Y-%m-%d') AS startTime,
+        DATE_FORMAT(m.end_time, '%Y-%m-%d') AS endTime,
+        m.is_give AS isGive,
+        m.is_platform AS isPlatform,
+        m.vouchers_way AS vouchersWay,
+        m.dis_data AS disData,
+        m.monad AS monad,
+        m.`main_picture` AS logoAddr,
+        m.`sys_user_id` as sysUserId
+        FROM
+        marketing_discount m
+        LEFT JOIN store_manage sm
+        ON sm.`sys_user_id` = m.`sys_user_id`
+        WHERE m.STATUS = '1'
+        AND m.del_flag = '0'
+        AND m.is_nomal = '0'
+        AND m.total > m.released_quantity
+        and m.start_time &lt; now()
+        and m.end_time &gt; now()
+        <if test="sysUserIds != null and sysUserIds.size() != 0">
+            AND m.sys_user_id in
+            <foreach collection="sysUserIds" item="item" index="index" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND sm.status = 1
+        </if>
+        ORDER BY m.is_platform DESC ,
+        m.create_time DESC
+    </select>
+
     <select id="findMarketingDiscountByIsThreshold" resultType="map">
           SELECT
           id,

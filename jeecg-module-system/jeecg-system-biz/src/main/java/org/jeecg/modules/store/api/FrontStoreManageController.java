@@ -1,6 +1,9 @@
 package org.jeecg.modules.store.api;
 
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -42,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 店铺接口无登录
@@ -278,20 +282,30 @@ public class FrontStoreManageController {
         if (storeManageMapList.getRecords().size()>0) {
             Map<String, Object> mapsMap = Maps.newHashMap();
 
+            List<String> storeDiscountSysUserIds = storeManageMapList.getRecords().stream().filter(s -> Convert.toInt(s.get("disCount")) > 0).map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
+            List<String> sysUserIds = storeManageMapList.getRecords().stream().map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
+            Map<String, List<Map<String, Object>>> storeDiscountsMap = MapUtil.newHashMap();
+            if (CollUtil.isNotEmpty(storeDiscountSysUserIds)) {
+                storeDiscountsMap  = iMarketingDiscountService.findMarketingDiscountBySysUserIds(storeDiscountSysUserIds).parallelStream().collect(Collectors.groupingBy(s -> Convert.toStr(s.get("sysUserId"))));
+            }
+
+//            Map<String, List<Map<String, Object>>> goodListMaps = MapUtil.newHashMap();
+//            if (CollUtil.isNotEmpty(sysUserIds)) {
+//                goodListMaps = iGoodStoreListService.findGoodListBySysUserIds(sysUserIds).stream().collect(Collectors.groupingBy(s -> Convert.toStr(s.get("sysUserId"))));
+//            }
+
+            Map<String, List<Map<String, Object>>> finalStoreDiscountsMap = storeDiscountsMap;
+//            Map<String, List<Map<String, Object>>> finalGoodListMaps = goodListMaps;
             storeManageMapList.getRecords().forEach(s -> {
                 //获取商品
-                Page<Map<String, Object>> storePage = new Page<Map<String, Object>>(1, 3);
-                s.put("storeGoods", iGoodStoreListService.findGoodListBySysUserId(storePage, s.get("sysUserId").toString()).getRecords());
+//                s.put("storeGoods", CollUtil.emptyIfNull(finalGoodListMaps.get(Convert.toStr(s.get("sysUserId")))));
                 if (Integer.parseInt(s.get("disCount").toString()) > 0) {
                     //获取券
-                    Page<Map<String, Object>> discountPage = new Page<Map<String, Object>>(1, 4);
-                    s.put("storeDiscounts", iMarketingDiscountService.findMarketingDiscountBySysUserId(discountPage, s.get("sysUserId").toString()).getRecords());
+                    s.put("storeDiscounts", CollUtil.emptyIfNull(finalStoreDiscountsMap.get(Convert.toStr(s.get("sysUserId")))));
                 } else {
                     s.put("storeDiscounts", "");
                 }
                 s.put("distance", "");
-
-
 
                 //获取标签信息
                 setStorelabels(s.get("id").toString(),s);

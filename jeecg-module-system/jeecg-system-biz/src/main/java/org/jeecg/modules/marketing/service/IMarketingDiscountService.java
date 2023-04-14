@@ -76,6 +76,13 @@ public interface IMarketingDiscountService extends IService<MarketingDiscount> {
     public IPage<Map<String,Object>> findMarketingDiscountBySysUserId(Page<Map<String,Object>> page,  String sysUserId);
 
     /**
+     * 根据店铺id列表查询优惠券信息
+     * @param sysUserIds 店铺用户id列表
+     * @return
+     */
+    public List<Map<String, Object>> findMarketingDiscountBySysUserIds(List<String> sysUserIds);
+
+    /**
      *新增优惠券
      */
     void savaMarketingDiscount(MarketingDiscount MarketingDiscount, String goodStoreListIds, String channelIds, String isPlatform);

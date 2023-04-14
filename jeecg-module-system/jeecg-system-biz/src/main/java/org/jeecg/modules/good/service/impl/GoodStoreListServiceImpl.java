@@ -221,6 +221,11 @@ public class GoodStoreListServiceImpl extends ServiceImpl<GoodStoreListMapper, G
     }
 
     @Override
+    public List<Map<String, Object>> findGoodListBySysUserIds(List<String> sysUserIds) {
+        return baseMapper.findGoodListBySysUserIds(sysUserIds);
+    }
+
+    @Override
     public IPage<Map<String, Object>> searchGoodList(Page<Map<String, Object>> page, Map<String, Object> paramMap) {
         return baseMapper.searchGoodList(page,paramMap);
     }

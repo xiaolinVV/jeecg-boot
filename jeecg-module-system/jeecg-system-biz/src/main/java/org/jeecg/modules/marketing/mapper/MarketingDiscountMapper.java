@@ -51,6 +51,7 @@ public interface MarketingDiscountMapper extends BaseMapper<MarketingDiscount> {
    * @return
    */
   public IPage<Map<String,Object>> findMarketingDiscountBySysUserId(Page<Map<String,Object>> page, @Param("sysUserId")   String sysUserId);
+  public List<Map<String,Object>>  findMarketingDiscountBySysUserIds(@Param("sysUserIds")  List<String> sysUserIds);
 
   /**
    *根据门槛查询优惠券信息
