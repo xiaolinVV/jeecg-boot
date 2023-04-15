@@ -379,6 +379,11 @@ public class FrontIndexController {
         SysFrontSetting sysFrontSetting=iSysFrontSettingService.getOne(new LambdaQueryWrapper<>());
         objectMap.put("frontLogo",sysFrontSetting.getFrontLogo());
         objectMap.put("indexBottomRecommend",sysFrontSetting.getIndexBottomRecommend());
+
+        //平台总会员数
+        LambdaQueryWrapper<MemberList> memberListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        memberListLambdaQueryWrapper.eq(MemberList::getStatus,"1");
+        objectMap.put("totalMemberCount",iMemberListService.count(memberListLambdaQueryWrapper));
         return Result.ok(objectMap);
     }
 }
