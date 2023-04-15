@@ -283,7 +283,7 @@ public class FrontStoreManageController {
             Map<String, Object> mapsMap = Maps.newHashMap();
 
             List<String> storeDiscountSysUserIds = storeManageMapList.getRecords().stream().filter(s -> Convert.toInt(s.get("disCount")) > 0).map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
-            List<String> sysUserIds = storeManageMapList.getRecords().stream().map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
+//            List<String> sysUserIds = storeManageMapList.getRecords().stream().map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
             Map<String, List<Map<String, Object>>> storeDiscountsMap = MapUtil.newHashMap();
             if (CollUtil.isNotEmpty(storeDiscountSysUserIds)) {
                 storeDiscountsMap  = iMarketingDiscountService.findMarketingDiscountBySysUserIds(storeDiscountSysUserIds).parallelStream().collect(Collectors.groupingBy(s -> Convert.toStr(s.get("sysUserId"))));
@@ -569,7 +569,6 @@ public class FrontStoreManageController {
      */
     @RequestMapping("findCityLifeStoreManageListNew")
     @ResponseBody
-    @Deprecated
     public Result<IPage<Map<String,Object>>> findCityLifeStoreManageListNew(Integer pattern,
                                                                             @RequestHeader(defaultValue = "")String longitude,
                                                                             @RequestHeader(defaultValue = "")String latitude,
@@ -604,6 +603,13 @@ public class FrontStoreManageController {
         IPage<Map<String,Object>> storeManageMapList=iStoreManageService.findCityLifeStoreManageListNew(page,paramObjectMap);
         if (storeManageMapList.getRecords().size()>0){
             Map<String,Object> mapsMap=Maps.newHashMap();
+
+            List<String> storeDiscountSysUserIds = storeManageMapList.getRecords().stream().filter(s -> Convert.toInt(s.get("disCount")) > 0).map(s -> Convert.toStr(s.get("sysUserId"))).collect(Collectors.toList());
+            Map<String, List<Map<String, Object>>> storeDiscountsMap = MapUtil.newHashMap();
+            if (CollUtil.isNotEmpty(storeDiscountSysUserIds)) {
+                storeDiscountsMap  = iMarketingDiscountService.findMarketingDiscountBySysUserIds(storeDiscountSysUserIds).parallelStream().collect(Collectors.groupingBy(s -> Convert.toStr(s.get("sysUserId"))));
+            }
+            Map<String, List<Map<String, Object>>> finalStoreDiscountsMap = storeDiscountsMap;
             storeManageMapList.getRecords().forEach(s->{
                 //获取商品
                 Page<Map<String,Object>> storePage = new Page<Map<String,Object>>(1, 3);
@@ -611,7 +617,7 @@ public class FrontStoreManageController {
                 if(Integer.parseInt(s.get("disCount").toString())>0) {
                     //获取券
                     Page<Map<String, Object>> discountPage = new Page<Map<String, Object>>(1, 4);
-                    s.put("storeDiscounts", iMarketingDiscountService.findMarketingDiscountBySysUserId(discountPage, s.get("sysUserId").toString()).getRecords());
+                    s.put("storeDiscounts", CollUtil.emptyIfNull(finalStoreDiscountsMap.get(Convert.toStr(s.get("sysUserId")))));
                 }else{
                     s.put("storeDiscounts", "");
                 }
