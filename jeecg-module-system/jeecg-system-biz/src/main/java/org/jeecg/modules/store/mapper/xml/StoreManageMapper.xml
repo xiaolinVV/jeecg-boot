@@ -1133,16 +1133,30 @@
     </select>
 
     <select id="getPrivilege" resultType="map">
-        SELECT IF
+        SELECT
+        sm.id as storeId,
+        IF
                    (
                            LENGTH(
                                    TRIM(sm.`sub_store_name`)) &gt; 0,
                            CONCAT(sm.`store_name`, '(', sm.`sub_store_name`, ')'),
                            sm.`store_name`
                    )          AS storeName,
+                sm.store_address AS storeAddress,
+                sm.comprehensive_evaluation AS comprehensiveEvaluation,
+                sm.longitude,
+                sm.latitude,
+                sm.STATUS,
+                sm.is_open_welfare_payments AS isOpenWelfarePayments,
+                sm.if_view_welfare_payments AS ifViewWelfarePayments,
                sm.sys_user_id AS sysUserId,
                sm.logo_addr   AS logoAddr,
-               md.logo_addr   AS mlogoAddr
+               md.logo_addr   AS mlogoAddr,
+                ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt;
+                released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
+                sm.sort,
+                sm.area_address AS areaAddress,
+                sm.take_out_phone AS takeOutPhone
         FROM member_designation_member_list mdml
                  LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
                  LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
@@ -1154,7 +1168,18 @@
     </select>
 
     <select id="getPrivilegeInfo" resultType="map">
-        SELECT IF
+        SELECT
+        sm.store_address AS storeAddress,
+        sm.comprehensive_evaluation AS comprehensiveEvaluation,
+        sm.longitude,
+        sm.latitude,
+        sm.STATUS,
+        sm.is_open_welfare_payments AS isOpenWelfarePayments,
+        sm.if_view_welfare_payments AS ifViewWelfarePayments,
+        sm.sort,
+        sm.area_address AS areaAddress,
+        sm.take_out_phone AS takeOutPhone,
+        IF
                    (
                            LENGTH(
                                    TRIM(sm.`sub_store_name`)) &gt; 0,
