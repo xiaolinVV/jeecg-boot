@@ -90,7 +90,7 @@ public class ErrAspect {
             }
         }
         // 发送飞书告警
-        String title = StrUtil.equals(env, "prod") ? "全惠付正式环境异常告警" : "全惠付开发环境异常告警";
+        String title = StrUtil.equals(env, "prod") ? "全惠付正式环境异常告警" : "全惠付v2开发环境异常告警";
         String buttonUrl = StrUtil.equals(env, "prod") ? "https://gk.quanhuifu.com" : "https://test.api.quanhuifu.com";
         String content = "告警时间: " + DateUtil.formatDateTime(DateUtil.date())
                 + "\n接口地址：" + requestPath
