@@ -109,6 +109,10 @@ public class AfterOrderProviderController {
                                 String string = orderStoreSubListService.listSkip(opl.getId());
                                 opl.setLogisticsTracking(string);
                             }
+                        }else {
+                            //请求接口更新物流数据接口
+                            String string = orderProviderListService.listSkip(opl.getId());
+                            opl.setLogisticsTracking(string);
                         }
                     } else {
                         String string = orderStoreSubListService.listSkip(opl.getId());
