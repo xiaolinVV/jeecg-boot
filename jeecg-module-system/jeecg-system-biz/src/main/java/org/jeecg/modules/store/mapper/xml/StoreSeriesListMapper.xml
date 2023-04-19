@@ -23,7 +23,19 @@ FROM
 				) AS storeName,
 				sm.logo_addr AS logoAddr,
 				sm.sys_user_id AS sysUserId,
-				ss.store_abstract AS storeAbstract
+				sm.store_address AS storeAddress,
+				sm.comprehensive_evaluation AS comprehensiveEvaluation,
+				sm.longitude,
+				sm.latitude,
+				sm.STATUS,
+				sm.is_open_welfare_payments AS isOpenWelfarePayments,
+				sm.if_view_welfare_payments AS ifViewWelfarePayments,
+				( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt;
+				released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
+				ss.store_abstract AS storeAbstract,
+				sm.sort,
+				sm.area_address AS areaAddress,
+				sm.take_out_phone AS takeOutPhone
 			FROM
 				store_series_list ss
 				LEFT JOIN `store_manage` sm ON ss.store_manage_id = sm.id
