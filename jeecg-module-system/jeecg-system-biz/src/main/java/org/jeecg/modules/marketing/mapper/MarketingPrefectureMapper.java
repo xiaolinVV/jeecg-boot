@@ -22,7 +22,7 @@ public interface MarketingPrefectureMapper extends BaseMapper<MarketingPrefectur
     List<Map<String,Object>> getMarketingPrefectureIdName(@Param("paramMap")Map<String,Object> paramMap);
 
     /**
-     * 专区首页数据
+     * 福利金专区首页数据
      *
      * @return
      */

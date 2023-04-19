@@ -210,6 +210,7 @@ public class FrontMarketingPrefectureGoodController {
         paramObjectMap.put("id",id);
         paramObjectMap.put("search",search);
         paramObjectMap.put("pattern",pattern);
+        paramObjectMap.put("isWelfare","1");
         //1  商品排序方式：是否启用排序值排序。0：停用（停用后客户端商品列表按照默认原系统的排序方式）；1：启用（启用后客户端商品列表排序按照排序值升序排序）；
         String goodsSortType = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "goods_sort_type");
         if(goodsSortType.equals("1")&&pattern==0){

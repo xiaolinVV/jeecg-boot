@@ -39,6 +39,7 @@
         `marketing_prefecture`
         WHERE del_flag = '0'
         AND STATUS = '1'
+        and is_welfare != '0'
         AND ((NOW() &gt;= start_time
         AND NOW() &lt;= end_time)
         OR valid_time = '0')

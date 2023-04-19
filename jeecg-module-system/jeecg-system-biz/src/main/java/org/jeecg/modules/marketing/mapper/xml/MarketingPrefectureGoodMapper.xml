@@ -337,6 +337,10 @@
 
         <include refid="marketingPrefectureGoodWhere"></include>
 
+        <if test="paramMap.isWelfare != null  and paramMap.isWelfare == 1">
+            and mp.is_welfare != '0'
+        </if>
+
         <if test="paramMap.search!=null"> and  (gl.good_name like concat('%',#{paramMap.search},'%') or gl.good_describe like concat('%',#{paramMap.search},'%'))</if>
         <if test="paramMap.pattern==5">order by mpg.sort asc </if>
         <if test="paramMap.pattern==null">ORDER BY smallPrice ASC,salesVolume,gl.update_time DESC </if>
