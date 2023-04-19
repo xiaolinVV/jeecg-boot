@@ -1,18 +1,31 @@
 package org.jeecg.modules.order.api;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.common.util.OrderNoUtils;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
+import org.jeecg.modules.order.entity.OrderStoreList;
+import org.jeecg.modules.order.entity.OrderStoreRefundList;
+import org.jeecg.modules.order.entity.OrderStoreSubList;
 import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
+import org.jeecg.modules.order.service.IOrderStoreListService;
+import org.jeecg.modules.order.service.IOrderStoreRefundListService;
+import org.jeecg.modules.order.service.IOrderStoreSubListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author 张少林
@@ -25,6 +38,15 @@ public class AfterOrderRefundController {
     @Autowired
     private IOrderStoreGoodRecordService orderStoreGoodRecordService;
 
+    @Autowired
+    private IOrderStoreRefundListService orderStoreRefundListService;
+
+    @Autowired
+    private IOrderStoreSubListService orderStoreSubListService;
+
+    @Autowired
+    private IOrderStoreListService orderStoreListService;
+
     /**
      * 申请订单售后
      *
@@ -33,16 +55,97 @@ public class AfterOrderRefundController {
      * @return
      */
     @PostMapping(value = "/apply")
-    public Result<String> applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
+    public Result<String> applyOrderRefund(@RequestBody ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
+        String isPlatform = applyOrderRefundDto.getIsPlatform();
+        String refundType = applyOrderRefundDto.getRefundType();
+        if (StrUtil.isBlank(isPlatform)) {
+            throw new JeecgBootException("isPlatform 不能为空");
+        }
+        if (StrUtil.isBlank(refundType)) {
+            throw new JeecgBootException("refundType 不能为空");
+        }
+        if (StrUtil.isBlank(applyOrderRefundDto.getOrderId())) {
+            throw new JeecgBootException("orderId 不能为空");
+        }
         String memberId = Convert.toStr(request.getAttribute("memberId"));
         if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "0")) {
-            OrderStoreGoodRecord orderStoreGoodRecord = orderStoreGoodRecordService.getById(applyOrderRefundDto.getOrderStoreGoodRecordId());
-            if (orderStoreGoodRecord == null) {
-                throw new JeecgBootException("订单商品信息不存在");
+            if (CollUtil.isEmpty(applyOrderRefundDto.getOrderStoreRefundLists())) {
+                throw new JeecgBootException("orderStoreRefundLists 不能为空");
+            }
+            List<String> orderStoreGoodRecordIds = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(OrderStoreRefundList::getOrderStoreGoodRecordId).collect(Collectors.toList());
+            if (CollUtil.isEmpty(orderStoreGoodRecordIds)) {
+                throw new JeecgBootException("orderStoreGoodRecordIds 不能为空");
             }
 
+            //查询订单信息
+            OrderStoreList orderStoreList = orderStoreListService.getById(applyOrderRefundDto.getOrderId());
+            if (orderStoreList == null) {
+                throw new JeecgBootException("订单不存在");
+            }
+            String status = orderStoreList.getStatus();
+            if (StrUtil.containsAny(status,"0","4")) {
+                throw new JeecgBootException("待付款/交易失败订单无法发起售后申请");
+            }
+            if (StrUtil.containsAny(refundType,"1","2")) {
+                // 退款退货、换货
+                if (StrUtil.equals(status,"1")) {
+                    throw new JeecgBootException("待发货订单无法发起退货、换货售后申请");
+                }
+            }
 
+            //批量查询订单商品列表
+            LambdaQueryWrapper<OrderStoreGoodRecord> orderStoreGoodRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderStoreGoodRecordLambdaQueryWrapper.in(OrderStoreGoodRecord::getId, orderStoreGoodRecordIds);
+            List<OrderStoreGoodRecord> orderStoreGoodRecordList = orderStoreGoodRecordService.list(orderStoreGoodRecordLambdaQueryWrapper);
+            Map<String, OrderStoreGoodRecord> orderStoreGoodRecordMap = orderStoreGoodRecordList.stream().collect(Collectors.toMap(OrderStoreGoodRecord::getId, orderStoreGoodRecord -> orderStoreGoodRecord));
 
+            //批量查询供应商订单列表
+            List<String> orderStoreSubListIds = orderStoreGoodRecordList.stream().map(OrderStoreGoodRecord::getOrderStoreSubListId).collect(Collectors.toList());
+            LambdaQueryWrapper<OrderStoreSubList> orderStoreSubListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderStoreSubListLambdaQueryWrapper.in(OrderStoreSubList::getId,orderStoreSubListIds);
+            Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.list().stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
+
+            // TODO: 2023/4/19  批量查询订单商品售后记录列表,用于售后金额、数量判断 @zhangshaolin
+
+            //保存售后申请单
+            List<OrderStoreRefundList> orderStoreRefundLists = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(orderStoreRefundList -> {
+                String orderStoreGoodRecordId = orderStoreRefundList.getOrderStoreGoodRecordId();
+                if (StrUtil.isBlank(orderStoreGoodRecordId)) {
+                    throw new JeecgBootException("orderStoreGoodRecordId 订单商品不能为空");
+                }
+                OrderStoreGoodRecord orderStoreGoodRecord = orderStoreGoodRecordMap.get(orderStoreGoodRecordId);
+                if (orderStoreGoodRecord == null) {
+                    throw new JeecgBootException("订单商品id: " + orderStoreRefundList.getOrderStoreGoodRecordId() + "不存在");
+                }
+                OrderStoreSubList orderStoreSubList = orderStoreSubListMap.get(orderStoreGoodRecord.getOrderStoreSubListId());
+                if (orderStoreSubList == null) {
+                    throw new JeecgBootException("店铺供应商订单不存在");
+                }
+
+                // TODO: 2023/4/19 判断申请金额、申请数量是否超出 @zhangshaolin
+
+                return new OrderStoreRefundList()
+                        .setOrderNo(orderStoreList.getOrderNo())
+                        .setOrderType(orderStoreList.getOrderType())
+                        .setGoodMainPicture(orderStoreGoodRecord.getMainPicture())
+                        .setGoodName(orderStoreGoodRecord.getGoodName())
+                        .setGoodSpecification(orderStoreGoodRecord.getSpecification())
+                        .setGoodStoreListId(orderStoreGoodRecord.getGoodStoreListId())
+                        .setGoodStoreSpecificationId(orderStoreGoodRecord.getGoodStoreSpecificationId())
+                        .setOrderStoreGoodRecordId(orderStoreGoodRecord.getId())
+                        .setMemberId(memberId)
+                        .setOrderStoreListId(orderStoreList.getId())
+                        .setSysUserId(orderStoreList.getSysUserId())
+                        .setOrderStoreSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
+                        .setRefundType(refundType)
+                        .setRefundReason(orderStoreRefundList.getRefundReason())
+                        .setRemarks(orderStoreRefundList.getRemarks())
+                        .setStatus("0")
+                        .setRefundCertificate(orderStoreRefundList.getRefundCertificate())
+                        .setRefundPrice(orderStoreRefundList.getRefundPrice())
+                        .setRefundAmount(orderStoreRefundList.getRefundAmount());
+            }).collect(Collectors.toList());
+            orderStoreRefundListService.saveBatch(orderStoreRefundLists);
 
         } else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
 
@@ -50,7 +153,6 @@ public class AfterOrderRefundController {
 
         return Result.OK();
     }
-
 
 
 }
