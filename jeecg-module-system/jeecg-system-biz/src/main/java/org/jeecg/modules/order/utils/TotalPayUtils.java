@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Log
@@ -450,48 +451,23 @@ public class TotalPayUtils {
 
                 //小程序
                 if(softModel.equals("0")){
-                    List<String> payModels= Lists.newArrayList();
-                    Arrays.asList(StringUtils.split(payModel,","))
-                            .stream().filter(model->!model.equals("1"))
-                            .forEach(model->{
-                                payModels.add(model);
-                            });
-                    payModel=StringUtils.join(payModels,",");
+                    payModel = Arrays.stream(StringUtils.split(payModel,",")).filter(model->!model.equals("1")).collect(Collectors.joining(","));
                 }
 
                 //app是否禁用小程序
                 if(softModel.equals("1")||softModel.equals("2")){
                     String closeWxPay = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "close_wx_pay");
                     if(closeWxPay.equals("1")){
-                        List<String> payModels = Lists.newArrayList();
-                        Arrays.asList(StringUtils.split(payModel, ","))
-                                .stream().filter(model -> !model.equals("0"))
-                                .forEach(model -> {
-                                    payModels.add(model);
-                                });
-                        payModel = StringUtils.join(payModels, ",");
-
+                        payModel = Arrays.stream(StringUtils.split(payModel, ",")).filter(model -> !model.equals("0")).collect(Collectors.joining(","));
                         log.info("收银台支付方式payModel：" + payModel);
                     }
                 }
 
                 if(isIntegral.equals("1")){
-                    List<String> payModels = Lists.newArrayList();
-                    Arrays.asList(StringUtils.split(payModel, ","))
-                            .stream().filter(model -> !model.equals("3"))
-                            .forEach(model -> {
-                                payModels.add(model);
-                            });
-                    payModel = StringUtils.join(payModels, ",");
+                    payModel = Arrays.stream(StringUtils.split(payModel, ",")).filter(model -> !model.equals("3")).collect(Collectors.joining(","));
                 }
                 if(removePay.equals("1")){
-                    List<String> payModels = Lists.newArrayList();
-                    Arrays.asList(StringUtils.split(payModel, ","))
-                            .stream().filter(model -> !model.equals("2"))
-                            .forEach(model -> {
-                                payModels.add(model);
-                            });
-                    payModel = StringUtils.join(payModels, ",");
+                    payModel = Arrays.stream(StringUtils.split(payModel, ",")).filter(model -> !model.equals("2")).collect(Collectors.joining(","));
                 }
 
                 log.info("收银台支付方式payModel："+payModel);
