@@ -2,28 +2,29 @@ package org.jeecg.modules.order.api;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
-import org.jeecg.common.util.OrderNoUtils;
+import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.dto.OrderRefundListDto;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
 import org.jeecg.modules.order.entity.OrderStoreList;
-import org.jeecg.modules.order.entity.OrderStoreRefundList;
 import org.jeecg.modules.order.entity.OrderStoreSubList;
+import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
-import org.jeecg.modules.order.service.IOrderStoreRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreSubListService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -43,7 +44,7 @@ public class AfterOrderRefundController {
     private IOrderStoreGoodRecordService orderStoreGoodRecordService;
 
     @Autowired
-    private IOrderStoreRefundListService orderStoreRefundListService;
+    private IOrderRefundListService orderRefundListService;
 
     @Autowired
     private IOrderStoreSubListService orderStoreSubListService;
@@ -111,7 +112,7 @@ public class AfterOrderRefundController {
             // TODO: 2023/4/19  批量查询订单商品售后记录列表,用于售后金额、数量判断 @zhangshaolin
 
             //保存售后申请单
-            List<OrderStoreRefundList> orderStoreRefundLists = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(orderRefundListDto -> {
+            List<OrderRefundList> orderRefundLists = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(orderRefundListDto -> {
                 String orderStoreGoodRecordId = orderRefundListDto.getOrderStoreGoodRecordId();
                 if (StrUtil.isBlank(orderStoreGoodRecordId)) {
                     throw new JeecgBootException("orderStoreGoodRecordId 订单商品不能为空");
@@ -137,19 +138,19 @@ public class AfterOrderRefundController {
                 if (refundPrice.compareTo(orderStoreGoodRecord.getActualPayment()) > 0) {
                     throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后金额大于实际支付金额，请重新填写");
                 }
-                return new OrderStoreRefundList()
+                return new OrderRefundList()
                         .setOrderNo(orderStoreList.getOrderNo())
                         .setOrderType(orderStoreList.getOrderType())
                         .setGoodMainPicture(orderStoreGoodRecord.getMainPicture())
                         .setGoodName(orderStoreGoodRecord.getGoodName())
                         .setGoodSpecification(orderStoreGoodRecord.getSpecification())
-                        .setGoodStoreListId(orderStoreGoodRecord.getGoodStoreListId())
-                        .setGoodStoreSpecificationId(orderStoreGoodRecord.getGoodStoreSpecificationId())
-                        .setOrderStoreGoodRecordId(orderStoreGoodRecord.getId())
+                        .setGoodListId(orderStoreGoodRecord.getGoodStoreListId())
+                        .setGoodSpecificationId(orderStoreGoodRecord.getGoodStoreSpecificationId())
+                        .setOrderGoodRecordId(orderStoreGoodRecord.getId())
                         .setMemberId(memberId)
-                        .setOrderStoreListId(orderStoreList.getId())
+                        .setOrderListId(orderStoreList.getId())
                         .setSysUserId(orderStoreList.getSysUserId())
-                        .setOrderStoreSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
+                        .setOrderSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
                         .setRefundType(refundType)
                         .setRefundReason(orderRefundListDto.getRefundReason())
                         .setRemarks(StrUtil.blankToDefault(orderRefundListDto.getRemarks(), applyOrderRefundDto.getRemarks()))
@@ -158,8 +159,8 @@ public class AfterOrderRefundController {
                         .setRefundPrice(orderRefundListDto.getRefundPrice())
                         .setRefundAmount(orderRefundListDto.getRefundAmount());
             }).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(orderStoreRefundLists)) {
-                orderStoreRefundListService.saveBatch(orderStoreRefundLists);
+            if (CollUtil.isNotEmpty(orderRefundLists)) {
+                orderRefundListService.saveBatch(orderRefundLists);
             }
         } else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
 

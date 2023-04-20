@@ -1954,7 +1954,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
     @Override
     @Transactional
     public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
-
+        // TODO: 2023/4/20 退款逻辑代码，可参考 @zhangshaolin
         OrderList orderList=this.getById(id);
         if(orderList.getStatus().equals("0")||orderList.getStatus().equals("4")){
             return Result.error("订单状态不正确");

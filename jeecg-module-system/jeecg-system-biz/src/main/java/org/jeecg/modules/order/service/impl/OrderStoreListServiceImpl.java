@@ -1012,6 +1012,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setPayWelfarePayments(orderStoreList.getActualPayment().divide(payOrderCarLog.getAllTotalPrice(), 2, RoundingMode.HALF_UP).multiply(payOrderCarLog.getWelfarePayments()));
             orderStoreList.setPayWelfarePaymentsPrice(orderStoreList.getPayWelfarePayments().multiply(integralValue));
         }
+        // TODO: 2023/4/20 计算商品实际支付金额占比 @zhangshaolin
 
 
         orderStoreList.setPayTime(new Date());
@@ -1064,6 +1065,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Override
     public void abrogateOrder(String id, String CloseExplain, String closeType) {
+        // TODO: 2023/4/20 关闭订单有代码可参考 @zhangshaolin
         OrderStoreList orderStoreList=this.getById(id);
         //买家关闭
         orderStoreList.setCloseType(closeType);
@@ -1127,7 +1129,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     @Override
     @Transactional
     public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
-
+        // TODO: 2023/4/20 退款接口代码可参考 @zhangshaolin
         OrderStoreList orderStoreList=this.getById(id);
         if(orderStoreList.getStatus().equals("0")||orderStoreList.getStatus().equals("4")){
             return Result.error("订单状态不正确");
