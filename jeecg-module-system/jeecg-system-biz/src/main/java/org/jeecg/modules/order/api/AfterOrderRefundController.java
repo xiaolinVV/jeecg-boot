@@ -158,13 +158,17 @@ public class AfterOrderRefundController {
                         .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
                         .setRefundPrice(orderRefundListDto.getRefundPrice())
                         .setRefundAmount(orderRefundListDto.getRefundAmount())
-                        .setIsPlatform(isPlatform);
+                        .setIsPlatform(isPlatform)
+                        .setGoodRecordTotal(orderStoreGoodRecord.getTotal())
+                        .setGoodRecordActualPayment(orderStoreGoodRecord.getActualPayment())
+                        .setGoodRecordCoupon(orderStoreGoodRecord.getCoupon())
+                        .setGoodRecordAmount(orderStoreGoodRecord.getAmount());
             }).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(orderRefundLists)) {
                 orderRefundListService.saveBatch(orderRefundLists);
             }
         } else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
-
+            // TODO: 2023/4/20 平台订单售后申请 @zhangshaolin
         }
 
         return Result.OK();
@@ -223,6 +227,8 @@ public class AfterOrderRefundController {
         }
         return Result.OK(orderRefundList);
     }
+
+    // TODO: 2023/4/20 撤销申请接口、修改申请接口 @zhangshaolin
 
 
 }
