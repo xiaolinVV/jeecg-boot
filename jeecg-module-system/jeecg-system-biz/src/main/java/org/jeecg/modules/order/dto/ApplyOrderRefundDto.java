@@ -3,7 +3,6 @@ package org.jeecg.modules.order.dto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import org.jeecg.modules.order.entity.OrderStoreRefundList;
 
 import java.io.Serializable;
 import java.util.List;
@@ -37,5 +36,5 @@ public class ApplyOrderRefundDto implements Serializable {
     /**
      * 店铺售后单列表
      */
-    private List<OrderStoreRefundList> orderStoreRefundLists;
+    private List<OrderRefundListDto> orderStoreRefundLists;
 }
