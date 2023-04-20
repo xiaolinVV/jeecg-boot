@@ -415,9 +415,7 @@ public class FrontPayController {
         if (payOrderLogJsonObject.containsKey("storeGoods")) {
             log.info("店铺订单处理" + payOrderCarLog.getId());
             JSONArray storeGoodsJsonArray = payOrderLogJsonObject.getJSONArray("storeGoods");
-            storeGoodsJsonArray.stream().forEach(storeGood -> {
-                iOrderStoreListService.paySuccessOrder(storeGood.toString(), payOrderCarLog);
-            });
+            storeGoodsJsonArray.forEach(storeGood -> iOrderStoreListService.paySuccessOrder(storeGood.toString(), payOrderCarLog));
         }
     }
 
