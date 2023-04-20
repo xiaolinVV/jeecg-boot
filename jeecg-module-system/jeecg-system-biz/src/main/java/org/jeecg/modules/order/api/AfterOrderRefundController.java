@@ -1,5 +1,6 @@
 package org.jeecg.modules.order.api;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.ObjectUtil;
@@ -197,7 +198,7 @@ public class AfterOrderRefundController {
     }
 
     /**
-     *  编辑
+     *  修改申请
      *
      * @param orderRefundList
      * @return
@@ -207,7 +208,46 @@ public class AfterOrderRefundController {
     //@RequiresPermissions("order:order_refund_list:edit")
     @RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
     public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
+        if (StrUtil.isBlank(orderRefundList.getId())) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(orderRefundList.getId());
+        if (orderRefundListServiceById == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundListServiceById.getStatus();
+        if (!StrUtil.containsAny(status,"0","5")) {
+            throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
+        }
+        // TODO: 2023/4/21 退款金额、退款件数、申请类型业务字段校验 @zhangshaolin
         orderRefundListService.updateById(orderRefundList);
+        return Result.OK("编辑成功!");
+    }
+
+    /**
+     *  修改申请
+     *
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:edit")
+    @RequestMapping(value = "/undo", method = {RequestMethod.PUT,RequestMethod.POST})
+    public Result<String> undo(@RequestParam(name = "id") String id) {
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(id);
+        if (orderRefundListServiceById == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundListServiceById.getStatus();
+        if (!StrUtil.containsAny(status,"0")) {
+            throw new JeecgBootException("非待处理售后单无法撤销申请");
+        }
+        String updateStatus = StrUtil.equals(orderRefundListServiceById.getRefundType(), "2") ? "7" : "6";
+        orderRefundListServiceById.setStatus(updateStatus);
+        // TODO: 2023/4/21 参考 close_explain 新增关闭原因字典 @zhangshaolin
+        orderRefundListServiceById.setCloseExplain("0");
+        orderRefundListService.updateById(orderRefundListServiceById);
         return Result.OK("编辑成功!");
     }
 
