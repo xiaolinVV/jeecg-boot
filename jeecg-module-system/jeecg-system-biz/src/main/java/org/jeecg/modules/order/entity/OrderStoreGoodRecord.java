@@ -125,6 +125,10 @@ public class OrderStoreGoodRecord {
 	@Excel(name = "平台实付款项", width = 15)
 	@ApiModelProperty(value = "平台实付款项")
 	private BigDecimal actualPayment;
+	/**优惠金额*/
+	@Excel(name = "优惠金额", width = 15)
+	@ApiModelProperty(value = "优惠金额")
+	private BigDecimal coupon;
 	@Excel(name = "重量", width = 15)
 	@ApiModelProperty(value = "重量")
 	private BigDecimal weight;

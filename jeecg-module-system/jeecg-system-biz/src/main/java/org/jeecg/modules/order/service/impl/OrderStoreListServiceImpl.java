@@ -527,6 +527,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreGoodRecord.setTotal(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
             orderStoreGoodRecord.setCustomaryDues(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
             orderStoreGoodRecord.setActualPayment(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
+            orderStoreGoodRecord.setCoupon(BigDecimal.ZERO);
             //商品总重量
             orderStoreGoodRecord.setWeight(goodStoreSpecification.getWeight().multiply(new BigDecimal(m.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
             iOrderStoreGoodRecordService.save(orderStoreGoodRecord);
@@ -721,10 +722,12 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                     BigDecimal orderGoodActualPayment = NumberUtil.sub(actualPayment,tempSum);
                     orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
                     orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                    orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                 } else {
                     BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(total, marketingTotalPrice), actualPayment);
                     orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
                     orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                    orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                     tempSum = NumberUtil.add(tempSum,orderGoodActualPayment);
                 }
             }
