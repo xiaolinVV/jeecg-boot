@@ -152,17 +152,16 @@ public class AfterOrderRefundController {
                         .setOrderStoreSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
                         .setRefundType(refundType)
                         .setRefundReason(orderRefundListDto.getRefundReason())
-                        .setRemarks(orderRefundListDto.getRemarks())
+                        .setRemarks(StrUtil.blankToDefault(orderRefundListDto.getRemarks(), applyOrderRefundDto.getRemarks()))
                         .setStatus("0")
-                        .setRefundCertificate(orderRefundListDto.getRefundCertificate())
+                        .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
                         .setRefundPrice(orderRefundListDto.getRefundPrice())
                         .setRefundAmount(orderRefundListDto.getRefundAmount());
             }).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(orderStoreRefundLists)) {
                 orderStoreRefundListService.saveBatch(orderStoreRefundLists);
             }
-        }
-        else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
+        } else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
 
         }
 

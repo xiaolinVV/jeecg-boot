@@ -34,6 +34,15 @@ public class ApplyOrderRefundDto implements Serializable {
     private String orderId;
 
     /**
+     * 申请说明
+     */
+    private String remarks;
+    /**
+     * 退款凭证图片，按照顺序逗号隔开
+     */
+    private String refundCertificate;
+
+    /**
      * 店铺售后单列表
      */
     private List<OrderRefundListDto> orderStoreRefundLists;
