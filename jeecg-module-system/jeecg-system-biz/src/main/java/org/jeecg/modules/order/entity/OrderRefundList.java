@@ -157,4 +157,9 @@ public class OrderRefundList implements Serializable {
 	@Excel(name = "快递单号", width = 15)
     @ApiModelProperty(value = "快递单号")
     private java.lang.String trackingNumber;
+
+    /**
+     * 0=店铺  1=平台
+     */
+    private String isPlatform;
 }

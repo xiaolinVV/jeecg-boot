@@ -157,7 +157,8 @@ public class AfterOrderRefundController {
                         .setStatus("0")
                         .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
                         .setRefundPrice(orderRefundListDto.getRefundPrice())
-                        .setRefundAmount(orderRefundListDto.getRefundAmount());
+                        .setRefundAmount(orderRefundListDto.getRefundAmount())
+                        .setIsPlatform(isPlatform);
             }).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(orderRefundLists)) {
                 orderRefundListService.saveBatch(orderRefundLists);
@@ -167,6 +168,60 @@ public class AfterOrderRefundController {
         }
 
         return Result.OK();
+    }
+
+    /**
+     * 分页列表查询
+     *
+     * @param orderRefundList
+     * @param pageNo
+     * @param pageSize
+     * @param req
+     * @return
+     */
+    //@AutoLog(value = "order_refund_list-分页列表查询")
+    @ApiOperation(value="order_refund_list-分页列表查询", notes="order_refund_list-分页列表查询")
+    @GetMapping(value = "/list")
+    public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
+                                                        @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+                                                        @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+                                                        HttpServletRequest req) {
+        QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
+        Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
+        IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
+        return Result.OK(pageList);
+    }
+
+    /**
+     *  编辑
+     *
+     * @param orderRefundList
+     * @return
+     */
+    @AutoLog(value = "order_refund_list-编辑")
+    @ApiOperation(value="order_refund_list-编辑", notes="order_refund_list-编辑")
+    //@RequiresPermissions("order:order_refund_list:edit")
+    @RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
+    public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
+        orderRefundListService.updateById(orderRefundList);
+        return Result.OK("编辑成功!");
+    }
+
+    /**
+     * 通过id查询
+     *
+     * @param id
+     * @return
+     */
+    //@AutoLog(value = "order_refund_list-通过id查询")
+    @ApiOperation(value="order_refund_list-通过id查询", notes="order_refund_list-通过id查询")
+    @GetMapping(value = "/queryById")
+    public Result<OrderRefundList> queryById(@RequestParam(name="id",required=true) String id) {
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if(orderRefundList==null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.OK(orderRefundList);
     }
 
 
