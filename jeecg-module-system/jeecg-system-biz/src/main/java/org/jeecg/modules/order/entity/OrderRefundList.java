@@ -262,4 +262,19 @@ public class OrderRefundList implements Serializable {
      * 拒绝原因
      */
     private String refusedExplain;
+
+    /**
+     * 商家收件人姓名
+     */
+    private String merchantConsigneeName;
+
+    /**
+     * 商家收件地址
+     */
+    private String merchantConsigneeAddress;
+
+    /**
+     * 商家收件手机号
+     */
+    private String merchantConsigneePhone;
 }

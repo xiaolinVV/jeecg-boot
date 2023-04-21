@@ -106,16 +106,27 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
 
 
     /**
-     * 通过
+     * 仅退款：后台确认退款，点击通过后：填写退款金额：微信渠道、余额、礼品卡、福利金
+     * 退款退货：后台确认退货退款，点击通过后：客服回填买家邮寄地址： 收件人+电话+地址
+     * 换货：后台点击通过后（客服回填买家邮寄地址）：收件人+电话+地址
      *
-     * @param id
+     * @param id                       售后单id
+     * @param actualRefundPrice        退款金额（微信）
+     * @param actualRefundBalance      退款余额
+     * @param merchantConsigneeName    商家收件人姓名
+     * @param merchantConsigneeAddress 商家收件地址
+     * @param merchantConsigneePhone   商家收件手机号
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
     @PostMapping(value = "/pass")
     public Result<String> pass(@RequestParam("id") String id,
-                               @RequestParam(value = "refundPrice", required = false) BigDecimal refundPrice,
-                               @RequestParam(value = "refundBalance", required = false) BigDecimal refundBalance) {
+                               @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
+                               @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance,
+                               @RequestParam(value = "merchantConsigneeName", required = false) String merchantConsigneeName,
+                               @RequestParam(value = "merchantConsigneeAddress", required = false) String merchantConsigneeAddress,
+                               @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone
+    ) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
         }
@@ -129,11 +140,16 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         }
         String refundType = orderRefundList.getRefundType();
         if (StrUtil.equals(refundType, "0")) {
-            // TODO: 2023/4/21 渠道金额回退处理 @zhangshaolin
+            // TODO: 2023/4/21  1、判断金额是否有传 2、各渠道资金退回
+
             orderRefundList.setStatus("3");
-        } else if (StrUtil.equals(refundType, "1")) {
-            orderRefundList.setStatus("1");
-        } else if (StrUtil.equals(refundType, "2")) {
+        } else if (StrUtil.containsAny(refundType, "1", "2")) {
+            if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress)) {
+                throw new JeecgBootException("邮寄地址信息不能为空");
+            }
+            orderRefundList.setMerchantConsigneeName(merchantConsigneeName);
+            orderRefundList.setMerchantConsigneePhone(merchantConsigneePhone);
+            orderRefundList.setMerchantConsigneeAddress(merchantConsigneeAddress);
             orderRefundList.setStatus("1");
         }
         orderRefundListService.updateById(orderRefundList);

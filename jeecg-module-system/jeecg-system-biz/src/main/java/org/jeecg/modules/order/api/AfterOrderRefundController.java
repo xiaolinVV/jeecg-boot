@@ -185,11 +185,11 @@ public class AfterOrderRefundController {
      * @return
      */
     //@AutoLog(value = "order_refund_list-分页列表查询")
-    @ApiOperation(value="order_refund_list-分页列表查询", notes="order_refund_list-分页列表查询")
+    @ApiOperation(value = "order_refund_list-分页列表查询", notes = "order_refund_list-分页列表查询")
     @GetMapping(value = "/list")
     public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
-                                                        @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
-                                                        @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+                                                        @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
+                                                        @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                         HttpServletRequest req) {
         QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
         Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
@@ -198,15 +198,15 @@ public class AfterOrderRefundController {
     }
 
     /**
-     *  修改申请
+     * 修改申请
      *
      * @param orderRefundList
      * @return
      */
     @AutoLog(value = "order_refund_list-编辑")
-    @ApiOperation(value="order_refund_list-编辑", notes="order_refund_list-编辑")
+    @ApiOperation(value = "order_refund_list-编辑", notes = "order_refund_list-编辑")
     //@RequiresPermissions("order:order_refund_list:edit")
-    @RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
+    @RequestMapping(value = "/edit", method = {RequestMethod.PUT, RequestMethod.POST})
     public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
         if (StrUtil.isBlank(orderRefundList.getId())) {
             throw new JeecgBootException("id 不能为空");
@@ -216,7 +216,7 @@ public class AfterOrderRefundController {
             throw new JeecgBootException("该售后单不存在");
         }
         String status = orderRefundListServiceById.getStatus();
-        if (!StrUtil.containsAny(status,"0","5")) {
+        if (!StrUtil.containsAny(status, "0", "5")) {
             throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
         }
         // TODO: 2023/4/21 退款金额、退款件数、申请类型业务字段校验 @zhangshaolin
@@ -225,12 +225,12 @@ public class AfterOrderRefundController {
     }
 
     /**
-     *  修改申请
+     * 修改申请
      *
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:edit")
-    @RequestMapping(value = "/undo", method = {RequestMethod.PUT,RequestMethod.POST})
+    @RequestMapping(value = "/undo", method = {RequestMethod.PUT, RequestMethod.POST})
     public Result<String> undo(@RequestParam(name = "id") String id) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
@@ -240,7 +240,7 @@ public class AfterOrderRefundController {
             throw new JeecgBootException("该售后单不存在");
         }
         String status = orderRefundListServiceById.getStatus();
-        if (!StrUtil.containsAny(status,"0")) {
+        if (!StrUtil.containsAny(status, "0")) {
             throw new JeecgBootException("非待处理售后单无法撤销申请");
         }
         String updateStatus = StrUtil.equals(orderRefundListServiceById.getRefundType(), "2") ? "7" : "6";
@@ -258,17 +258,14 @@ public class AfterOrderRefundController {
      * @return
      */
     //@AutoLog(value = "order_refund_list-通过id查询")
-    @ApiOperation(value="order_refund_list-通过id查询", notes="order_refund_list-通过id查询")
+    @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
-    public Result<OrderRefundList> queryById(@RequestParam(name="id",required=true) String id) {
+    public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
         OrderRefundList orderRefundList = orderRefundListService.getById(id);
-        if(orderRefundList==null) {
+        if (orderRefundList == null) {
             return Result.error("未找到对应数据");
         }
         return Result.OK(orderRefundList);
     }
-
-    // TODO: 2023/4/20 撤销申请接口、修改申请接口 @zhangshaolin
-
 
 }
