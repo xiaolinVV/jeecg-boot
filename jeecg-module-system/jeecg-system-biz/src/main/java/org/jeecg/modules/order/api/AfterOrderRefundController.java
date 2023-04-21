@@ -59,6 +59,7 @@ public class AfterOrderRefundController {
      */
     @PostMapping(value = "/apply")
     public Result<String> applyOrderRefund(@RequestBody ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
+        // TODO: 2023/4/22 换货类型，一开始就要填写换货信息、邮寄信息、物流公司、快递单号。提交后状态默认 2
         String isPlatform = applyOrderRefundDto.getIsPlatform();
         String refundType = applyOrderRefundDto.getRefundType();
         if (StrUtil.isBlank(isPlatform)) {
@@ -258,7 +259,7 @@ public class AfterOrderRefundController {
     }
 
     /**
-     * 填写退换货物流
+     * 退货退款：填写退货物流
      *
      * @return
      */
