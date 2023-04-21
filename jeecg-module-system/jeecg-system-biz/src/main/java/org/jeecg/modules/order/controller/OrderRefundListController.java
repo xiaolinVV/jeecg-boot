@@ -1,44 +1,27 @@
 package org.jeecg.modules.order.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import cn.hutool.core.util.StrUtil;
-import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.exception.JeecgBootException;
-import org.jeecg.common.system.query.QueryGenerator;
-import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.order.entity.OrderRefundList;
-import org.jeecg.modules.order.service.IOrderRefundListService;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.extern.slf4j.Slf4j;
-
-import org.jeecgframework.poi.excel.ExcelImportUtil;
-import org.jeecgframework.poi.excel.def.NormalExcelConstants;
-import org.jeecgframework.poi.excel.entity.ExportParams;
-import org.jeecgframework.poi.excel.entity.ImportParams;
-import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
-import org.jeecg.common.system.base.controller.JeecgController;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
-import com.alibaba.fastjson.JSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.common.system.base.controller.JeecgController;
+import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.modules.order.entity.OrderRefundList;
+import org.jeecg.modules.order.service.IOrderRefundListService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.math.BigDecimal;
+import java.util.Arrays;
 
 /**
  * @Description: order_refund_list
@@ -119,6 +102,42 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         orderRefundListServiceById.setRefusedExplain(refusedExplain);
         orderRefundListService.updateById(orderRefundListServiceById);
         return Result.OK("拒绝成功！");
+    }
+
+
+    /**
+     * 通过
+     *
+     * @param id
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:add")
+    @PostMapping(value = "/pass")
+    public Result<String> pass(@RequestParam("id") String id,
+                               @RequestParam(value = "refundPrice", required = false) BigDecimal refundPrice,
+                               @RequestParam(value = "refundBalance", required = false) BigDecimal refundBalance) {
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if (orderRefundList == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundList.getStatus();
+        if (!StrUtil.containsAny(status, "0")) {
+            throw new JeecgBootException("非待处理售后单无法点击通过");
+        }
+        String refundType = orderRefundList.getRefundType();
+        if (StrUtil.equals(refundType, "0")) {
+            // TODO: 2023/4/21 渠道金额回退处理 @zhangshaolin
+            orderRefundList.setStatus("3");
+        } else if (StrUtil.equals(refundType, "1")) {
+            orderRefundList.setStatus("1");
+        } else if (StrUtil.equals(refundType, "2")) {
+            orderRefundList.setStatus("1");
+        }
+        orderRefundListService.updateById(orderRefundList);
+        return Result.OK("通过成功！");
     }
 
     /**
