@@ -185,7 +185,6 @@ public class AfterOrderRefundController {
      * @return
      */
     //@AutoLog(value = "order_refund_list-分页列表查询")
-    @ApiOperation(value = "order_refund_list-分页列表查询", notes = "order_refund_list-分页列表查询")
     @GetMapping(value = "/list")
     public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
                                                         @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
@@ -203,10 +202,8 @@ public class AfterOrderRefundController {
      * @param orderRefundList
      * @return
      */
-    @AutoLog(value = "order_refund_list-编辑")
-    @ApiOperation(value = "order_refund_list-编辑", notes = "order_refund_list-编辑")
     //@RequiresPermissions("order:order_refund_list:edit")
-    @RequestMapping(value = "/edit", method = {RequestMethod.PUT, RequestMethod.POST})
+    @PostMapping(value = "/edit")
     public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
         if (StrUtil.isBlank(orderRefundList.getId())) {
             throw new JeecgBootException("id 不能为空");
@@ -225,12 +222,12 @@ public class AfterOrderRefundController {
     }
 
     /**
-     * 修改申请
+     * 撤销申请
      *
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:edit")
-    @RequestMapping(value = "/undo", method = {RequestMethod.PUT, RequestMethod.POST})
+    @PostMapping(value = "/undo")
     public Result<String> undo(@RequestParam(name = "id") String id) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
@@ -258,7 +255,6 @@ public class AfterOrderRefundController {
      * @return
      */
     //@AutoLog(value = "order_refund_list-通过id查询")
-    @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
         OrderRefundList orderRefundList = orderRefundListService.getById(id);
@@ -274,7 +270,7 @@ public class AfterOrderRefundController {
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:edit")
-    @RequestMapping(value = "/editLogisticsInfo", method = {RequestMethod.PUT, RequestMethod.POST})
+    @PostMapping(value = "/editLogisticsInfo")
     public Result<String> editLogisticsInfo(
             @RequestParam(name = "id") String id,
             @RequestParam(name = "buyerLogisticsCompany") String buyerLogisticsCompany,

@@ -38,7 +38,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     private IOrderRefundListService orderRefundListService;
 
     /**
-     * 分页列表查询
+     * 售后分页列表查询
      *
      * @param orderRefundList
      * @param pageNo
@@ -77,8 +77,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     /**
      * 拒绝
      *
-     * @param id
-     * @param refusedExplain
+     * @param id             售后单id
+     * @param refusedExplain 拒绝原因
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
@@ -160,16 +160,16 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     /**
      * 退款退货：后台查看买家的物流，点击确认收货后，进行退款
      *
-     * @param id                       售后单id
-     * @param actualRefundPrice        退款金额（微信）
-     * @param actualRefundBalance      退款余额
+     * @param id                  售后单id
+     * @param actualRefundPrice   退款金额（微信）
+     * @param actualRefundBalance 退款余额
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
     @PostMapping(value = "/confirm")
     public Result<String> confirm(@RequestParam("id") String id,
-                               @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
-                               @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance){
+                                  @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
+                                  @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
         // TODO: 2023/4/21 后台查看买家的物流，点击确认收货后，进行退款
         return Result.OK();
     }
