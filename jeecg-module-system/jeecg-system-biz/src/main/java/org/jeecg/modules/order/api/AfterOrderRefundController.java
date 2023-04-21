@@ -268,4 +268,29 @@ public class AfterOrderRefundController {
         return Result.OK(orderRefundList);
     }
 
+    /**
+     * 填写退货物流
+     *
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:edit")
+    @RequestMapping(value = "/editLogisticsInfo", method = {RequestMethod.PUT, RequestMethod.POST})
+    public Result<String> editLogisticsInfo(
+            @RequestParam(name = "id") String id,
+            @RequestParam(name = "buyerLogisticsCompany") String buyerLogisticsCompany,
+            @RequestParam(name = "buyerTrackingNumber") String buyerTrackingNumber) {
+        // TODO: 2023/4/21 填写退货物流 @zhangshaolin
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        if (StrUtil.hasBlank(buyerLogisticsCompany, buyerTrackingNumber)) {
+            throw new JeecgBootException("物流信息不能为空");
+        }
+        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(id);
+        if (orderRefundListServiceById == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        return Result.OK();
+    }
+
 }

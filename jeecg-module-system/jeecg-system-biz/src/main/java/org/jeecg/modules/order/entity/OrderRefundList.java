@@ -208,18 +208,6 @@ public class OrderRefundList implements Serializable {
     @Excel(name = "退款数量", width = 15)
     @ApiModelProperty(value = "退款数量")
     private java.math.BigDecimal refundAmount;
-    /**
-     * 物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
-     */
-    @Excel(name = "物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；", width = 15)
-    @ApiModelProperty(value = "物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；")
-    private java.lang.String logisticsCompany;
-    /**
-     * 快递单号
-     */
-    @Excel(name = "快递单号", width = 15)
-    @ApiModelProperty(value = "快递单号")
-    private java.lang.String trackingNumber;
 
     /**
      * 0=店铺  1=平台
@@ -277,4 +265,20 @@ public class OrderRefundList implements Serializable {
      * 商家收件手机号
      */
     private String merchantConsigneePhone;
+
+    /**
+     * 买家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
+     */
+    private java.lang.String buyerLogisticsCompany;
+    /**
+     * 买家快递单号
+     */
+    private java.lang.String buyerTrackingNumber;
+
+    /**
+     * 买家物流跟踪信息的json保存（每次查询的时候更新）
+     */
+    private String buyerLogisticsTracking;
+
+
 }

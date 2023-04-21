@@ -156,6 +156,24 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         return Result.OK("通过成功！");
     }
 
+
+    /**
+     * 退款退货：后台查看买家的物流，点击确认收货后，进行退款
+     *
+     * @param id                       售后单id
+     * @param actualRefundPrice        退款金额（微信）
+     * @param actualRefundBalance      退款余额
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:add")
+    @PostMapping(value = "/confirm")
+    public Result<String> confirm(@RequestParam("id") String id,
+                               @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
+                               @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance){
+        // TODO: 2023/4/21 后台查看买家的物流，点击确认收货后，进行退款
+        return Result.OK();
+    }
+
     /**
      * 编辑
      *
@@ -211,6 +229,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
+        // TODO: 2023/4/21 后台查看买家、卖家的物流，实时查询更新 @zhangshaolin
         OrderRefundList orderRefundList = orderRefundListService.getById(id);
         if (orderRefundList == null) {
             return Result.error("未找到对应数据");
