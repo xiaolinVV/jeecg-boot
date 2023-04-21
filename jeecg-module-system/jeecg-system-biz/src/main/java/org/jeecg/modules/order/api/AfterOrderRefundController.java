@@ -1,6 +1,5 @@
 package org.jeecg.modules.order.api;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.ObjectUtil;
@@ -9,9 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
@@ -265,7 +262,7 @@ public class AfterOrderRefundController {
     }
 
     /**
-     * 填写退货物流
+     * 填写退换货物流
      *
      * @return
      */
@@ -275,17 +272,24 @@ public class AfterOrderRefundController {
             @RequestParam(name = "id") String id,
             @RequestParam(name = "buyerLogisticsCompany") String buyerLogisticsCompany,
             @RequestParam(name = "buyerTrackingNumber") String buyerTrackingNumber) {
-        // TODO: 2023/4/21 填写退货物流 @zhangshaolin
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
         }
         if (StrUtil.hasBlank(buyerLogisticsCompany, buyerTrackingNumber)) {
             throw new JeecgBootException("物流信息不能为空");
         }
-        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(id);
-        if (orderRefundListServiceById == null) {
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if (orderRefundList == null) {
             throw new JeecgBootException("该售后单不存在");
         }
+        String status = orderRefundList.getStatus();
+        if (!StrUtil.equals(status, "1")) {
+            throw new JeecgBootException("售后单状态不是待买家退回，无法操作");
+        }
+        orderRefundList.setBuyerLogisticsCompany(buyerLogisticsCompany)
+                .setBuyerTrackingNumber(buyerTrackingNumber)
+                .setStatus("2");
+        orderRefundListService.updateById(orderRefundList);
         return Result.OK();
     }
 
