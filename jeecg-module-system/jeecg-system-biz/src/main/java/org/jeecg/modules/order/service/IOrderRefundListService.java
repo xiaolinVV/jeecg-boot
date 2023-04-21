@@ -11,4 +11,10 @@ import com.github.yulichang.base.MPJBaseService;
  */
 public interface IOrderRefundListService extends MPJBaseService<OrderRefundList> {
 
+    /**
+     * 通过id 查询
+     * @param id
+     * @return
+     */
+    OrderRefundList getOrderRefundListById(String id);
 }

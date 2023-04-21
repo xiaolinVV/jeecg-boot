@@ -229,12 +229,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
-        // TODO: 2023/4/21 后台查看买家、卖家的物流，实时查询更新 @zhangshaolin
-        OrderRefundList orderRefundList = orderRefundListService.getById(id);
-        if (orderRefundList == null) {
-            return Result.error("未找到对应数据");
-        }
-        return Result.OK(orderRefundList);
+        return Result.OK(orderRefundListService.getOrderRefundListById(id));
     }
 
     /**

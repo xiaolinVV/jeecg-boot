@@ -254,11 +254,7 @@ public class AfterOrderRefundController {
     //@AutoLog(value = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
-        OrderRefundList orderRefundList = orderRefundListService.getById(id);
-        if (orderRefundList == null) {
-            return Result.error("未找到对应数据");
-        }
-        return Result.OK(orderRefundList);
+        return Result.OK(orderRefundListService.getOrderRefundListById(id));
     }
 
     /**
