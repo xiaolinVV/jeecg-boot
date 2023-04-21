@@ -9,7 +9,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import cn.hutool.core.util.StrUtil;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.order.entity.OrderRefundList;
@@ -37,125 +40,155 @@ import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
- /**
+/**
  * @Description: order_refund_list
  * @Author: jeecg-boot
- * @Date:   2023-04-20
+ * @Date: 2023-04-20
  * @Version: V1.0
  */
-@Api(tags="order_refund_list")
+@Api(tags = "order_refund_list")
 @RestController
 @RequestMapping("/order/orderRefundList")
 @Slf4j
 public class OrderRefundListController extends JeecgController<OrderRefundList, IOrderRefundListService> {
-	@Autowired
-	private IOrderRefundListService orderRefundListService;
-	
-	/**
-	 * 分页列表查询
-	 *
-	 * @param orderRefundList
-	 * @param pageNo
-	 * @param pageSize
-	 * @param req
-	 * @return
-	 */
-	//@AutoLog(value = "order_refund_list-分页列表查询")
-	@ApiOperation(value="order_refund_list-分页列表查询", notes="order_refund_list-分页列表查询")
-	@GetMapping(value = "/list")
-	public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
-								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
-								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-								   HttpServletRequest req) {
-		QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
-		Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
-		IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
-		return Result.OK(pageList);
-	}
-	
-	/**
-	 *   添加
-	 *
-	 * @param orderRefundList
-	 * @return
-	 */
-	@AutoLog(value = "order_refund_list-添加")
-	@ApiOperation(value="order_refund_list-添加", notes="order_refund_list-添加")
-	//@RequiresPermissions("order:order_refund_list:add")
-	@PostMapping(value = "/add")
-	public Result<String> add(@RequestBody OrderRefundList orderRefundList) {
-		orderRefundListService.save(orderRefundList);
-		return Result.OK("添加成功！");
-	}
-	
-	/**
-	 *  编辑
-	 *
-	 * @param orderRefundList
-	 * @return
-	 */
-	@AutoLog(value = "order_refund_list-编辑")
-	@ApiOperation(value="order_refund_list-编辑", notes="order_refund_list-编辑")
-	//@RequiresPermissions("order:order_refund_list:edit")
-	@RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
-	public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
-		orderRefundListService.updateById(orderRefundList);
-		return Result.OK("编辑成功!");
-	}
-	
-	/**
-	 *   通过id删除
-	 *
-	 * @param id
-	 * @return
-	 */
-	@AutoLog(value = "order_refund_list-通过id删除")
-	@ApiOperation(value="order_refund_list-通过id删除", notes="order_refund_list-通过id删除")
-	//@RequiresPermissions("order:order_refund_list:delete")
-	@DeleteMapping(value = "/delete")
-	public Result<String> delete(@RequestParam(name="id",required=true) String id) {
-		orderRefundListService.removeById(id);
-		return Result.OK("删除成功!");
-	}
-	
-	/**
-	 *  批量删除
-	 *
-	 * @param ids
-	 * @return
-	 */
-	@AutoLog(value = "order_refund_list-批量删除")
-	@ApiOperation(value="order_refund_list-批量删除", notes="order_refund_list-批量删除")
-	//@RequiresPermissions("order:order_refund_list:deleteBatch")
-	@DeleteMapping(value = "/deleteBatch")
-	public Result<String> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
-		this.orderRefundListService.removeByIds(Arrays.asList(ids.split(",")));
-		return Result.OK("批量删除成功!");
-	}
-	
-	/**
-	 * 通过id查询
-	 *
-	 * @param id
-	 * @return
-	 */
-	//@AutoLog(value = "order_refund_list-通过id查询")
-	@ApiOperation(value="order_refund_list-通过id查询", notes="order_refund_list-通过id查询")
-	@GetMapping(value = "/queryById")
-	public Result<OrderRefundList> queryById(@RequestParam(name="id",required=true) String id) {
-		OrderRefundList orderRefundList = orderRefundListService.getById(id);
-		if(orderRefundList==null) {
-			return Result.error("未找到对应数据");
-		}
-		return Result.OK(orderRefundList);
-	}
+    @Autowired
+    private IOrderRefundListService orderRefundListService;
 
     /**
-    * 导出excel
-    *
-    * @param request
-    * @param orderRefundList
-    */
+     * 分页列表查询
+     *
+     * @param orderRefundList
+     * @param pageNo
+     * @param pageSize
+     * @param req
+     * @return
+     */
+    //@AutoLog(value = "order_refund_list-分页列表查询")
+    @ApiOperation(value = "order_refund_list-分页列表查询", notes = "order_refund_list-分页列表查询")
+    @GetMapping(value = "/list")
+    public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
+                                                        @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
+                                                        @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                        HttpServletRequest req) {
+        QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
+        Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
+        IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
+        return Result.OK(pageList);
+    }
+
+    /**
+     * 添加
+     *
+     * @param orderRefundList
+     * @return
+     */
+    @AutoLog(value = "order_refund_list-添加")
+    @ApiOperation(value = "order_refund_list-添加", notes = "order_refund_list-添加")
+    //@RequiresPermissions("order:order_refund_list:add")
+    @PostMapping(value = "/add")
+    public Result<String> add(@RequestBody OrderRefundList orderRefundList) {
+        orderRefundListService.save(orderRefundList);
+        return Result.OK("添加成功！");
+    }
+
+    /**
+     * 拒绝
+     *
+     * @param id
+     * @param refusedExplain
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:add")
+    @PostMapping(value = "/refused")
+    public Result<String> refused(@RequestParam("id") String id, @RequestParam("refusedExplain") String refusedExplain) {
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        if (StrUtil.isBlank(refusedExplain)) {
+            throw new JeecgBootException("请填写拒绝原因");
+        }
+        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(id);
+        if (orderRefundListServiceById == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundListServiceById.getStatus();
+        if (!StrUtil.containsAny(status, "0")) {
+            throw new JeecgBootException("非待处理售后单无法拒绝");
+        }
+        orderRefundListServiceById.setStatus("5");
+        orderRefundListServiceById.setRefusedExplain(refusedExplain);
+        orderRefundListService.updateById(orderRefundListServiceById);
+        return Result.OK("拒绝成功！");
+    }
+
+    /**
+     * 编辑
+     *
+     * @param orderRefundList
+     * @return
+     */
+    @AutoLog(value = "order_refund_list-编辑")
+    @ApiOperation(value = "order_refund_list-编辑", notes = "order_refund_list-编辑")
+    //@RequiresPermissions("order:order_refund_list:edit")
+    @RequestMapping(value = "/edit", method = {RequestMethod.PUT, RequestMethod.POST})
+    public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
+        orderRefundListService.updateById(orderRefundList);
+        return Result.OK("编辑成功!");
+    }
+
+    /**
+     * 通过id删除
+     *
+     * @param id
+     * @return
+     */
+    @AutoLog(value = "order_refund_list-通过id删除")
+    @ApiOperation(value = "order_refund_list-通过id删除", notes = "order_refund_list-通过id删除")
+    //@RequiresPermissions("order:order_refund_list:delete")
+    @DeleteMapping(value = "/delete")
+    public Result<String> delete(@RequestParam(name = "id", required = true) String id) {
+        orderRefundListService.removeById(id);
+        return Result.OK("删除成功!");
+    }
+
+    /**
+     * 批量删除
+     *
+     * @param ids
+     * @return
+     */
+    @AutoLog(value = "order_refund_list-批量删除")
+    @ApiOperation(value = "order_refund_list-批量删除", notes = "order_refund_list-批量删除")
+    //@RequiresPermissions("order:order_refund_list:deleteBatch")
+    @DeleteMapping(value = "/deleteBatch")
+    public Result<String> deleteBatch(@RequestParam(name = "ids", required = true) String ids) {
+        this.orderRefundListService.removeByIds(Arrays.asList(ids.split(",")));
+        return Result.OK("批量删除成功!");
+    }
+
+    /**
+     * 通过id查询
+     *
+     * @param id
+     * @return
+     */
+    //@AutoLog(value = "order_refund_list-通过id查询")
+    @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
+    @GetMapping(value = "/queryById")
+    public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if (orderRefundList == null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.OK(orderRefundList);
+    }
+
+    /**
+     * 导出excel
+     *
+     * @param request
+     * @param orderRefundList
+     */
     //@RequiresPermissions("order:order_refund_list:exportXls")
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(HttpServletRequest request, OrderRefundList orderRefundList) {
@@ -163,12 +196,12 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     }
 
     /**
-      * 通过excel导入数据
-    *
-    * @param request
-    * @param response
-    * @return
-    */
+     * 通过excel导入数据
+     *
+     * @param request
+     * @param response
+     * @return
+     */
     //@RequiresPermissions("order:order_refund_list:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {

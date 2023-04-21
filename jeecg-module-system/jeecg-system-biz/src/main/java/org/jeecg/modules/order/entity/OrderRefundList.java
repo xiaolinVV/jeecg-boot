@@ -251,8 +251,15 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "商品数量")
     private java.math.BigDecimal goodRecordAmount;
 
-    /**关闭原因，关联字典 refund_close_explain*/
+    /**
+     * 关闭原因，关联字典 refund_close_explain
+     */
     @ApiModelProperty(value = "关闭原因，关联字典 refund_close_explain")
     @Dict(dicCode = "refund_close_explain")
     private String closeExplain;
+
+    /**
+     * 拒绝原因
+     */
+    private String refusedExplain;
 }
