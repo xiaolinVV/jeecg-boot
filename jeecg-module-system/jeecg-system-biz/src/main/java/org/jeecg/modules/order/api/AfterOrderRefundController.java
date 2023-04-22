@@ -2,6 +2,7 @@ package org.jeecg.modules.order.api;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -71,16 +72,15 @@ public class AfterOrderRefundController {
         if (StrUtil.isBlank(applyOrderRefundDto.getOrderId())) {
             throw new JeecgBootException("orderId 不能为空");
         }
+        if (CollUtil.isEmpty(applyOrderRefundDto.getOrderRefundListDtos())) {
+            throw new JeecgBootException("orderStoreRefundLists 不能为空");
+        }
+        List<String> orderStoreGoodRecordIds = applyOrderRefundDto.getOrderRefundListDtos().stream().map(OrderRefundListDto::getOrderGoodRecordId).collect(Collectors.toList());
+        if (CollUtil.isEmpty(orderStoreGoodRecordIds)) {
+            throw new JeecgBootException("orderStoreGoodRecordIds 不能为空");
+        }
         String memberId = Convert.toStr(request.getAttribute("memberId"));
         if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "0")) {
-            if (CollUtil.isEmpty(applyOrderRefundDto.getOrderStoreRefundLists())) {
-                throw new JeecgBootException("orderStoreRefundLists 不能为空");
-            }
-            List<String> orderStoreGoodRecordIds = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(OrderRefundListDto::getOrderStoreGoodRecordId).collect(Collectors.toList());
-            if (CollUtil.isEmpty(orderStoreGoodRecordIds)) {
-                throw new JeecgBootException("orderStoreGoodRecordIds 不能为空");
-            }
-
             //查询订单信息
             OrderStoreList orderStoreList = orderStoreListService.getById(applyOrderRefundDto.getOrderId());
             if (orderStoreList == null) {
@@ -108,17 +108,25 @@ public class AfterOrderRefundController {
             orderStoreSubListLambdaQueryWrapper.in(OrderStoreSubList::getId, orderStoreSubListIds);
             Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.list().stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
 
-            // TODO: 2023/4/19  批量查询订单商品售后记录列表,用于售后金额、数量判断 @zhangshaolin
+            // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
+            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderRefundListLambdaQueryWrapper.eq(OrderRefundList::getMemberId, memberId)
+                    .notIn(OrderRefundList::getStatus, "5", "6", "7")
+                    .eq(OrderRefundList::getOrderListId, applyOrderRefundDto.getOrderId())
+                    .eq(OrderRefundList::getDelFlag, "0");
+            List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
+            Map<String, BigDecimal> refundAmountMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundAmount, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
+            Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
 
             //保存售后申请单
-            List<OrderRefundList> orderRefundLists = applyOrderRefundDto.getOrderStoreRefundLists().stream().map(orderRefundListDto -> {
-                String orderStoreGoodRecordId = orderRefundListDto.getOrderStoreGoodRecordId();
+            List<OrderRefundList> orderRefundLists = applyOrderRefundDto.getOrderRefundListDtos().stream().map(orderRefundListDto -> {
+                String orderStoreGoodRecordId = orderRefundListDto.getOrderGoodRecordId();
                 if (StrUtil.isBlank(orderStoreGoodRecordId)) {
                     throw new JeecgBootException("orderStoreGoodRecordId 订单商品不能为空");
                 }
                 OrderStoreGoodRecord orderStoreGoodRecord = orderStoreGoodRecordMap.get(orderStoreGoodRecordId);
                 if (orderStoreGoodRecord == null) {
-                    throw new JeecgBootException("订单商品id: " + orderRefundListDto.getOrderStoreGoodRecordId() + "不存在");
+                    throw new JeecgBootException("订单商品id: " + orderRefundListDto.getOrderGoodRecordId() + "不存在");
                 }
                 OrderStoreSubList orderStoreSubList = orderStoreSubListMap.get(orderStoreGoodRecord.getOrderStoreSubListId());
                 if (orderStoreSubList == null) {
@@ -130,13 +138,13 @@ public class AfterOrderRefundController {
                 BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderStoreGoodRecord.getActualPayment());
                 BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
 
-                // TODO: 2023/4/20 这里要结合实际售后历史做计算，再判断比较准确 @zhangshaolin
-                if (refundAmount.compareTo(orderStoreGoodRecord.getAmount()) > 0) {
+                if (refundAmount.compareTo(NumberUtil.sub(orderStoreGoodRecord.getAmount(),refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
                     throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后数量大于实际购买数量，请重新填写");
                 }
-                if (refundPrice.compareTo(orderStoreGoodRecord.getActualPayment()) > 0) {
+                if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(),refundPriceMap.getOrDefault(orderStoreGoodRecordId,BigDecimal.ZERO))) > 0) {
                     throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后金额大于实际支付金额，请重新填写");
                 }
+
                 return new OrderRefundList()
                         .setOrderNo(orderStoreList.getOrderNo())
                         .setOrderType(orderStoreList.getOrderType())

@@ -30,7 +30,7 @@ public class OrderRefundListDto implements Serializable {
      */
     @Excel(name = "订单商品记录id", width = 15)
     @ApiModelProperty(value = "订单商品记录id")
-    private String orderStoreGoodRecordId;
+    private String orderGoodRecordId;
 
     /**
      * 退款原因

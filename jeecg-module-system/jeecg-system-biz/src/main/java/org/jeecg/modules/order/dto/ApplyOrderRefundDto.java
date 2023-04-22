@@ -45,5 +45,5 @@ public class ApplyOrderRefundDto implements Serializable {
     /**
      * 店铺售后单列表
      */
-    private List<OrderRefundListDto> orderStoreRefundLists;
+    private List<OrderRefundListDto> orderRefundListDtos;
 }
