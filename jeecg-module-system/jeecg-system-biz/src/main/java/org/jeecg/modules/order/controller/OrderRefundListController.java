@@ -180,7 +180,42 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
                                   @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
                                   @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
         // TODO: 2023/4/21 后台查看买家的物流，点击确认收货后，进行退款
-        return Result.OK();
+        return Result.OK("确认收货成功，退款中");
+    }
+
+    /**
+     * 换货：商家发货
+     *
+     * @param id                       售后id
+     * @param merchantLogisticsCompany 换货：商家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
+     * @param merchantTrackingNumber   换货：商家快递单号
+     * @return
+     */
+    //@RequiresPermissions("order:order_refund_list:edit")
+    @PostMapping(value = "/editLogisticsInfo")
+    public Result<String> editLogisticsInfo(
+            @RequestParam(name = "id") String id,
+            @RequestParam(name = "merchantLogisticsCompany") String merchantLogisticsCompany,
+            @RequestParam(name = "merchantTrackingNumber") String merchantTrackingNumber) {
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        if (StrUtil.hasBlank(merchantLogisticsCompany, merchantTrackingNumber)) {
+            throw new JeecgBootException("物流信息不能为空");
+        }
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if (orderRefundList == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundList.getStatus();
+        if (!StrUtil.equals(status, "2")) {
+            throw new JeecgBootException("售后单状态不是换货中，无法操作");
+        }
+        orderRefundList.setMerchantLogisticsCompany(merchantLogisticsCompany)
+                .setMerchantTrackingNumber(merchantTrackingNumber)
+                .setStatus("8");
+        orderRefundListService.updateById(orderRefundList);
+        return Result.OK("换货成功，商家已发货");
     }
 
     /**
