@@ -278,6 +278,22 @@ public class OrderRefundList implements Serializable {
     private String merchantConsigneePhone;
 
     /**
+     * 商家收件地址：省
+     */
+    private String merchantConsigneeProvinceId;
+
+    /**
+     * 商家收件地址：市
+     */
+    private String merchantConsigneeCityId;
+
+    /**
+     * 商家收件地址：区
+     */
+    private String merchantConsigneeAreaId;
+
+
+    /**
      * 买家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
      */
     private java.lang.String buyerLogisticsCompany;

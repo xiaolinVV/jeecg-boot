@@ -110,12 +110,15 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * 退款退货：后台确认退货退款，点击通过后：客服回填买家邮寄地址： 收件人+电话+地址
      * 换货：后台点击通过后（客服回填买家邮寄地址）：收件人+电话+地址
      *
-     * @param id                       售后单id
-     * @param actualRefundPrice        退款金额（微信）
-     * @param actualRefundBalance      退款余额
-     * @param merchantConsigneeName    商家收件人姓名
-     * @param merchantConsigneeAddress 商家收件地址
-     * @param merchantConsigneePhone   商家收件手机号
+     * @param id                          售后单id
+     * @param actualRefundPrice           退款金额（微信）
+     * @param actualRefundBalance         退款余额
+     * @param merchantConsigneeName       商家收件人姓名
+     * @param merchantConsigneeAddress    商家收件地址
+     * @param merchantConsigneePhone      商家收件手机号
+     * @param merchantConsigneeProvinceId 省
+     * @param merchantConsigneeCityId     市
+     * @param merchantConsigneeAreaId     区
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
@@ -125,7 +128,10 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
                                @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance,
                                @RequestParam(value = "merchantConsigneeName", required = false) String merchantConsigneeName,
                                @RequestParam(value = "merchantConsigneeAddress", required = false) String merchantConsigneeAddress,
-                               @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone
+                               @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone,
+                               @RequestParam(value = "merchantConsigneeProvinceId", required = false) String merchantConsigneeProvinceId,
+                               @RequestParam(value = "merchantConsigneeCityId", required = false) String merchantConsigneeCityId,
+                               @RequestParam(value = "merchantConsigneeAreaId", required = false) String merchantConsigneeAreaId
     ) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
@@ -144,12 +150,15 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
 
             orderRefundList.setStatus("3");
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
-            if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress)) {
+            if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {
                 throw new JeecgBootException("邮寄地址信息不能为空");
             }
             orderRefundList.setMerchantConsigneeName(merchantConsigneeName);
             orderRefundList.setMerchantConsigneePhone(merchantConsigneePhone);
             orderRefundList.setMerchantConsigneeAddress(merchantConsigneeAddress);
+            orderRefundList.setMerchantConsigneeProvinceId(merchantConsigneeProvinceId);
+            orderRefundList.setMerchantConsigneeCityId(merchantConsigneeCityId);
+            orderRefundList.setMerchantConsigneeAreaId(merchantConsigneeAreaId);
             orderRefundList.setStatus("1");
         }
         orderRefundListService.updateById(orderRefundList);
