@@ -43,6 +43,11 @@ public class ApplyOrderRefundDto implements Serializable {
     private String refundCertificate;
 
     /**
+     * 换货：收货地址id
+     */
+    private String memberShippingAddressId;
+
+    /**
      * 店铺售后单列表
      */
     private List<OrderRefundListDto> orderRefundListDtos;

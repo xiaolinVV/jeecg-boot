@@ -61,4 +61,15 @@ public class OrderRefundListDto implements Serializable {
     @Excel(name = "退款数量", width = 15)
     @ApiModelProperty(value = "退款数量")
     private BigDecimal refundAmount;
+
+    /**
+     * 换货商品规格id
+     */
+    private java.lang.String exchangeGoodSpecificationId;
+
+    /**
+     * 换货规格名称，按照顺序逗号隔开
+     */
+    private java.lang.String exchangeGoodSpecification;
+
 }

@@ -308,5 +308,24 @@ public class OrderRefundList implements Serializable {
      */
     private String buyerLogisticsTracking;
 
+    /**
+     * 换货商品规格id，逗号分隔
+     */
+    @Excel(name = "商品规格id（只做对象映射）", width = 15)
+    @ApiModelProperty(value = "商品规格id（只做对象映射）")
+    private java.lang.String exchangeGoodSpecificationId;
+
+    /**
+     * 换货规格名称，按照顺序逗号隔开
+     */
+    @Excel(name = "规格名称，按照顺序逗号隔开", width = 15)
+    @ApiModelProperty(value = "规格名称，按照顺序逗号隔开")
+    private java.lang.String exchangeGoodSpecification;
+
+    /**
+     * 换货：买家收货地址
+     */
+    private java.lang.String exchangeMemberShippingAddress;
+
 
 }
