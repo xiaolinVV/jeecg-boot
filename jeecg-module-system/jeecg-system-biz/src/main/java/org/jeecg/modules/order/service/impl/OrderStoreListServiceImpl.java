@@ -506,6 +506,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
         // 参与优惠券优惠的店铺商品列表，暂存，用于后面更新商品实付金额 --- by zhangshaolin
         List<OrderStoreGoodRecord> marketingOrderStoreGoodRecords = CollUtil.newArrayList();
+        List<OrderStoreGoodRecord> goodGiftCardGoodRecords = CollUtil.newArrayList();
         for (Map<String,Object> m:myStoreGoods) {
             GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getById(m.get("goodSpecificationId").toString());
             GoodStoreList goodStoreList=iGoodStoreListService.getById(m.get("goodId").toString());
@@ -528,6 +529,8 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreGoodRecord.setCustomaryDues(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
             orderStoreGoodRecord.setActualPayment(orderStoreGoodRecord.getUnitPrice().multiply(orderStoreGoodRecord.getAmount()));
             orderStoreGoodRecord.setCoupon(BigDecimal.ZERO);
+            orderStoreGoodRecord.setGiftCardCoupon(BigDecimal.ZERO);
+            orderStoreGoodRecord.setTotalCoupon(BigDecimal.ZERO);
             //商品总重量
             orderStoreGoodRecord.setWeight(goodStoreSpecification.getWeight().multiply(new BigDecimal(m.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
             iOrderStoreGoodRecordService.save(orderStoreGoodRecord);
@@ -544,6 +547,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                 if(StringUtils.isBlank(marketingStoreGiftCardMemberListId)){
                     marketingStoreGiftCardMemberListId=m.get("marketingStoreGiftCardMemberListId").toString();
                 }
+                goodGiftCardGoodRecords.add(orderStoreGoodRecord);
             }
             if (StrUtil.isBlank(marketingStoreGiftCardMemberListId)) {
                 //判断哪些商品有优惠、哪些商品没优惠、并且计算优惠金额
@@ -710,7 +714,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setCoupon(totalPrice);
         }
 
-        // 更新订单商品表实付金额 @zhangshaolin
+        // 更新订单商品表扣除优惠券后的实付金额 @zhangshaolin
         if (CollUtil.isNotEmpty(marketingOrderStoreGoodRecords)) {
             //订单优惠后实付款，不含运费
             BigDecimal actualPayment = marketingTotalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(), new BigDecimal("0")));
@@ -723,11 +727,13 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                     orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
                     orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
                     orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                    orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                 } else {
                     BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(total, marketingTotalPrice), actualPayment);
                     orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
                     orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
                     orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                    orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                     tempSum = NumberUtil.add(tempSum,orderGoodActualPayment);
                 }
             }
@@ -743,8 +749,31 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             if(marketingStoreGiftCardMemberList.getDenomination().subtract(goodGiftCardtotal).doubleValue()<0){
                 goodGiftCardtotal=marketingStoreGiftCardMemberList.getDenomination();
             }
+            orderStoreList.setGiftCardTotal(goodGiftCardtotal);
             orderStoreList.setActiveId(marketingStoreGiftCardMemberListId);
             orderStoreList.setOrderType("7");
+            //        更新订单商品表扣除礼品卡后的实付金额
+            if ( goodGiftCardtotal.compareTo(BigDecimal.ZERO) != 0 && CollUtil.isNotEmpty(goodGiftCardGoodRecords)) {
+                BigDecimal tempSum = new BigDecimal(0);
+                for (int i = 0; i < goodGiftCardGoodRecords.size(); i++) {
+                    OrderStoreGoodRecord orderStoreGoodRecord = goodGiftCardGoodRecords.get(i);
+                    if (i == goodGiftCardGoodRecords.size() - 1) {
+                        BigDecimal orderGoodActualPayment = NumberUtil.sub(goodGiftCardtotal,tempSum);
+                        orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
+                        orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                        orderStoreGoodRecord.setGiftCardCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                        orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                    } else {
+                        BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(orderStoreGoodRecord.getTotal(), goodGiftCardtotal), goodGiftCardtotal);
+                        orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
+                        orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
+                        orderStoreGoodRecord.setGiftCardCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                        orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                        tempSum = NumberUtil.add(tempSum,orderGoodActualPayment);
+                    }
+                }
+                orderStoreGoodRecordService.updateBatchById(goodGiftCardGoodRecords);
+            }
         }
         /*店铺专区*/
         if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
