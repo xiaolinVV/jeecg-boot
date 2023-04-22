@@ -46,8 +46,6 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @param req
      * @return
      */
-    //@AutoLog(value = "order_refund_list-分页列表查询")
-    @ApiOperation(value = "order_refund_list-分页列表查询", notes = "order_refund_list-分页列表查询")
     @GetMapping(value = "/list")
     public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
                                                         @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
@@ -269,8 +267,6 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @param id
      * @return
      */
-    //@AutoLog(value = "order_refund_list-通过id查询")
-    @ApiOperation(value = "order_refund_list-通过id查询", notes = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
         return Result.OK(orderRefundListService.getOrderRefundListById(id));

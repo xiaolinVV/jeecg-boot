@@ -60,7 +60,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             updateById(orderRefundList);
         }
 
-        // TODO: 2023/4/22 返回卖家物流信息 @zhangshaolin
+        // TODO: 2023/4/22 返回商家物流信息 @zhangshaolin
         return orderRefundList;
     }
 }
