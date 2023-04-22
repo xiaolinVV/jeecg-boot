@@ -341,6 +341,11 @@ public class OrderRefundList implements Serializable {
      */
     private String merchantLogisticsTracking;
 
+    /**
+     * 退款json返回日志
+     */
+    private String refundJson;
+
 
 
 }

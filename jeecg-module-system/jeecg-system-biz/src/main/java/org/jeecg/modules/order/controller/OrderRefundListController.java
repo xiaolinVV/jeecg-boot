@@ -1,9 +1,12 @@
 package org.jeecg.modules.order.controller;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.huifu.adapay.core.exception.BaseAdaPayException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +15,15 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.order.entity.OrderRefundList;
+import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.service.IOrderRefundListService;
+import org.jeecg.modules.order.service.IOrderStoreListService;
+import org.jeecg.modules.order.utils.PayUtils;
+import org.jeecg.modules.pay.utils.HftxPayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -22,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * @Description: order_refund_list
@@ -36,6 +46,19 @@ import java.util.Arrays;
 public class OrderRefundListController extends JeecgController<OrderRefundList, IOrderRefundListService> {
     @Autowired
     private IOrderRefundListService orderRefundListService;
+
+    @Autowired
+    private IOrderStoreListService orderStoreListService;
+
+    @Autowired
+    private PayUtils payUtils;
+
+    @Autowired
+    private HftxPayUtils hftxPayUtils;
+
+    @Autowired
+    @Lazy
+    private IMemberListService memberListService;
 
     /**
      * 售后分页列表查询
@@ -145,7 +168,69 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         String refundType = orderRefundList.getRefundType();
         if (StrUtil.equals(refundType, "0")) {
             // TODO: 2023/4/21  1、判断金额是否有传 2、各渠道资金退回
+            String isPlatform = orderRefundList.getIsPlatform();
+            BigDecimal refundAmount = orderRefundList.getRefundAmount();
+            if (StrUtil.equals(isPlatform, "0")) {
+                //店铺订单退款处理：微信、余额、礼品卡  区分不同地点类型
+                OrderStoreList orderStoreList = orderStoreListService.getById(orderRefundList.getOrderListId());
+                if (orderStoreList == null) {
+                    throw new JeecgBootException("订单不存在");
+                }
+                String orderType = orderStoreList.getOrderType();
+                if (StrUtil.equals(orderType, "0")) {
+                    // 普通订单，走余额、微信退款，优先退余额
+                    BigDecimal totalRefundPrice = NumberUtil.add(actualRefundPrice, actualRefundBalance);
+                    if (totalRefundPrice.compareTo(orderRefundList.getGoodRecordActualPayment()) > 0) {
+                        throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于商品实付款：" + orderRefundList.getGoodRecordActualPayment() + ",无法操作");
+                    }
 
+                    //  先退余额，状态改为退款成功
+                    if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
+                        // TODO: 2023/4/23 退余额方案需要完善 @zhangshaolin
+//                        memberListService.addBlance(orderRefundList.getMemberId(),actualRefundBalance,orderStoreList.getOrderNo(),"2");
+                        orderRefundList.setStatus("4");
+                    }
+
+                    // 微信退款，走汇付，状态改为退款中，走异步通知
+                    if (actualRefundPrice.compareTo(BigDecimal.ZERO) >0) {
+                        if (StrUtil.isBlank(orderStoreList.getHftxSerialNumber()) || StrUtil.isBlank(orderStoreList.getSerialNumber()) || orderStoreList.getPayPrice().compareTo(BigDecimal.ZERO) == 0) {
+                            throw new JeecgBootException("该订单未使用微信支付，无法使用微信退款");
+                        }
+                        if (actualRefundPrice.compareTo(orderStoreList.getPayPrice()) > 0) {
+                            throw new JeecgBootException("微信退款金额大于该订单中微信实付款，无法发起退款");
+                        }
+                        Map<String, Object> balanceMap;
+                        try {
+                            balanceMap = this.hftxPayUtils.getSettleAccountBalance();
+                            log.info(JSON.toJSONString("账户余额信息：" + balanceMap));
+                            if (!balanceMap.get("status").equals("succeeded")) {
+                                throw new JeecgBootException("汇付账户的余额查询出错");
+                            }
+
+                            if (Double.parseDouble(balanceMap.get("avl_balance").toString()) < actualRefundPrice.doubleValue()) {
+                                Object var10000 = balanceMap.get("avl_balance");
+                                throw new JeecgBootException("汇付账户的余额：" + var10000 + "；需退金额：" + actualRefundPrice);
+                            }
+
+                        } catch (BaseAdaPayException var6) {
+                            var6.printStackTrace();
+                        }
+                        // TODO: 2023/4/23 设置回调接口地址 @zhangshaolin
+                        balanceMap = this.payUtils.refund(orderStoreList.getPayPrice(), orderStoreList.getSerialNumber(), orderStoreList.getHftxSerialNumber(),"");
+                        if (balanceMap.get("status").equals("failed")) {
+                            throw new JeecgBootException("现金退款失败");
+                        }
+                        orderRefundList.setRefundJson(JSON.toJSONString(balanceMap));
+                        orderRefundList.setStatus("3");
+                    }
+                    // TODO: 2023/4/23 售后单新增实际退款渠道明细字段  @zhangshaolin
+                    orderRefundListService.updateById(orderRefundList);
+
+                } else if (StrUtil.equals(orderType, "7")) {
+                    // 礼品卡订单，走余额、微信退款、礼品卡退款，优先退礼品卡金额
+
+                }
+            }
             orderRefundList.setStatus("3");
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
             if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {

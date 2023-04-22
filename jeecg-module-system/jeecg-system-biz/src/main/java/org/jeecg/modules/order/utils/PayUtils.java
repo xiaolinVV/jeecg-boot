@@ -54,6 +54,31 @@ public class PayUtils {
     }
 
     /**
+     * 退款
+     *
+     * @param price
+     * @param serialNumber
+     * @param hftxSerialNumber
+     * @return
+     */
+    public Map<String, Object> refund(BigDecimal price,String serialNumber,String hftxSerialNumber,String notifyUrl){
+        String weixinMiniSoftPay = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "weixin_mini_soft_pay");
+        //汇付天下支付退款
+        if(weixinMiniSoftPay.equals("1")&&price.doubleValue()>0){
+            try {
+                Map<String, Object> refundParams = new HashMap<>();
+                refundParams.put("refund_amt", price.setScale(2, RoundingMode.DOWN).toString());
+                refundParams.put("refund_order_no", serialNumber);
+                refundParams.put("notify_url",notifyUrl);
+                return Refund.create(hftxSerialNumber, refundParams);
+            } catch (BaseAdaPayException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
      *
      * 微信和支付宝支付
      *
