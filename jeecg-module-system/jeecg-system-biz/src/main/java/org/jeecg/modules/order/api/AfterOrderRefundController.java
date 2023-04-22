@@ -146,10 +146,16 @@ public class AfterOrderRefundController {
                         .setGoodListId(orderStoreGoodRecord.getGoodStoreListId())
                         .setGoodSpecificationId(orderStoreGoodRecord.getGoodStoreSpecificationId())
                         .setOrderGoodRecordId(orderStoreGoodRecord.getId())
+                        .setOrderSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
+                        .setGoodRecordTotal(orderStoreGoodRecord.getTotal())
+                        .setGoodRecordActualPayment(orderStoreGoodRecord.getActualPayment())
+                        .setGoodRecordCoupon(orderStoreGoodRecord.getCoupon())
+                        .setGoodRecordGiftCardCoupon(orderStoreGoodRecord.getGiftCardCoupon())
+                        .setGoodRecordTotalCoupon(orderStoreGoodRecord.getTotalCoupon())
+                        .setGoodRecordAmount(orderStoreGoodRecord.getAmount())
                         .setMemberId(memberId)
                         .setOrderListId(orderStoreList.getId())
                         .setSysUserId(orderStoreList.getSysUserId())
-                        .setOrderSubListId(orderStoreGoodRecord.getOrderStoreSubListId())
                         .setRefundType(refundType)
                         .setRefundReason(orderRefundListDto.getRefundReason())
                         .setRemarks(StrUtil.blankToDefault(orderRefundListDto.getRemarks(), applyOrderRefundDto.getRemarks()))
@@ -157,11 +163,7 @@ public class AfterOrderRefundController {
                         .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
                         .setRefundPrice(orderRefundListDto.getRefundPrice())
                         .setRefundAmount(orderRefundListDto.getRefundAmount())
-                        .setIsPlatform(isPlatform)
-                        .setGoodRecordTotal(orderStoreGoodRecord.getTotal())
-                        .setGoodRecordActualPayment(orderStoreGoodRecord.getActualPayment())
-                        .setGoodRecordCoupon(orderStoreGoodRecord.getCoupon())
-                        .setGoodRecordAmount(orderStoreGoodRecord.getAmount());
+                        .setIsPlatform(isPlatform);
             }).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(orderRefundLists)) {
                 orderRefundListService.saveBatch(orderRefundLists);

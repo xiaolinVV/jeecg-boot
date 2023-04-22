@@ -232,6 +232,17 @@ public class OrderRefundList implements Serializable {
     @Excel(name = "商品优惠金额", width = 15)
     @ApiModelProperty(value = "商品优惠金额")
     private java.math.BigDecimal goodRecordCoupon;
+
+    /**
+     * 礼品卡优惠金额
+     */
+    private BigDecimal goodRecordGiftCardCoupon;
+
+    /**
+     * 总优惠金额
+     */
+    private BigDecimal goodRecordTotalCoupon;
+
     /**
      * 商品数量
      */
