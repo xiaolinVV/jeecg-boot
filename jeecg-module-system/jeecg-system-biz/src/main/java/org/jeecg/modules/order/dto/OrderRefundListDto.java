@@ -18,7 +18,6 @@ import java.math.BigDecimal;
  * @Version: V1.0
  */
 @Data
-@TableName("order_store_refund_list")
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value = "order_store_refund_list对象", description = "店铺订单售后申请表")

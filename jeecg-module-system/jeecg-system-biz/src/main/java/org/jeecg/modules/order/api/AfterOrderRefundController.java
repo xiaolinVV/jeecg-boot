@@ -108,8 +108,8 @@ public class AfterOrderRefundController {
             //批量查询供应商订单列表
             List<String> orderStoreSubListIds = orderStoreGoodRecordList.stream().map(OrderStoreGoodRecord::getOrderStoreSubListId).collect(Collectors.toList());
             LambdaQueryWrapper<OrderStoreSubList> orderStoreSubListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderStoreSubListLambdaQueryWrapper.in(OrderStoreSubList::getId, orderStoreSubListIds);
-            Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.list().stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
+            orderStoreSubListLambdaQueryWrapper.in(OrderStoreSubList::getId, orderStoreSubListIds).eq(OrderStoreSubList::getOrderStoreListId,applyOrderRefundDto.getOrderId());
+            Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.list(orderStoreSubListLambdaQueryWrapper).stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
 
             // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -203,7 +203,7 @@ public class AfterOrderRefundController {
             //批量查询供应商订单列表
             List<String> orderProviderIds = orderProviderGoodRecordList.stream().map(OrderProviderGoodRecord::getOrderProviderListId).collect(Collectors.toList());
             LambdaQueryWrapper<OrderProviderList> orderProviderListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderProviderListLambdaQueryWrapper.in(OrderProviderList::getId,orderProviderIds);
+            orderProviderListLambdaQueryWrapper.in(OrderProviderList::getId,orderProviderIds).eq(OrderProviderList::getOrderListId,applyOrderRefundDto.getOrderId());
             Map<String, OrderProviderList> orderProviderListMap = orderProviderListService.list(orderProviderListLambdaQueryWrapper).stream().collect(Collectors.toMap(OrderProviderList::getId, orderProviderList -> orderProviderList));
 
             //保存售后申请单
@@ -263,7 +263,7 @@ public class AfterOrderRefundController {
                 orderRefundListService.saveBatch(orderRefundLists);
             }
         }
-        return Result.OK();
+        return Result.OK("申请成功");
     }
 
     /**
