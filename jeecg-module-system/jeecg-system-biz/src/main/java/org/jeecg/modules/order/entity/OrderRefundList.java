@@ -123,6 +123,7 @@ public class OrderRefundList implements Serializable {
      */
     @Excel(name = "会员id", width = 15)
     @ApiModelProperty(value = "会员id")
+    @Dict(dictTable = "member_list",dicCode = "id",dicText = "phone")
     private java.lang.String memberId;
     /**
      * 店铺用户id
