@@ -155,7 +155,6 @@ public class MarketingIntegralTaskServiceImpl extends ServiceImpl<MarketingInteg
     public boolean manyTimesDay(String memberId, String taskType) {
         MarketingIntegralTaskBaseSetting marketingIntegralTaskBaseSetting=iMarketingIntegralTaskBaseSettingService.getOne(new LambdaQueryWrapper<MarketingIntegralTaskBaseSetting>()
                 .eq(MarketingIntegralTaskBaseSetting::getStatus,"1"));
-        // TODO: 2023/2/7  MarketingIntegralTaskBaseSetting 一直为空,就无法给注册积分奖励 @zhangshaolin
         if(marketingIntegralTaskBaseSetting==null){
             return false;
         }

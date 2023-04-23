@@ -1100,7 +1100,6 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Override
     public void abrogateOrder(String id, String CloseExplain, String closeType) {
-        // TODO: 2023/4/20 关闭订单有代码可参考 @zhangshaolin
         OrderStoreList orderStoreList=this.getById(id);
         //买家关闭
         orderStoreList.setCloseType(closeType);
