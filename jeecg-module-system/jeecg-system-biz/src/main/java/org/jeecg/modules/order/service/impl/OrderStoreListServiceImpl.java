@@ -743,33 +743,36 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         //无优惠的总价
 //        totalPrice=totalPrice.add(freight);
 
+        //礼品卡实际抵扣金额
+        BigDecimal actuaGoodGiftCardtotal = new BigDecimal("0");
         //判断礼品卡的优惠
         if(StringUtils.isNotBlank(marketingStoreGiftCardMemberListId)){
             MarketingStoreGiftCardMemberList marketingStoreGiftCardMemberList=iMarketingStoreGiftCardMemberListService.getById(marketingStoreGiftCardMemberListId);
             if(marketingStoreGiftCardMemberList.getDenomination().subtract(goodGiftCardtotal).doubleValue()<0){
-                goodGiftCardtotal=marketingStoreGiftCardMemberList.getDenomination();
+                actuaGoodGiftCardtotal=marketingStoreGiftCardMemberList.getDenomination();
             }
-            orderStoreList.setGiftCardTotal(goodGiftCardtotal);
+            orderStoreList.setGiftCardTotal(actuaGoodGiftCardtotal);
             orderStoreList.setActiveId(marketingStoreGiftCardMemberListId);
             orderStoreList.setOrderType("7");
             //        更新订单商品表扣除礼品卡后的实付金额
-            if ( goodGiftCardtotal.compareTo(BigDecimal.ZERO) != 0 && CollUtil.isNotEmpty(goodGiftCardGoodRecords)) {
+            if ( actuaGoodGiftCardtotal.compareTo(BigDecimal.ZERO) != 0 && CollUtil.isNotEmpty(goodGiftCardGoodRecords)) {
                 BigDecimal tempSum = new BigDecimal(0);
                 for (int i = 0; i < goodGiftCardGoodRecords.size(); i++) {
                     OrderStoreGoodRecord orderStoreGoodRecord = goodGiftCardGoodRecords.get(i);
                     if (i == goodGiftCardGoodRecords.size() - 1) {
-                        BigDecimal orderGoodActualPayment = NumberUtil.sub(goodGiftCardtotal,tempSum);
-                        orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
-                        orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
-                        orderStoreGoodRecord.setGiftCardCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
-                        orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
+                        BigDecimal orderGoodActualGiftCardPayment = NumberUtil.sub(actuaGoodGiftCardtotal,tempSum);
+                        orderStoreGoodRecord.setCustomaryDues(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
+                        orderStoreGoodRecord.setActualPayment(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
+                        orderStoreGoodRecord.setGiftCardCoupon(orderGoodActualGiftCardPayment);
+                        orderStoreGoodRecord.setTotalCoupon(orderGoodActualGiftCardPayment);
                     } else {
-                        BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(orderStoreGoodRecord.getTotal(), goodGiftCardtotal), goodGiftCardtotal);
-                        orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
-                        orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
-                        orderStoreGoodRecord.setGiftCardCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
-                        orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
-                        tempSum = NumberUtil.add(tempSum,orderGoodActualPayment);
+                        //商品实际礼品卡抵扣金额
+                        BigDecimal orderGoodActualGiftCardPayment = NumberUtil.mul(NumberUtil.div(orderStoreGoodRecord.getTotal(), goodGiftCardtotal), actuaGoodGiftCardtotal);
+                        orderStoreGoodRecord.setCustomaryDues(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
+                        orderStoreGoodRecord.setActualPayment(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
+                        orderStoreGoodRecord.setGiftCardCoupon(orderGoodActualGiftCardPayment);
+                        orderStoreGoodRecord.setTotalCoupon(orderGoodActualGiftCardPayment);
+                        tempSum = NumberUtil.add(tempSum,orderGoodActualGiftCardPayment);
                     }
                 }
                 orderStoreGoodRecordService.updateBatchById(goodGiftCardGoodRecords);
@@ -782,12 +785,12 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setOrderType("8");
         }
         //设置礼品卡优惠金额
-        orderStoreList.setGiftCardTotal(goodGiftCardtotal);
+        orderStoreList.setGiftCardTotal(actuaGoodGiftCardtotal);
 
         //应付款
-        orderStoreList.setCustomaryDues(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(goodGiftCardtotal));
+        orderStoreList.setCustomaryDues(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(actuaGoodGiftCardtotal));
         //实付款
-        orderStoreList.setActualPayment(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(goodGiftCardtotal));
+        orderStoreList.setActualPayment(totalPrice.subtract(ObjectUtil.defaultIfNull(orderStoreList.getCoupon(),new BigDecimal("0"))).subtract(actuaGoodGiftCardtotal));
 
         //实付款小于等于，就设置为0
         if(orderStoreList.getActualPayment().doubleValue()<=0){
