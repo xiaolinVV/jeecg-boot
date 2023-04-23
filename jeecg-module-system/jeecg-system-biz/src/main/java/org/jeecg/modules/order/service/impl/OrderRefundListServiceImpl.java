@@ -134,9 +134,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (totalRefundPrice.compareTo(orderRefundList.getRefundPrice()) > 0) {
                 throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于申请金额：" + orderRefundList.getRefundPrice() + ",无法操作");
             }
-            if (totalRefundPrice.compareTo(NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO))) > 0) {
-                throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于实际可退款金额：" + NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO)) + ",无法操作");
-            }
+//            if (totalRefundPrice.compareTo(NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO))) > 0) {
+//                throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于实际可退款金额：" + NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO)) + ",无法操作");
+//            }
             //  先退余额，状态改为退款成功
             if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
                 boolean addBlance = memberListService.addBlance(orderRefundList.getMemberId(), actualRefundBalance, orderStoreList.getOrderNo(), "2");
@@ -151,7 +151,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     throw new JeecgBootException("该订单未使用微信支付，无法使用微信退款");
                 }
                 if (actualRefundPrice.compareTo(orderStoreList.getPayPrice()) > 0) {
-                    // TODO: 2023/4/23 这里分多次退款的话，存在判断bug，为了安全起见，当下先这么判断吧 @zhangshaolin
+                    // TODO: 2023/4/23 这里分多次退款的话，可能存在判断bug，为了安全起见，当下先这么判断吧 @zhangshaolin
                     throw new JeecgBootException("微信退款金额大于该订单中微信实付款，无法发起退款");
                 }
                 Map<String, Object> balanceMap;

@@ -174,10 +174,10 @@ public class AfterOrderRefundController {
                 BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
 
                 if (refundAmount.compareTo(NumberUtil.sub(orderStoreGoodRecord.getAmount(), refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
-                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后数量大于实际购买数量，请重新填写");
+                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + orderRefundListDto.getRefundAmount() + "已申请数量：" + refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO));
                 }
                 if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), refundPriceMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
-                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后金额大于实际支付金额，请重新填写");
+                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + orderRefundListDto.getRefundPrice() + "已售后金额：" + refundPriceMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO));
                 }
                 OrderRefundList orderRefundList = new OrderRefundList()
                         .setOrderNo(orderStoreList.getOrderNo())
