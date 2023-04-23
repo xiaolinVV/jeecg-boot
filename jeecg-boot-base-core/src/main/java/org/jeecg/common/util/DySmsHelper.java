@@ -72,11 +72,11 @@ public class DySmsHelper {
         return accessKeySecret;
     }
 
-    @PostConstruct
-    public void initParam() {
-        DySmsHelper.accessKeyId = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "access_key_id");
-        DySmsHelper.accessKeySecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "access_key_secret");
-    }
+//    @PostConstruct
+//    public void initParam() {
+//        DySmsHelper.accessKeyId = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "access_key_id");
+//        DySmsHelper.accessKeySecret = commonApi.translateDictFromTable("sys_dict_item", "item_value", "item_text", "access_key_secret");
+//    }
 
 
     public static boolean sendSms(String phone, JSONObject templateParamJson, DySmsEnum dySmsEnum) throws ClientException {
