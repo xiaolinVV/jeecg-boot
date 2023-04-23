@@ -1,13 +1,9 @@
 package org.jeecg.modules.order.controller;
 
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.huifu.adapay.core.exception.BaseAdaPayException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -16,15 +12,9 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecg.common.system.query.QueryGenerator;
-import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.order.entity.OrderRefundList;
-import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.service.IOrderRefundListService;
-import org.jeecg.modules.order.service.IOrderStoreListService;
-import org.jeecg.modules.order.utils.PayUtils;
-import org.jeecg.modules.pay.utils.HftxPayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -32,9 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @Description: order_refund_list
@@ -157,8 +144,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         }
         String refundType = orderRefundList.getRefundType();
         if (StrUtil.equals(refundType, "0")) {
-            // TODO: 2023/4/21  1、判断金额是否有传 2、各渠道资金退回
-
+            orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
             if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {
                 throw new JeecgBootException("邮寄地址信息不能为空");
@@ -189,7 +175,18 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     public Result<String> confirm(@RequestParam("id") String id,
                                   @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
                                   @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
-        // TODO: 2023/4/21 后台查看买家的物流，点击确认收货后，进行退款
+        if (StrUtil.isBlank(id)) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        if (orderRefundList == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundList.getStatus();
+        if (StrUtil.equals(status, "2")) {
+            throw new JeecgBootException("售后状态不是待商家确认收货，无法操作");
+        }
+        orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         return Result.OK("确认收货成功，退款中");
     }
 
