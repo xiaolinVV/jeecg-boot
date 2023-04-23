@@ -115,6 +115,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             String orderType = orderStoreList.getOrderType();
             if (StrUtil.equals(orderType, "0")) {
+                // TODO: 2023/4/23 判断订单中所有参与优惠券优惠的商品全部退款后，退还优惠券 @zhangshaolin
                 LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 orderRefundListLambdaQueryWrapper.eq(OrderRefundList::getMemberId, orderRefundList.getMemberId())
                         .notIn(OrderRefundList::getStatus, "5", "6", "7")
