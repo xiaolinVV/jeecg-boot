@@ -5,6 +5,7 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.ocean.rawsdk.common.SDKResult;
 import com.alibaba.product.param.*;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.modules.good.entity.GoodList;
 import org.jeecg.modules.good.entity.GoodSpecification;
+import org.jeecg.modules.good.entity.GoodType;
 import org.jeecg.modules.good.service.IGoodListService;
 import org.jeecg.modules.good.service.IGoodSpecificationService;
 import org.jeecg.modules.good.service.IGoodTypeService;
@@ -70,14 +72,29 @@ public class IAli1688ServiceImpl implements IAli1688Service {
         //供应链用户id
         String sysUserId = "220ebc6c395bdb6cfc7c5b721746a79c";//1688供应商
 
-        //先判断平台中是否存在商品
-        LambdaQueryWrapper<GoodList> goodListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        goodListLambdaQueryWrapper.eq(GoodList::getGoodNo, offerId).eq(GoodList::getDelFlag, "0");
-        GoodList existGoodList = goodListService.getOne(goodListLambdaQueryWrapper, false);
-        if (existGoodList == null) {
-            return false;
+        String goodTypeId = "";
+
+        if (StrUtil.isBlank(title)) {
+            //先判断平台中是否存在商品, 用于 1688 自动推送更新场景 @zhangshaolin
+            LambdaQueryWrapper<GoodList> goodListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            goodListLambdaQueryWrapper.eq(GoodList::getGoodNo, offerId).eq(GoodList::getDelFlag, "0");
+            GoodList existGoodList = goodListService.getOne(goodListLambdaQueryWrapper, false);
+            if (existGoodList == null) {
+                return false;
+            }
+            goodTypeId = existGoodList.getGoodTypeId();
+        } else {
+            // 用于定时任务同步数据场景 @zhangshaolin
+            long count = iGoodTypeService.count(new LambdaQueryWrapper<GoodType>().eq(GoodType::getName, title).eq(GoodType::getStatus, "1").eq(GoodType::getLevel, "3"));
+            if (count == 0) {
+                log.info("没有被允许的商品分类：offerId=" + offerId + "；title=" + title);
+                return false;
+            }
+            goodTypeId = iGoodTypeService.getOne(new LambdaQueryWrapper<GoodType>()
+                    .eq(GoodType::getName, title).eq(GoodType::getStatus, "1")
+                    .eq(GoodType::getLevel, "3")
+                    .orderByDesc(GoodType::getCreateTime).last("limit 1")).getId();
         }
-        String goodTypeId = existGoodList.getGoodTypeId();
 
         SDKResult<AlibabaCpsMediaProductInfoResult> productInfoResult = getProductInfoResult(offerId);
         if (productInfoResult.getResult() == null) {
@@ -90,17 +107,6 @@ public class IAli1688ServiceImpl implements IAli1688Service {
         }
 
 //        title = productInfoResult.getResult().getProductInfo().getCategoryName();
-
-//        int count = iGoodTypeService.count(new LambdaQueryWrapper<GoodType>().eq(GoodType::getName, title).eq(GoodType::getStatus, "1").eq(GoodType::getLevel, "3"));
-//        if (count == 0) {
-//            log.info("没有被允许的商品分类：offerId=" + offerId + "；title=" + title);
-//            return false;
-//        }
-
-//        String goodTypeId = iGoodTypeService.getOne(new LambdaQueryWrapper<GoodType>()
-//                .eq(GoodType::getName, title).eq(GoodType::getStatus, "1")
-//                .eq(GoodType::getLevel, "3")
-//                .orderByDesc(GoodType::getCreateTime).last("limit 1")).getId();
 
         String marketingPrefectureTypeId = "";
 
