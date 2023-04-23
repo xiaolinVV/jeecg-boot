@@ -186,7 +186,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 // 查询已退还的礼品卡金额，已退过就不用再退了
                 Map<String, BigDecimal> refundGiftCardMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getActualRefundGiftCardBalance, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
                 if (refundGiftCardMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO).compareTo(BigDecimal.ZERO) == 0) {
-                    // TODO: 2023/4/23 退还礼品卡 @zhangshaolin
                     marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), goodRecordGiftCardCoupon, orderStoreList.getOrderNo(), "2");
                     orderRefundList.setActualRefundGiftCardBalance(goodRecordGiftCardCoupon);
                 }
