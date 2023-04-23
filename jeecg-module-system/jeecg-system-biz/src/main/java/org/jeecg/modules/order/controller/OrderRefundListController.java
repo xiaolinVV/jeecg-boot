@@ -93,8 +93,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
             throw new JeecgBootException("该售后单不存在");
         }
         String status = orderRefundListServiceById.getStatus();
-        if (!StrUtil.containsAny(status, "0", "2")) {
-            throw new JeecgBootException("非待处理/等待店铺确认收货状态售后单无法拒绝");
+        if (!StrUtil.containsAny(status, "0", "1", "2")) {
+            throw new JeecgBootException("该售后单状态无法拒绝");
         }
         orderRefundListServiceById.setStatus("5");
         orderRefundListServiceById.setRefusedExplain(refusedExplain);
