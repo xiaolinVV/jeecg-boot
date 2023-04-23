@@ -172,7 +172,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 }
                 //设置回调地址
                 String refundCallbackUrl = notifyUrlUtils.getNotify("refundCallbackUrl");
-                balanceMap = this.payUtils.refund(actualRefundPrice, orderStoreList.getSerialNumber(), orderStoreList.getHftxSerialNumber(), refundCallbackUrl);
+                balanceMap = this.payUtils.refund(actualRefundPrice, orderRefundList.getId(), orderStoreList.getHftxSerialNumber(), refundCallbackUrl);
                 if (balanceMap.get("status").equals("failed")) {
                     throw new JeecgBootException("现金退款失败");
                 }

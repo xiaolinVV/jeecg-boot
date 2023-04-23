@@ -17,7 +17,9 @@ import org.jeecg.modules.marketing.service.*;
 import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagRecordService;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.service.IOrderListService;
+import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
 import org.jeecg.modules.pay.entity.*;
 import org.jeecg.modules.pay.service.*;
@@ -124,6 +126,9 @@ public class FrontPayController {
 
     @Autowired
     private IMarketingStoreGiftbagRecordService iMarketingStoreGiftbagRecordService;
+
+    @Autowired
+    private IOrderRefundListService orderRefundListService;
 
 
     /**
@@ -292,7 +297,29 @@ public class FrontPayController {
     @RequestMapping("refundCallback")
     @ResponseBody
     public Result<String> refundCallback(HttpServletRequest request) {
-        // TODO: 2023/4/23 退款回调逻辑 @zhangshaolin
+        String weixinMiniSoftPay = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "weixin_mini_soft_pay");
+        if (weixinMiniSoftPay.equals("1")) {
+            String data = request.getParameter("data");
+            log.info("退款回调的data数据：" + data);
+            JSONObject jsonObject = JSON.parseObject(data);
+            if (jsonObject.getString("status").equals("succeeded")) {
+                String refundId = jsonObject.getString("refund_order_no");
+                // 更新订单信息
+                // 发送通知等
+                OrderRefundList orderRefundList = orderRefundListService.getById(refundId);
+                log.info("退款回调id：" + refundId);
+                if (StrUtil.equals(orderRefundList.getStatus(),"3")) {
+                    BigDecimal refund_amt = jsonObject.getBigDecimal("refund_amt");
+                    orderRefundList.setActualRefundPrice(refund_amt);
+                    orderRefundList.setStatus("4");
+                    orderRefundList.setRefundJson(data);
+                    orderRefundListService.updateById(orderRefundList);
+                    // TODO: 2023/4/23 退优惠券、退库存、兑换券等 @zhangshaolin
+                }
+            } else {
+                log.info("汇付天下微信退款失败：" + data);
+            }
+        }
         return Result.OK();
     }
 

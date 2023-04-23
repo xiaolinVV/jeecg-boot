@@ -1164,7 +1164,6 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     @Override
     @Transactional
     public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
-        // TODO: 2023/4/20 退款接口代码可参考 @zhangshaolin
         OrderStoreList orderStoreList=this.getById(id);
         if(orderStoreList.getStatus().equals("0")||orderStoreList.getStatus().equals("4")){
             return Result.error("订单状态不正确");
