@@ -346,6 +346,16 @@ public class OrderRefundList implements Serializable {
      */
     private String refundJson;
 
+    /**
+     * 实际退款余额
+     */
+    private java.math.BigDecimal actualRefundBalance;
+
+    /**
+     * 实际退款现金（汇付微信）
+     */
+    private java.math.BigDecimal actualRefundPrice;
+
 
 
 }

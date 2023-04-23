@@ -1,7 +1,10 @@
 package org.jeecg.modules.order.service;
 
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.order.entity.OrderRefundList;
 import com.github.yulichang.base.MPJBaseService;
+
+import java.math.BigDecimal;
 
 /**
  * @Description: order_refund_list
@@ -17,4 +20,6 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @return
      */
     OrderRefundList getOrderRefundListById(String id);
+
+    public void refund(OrderRefundList orderRefundList, BigDecimal actualRefundPrice,BigDecimal actualRefundBalance);
 }

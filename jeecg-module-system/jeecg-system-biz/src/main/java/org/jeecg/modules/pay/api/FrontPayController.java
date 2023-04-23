@@ -159,7 +159,7 @@ public class FrontPayController {
             //扣除余额
             iMemberListService.subtractBlance(payCertificateLog.getMemberListId(), payCertificateLog.getBalance(), payCertificateLog.getId(), blanceType);
             //扣除积分
-            iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(),"");
+            iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(), "");
             if (payCertificateLog == null) {
                 return Result.error("id参数找不到相关的支付日志");
             }
@@ -212,7 +212,7 @@ public class FrontPayController {
                     //扣除余额
                     iMemberListService.subtractBlance(payCertificateLog.getMemberListId(), payCertificateLog.getBalance(), payCertificateLog.getId(), blanceType);
                     //扣除积分
-                    iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(),"");
+                    iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(), "");
                     log.info(tradeNo);
                     if (payCertificateLog.getPayStatus().equals("0")) {
                         map = iMarketingCertificateRecordService.paySuccess(payCertificateLog);
@@ -252,18 +252,18 @@ public class FrontPayController {
                     //扣除余额
                     iMemberListService.subtractBlance(payCertificateLog.getMemberListId(), payCertificateLog.getBalance(), payCertificateLog.getId(), blanceType);
                     //扣除积分
-                    iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(),"");
+                    iMemberWelfarePaymentsService.subtractWelfarePayments(payCertificateLog.getMemberListId(), payCertificateLog.getWelfarePayments(), welfarePaymentsType, payCertificateLog.getId(), "");
                     log.info(tradeNo);
-                    if (payCertificateLog.getPayStatus().equals("0")){
+                    if (payCertificateLog.getPayStatus().equals("0")) {
                         map = iMarketingCertificateRecordService.paySuccess(payCertificateLog);
                         log.info("回调数据" + map);
-                    }else if (payCertificateLog.getPayStatus().equals("1")){
+                    } else if (payCertificateLog.getPayStatus().equals("1")) {
                         MarketingCertificateGroupRecord marketingCertificateGroupRecord = iMarketingCertificateGroupRecordService.getOne(new LambdaQueryWrapper<MarketingCertificateGroupRecord>()
                                 .eq(MarketingCertificateGroupRecord::getDelFlag, "0")
                                 .eq(MarketingCertificateGroupRecord::getPayCertificateLogId, payCertificateLog.getId())
                         );
-                        map.put("marketingCertificateGroupRecordId",marketingCertificateGroupRecord.getId());
-                        map.put("code","SUCCESS");
+                        map.put("marketingCertificateGroupRecordId", marketingCertificateGroupRecord.getId());
+                        map.put("code", "SUCCESS");
                     }
                     return Result.ok(map);
                 } else {
@@ -272,15 +272,28 @@ public class FrontPayController {
             }
         }
         PayCertificateLog payCertificateLog = iPayCertificateLogService.getById(id);
-        if (payCertificateLog.getBuyType().equals("1")||payCertificateLog.getBuyType().equals("3")){
+        if (payCertificateLog.getBuyType().equals("1") || payCertificateLog.getBuyType().equals("3")) {
             MarketingCertificateGroupRecord marketingCertificateGroupRecord = iMarketingCertificateGroupRecordService.getOne(new LambdaQueryWrapper<MarketingCertificateGroupRecord>()
                     .eq(MarketingCertificateGroupRecord::getDelFlag, "0")
                     .eq(MarketingCertificateGroupRecord::getPayCertificateLogId, payCertificateLog.getId())
             );
-            map.put("marketingCertificateGroupRecordId",marketingCertificateGroupRecord.getId());
-            map.put("code","SUCCESS");
+            map.put("marketingCertificateGroupRecordId", marketingCertificateGroupRecord.getId());
+            map.put("code", "SUCCESS");
         }
         return Result.ok(map);
+    }
+
+    /**
+     * 退款回调
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping("refundCallback")
+    @ResponseBody
+    public Result<String> refundCallback(HttpServletRequest request) {
+        // TODO: 2023/4/23 退款回调逻辑 @zhangshaolin
+        return Result.OK();
     }
 
     /**
@@ -307,7 +320,7 @@ public class FrontPayController {
                 payOrderCarLog.setBackTimes(payOrderCarLog.getBackTimes().add(new BigDecimal(1)));
                 iPayOrderCarLogService.saveOrUpdate(payOrderCarLog);
                 if (StringUtils.isBlank(payOrderCarLog.getPayParam())) {
-                    if (payOrderCarLog.getPayStatus().equals("0")&&payOrderCarLog.getPayPrice().doubleValue()==0) {
+                    if (payOrderCarLog.getPayStatus().equals("0") && payOrderCarLog.getPayPrice().doubleValue() == 0) {
                         orderPaySuccess(payOrderCarLog);
                     }
                 }
@@ -374,14 +387,14 @@ public class FrontPayController {
     @Transactional
     public void orderPaySuccess(PayOrderCarLog payOrderCarLog) {
         log.info("进入订单处理流水号：" + payOrderCarLog.getId());
-        if(payOrderCarLog.getPayStatus().equals("0")) {
+        if (payOrderCarLog.getPayStatus().equals("0")) {
             //扣除余额
             if (!iMemberListService.subtractBlance(payOrderCarLog.getMemberListId(), payOrderCarLog.getBalance(), payOrderCarLog.getId(), "0")) {
                 //手动强制回滚事务，这里一定要第一时间处理
                 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             }
             //扣除积分
-            if (!iMemberWelfarePaymentsService.subtractWelfarePayments(payOrderCarLog.getMemberListId(), payOrderCarLog.getWelfarePayments(), "6", payOrderCarLog.getId(),"")) {
+            if (!iMemberWelfarePaymentsService.subtractWelfarePayments(payOrderCarLog.getMemberListId(), payOrderCarLog.getWelfarePayments(), "6", payOrderCarLog.getId(), "")) {
                 //手动强制回滚事务，这里一定要第一时间处理
                 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             }
@@ -485,7 +498,7 @@ public class FrontPayController {
                                    HttpServletRequest request,
                                    @RequestAttribute(value = "memberId", required = false) String memberId) {
         Result<String> result = new Result<>();
-        log.info("接收到的会员id+"+memberId);
+        log.info("接收到的会员id+" + memberId);
         if (StringUtils.isNotBlank(memberId)) {
             log.info("进入礼包冲账!!!!!");
             PayGiftBagLog payGiftBagLog = iPayGiftBagLogService.getById(id);
@@ -504,7 +517,7 @@ public class FrontPayController {
             payGiftBagLog.setBackTimes(payGiftBagLog.getBackTimes().add(new BigDecimal(1)));
             iPayGiftBagLogService.saveOrUpdate(payGiftBagLog);
             log.info("冲账参数");
-            if(payGiftBagLog.getPayPrice().doubleValue()==0&&payGiftBagLog.getPayStatus().equals("0")){
+            if (payGiftBagLog.getPayPrice().doubleValue() == 0 && payGiftBagLog.getPayStatus().equals("0")) {
                 log.info("冲账进入礼包奖励分配!!!");
                 iMarketingGiftBagService.paySuccess(payGiftBagLog.getMemberListId(), payGiftBagLog.getId());
             }
@@ -711,7 +724,6 @@ public class FrontPayController {
     }
 
 
-
     /**
      * 充值余额回调
      *
@@ -790,7 +802,6 @@ public class FrontPayController {
         }
         return "SUCCESS";
     }
-
 
 
     /**
@@ -902,7 +913,7 @@ public class FrontPayController {
             payZoneGroupLog.setBackStatus("1");
             payZoneGroupLog.setBackTimes(payZoneGroupLog.getBackTimes().add(new BigDecimal(1)));
             iPayZoneGroupLogService.saveOrUpdate(payZoneGroupLog);
-            if (payZoneGroupLog.getPayStatus().equals("0")&&payZoneGroupLog.getPayPrice().doubleValue()==0){
+            if (payZoneGroupLog.getPayStatus().equals("0") && payZoneGroupLog.getPayPrice().doubleValue() == 0) {
                 //成功
                 iMarketingZoneGroupManageService.success(payZoneGroupLog.getId());
             }
@@ -962,8 +973,6 @@ public class FrontPayController {
     }
 
 
-
-
     /**
      * 创业礼包支付回调
      *
@@ -993,7 +1002,7 @@ public class FrontPayController {
             payBusinessGiftLog.setBackStatus("1");
             payBusinessGiftLog.setBackTimes(payBusinessGiftLog.getBackTimes().add(new BigDecimal(1)));
             iPayBusinessGiftLogService.saveOrUpdate(payBusinessGiftLog);
-            if (payBusinessGiftLog.getPayStatus().equals("0")&&payBusinessGiftLog.getPayPrice().doubleValue()==0){
+            if (payBusinessGiftLog.getPayStatus().equals("0") && payBusinessGiftLog.getPayPrice().doubleValue() == 0) {
                 //成功
                 iMarketingBusinessGiftListService.success(payBusinessGiftLog.getId());
             }
@@ -1068,7 +1077,6 @@ public class FrontPayController {
 
 
     /**
-     *
      * 礼包团支付回调
      *
      * @param id
@@ -1078,7 +1086,7 @@ public class FrontPayController {
      */
     @RequestMapping("marketingStoreGift")
     @ResponseBody
-    public Object marketingStoreGift(String id, HttpServletRequest request, @RequestAttribute(value = "memberId", required = false) String memberId){
+    public Object marketingStoreGift(String id, HttpServletRequest request, @RequestAttribute(value = "memberId", required = false) String memberId) {
         Result<String> result = new Result<>();
 
         if (StringUtils.isNotBlank(memberId)) {
