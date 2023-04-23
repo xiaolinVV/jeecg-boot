@@ -356,6 +356,11 @@ public class OrderRefundList implements Serializable {
      */
     private java.math.BigDecimal actualRefundPrice;
 
+    /**
+     * 实际退还礼品卡金额
+     */
+    private BigDecimal actualRefundGiftCardBalance;
+
 
 
 }

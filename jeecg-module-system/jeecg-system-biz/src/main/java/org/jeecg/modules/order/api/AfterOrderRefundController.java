@@ -72,6 +72,7 @@ public class AfterOrderRefundController {
     public Result<String> applyOrderRefund(@RequestBody ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
         String isPlatform = applyOrderRefundDto.getIsPlatform();
         String refundType = applyOrderRefundDto.getRefundType();
+        String memberId = Convert.toStr(request.getAttribute("memberId"));
         if (StrUtil.isBlank(isPlatform)) {
             throw new JeecgBootException("isPlatform 不能为空");
         }
@@ -112,7 +113,6 @@ public class AfterOrderRefundController {
         if (CollUtil.isEmpty(orderGoodRecordIds)) {
             throw new JeecgBootException("orderGoodRecordIds 不能为空");
         }
-        String memberId = Convert.toStr(request.getAttribute("memberId"));
         if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "0")) {
             //查询订单信息
             OrderStoreList orderStoreList = orderStoreListService.getById(applyOrderRefundDto.getOrderId());
@@ -143,7 +143,8 @@ public class AfterOrderRefundController {
 
             // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderRefundListLambdaQueryWrapper.eq(OrderRefundList::getMemberId, memberId)
+            orderRefundListLambdaQueryWrapper
+                    .eq(OrderRefundList::getMemberId, memberId)
                     .notIn(OrderRefundList::getStatus, "5", "6", "7")
                     .eq(OrderRefundList::getOrderListId, applyOrderRefundDto.getOrderId())
                     .eq(OrderRefundList::getDelFlag, "0");
