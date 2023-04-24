@@ -906,6 +906,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         }
 
         List<OrderProviderGoodRecord> discountOrderProviderGoodRecords = new ArrayList<>();
+        List<OrderProviderGoodRecord> allOrderProviderGoodRecords = new ArrayList<>();
         //供应商订单设置
         for (Map<String, Object> gm : goodsMap) {
             //商品总价(成本价)
@@ -1001,6 +1002,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 if (discountGoods.contains(p.get("goodId").toString())) {
                     discountOrderProviderGoodRecords.add(orderProviderGoodRecord);
                 }
+                allOrderProviderGoodRecords.add(orderProviderGoodRecord);
 
                 //增加销量
                 //扣除库存
@@ -1125,6 +1127,23 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         //实付款小于等于，就设置为0
         if (orderList.getActualPayment().doubleValue() <= 0) {
             orderList.setActualPayment(new BigDecimal(0));
+        }
+
+        //计算每个商品实付款
+        if (CollUtil.isNotEmpty(allOrderProviderGoodRecords)) {
+            BigDecimal temSum = new BigDecimal("0");
+            for (int i = 0; i < allOrderProviderGoodRecords.size(); i++) {
+                OrderProviderGoodRecord orderProviderGoodRecord = allOrderProviderGoodRecords.get(i);
+                if (i == allOrderProviderGoodRecords.size() - 1) {
+                    BigDecimal goodActualPayment = NumberUtil.sub(orderList.getActualPayment(),temSum);
+                    orderProviderGoodRecord.setActualPayment(goodActualPayment);
+                } else {
+                    BigDecimal goodActualPayment = NumberUtil.sub(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPrice), orderList.getActualPayment());
+                    orderProviderGoodRecord.setActualPayment(goodActualPayment);
+                    temSum = NumberUtil.add(temSum,goodActualPayment);
+                }
+            }
+            iOrderProviderGoodRecordService.updateBatchById(allOrderProviderGoodRecords);
         }
 
         //给应付款和支付款加上运费

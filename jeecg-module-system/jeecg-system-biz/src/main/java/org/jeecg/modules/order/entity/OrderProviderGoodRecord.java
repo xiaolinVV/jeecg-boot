@@ -194,4 +194,9 @@ public class OrderProviderGoodRecord {
 	 */
 	private BigDecimal discountCoupon;
 
+	/**
+	 * 实付款（支付后标准金额）
+	 */
+	private BigDecimal actualPayment;
+
 }
