@@ -1139,10 +1139,10 @@ public class AfterOrderController {
             //获取过滤的优惠券列表
             List<Map<String,Object>> discounts=Lists.newArrayList();
             for (Map<String,Object> mdc:marketingDiscountCouponMaps) {
-                if (StrUtil.equals(Convert.toStr(mdc.get("isNomal")),"2")) {
-                    discounts.add(mdc);
-                    continue;
-                }
+//                if (StrUtil.equals(Convert.toStr(mdc.get("isNomal")),"2")) {
+//                    discounts.add(mdc);
+//                    continue;
+//                }
                 if(mdc.get("isThreshold").toString().equals("0")){
                     mdc.put("logoAddr",String.valueOf(mdc.get("logoAddr")));
                     discounts.add(mdc);
