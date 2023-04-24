@@ -603,6 +603,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         BigDecimal totalPriceMarketingDiscount = new BigDecimal(0);//优惠券商品金额总和
         BigDecimal couponPriceMarketingDiscount = new BigDecimal(0);//优惠券优惠金额
         List<String> marketingDiscountGoods = Lists.newArrayList();
+        List<String> discountGoods = Lists.newArrayList(); // 订单中参与优惠券的商品id列表
         Map<String,Map<String, Object>> marketingPrefectureGoods = MapUtil.newHashMap();
         MarketingDiscount marketingDiscount = null;//优惠券信息
 
@@ -631,14 +632,14 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
                     //获取优惠券商品
                     marketingDiscount = iMarketingDiscountService.getById(marketingDiscountCoupon.getMarketingDiscountId());
-                    if (marketingDiscount.getIsDistribution().equals("0")) {
-                        QueryWrapper<MarketingDiscountGood> marketingDiscountGoodQueryWrapper = new QueryWrapper<>();
-                        marketingDiscountGoodQueryWrapper.eq("marketing_discount_id", marketingDiscountCoupon.getMarketingDiscountId());
-                        List<MarketingDiscountGood> marketingDiscountGoodsList = iMarketingDiscountGoodService.list(marketingDiscountGoodQueryWrapper);
-                        for (MarketingDiscountGood marketingDiscountGood : marketingDiscountGoodsList) {
-                            marketingDiscountGoods.add(marketingDiscountGood.getGoodId());
-                        }
+//                    if (marketingDiscount.getIsDistribution().equals("0")) {
+                    QueryWrapper<MarketingDiscountGood> marketingDiscountGoodQueryWrapper = new QueryWrapper<>();
+                    marketingDiscountGoodQueryWrapper.eq("marketing_discount_id", marketingDiscountCoupon.getMarketingDiscountId());
+                    List<MarketingDiscountGood> marketingDiscountGoodsList = iMarketingDiscountGoodService.list(marketingDiscountGoodQueryWrapper);
+                    for (MarketingDiscountGood marketingDiscountGood : marketingDiscountGoodsList) {
+                        marketingDiscountGoods.add(marketingDiscountGood.getGoodId());
                     }
+//                    }
                 }
 
             } else {
@@ -706,8 +707,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             //优惠券总价计算
             if (marketingDiscountGoods.contains(g.get("goodId"))) {
                 log.info("订单发现优惠券里面的商品，商品id：" + g.get("goodId"));
-                totalPriceMarketingDiscount = totalPriceMarketingDiscount.add(((BigDecimal) g.get("price")).multiply((BigDecimal) g.get("quantity")));
+                BigDecimal goodTotalPrice = ((BigDecimal) g.get("price")).multiply((BigDecimal) g.get("quantity"));
+                totalPriceMarketingDiscount = totalPriceMarketingDiscount.add(goodTotalPrice);
                 costPriceMarketingDiscount = costPriceMarketingDiscount.add(goodSpecification.getSupplyPrice().multiply((BigDecimal) g.get("quantity")));
+                discountGoods.add(g.get("goodId").toString());
             }
 
 
@@ -902,6 +905,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
            orderList.setActiveId(marketingGroupRecordId);
         }
 
+        List<OrderProviderGoodRecord> discountOrderProviderGoodRecords = new ArrayList<>();
         //供应商订单设置
         for (Map<String, Object> gm : goodsMap) {
             //商品总价(成本价)
@@ -965,6 +969,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 Map<String, Object> objectMap = marketingPrefectureGoods.get(p.get("goodId").toString());
                 orderProviderGoodRecord.setWelfarePayments(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfareProportionPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfareProportionPrice"),BigDecimal.ZERO));
                 orderProviderGoodRecord.setWelfarePaymentsPrice(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfarePaymentsPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfarePaymentsPrice"),BigDecimal.ZERO));
+                orderProviderGoodRecord.setDiscountCoupon(BigDecimal.ZERO);
 
                 //商品总重量
                 orderProviderGoodRecord.setWeight(goodSpecification.getWeight().multiply(new BigDecimal(p.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
@@ -992,6 +997,11 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     }
                 }
                 iOrderProviderGoodRecordService.save(orderProviderGoodRecord);
+
+                if (discountGoods.contains(p.get("goodId").toString())) {
+                    discountOrderProviderGoodRecords.add(orderProviderGoodRecord);
+                }
+
                 //增加销量
                 //扣除库存
                 goodSpecification.setRepertory(goodSpecification.getRepertory().subtract(orderProviderGoodRecord.getAmount()));
@@ -1045,6 +1055,24 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             //保存订单信息
             iOrderProviderListService.saveOrUpdate(orderProviderList);
         }
+
+        //优惠商品不为空，计算每个商品的优惠卷优惠金额
+        if (CollUtil.isNotEmpty(discountOrderProviderGoodRecords)) {
+            BigDecimal temSum = new BigDecimal("0");
+            for (int i = 0; i < discountOrderProviderGoodRecords.size(); i++) {
+                OrderProviderGoodRecord orderProviderGoodRecord = discountOrderProviderGoodRecords.get(i);
+                if (i == discountOrderProviderGoodRecords.size() - 1) {
+                    BigDecimal goodDiscountPrice = NumberUtil.sub(couponPriceMarketingDiscount,temSum);
+                    orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
+                } else {
+                    BigDecimal goodDiscountPrice = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPriceMarketingDiscount), couponPriceMarketingDiscount);
+                    orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
+                    temSum = NumberUtil.add(goodDiscountPrice,temSum);
+                }
+            }
+            iOrderProviderGoodRecordService.updateBatchById(discountOrderProviderGoodRecords);
+        }
+
         //子订单数(拆分供应商后写入)
         orderList.setChildOrder(new BigDecimal(goodsMap.size()));
         //设置商品总价

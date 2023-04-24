@@ -189,4 +189,9 @@ public class OrderProviderGoodRecord {
 
 	private BigDecimal welfarePayments;
 
+	/**
+	 * 优惠券优惠金额
+	 */
+	private BigDecimal discountCoupon;
+
 }
