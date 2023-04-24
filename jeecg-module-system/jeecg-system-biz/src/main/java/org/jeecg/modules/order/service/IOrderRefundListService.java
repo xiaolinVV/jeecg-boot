@@ -1,10 +1,12 @@
 package org.jeecg.modules.order.service;
 
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.entity.OrderRefundList;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @Description: order_refund_list
@@ -29,5 +31,34 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @param actualRefundPrice   实际退款现金
      * @param actualRefundBalance 实际退款余额
      */
-    public void refund(OrderRefundList orderRefundList, BigDecimal actualRefundPrice, BigDecimal actualRefundBalance);
+    void refund(OrderRefundList orderRefundList, BigDecimal actualRefundPrice, BigDecimal actualRefundBalance);
+
+    /**
+     * 店铺订单商品售后申请
+     *
+     * @param applyOrderRefundDto               售后请求参数对象
+     * @param memberId                          会员id
+     * @param exchangeMemberShippingAddressJson 换货地址json
+     */
+    void applyOrderStoreRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
+
+    /**
+     * 平台订单商品售后申请
+     *
+     * @param applyOrderRefundDto               售后请求参数对象
+     * @param memberId                          会员id
+     * @param exchangeMemberShippingAddressJson 换货地址json
+     */
+    void applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
+
+    /**
+     * 查询用户在订单下的所有售后单(进行中或已完成)
+     *
+     * @param memberId 会员id
+     * @param orderId  订单id
+     * @return
+     */
+    List<OrderRefundList> getOrderRefundListByMemberIdAndOrderId(String memberId, String orderId);
+
+
 }
