@@ -361,6 +361,13 @@ public class OrderRefundList implements Serializable {
      */
     private BigDecimal actualRefundGiftCardBalance;
 
+    /**
+     * 积分价值
+     */
+    private BigDecimal welfarePaymentsPrice;
+
+    private BigDecimal welfarePayments;
+
 
 
 }

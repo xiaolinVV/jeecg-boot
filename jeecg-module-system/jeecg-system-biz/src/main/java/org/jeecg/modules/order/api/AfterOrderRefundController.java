@@ -241,6 +241,17 @@ public class AfterOrderRefundController {
             orderProviderListLambdaQueryWrapper.in(OrderProviderList::getId, orderProviderIds).eq(OrderProviderList::getOrderListId, applyOrderRefundDto.getOrderId());
             Map<String, OrderProviderList> orderProviderListMap = orderProviderListService.list(orderProviderListLambdaQueryWrapper).stream().collect(Collectors.toMap(OrderProviderList::getId, orderProviderList -> orderProviderList));
 
+            // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
+            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderRefundListLambdaQueryWrapper
+                    .eq(OrderRefundList::getMemberId, memberId)
+                    .notIn(OrderRefundList::getStatus, "5", "6", "7")
+                    .eq(OrderRefundList::getOrderListId, applyOrderRefundDto.getOrderId())
+                    .eq(OrderRefundList::getDelFlag, "0");
+            List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
+            Map<String, BigDecimal> refundAmountMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundAmount, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
+            Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
+
             //保存售后申请单
             List<OrderRefundList> orderRefundLists = applyOrderRefundDto.getOrderRefundListDtos().stream().map(orderRefundListDto -> {
                 String orderGoodRecordId = orderRefundListDto.getOrderGoodRecordId();
@@ -258,14 +269,16 @@ public class AfterOrderRefundController {
                 if (StrUtil.containsAny(refundType, "1", "2") && StrUtil.equals(orderProviderList.getParentId(), "0")) {
                     throw new JeecgBootException("订单商品" + orderGoodRecordId + "还未发货，无法发起退货换货售后申请");
                 }
-//                BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderProviderGoodRecord.getActualPayment());
-//                BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderProviderGoodRecord.getAmount());
-//                if (refundAmount.compareTo(NumberUtil.sub(orderProviderGoodRecord.getAmount(),refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
-//                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后数量大于实际购买数量，请重新填写");
-//                }
-//                if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(),refundPriceMap.getOrDefault(orderStoreGoodRecordId,BigDecimal.ZERO))) > 0) {
-//                    throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "售后金额大于实际支付金额，请重新填写");
-//                }
+
+                BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderProviderGoodRecord.getActualPayment());
+                BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderProviderGoodRecord.getAmount());
+
+                if (refundAmount.compareTo(NumberUtil.sub(orderProviderGoodRecord.getAmount(), refundAmountMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO))) > 0) {
+                    throw new JeecgBootException("订单商品" + orderProviderGoodRecord.getId() + "实际购买数量：" + orderProviderGoodRecord.getAmount() + "申请数量：" + orderRefundListDto.getRefundAmount() + "已申请数量：" + refundAmountMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO));
+                }
+                if (refundPrice.compareTo(NumberUtil.sub(orderProviderGoodRecord.getActualPayment(), refundPriceMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO))) > 0) {
+                    throw new JeecgBootException("订单商品" + orderProviderGoodRecord.getId() + " 实付金额：" + orderProviderGoodRecord.getActualPayment() + "申请金额：" + orderRefundListDto.getRefundPrice() + "已售后金额：" + refundPriceMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO));
+                }
                 return new OrderRefundList()
                         .setOrderNo(orderList.getOrderNo())
                         .setOrderType(orderList.getOrderType())
@@ -277,10 +290,11 @@ public class AfterOrderRefundController {
                         .setOrderGoodRecordId(orderProviderGoodRecord.getId())
                         .setOrderSubListId(orderProviderGoodRecord.getOrderProviderListId())
                         .setGoodRecordTotal(orderProviderGoodRecord.getTotal())
-//                        .setGoodRecordActualPayment(orderProviderGoodRecord.getActualPayment())
-//                        .setGoodRecordCoupon(orderProviderGoodRecord.getCoupon())
-//                        .setGoodRecordGiftCardCoupon(orderProviderGoodRecord.getGiftCardCoupon())
-//                        .setGoodRecordTotalCoupon(orderProviderGoodRecord.getTotalCoupon())
+                        .setGoodRecordActualPayment(orderProviderGoodRecord.getActualPayment())
+                        .setGoodRecordCoupon(orderProviderGoodRecord.getDiscountCoupon())
+                        .setGoodRecordTotalCoupon(NumberUtil.add(orderProviderGoodRecord.getWelfarePaymentsPrice(),orderProviderGoodRecord.getDiscountCoupon()))
+                        .setWelfarePayments(orderProviderGoodRecord.getWelfarePayments())
+                        .setWelfarePaymentsPrice(orderProviderGoodRecord.getWelfarePaymentsPrice())
                         .setGoodRecordAmount(orderProviderGoodRecord.getAmount())
                         .setMemberId(memberId)
                         .setOrderListId(orderList.getId())
