@@ -1,5 +1,9 @@
 package org.jeecg.modules.order.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -599,6 +603,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         BigDecimal totalPriceMarketingDiscount = new BigDecimal(0);//优惠券商品金额总和
         BigDecimal couponPriceMarketingDiscount = new BigDecimal(0);//优惠券优惠金额
         List<String> marketingDiscountGoods = Lists.newArrayList();
+        Map<String,Map<String, Object>> marketingPrefectureGoods = MapUtil.newHashMap();
         MarketingDiscount marketingDiscount = null;//优惠券信息
 
         if (model == 0) {
@@ -610,29 +615,32 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
                 if (marketingDiscountCoupon == null || !marketingDiscountCoupon.getStatus().equals("1")) {
                     log.info("优惠券不可用");
-                }
-                orderList.setCoupon(marketingDiscountCoupon.getPrice());
-                //添加优惠金额
-                couponTotal = couponTotal.add(marketingDiscountCoupon.getPrice());
-                orderList.setDiscountOuponPrice(marketingDiscountCoupon.getPrice());
-                //标识优惠金额
-                couponPriceMarketingDiscount = marketingDiscountCoupon.getPrice();
-                //标识优惠券已使用                                                                                                                                                                            1
-                marketingDiscountCoupon.setStatus("2");
-                marketingDiscountCoupon.setUserTime(new Date());
-                //优惠券id
-                orderList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
-                iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
-                //获取优惠券商品
-                marketingDiscount = iMarketingDiscountService.getById(marketingDiscountCoupon.getMarketingDiscountId());
-                if (marketingDiscount.getIsDistribution().equals("0")) {
-                    QueryWrapper<MarketingDiscountGood> marketingDiscountGoodQueryWrapper = new QueryWrapper<>();
-                    marketingDiscountGoodQueryWrapper.eq("marketing_discount_id", marketingDiscountCoupon.getMarketingDiscountId());
-                    List<MarketingDiscountGood> marketingDiscountGoodsList = iMarketingDiscountGoodService.list(marketingDiscountGoodQueryWrapper);
-                    for (MarketingDiscountGood marketingDiscountGood : marketingDiscountGoodsList) {
-                        marketingDiscountGoods.add(marketingDiscountGood.getGoodId());
+                    orderList.setCoupon(new BigDecimal(0));
+                } else {
+                    orderList.setCoupon(marketingDiscountCoupon.getPrice());
+                    //添加优惠金额
+                    couponTotal = couponTotal.add(marketingDiscountCoupon.getPrice());
+                    orderList.setDiscountOuponPrice(marketingDiscountCoupon.getPrice());
+                    //标识优惠金额
+                    couponPriceMarketingDiscount = marketingDiscountCoupon.getPrice();
+                    //标识优惠券已使用                                                                                                                                                                            1
+                    marketingDiscountCoupon.setStatus("2");
+                    marketingDiscountCoupon.setUserTime(new Date());
+                    //优惠券id
+                    orderList.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+                    iMarketingDiscountCouponService.saveOrUpdate(marketingDiscountCoupon);
+                    //获取优惠券商品
+                    marketingDiscount = iMarketingDiscountService.getById(marketingDiscountCoupon.getMarketingDiscountId());
+                    if (marketingDiscount.getIsDistribution().equals("0")) {
+                        QueryWrapper<MarketingDiscountGood> marketingDiscountGoodQueryWrapper = new QueryWrapper<>();
+                        marketingDiscountGoodQueryWrapper.eq("marketing_discount_id", marketingDiscountCoupon.getMarketingDiscountId());
+                        List<MarketingDiscountGood> marketingDiscountGoodsList = iMarketingDiscountGoodService.list(marketingDiscountGoodQueryWrapper);
+                        for (MarketingDiscountGood marketingDiscountGood : marketingDiscountGoodsList) {
+                            marketingDiscountGoods.add(marketingDiscountGood.getGoodId());
+                        }
                     }
                 }
+
             } else {
                 orderList.setCoupon(new BigDecimal(0));
             }
@@ -770,21 +778,25 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     if (marketingPrefecture.getIsVipLower().equals("1") && memberList.getMemberType().equals("1")) {
                         vipLowerTotal = vipLowerTotal.add(welfareProportionPrice).multiply(integralValue);
                         welfareProportionPrice = new BigDecimal(0);
+                        g.put("vipLowerTotal",welfareProportionPrice.multiply(integralValue).setScale(2,RoundingMode.HALF_UP));
                     }
 
                     log.info("商品福利金抵扣：" + welfareProportionPrice);
+                    g.put("welfareProportionPrice",welfareProportionPrice);
+                    g.put("welfarePaymentsPrice",(welfareProportionPrice.multiply(integralValue).setScale(2,RoundingMode.HALF_UP)));
 
                     welfarePayments = welfarePayments.add(welfareProportionPrice);
 
                     //赠送福利金的计算
                     BigDecimal giveWelfareProportion = marketingPrefectureGoodSpecification.getGiveWelfareProportion();
                     giveWelfarePayments = giveWelfarePayments.add(marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity"))).divide(integralValue,2,RoundingMode.DOWN);
+                    g.put("giveWelfarePayments",marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue,2,RoundingMode.DOWN));
                     //专区订单
                     orderList.setOrderType("5");
                     orderList.setActiveId(marketingPrefecture.getId());
                     orderList.setMarketingPrefectureGoodId(marketingPrefectureGood.getId());
                     orderList.setMarketingRushGroupId(String.valueOf(g.get("marketingRushGroupId")));
-
+                    marketingPrefectureGoods.put(Convert.toStr(g.get("goodId")),g);
                 }
                 //中奖拼团商品
                 if(g.get("marketingGroupRecordId")!=null){
@@ -830,12 +842,30 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
         log.info("福利金优惠之前的优惠金额：" + couponTotal);
 
-
         //平台福利金的计算
         if (model == 0) {
             //抵扣福利金的总数与会员福利金的情况进行限制
             if (iMemberListService.getById(memberId).getWelfarePayments().subtract(welfarePayments).doubleValue() < 0) {
-                welfarePayments = iMemberListService.getById(memberId).getWelfarePayments();
+                BigDecimal memberWelfarePayments = iMemberListService.getById(memberId).getWelfarePayments();
+                ArrayList<Map<String, Object>> list = CollUtil.newArrayList(marketingPrefectureGoods.values());
+                BigDecimal tempSum = new BigDecimal(0);
+                for (int i = 0; i < list.size(); i++) {
+                    Map<String, Object> g = list.get(i);
+                    BigDecimal welfareProportionPrice = Convert.toBigDecimal(g.get("welfareProportionPrice"), BigDecimal.ZERO);
+                    if (i == list.size() - 1) {
+                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.sub(memberWelfarePayments,tempSum);
+                        g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
+                        g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
+                    } else {
+                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.mul(NumberUtil.div(welfareProportionPrice, welfarePayments), memberWelfarePayments);
+                        g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
+                        g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
+                        tempSum = tempSum.add(goodActualWelfareProportionPrice);
+                    }
+                }
+                //控制抵扣福利金金额
+                welfarePayments = memberWelfarePayments;
+                marketingPrefectureGoods = list.stream().collect(Collectors.toMap(g -> Convert.toStr(g.get("goodId")),g -> g));
             }
             orderList.setWelfarePayments(welfarePayments);
             orderList.setWelfarePaymentsPrice(welfarePayments.multiply(integralValue).setScale(2,RoundingMode.HALF_UP));
@@ -932,6 +962,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 orderProviderGoodRecord.setGoodNo(goodList.getGoodNo());
                 orderProviderGoodRecord.setSkuNo(goodSpecification.getSkuNo());
                 orderProviderGoodRecord.setTotal(orderProviderGoodRecord.getUnitPrice().multiply(orderProviderGoodRecord.getAmount()));
+                Map<String, Object> objectMap = marketingPrefectureGoods.get(p.get("goodId").toString());
+                orderProviderGoodRecord.setWelfarePayments(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfareProportionPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfareProportionPrice"),BigDecimal.ZERO));
+                orderProviderGoodRecord.setWelfarePaymentsPrice(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfarePaymentsPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfarePaymentsPrice"),BigDecimal.ZERO));
+
                 //商品总重量
                 orderProviderGoodRecord.setWeight(goodSpecification.getWeight().multiply(new BigDecimal(p.get("quantity").toString())).setScale(3, RoundingMode.DOWN));
                 if (p.containsKey("label") && oConvertUtils.isNotEmpty(p.get("label"))) {

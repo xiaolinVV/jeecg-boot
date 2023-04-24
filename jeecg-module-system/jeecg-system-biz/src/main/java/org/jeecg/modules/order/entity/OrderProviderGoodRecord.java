@@ -182,4 +182,11 @@ public class OrderProviderGoodRecord {
 	 */
 	private String message;
 
+	/**
+	 * 积分价值
+	 */
+	private BigDecimal welfarePaymentsPrice;
+
+	private BigDecimal welfarePayments;
+
 }
