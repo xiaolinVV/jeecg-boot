@@ -24,17 +24,17 @@ public class ApplyOrderRefundDto implements Serializable {
      */
     private String isPlatform;
     /**
-     * 退款类型 0=仅退款 1=退货退款 2=换货
+     * 退款类型 0=仅退款 1=退货退款 2=换货 关联字典：refund_type
      */
     private String refundType;
 
     /**
-     * 订单id
+     * 订单id（店铺订单/平台订单）
      */
     private String orderId;
 
     /**
-     * 申请说明
+     * 售后申请说明
      */
     private String remarks;
     /**
@@ -43,12 +43,12 @@ public class ApplyOrderRefundDto implements Serializable {
     private String refundCertificate;
 
     /**
-     * 换货：收货地址id
+     * 买家换货：收货地址id
      */
     private String memberShippingAddressId;
 
     /**
-     * 店铺售后单列表
+     * 售后单商品列表（换货类型,只能传一种商品）
      */
     private List<OrderRefundListDto> orderRefundListDtos;
 }

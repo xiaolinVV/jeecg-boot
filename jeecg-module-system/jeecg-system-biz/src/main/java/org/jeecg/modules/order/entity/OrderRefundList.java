@@ -132,16 +132,13 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "店铺用户id/平台供应商用户id")
     private java.lang.String sysUserId;
     /**
-     * 退款类型 0=仅退款 1=退货退款 2=换货
+     * 退款类型 0=仅退款 1=退货退款 2=换货 关联字典：refund_type
      */
-    @Excel(name = "退款类型 0=仅退款 1=退货退款 2=换货", width = 15)
-    @ApiModelProperty(value = "退款类型 0=仅退款 1=退货退款 2=换货")
+    @Dict(dicCode = "refund_type")
     private java.lang.String refundType;
     /**
      * 退款原因,关联字典：order_store_refund_reason
      */
-    @Excel(name = "退款原因,关联字典：order_store_refund_reason", width = 15)
-    @ApiModelProperty(value = "退款原因,关联字典：order_store_refund_reason")
     @Dict(dicCode = "order_refund_reason")
     private java.lang.String refundReason;
     /**

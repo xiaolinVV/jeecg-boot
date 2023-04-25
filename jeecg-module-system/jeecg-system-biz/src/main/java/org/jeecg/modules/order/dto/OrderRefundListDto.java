@@ -27,48 +27,36 @@ public class OrderRefundListDto implements Serializable {
     /**
      * 订单商品记录id
      */
-    @Excel(name = "订单商品记录id", width = 15)
-    @ApiModelProperty(value = "订单商品记录id")
     private String orderGoodRecordId;
 
     /**
-     * 退款原因
+     * 退款原因,关联字典：order_store_refund_reason
      */
-    @Excel(name = "退款原因", width = 15)
-    @ApiModelProperty(value = "退款原因")
     private String refundReason;
     /**
-     * 申请说明
+     * 售后申请说明
      */
-    @Excel(name = "申请说明", width = 15)
-    @ApiModelProperty(value = "申请说明")
     private String remarks;
     /**
      * 退款凭证图片，按照顺序逗号隔开
      */
-    @Excel(name = "退款凭证图片，按照顺序逗号隔开", width = 15)
-    @ApiModelProperty(value = "退款凭证图片，按照顺序逗号隔开")
     private String refundCertificate;
     /**
-     * 退款金额
+     * 申请退款金额
      */
-    @Excel(name = "退款金额", width = 15)
-    @ApiModelProperty(value = "退款金额")
     private BigDecimal refundPrice;
     /**
-     * 退款数量
+     * 申请退款数量
      */
-    @Excel(name = "退款数量", width = 15)
-    @ApiModelProperty(value = "退款数量")
     private BigDecimal refundAmount;
 
     /**
-     * 换货商品规格id
+     * 换货商品规格id（只需要换货时候传即可）
      */
     private java.lang.String exchangeGoodSpecificationId;
 
     /**
-     * 换货规格名称，按照顺序逗号隔开
+     * 换货规格名称，按照顺序逗号隔开（只需要换货时候传即可）
      */
     private java.lang.String exchangeGoodSpecification;
 

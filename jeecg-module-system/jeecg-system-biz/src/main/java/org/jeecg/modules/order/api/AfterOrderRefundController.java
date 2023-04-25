@@ -141,15 +141,15 @@ public class AfterOrderRefundController {
         }
         // TODO: 2023/4/21 退款金额、退款件数、申请类型业务字段校验 @zhangshaolin
         orderRefundListService.updateById(orderRefundList);
-        return Result.OK("编辑成功!");
+        return Result.OK("修改申请成功!");
     }
 
     /**
      * 撤销申请
      *
+     * @param id 售后单id
      * @return
      */
-    //@RequiresPermissions("order:order_refund_list:edit")
     @PostMapping(value = "/undo")
     public Result<String> undo(@RequestParam(name = "id") String id) {
         if (StrUtil.isBlank(id)) {
@@ -167,13 +167,13 @@ public class AfterOrderRefundController {
         orderRefundListServiceById.setStatus(updateStatus);
         orderRefundListServiceById.setCloseExplain("0");
         orderRefundListService.updateById(orderRefundListServiceById);
-        return Result.OK("编辑成功!");
+        return Result.OK("撤销成功!");
     }
 
     /**
      * 通过id查询
      *
-     * @param id
+     * @param id 售后单id
      * @return
      */
     @GetMapping(value = "/queryById")
@@ -181,9 +181,13 @@ public class AfterOrderRefundController {
         return Result.OK(orderRefundListService.getOrderRefundListById(id));
     }
 
+
     /**
-     * 退货退款：填写退货物流
+     * 退货退款(换货)：填写物流信息
      *
+     * @param id                    售后单id
+     * @param buyerLogisticsCompany 买家寄回物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
+     * @param buyerTrackingNumber   买家寄回快递单号
      * @return
      */
     @PostMapping(value = "/editLogisticsInfo")
@@ -209,7 +213,7 @@ public class AfterOrderRefundController {
                 .setBuyerTrackingNumber(buyerTrackingNumber)
                 .setStatus("2");
         orderRefundListService.updateById(orderRefundList);
-        return Result.OK();
+        return Result.OK("寄出成功");
     }
 
 }
