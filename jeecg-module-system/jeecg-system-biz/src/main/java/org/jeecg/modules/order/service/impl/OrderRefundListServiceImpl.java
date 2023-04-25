@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
 import org.jeecg.modules.member.service.IMemberListService;
+import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.dto.OrderRefundListDto;
 import org.jeecg.modules.order.entity.*;
@@ -84,6 +85,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
     @Autowired
     private IOrderProviderListService orderProviderListService;
 
+    @Autowired
+    private IMemberWelfarePaymentsService memberWelfarePaymentsService;
+
 
     @Override
     public OrderRefundList getOrderRefundListById(String id) {
@@ -143,21 +147,34 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
      * @param actualRefundBalance
      */
     public void refundOrderGood(OrderRefundList orderRefundList, BigDecimal actualRefundPrice, BigDecimal actualRefundBalance) {
-        // TODO: 2023/4/23 平台订单退款逻辑 @zhangshaolin
         OrderList orderList = orderListService.getById(orderRefundList.getOrderListId());
         if (orderList == null) {
             throw new JeecgBootException("订单不存在");
         }
         String orderType = orderList.getOrderType();
-
-        List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
-
-        Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
         // 普通订单，走余额、微信退款，优先退余额。 还要退福利金优惠
         BigDecimal totalRefundPrice = NumberUtil.add(actualRefundPrice, actualRefundBalance);
         if (totalRefundPrice.compareTo(orderRefundList.getRefundPrice()) > 0) {
             throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于申请金额：" + orderRefundList.getRefundPrice() + ",无法操作");
         }
+        // 优先按比例退还抵扣福利金
+        if (StrUtil.equals(orderType, "5")) {
+            //福利金订单需要退福利金
+            BigDecimal welfarePayments = orderRefundList.getWelfarePayments();
+            BigDecimal goodRecordAmount = orderRefundList.getGoodRecordAmount();
+            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getActualRefundDiscountWelfarePayments).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+            if (NumberUtil.sub(goodRecordAmount, count).compareTo(new BigDecimal("1")) == 0) {
+                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.sub(welfarePayments, decimal));
+            } else {
+                //按数量比例退
+                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.mul(NumberUtil.div(welfarePayments, goodRecordAmount), orderRefundList.getRefundAmount()));
+            }
+            //退福利金
+            memberWelfarePaymentsService.addWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualRefundDiscountWelfarePayments(), "20", orderRefundList.getId(), "平台订单售后退款");
+        }
+
         //  先退余额，状态改为退款成功
         if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
             boolean addBlance = memberListService.addBlance(orderRefundList.getMemberId(), actualRefundBalance, orderList.getOrderNo(), "2");
@@ -201,11 +218,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             orderRefundList.setRefundJson(JSON.toJSONString(balanceMap));
             orderRefundList.setStatus("3");
         }
-
-        if (StrUtil.equals(orderType, "5")) {
-            //福利金订单需要退福利金
-
-        }
+        orderRefundListService.updateById(orderRefundList);
     }
 
 
@@ -232,7 +245,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 //            if (totalRefundPrice.compareTo(NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO))) > 0) {
 //                throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于实际可退款金额：" + NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO)) + ",无法操作");
 //            }
-
         // 优先退礼品卡
         if (StrUtil.equals(orderType, "7") && StrUtil.isNotBlank(orderStoreList.getActiveId()) && orderRefundList.getGoodRecordGiftCardCoupon().doubleValue() > 0) {
             //实际支付礼品卡金额
@@ -249,7 +261,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), orderRefundList.getActualRefundGiftCardBalance(), orderStoreList.getOrderNo(), "2");
         }
-
         //  先退余额，状态改为退款成功
         if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
             boolean addBlance = memberListService.addBlance(orderRefundList.getMemberId(), actualRefundBalance, orderStoreList.getOrderNo(), "2");

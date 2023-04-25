@@ -357,6 +357,11 @@ public class OrderRefundList implements Serializable {
     private BigDecimal actualRefundGiftCardBalance;
 
     /**
+     * 实际退还抵扣的福利金（专区商品）
+     */
+    private BigDecimal actualRefundDiscountWelfarePayments;
+
+    /**
      * 订单商品抵扣福利金价值（专区商品）
      */
     private BigDecimal welfarePaymentsPrice;
