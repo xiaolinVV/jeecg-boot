@@ -224,14 +224,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         }
         String orderType = orderStoreList.getOrderType();
         // TODO: 2023/4/23 1、判断订单中所有参与优惠券优惠的商品全部退款后，退还优惠券 2、还库存 @zhangshaolin
-        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderRefundListLambdaQueryWrapper
-                .eq(OrderRefundList::getMemberId, orderRefundList.getMemberId())
-                .notIn(OrderRefundList::getStatus, "5", "6", "7")
-                .eq(OrderRefundList::getOrderListId, orderRefundList.getOrderListId())
-                .eq(OrderRefundList::getDelFlag, "0");
-        List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
-        Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
         // 普通订单，走余额、微信退款，优先退余额
         BigDecimal totalRefundPrice = NumberUtil.add(actualRefundPrice, actualRefundBalance);
         if (totalRefundPrice.compareTo(orderRefundList.getRefundPrice()) > 0) {
@@ -288,8 +280,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             //实际支付礼品卡金额
             BigDecimal goodRecordGiftCardCoupon = orderRefundList.getGoodRecordGiftCardCoupon();
             // 查询已退还的礼品卡金额，已退过就不用再退了
-            Map<String, BigDecimal> refundGiftCardMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getActualRefundGiftCardBalance, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
-            if (refundGiftCardMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO).compareTo(BigDecimal.ZERO) == 0) {
+            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())).map(OrderRefundList::getActualRefundGiftCardBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+            if (decimal.compareTo(BigDecimal.ZERO) == 0) {
                 marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), goodRecordGiftCardCoupon, orderStoreList.getOrderNo(), "2");
                 orderRefundList.setActualRefundGiftCardBalance(goodRecordGiftCardCoupon);
             }
