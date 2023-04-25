@@ -46,10 +46,10 @@ public class AfterPayCertificateController {
      * 兑换券支付
      *
      * @param memberId(支付归属会员)
-     * @param payModel  支付方式；0：微信支付，1：支付宝支付
-     * @param memberListId  会员id(订单归属会员)
-     * @param welfarePayments 积分
-     * @param balance 余额
+     * @param payModel  支付方式；0：微信支付，1：支付宝支付  必传
+     * @param memberListId  会员id(订单归属会员，必传)
+     * @param welfarePayments 积分（福利金，非必传）
+     * @param balance 余额（非必传）
      * @param request
      * @return
      */

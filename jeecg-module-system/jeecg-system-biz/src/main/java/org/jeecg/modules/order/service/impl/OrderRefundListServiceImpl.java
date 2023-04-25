@@ -232,6 +232,24 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 //            if (totalRefundPrice.compareTo(NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO))) > 0) {
 //                throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于实际可退款金额：" + NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO)) + ",无法操作");
 //            }
+
+        // 优先退礼品卡
+        if (StrUtil.equals(orderType, "7") && StrUtil.isNotBlank(orderStoreList.getActiveId()) && orderRefundList.getGoodRecordGiftCardCoupon().doubleValue() > 0) {
+            //实际支付礼品卡金额
+            BigDecimal goodRecordGiftCardCoupon = orderRefundList.getGoodRecordGiftCardCoupon();
+            BigDecimal goodRecordAmount = orderRefundList.getGoodRecordAmount();
+            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getActualRefundGiftCardBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+            if (NumberUtil.sub(goodRecordAmount, count).compareTo(new BigDecimal("1")) == 0) {
+                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.sub(goodRecordGiftCardCoupon, decimal));
+            } else {
+                //按数量比例退
+                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.mul(NumberUtil.div(goodRecordGiftCardCoupon, goodRecordAmount), orderRefundList.getRefundAmount()));
+            }
+            marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), orderRefundList.getActualRefundGiftCardBalance(), orderStoreList.getOrderNo(), "2");
+        }
+
         //  先退余额，状态改为退款成功
         if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
             boolean addBlance = memberListService.addBlance(orderRefundList.getMemberId(), actualRefundBalance, orderStoreList.getOrderNo(), "2");
@@ -274,18 +292,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             orderRefundList.setRefundJson(JSON.toJSONString(balanceMap));
             orderRefundList.setStatus("3");
-        }
-
-        if (StrUtil.equals(orderType, "7") && StrUtil.isNotBlank(orderStoreList.getActiveId()) && orderRefundList.getGoodRecordGiftCardCoupon().doubleValue() > 0) {
-            //实际支付礼品卡金额
-            BigDecimal goodRecordGiftCardCoupon = orderRefundList.getGoodRecordGiftCardCoupon();
-            // 查询已退还的礼品卡金额，已退过就不用再退了
-            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
-            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())).map(OrderRefundList::getActualRefundGiftCardBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
-            if (decimal.compareTo(BigDecimal.ZERO) == 0) {
-                marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), goodRecordGiftCardCoupon, orderStoreList.getOrderNo(), "2");
-                orderRefundList.setActualRefundGiftCardBalance(goodRecordGiftCardCoupon);
-            }
         }
         orderRefundListService.updateById(orderRefundList);
     }
@@ -577,6 +583,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
         }
     }
+
     /**
      * 查询用户在订单下的所有售后单(进行中或已完成)
      *
