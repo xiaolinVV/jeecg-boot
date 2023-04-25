@@ -1,6 +1,7 @@
 package org.jeecg.modules.order.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -309,6 +310,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (CollUtil.isEmpty(orderGoodRecordIds)) {
             throw new JeecgBootException("orderGoodRecordIds 不能为空");
         }
+        String refundType = applyOrderRefundDto.getRefundType();
         //查询订单信息
         OrderStoreList orderStoreList = orderStoreListService.getById(applyOrderRefundDto.getOrderId());
         if (orderStoreList == null) {
@@ -333,15 +335,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.listByIds(orderStoreSubListIds).stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
 
         // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
-        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderRefundListLambdaQueryWrapper
-                .eq(OrderRefundList::getMemberId, memberId)
-                .notIn(OrderRefundList::getStatus, "5", "6", "7")
-                .eq(OrderRefundList::getOrderListId, applyOrderRefundDto.getOrderId())
-                .eq(OrderRefundList::getDelFlag, "0");
-        List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
-        Map<String, BigDecimal> refundAmountMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundAmount, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
-        Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
+        List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.getOrderRefundListByMemberIdAndOrderId(memberId, orderStoreList.getId());
 
         //保存售后申请单
         String finalExchangeMemberShippingAddressJson = exchangeMemberShippingAddressJson;
@@ -364,12 +358,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderStoreGoodRecord.getActualPayment());
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
 
-            if (refundAmount.compareTo(NumberUtil.sub(orderStoreGoodRecord.getAmount(), refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + orderRefundListDto.getRefundAmount() + "已申请数量：" + refundAmountMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO));
-            }
-            if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), refundPriceMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO))) > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + orderRefundListDto.getRefundPrice() + "已售后金额：" + refundPriceMap.getOrDefault(orderStoreGoodRecordId, BigDecimal.ZERO));
-            }
+            verifyApplyOrderStoreRefund(refundType, refundPrice, refundAmount, ongoingOrderRefundList, orderStoreGoodRecord);
             OrderRefundList orderRefundList = new OrderRefundList()
                     .setOrderNo(orderStoreList.getOrderNo())
                     .setOrderType(orderStoreList.getOrderType())
@@ -444,15 +433,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         Map<String, OrderProviderList> orderProviderListMap = orderProviderListService.listByIds(orderProviderIds).stream().collect(Collectors.toMap(OrderProviderList::getId, orderProviderList -> orderProviderList));
 
         // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
-        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderRefundListLambdaQueryWrapper
-                .eq(OrderRefundList::getMemberId, memberId)
-                .notIn(OrderRefundList::getStatus, "5", "6", "7")
-                .eq(OrderRefundList::getOrderListId, applyOrderRefundDto.getOrderId())
-                .eq(OrderRefundList::getDelFlag, "0");
-        List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
-        Map<String, BigDecimal> refundAmountMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundAmount, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
-        Map<String, BigDecimal> refundPriceMap = ongoingOrderRefundList.stream().collect(Collectors.groupingBy(OrderRefundList::getOrderGoodRecordId, Collectors.mapping(OrderRefundList::getRefundPrice, Collectors.reducing(BigDecimal.ZERO, NumberUtil::add))));
+        List<OrderRefundList> ongoingOrderRefundList = orderRefundListService.getOrderRefundListByMemberIdAndOrderId(memberId, orderList.getId());
 
         //保存售后申请单
         List<OrderRefundList> orderRefundLists = applyOrderRefundDto.getOrderRefundListDtos().stream().map(orderRefundListDto -> {
@@ -475,12 +456,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderProviderGoodRecord.getActualPayment());
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderProviderGoodRecord.getAmount());
 
-            if (refundAmount.compareTo(NumberUtil.sub(orderProviderGoodRecord.getAmount(), refundAmountMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO))) > 0) {
-                throw new JeecgBootException("订单商品" + orderProviderGoodRecord.getId() + "实际购买数量：" + orderProviderGoodRecord.getAmount() + "申请数量：" + orderRefundListDto.getRefundAmount() + "已申请数量：" + refundAmountMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO));
-            }
-            if (refundPrice.compareTo(NumberUtil.sub(orderProviderGoodRecord.getActualPayment(), refundPriceMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO))) > 0) {
-                throw new JeecgBootException("订单商品" + orderProviderGoodRecord.getId() + " 实付金额：" + orderProviderGoodRecord.getActualPayment() + "申请金额：" + orderRefundListDto.getRefundPrice() + "已售后金额：" + refundPriceMap.getOrDefault(orderProviderGoodRecord.getId(), BigDecimal.ZERO));
-            }
+            verifyApplyOrderRefund(refundType, refundPrice, refundAmount, ongoingOrderRefundList, orderProviderGoodRecord);
             return new OrderRefundList()
                     .setOrderNo(orderList.getOrderNo())
                     .setOrderType(orderList.getOrderType())
@@ -516,6 +492,98 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         }
     }
 
+    /**
+     * 校验订单商品售后申请限制
+     *
+     * @param refundType
+     * @param refundPrice
+     * @param refundAmount
+     * @param ongoingOrderRefundList
+     * @param orderStoreGoodRecord
+     */
+    public void verifyApplyOrderStoreRefund(String refundType, BigDecimal refundPrice, BigDecimal refundAmount, List<OrderRefundList> ongoingOrderRefundList, OrderStoreGoodRecord orderStoreGoodRecord) {
+        // 售后申请拦截校验
+        if (StrUtil.containsAny(refundType, "0", "1")) {
+            //退款
+            long count = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "2") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2")).count();
+            if (count > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在换货中的售后单，无法发起退款退货申请");
+            }
+            //金额、个数检查
+            BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal price2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
+            if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + refundPrice + "已售后金额：" + ongoingPrice);
+            }
+            long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+            long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + refundAmount + "已售后数量：" + (count1 + count2));
+            }
+        } else if (StrUtil.equals(refundType, "2")) {
+            //退款中数量
+            long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+            long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+            if (count1 + count2 > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在退款或退货退款的售后单，无法发起换货申请");
+            }
+        }
+    }
+
+
+    /**
+     * 校验订单商品售后申请限制
+     *
+     * @param refundType
+     * @param refundPrice
+     * @param refundAmount
+     * @param ongoingOrderRefundList
+     * @param orderStoreGoodRecord
+     */
+    public void verifyApplyOrderRefund(String refundType, BigDecimal refundPrice, BigDecimal refundAmount, List<OrderRefundList> ongoingOrderRefundList, OrderProviderGoodRecord orderStoreGoodRecord) {
+        // 售后申请拦截校验
+        if (StrUtil.containsAny(refundType, "0", "1")) {
+            //退款
+            long count = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "2") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2")).count();
+            if (count > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在换货中的售后单，无法发起退款退货申请");
+            }
+            //金额、个数检查
+            BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal price2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
+            if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + refundPrice + "已售后金额：" + ongoingPrice);
+            }
+            long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+            long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + refundAmount + "已售后数量：" + (count1 + count2));
+            }
+        } else if (StrUtil.equals(refundType, "2")) {
+            //退款中数量
+            long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+            long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+            if (count1 + count2 > 0) {
+                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在退款或退货退款的售后单，无法发起换货申请");
+            }
+        }
+    }
     /**
      * 查询用户在订单下的所有售后单(进行中或已完成)
      *
