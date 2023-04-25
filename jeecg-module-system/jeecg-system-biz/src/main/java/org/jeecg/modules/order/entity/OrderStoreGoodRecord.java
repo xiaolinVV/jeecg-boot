@@ -141,4 +141,9 @@ public class OrderStoreGoodRecord {
 	@Excel(name = "重量", width = 15)
 	@ApiModelProperty(value = "重量")
 	private BigDecimal weight;
+
+	/**
+	 * 优惠券记录id
+	 */
+	private String marketingDiscountCouponId;
 }

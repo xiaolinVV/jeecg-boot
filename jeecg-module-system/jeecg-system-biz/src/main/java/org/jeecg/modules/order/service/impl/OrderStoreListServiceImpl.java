@@ -558,6 +558,9 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                         //可优惠总金额
                         marketingTotalPrice = marketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
                         marketingOrderStoreGoodRecords.add(orderStoreGoodRecord);
+                        //设置优惠券记录id
+                        orderStoreGoodRecord.setMarketingDiscountCouponId(marketingDiscountCoupon.getId());
+                        iOrderStoreGoodRecordService.updateById(orderStoreGoodRecord);
                     }else {
                         noMarketingGoodIds.add(Convert.toStr(m.get("goodId")));
                         noMarketingTotalPrice = noMarketingTotalPrice.add(((BigDecimal) m.get("price")).multiply((BigDecimal) m.get("quantity")));
