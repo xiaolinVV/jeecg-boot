@@ -95,7 +95,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (orderRefundList == null) {
             throw new JeecgBootException("售后单数据不存在");
         }
-
         //获取物流数据JSON
         if (StrUtil.isAllNotBlank(orderRefundList.getBuyerLogisticsCompany(), orderRefundList.getBuyerTrackingNumber())) {
             String buyerLogisticsTracking = orderRefundList.getBuyerLogisticsTracking();
@@ -123,8 +122,32 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             updateById(orderRefundList);
         }
+        if (StrUtil.isAllNotBlank(orderRefundList.getMerchantLogisticsCompany(), orderRefundList.getMerchantTrackingNumber())) {
+            String merchantLogisticsTracking = orderRefundList.getMerchantLogisticsTracking();
+            if (StrUtil.isNotBlank(merchantLogisticsTracking)) {
+                JSONObject jsonObject = JSONObject.parseObject(merchantLogisticsTracking);
+                if (jsonObject.get("status").equals("0")) {
+                    //已签收
+                    JSONObject jsonObjectResult = JSONObject.parseObject(jsonObject.get("result").toString());
 
-        // TODO: 2023/4/22 返回商家物流信息 @zhangshaolin
+                    if (jsonObjectResult.get("issign").equals("1")) {
+                        //已签收，不做查询物流接口
+                    } else {
+                        //请求接口更新数据接口
+                        String string = logisticsUtil.getLogisticsInfo(orderRefundList.getMerchantLogisticsCompany(), orderRefundList.getMerchantTrackingNumber());
+                        orderRefundList.setMerchantLogisticsTracking(string);
+                    }
+                } else {
+                    //请求接口更新物流数据接口
+                    String string = logisticsUtil.getLogisticsInfo(orderRefundList.getMerchantLogisticsCompany(), orderRefundList.getMerchantTrackingNumber());
+                    orderRefundList.setMerchantLogisticsTracking(string);
+                }
+            } else {
+                String string = logisticsUtil.getLogisticsInfo(orderRefundList.getMerchantLogisticsCompany(), orderRefundList.getMerchantTrackingNumber());
+                orderRefundList.setMerchantLogisticsTracking(string);
+            }
+            updateById(orderRefundList);
+        }
         return orderRefundList;
     }
 
