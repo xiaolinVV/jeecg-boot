@@ -325,16 +325,12 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
         }
         //批量查询订单商品列表
-        LambdaQueryWrapper<OrderStoreGoodRecord> orderStoreGoodRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderStoreGoodRecordLambdaQueryWrapper.in(OrderStoreGoodRecord::getId, orderGoodRecordIds);
-        List<OrderStoreGoodRecord> orderStoreGoodRecordList = orderStoreGoodRecordService.list(orderStoreGoodRecordLambdaQueryWrapper);
+        List<OrderStoreGoodRecord> orderStoreGoodRecordList = orderStoreGoodRecordService.listByIds(orderGoodRecordIds);
         Map<String, OrderStoreGoodRecord> orderStoreGoodRecordMap = orderStoreGoodRecordList.stream().collect(Collectors.toMap(OrderStoreGoodRecord::getId, orderStoreGoodRecord -> orderStoreGoodRecord));
 
         //批量查询供应商订单列表
         List<String> orderStoreSubListIds = orderStoreGoodRecordList.stream().map(OrderStoreGoodRecord::getOrderStoreSubListId).collect(Collectors.toList());
-        LambdaQueryWrapper<OrderStoreSubList> orderStoreSubListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderStoreSubListLambdaQueryWrapper.in(OrderStoreSubList::getId, orderStoreSubListIds).eq(OrderStoreSubList::getOrderStoreListId, applyOrderRefundDto.getOrderId());
-        Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.list(orderStoreSubListLambdaQueryWrapper).stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
+        Map<String, OrderStoreSubList> orderStoreSubListMap = orderStoreSubListService.listByIds(orderStoreSubListIds).stream().collect(Collectors.toMap(OrderStoreSubList::getId, orderStoreSubList -> orderStoreSubList));
 
         // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
         LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -440,16 +436,12 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
         }
         //批量查询订单商品列表
-        LambdaQueryWrapper<OrderProviderGoodRecord> orderProviderGoodRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderProviderGoodRecordLambdaQueryWrapper.in(OrderProviderGoodRecord::getId, orderGoodRecordIds);
-        List<OrderProviderGoodRecord> orderProviderGoodRecordList = orderProviderGoodRecordService.list(orderProviderGoodRecordLambdaQueryWrapper);
+        List<OrderProviderGoodRecord> orderProviderGoodRecordList = orderProviderGoodRecordService.listByIds(orderGoodRecordIds);
         Map<String, OrderProviderGoodRecord> orderProviderGoodRecordMap = orderProviderGoodRecordList.stream().collect(Collectors.toMap(OrderProviderGoodRecord::getId, orderProviderGoodRecord -> orderProviderGoodRecord));
 
         //批量查询供应商订单列表
         List<String> orderProviderIds = orderProviderGoodRecordList.stream().map(OrderProviderGoodRecord::getOrderProviderListId).collect(Collectors.toList());
-        LambdaQueryWrapper<OrderProviderList> orderProviderListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderProviderListLambdaQueryWrapper.in(OrderProviderList::getId, orderProviderIds).eq(OrderProviderList::getOrderListId, applyOrderRefundDto.getOrderId());
-        Map<String, OrderProviderList> orderProviderListMap = orderProviderListService.list(orderProviderListLambdaQueryWrapper).stream().collect(Collectors.toMap(OrderProviderList::getId, orderProviderList -> orderProviderList));
+        Map<String, OrderProviderList> orderProviderListMap = orderProviderListService.listByIds(orderProviderIds).stream().collect(Collectors.toMap(OrderProviderList::getId, orderProviderList -> orderProviderList));
 
         // 批量查询用户订单商品进行中或者已完成的售后记录列表,用于售后金额、数量判断
         LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
