@@ -1,5 +1,6 @@
 package org.jeecg.modules.marketing.api;
 
+import cn.hutool.core.convert.Convert;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -323,7 +324,7 @@ public class FrontMarketingDiscountController {
         String frontLogo = iSysFrontSettingService.getOne(new LambdaUpdateWrapper<SysFrontSetting>().eq(SysFrontSetting::getDelFlag, "0")).getFrontLogo();
         Map<String,Object> marketingDiscount =iMarketingDiscountService.findMarketingDiscountById(id);
         if(marketingDiscount.get("logoAddr")!=null) {
-            marketingDiscount.put("logoAddr",new String((byte[])marketingDiscount.get("logoAddr")));
+            marketingDiscount.put("logoAddr", Convert.toStr(marketingDiscount.get("logoAddr"),""));
         }else {
             marketingDiscount.put("logoAddr",frontLogo);
         }
