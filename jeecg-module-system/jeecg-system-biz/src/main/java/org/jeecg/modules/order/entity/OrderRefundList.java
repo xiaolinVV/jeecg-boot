@@ -95,16 +95,16 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "子订单id（供应商/包裹）")
     private java.lang.String orderSubListId;
     /**
-     * 订单id
+     * 订单id（店铺订单/平台订单）
      */
-    @Excel(name = "订单id", width = 15)
-    @ApiModelProperty(value = "订单id")
+    @Excel(name = "订单id（店铺订单/平台订单）", width = 15)
+    @ApiModelProperty(value = "订单id（店铺订单/平台订单）")
     private java.lang.String orderListId;
     /**
-     * 订单号
+     * 订单号（店铺订单/平台订单）
      */
-    @Excel(name = "订单号", width = 15)
-    @ApiModelProperty(value = "订单号")
+    @Excel(name = "订单号（店铺订单/平台订单）", width = 15)
+    @ApiModelProperty(value = "订单号（店铺订单/平台订单）")
     private java.lang.String orderNo;
     /**
      * 订单类型；0：普通订单；1：拼团订单；2：抢购订单；3：自选订单；4：兑换订单；数据字典：order_type；
@@ -126,10 +126,10 @@ public class OrderRefundList implements Serializable {
     @Dict(dictTable = "member_list",dicCode = "id",dicText = "phone")
     private java.lang.String memberId;
     /**
-     * 店铺用户id
+     * 店铺用户id/平台供应商用户id
      */
-    @Excel(name = "店铺用户id", width = 15)
-    @ApiModelProperty(value = "店铺用户id")
+    @Excel(name = "店铺用户id/平台供应商用户id", width = 15)
+    @ApiModelProperty(value = "店铺用户id/平台供应商用户id")
     private java.lang.String sysUserId;
     /**
      * 退款类型 0=仅退款 1=退货退款 2=换货
@@ -138,46 +138,46 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "退款类型 0=仅退款 1=退货退款 2=换货")
     private java.lang.String refundType;
     /**
-     * 退款原因
+     * 退款原因,关联字典：order_store_refund_reason
      */
-    @Excel(name = "退款原因", width = 15)
-    @ApiModelProperty(value = "退款原因")
+    @Excel(name = "退款原因,关联字典：order_store_refund_reason", width = 15)
+    @ApiModelProperty(value = "退款原因,关联字典：order_store_refund_reason")
+    @Dict(dicCode = "order_refund_reason")
     private java.lang.String refundReason;
     /**
-     * 拒绝退款理由
+     * 后台商家拒绝退款理由
      */
-    @Excel(name = "拒绝退款理由", width = 15)
-    @ApiModelProperty(value = "拒绝退款理由")
+    @Excel(name = "后台商家拒绝退款理由", width = 15)
+    @ApiModelProperty(value = "后台商家拒绝退款理由")
     private java.lang.String refundExplain;
     /**
-     * 申请说明
+     * 售后申请说明
      */
-    @Excel(name = "申请说明", width = 15)
-    @ApiModelProperty(value = "申请说明")
+    @Excel(name = "售后申请说明", width = 15)
+    @ApiModelProperty(value = "售后申请说明")
     private java.lang.String remarks;
     /**
-     * 售后状态 0=待处理 1=待买家退回 2=换货中 3=退款中 4=退款成功 5=已拒绝 6=退款关闭 7=换货关闭 8=换货完成
+     * 售后状态 0=待处理 1=待买家退回 2=换货中（等待店铺确认收货） 3=退款中 4=退款成功 5=已拒绝 6=退款关闭 7=换货关闭 8=换货完成。 关联字典：order_refund_status
      */
-    @Excel(name = "售后状态 0=待处理 1=待买家退回 2=换货中 3=退款中 4=退款成功 5=已拒绝 6=退款关闭 7=换货关闭 8=换货完成", width = 15)
-    @ApiModelProperty(value = "售后状态 0=待处理 1=待买家退回 2=换货中 3=退款中 4=退款成功 5=已拒绝 6=退款关闭 7=换货关闭 8=换货完成")
+    @Dict(dicCode = "order_refund_status")
     private java.lang.String status;
     /**
-     * 商品主图相对地址（以json的形式存储多张）
+     * 订单商品主图相对地址（以json的形式存储多张）
      */
-    @Excel(name = "商品主图相对地址（以json的形式存储多张）", width = 15)
+    @Excel(name = "订单商品主图相对地址（以json的形式存储多张）", width = 15)
     @ApiModelProperty(value = "商品主图相对地址（以json的形式存储多张）")
     private java.lang.String goodMainPicture;
     /**
-     * 平台商品id（只做对象映射）
+     * 订单商品id（只做对象映射）
      */
-    @Excel(name = "平台商品id（只做对象映射）", width = 15)
-    @ApiModelProperty(value = "平台商品id（只做对象映射）")
+    @Excel(name = "订单商品id（只做对象映射）", width = 15)
+    @ApiModelProperty(value = "订单商品id（只做对象映射）")
     private java.lang.String goodListId;
     /**
-     * 商品规格id（只做对象映射）
+     * 订单商品规格id（只做对象映射）
      */
-    @Excel(name = "商品规格id（只做对象映射）", width = 15)
-    @ApiModelProperty(value = "商品规格id（只做对象映射）")
+    @Excel(name = "订单商品规格id（只做对象映射）", width = 15)
+    @ApiModelProperty(value = "订单商品规格id（只做对象映射）")
     private java.lang.String goodSpecificationId;
     /**
      * 商品名称
@@ -192,22 +192,22 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "规格名称，按照顺序逗号隔开")
     private java.lang.String goodSpecification;
     /**
-     * 退款凭证图片，按照顺序逗号隔开
+     * 申请退款凭证图片，按照顺序逗号隔开
      */
-    @Excel(name = "退款凭证图片，按照顺序逗号隔开", width = 15)
-    @ApiModelProperty(value = "退款凭证图片，按照顺序逗号隔开")
+    @Excel(name = "申请退款凭证图片，按照顺序逗号隔开", width = 15)
+    @ApiModelProperty(value = "申请退款凭证图片，按照顺序逗号隔开")
     private java.lang.String refundCertificate;
     /**
-     * 退款金额
+     * 申请退款金额
      */
-    @Excel(name = "退款金额", width = 15)
-    @ApiModelProperty(value = "退款金额")
+    @Excel(name = "申请退款金额", width = 15)
+    @ApiModelProperty(value = "申请退款金额")
     private java.math.BigDecimal refundPrice;
     /**
-     * 退款数量
+     * 申请退款数量
      */
-    @Excel(name = "退款数量", width = 15)
-    @ApiModelProperty(value = "退款数量")
+    @Excel(name = "申请退款数量", width = 15)
+    @ApiModelProperty(value = "申请退款数量")
     private java.math.BigDecimal refundAmount;
 
     /**
@@ -216,128 +216,126 @@ public class OrderRefundList implements Serializable {
     private String isPlatform;
 
     /**
-     * 商品总计金额（小计）
+     * 订单商品总计金额（小计）
      */
-    @Excel(name = "商品总计金额（小计）", width = 15)
-    @ApiModelProperty(value = "商品总计金额（小计）")
+    @Excel(name = "订单商品总计金额（小计）", width = 15)
+    @ApiModelProperty(value = "订单商品总计金额（小计）")
     private java.math.BigDecimal goodRecordTotal;
     /**
-     * 商品实付款
+     * 订单商品实付款
      */
-    @Excel(name = "商品实付款", width = 15)
-    @ApiModelProperty(value = "商品实付款")
+    @Excel(name = "订单商品实付款", width = 15)
+    @ApiModelProperty(value = "订单商品实付款")
     private java.math.BigDecimal goodRecordActualPayment;
     /**
-     * 商品优惠金额
+     * 订单商品优惠卷优惠金额
      */
-    @Excel(name = "商品优惠金额", width = 15)
-    @ApiModelProperty(value = "商品优惠金额")
+    @Excel(name = "订单商品优惠卷优惠金额", width = 15)
+    @ApiModelProperty(value = "订单商品优惠卷优惠金额")
     private java.math.BigDecimal goodRecordCoupon;
 
     /**
-     * 礼品卡优惠金额
+     * 订单商品礼品卡优惠金额
      */
     private BigDecimal goodRecordGiftCardCoupon;
 
     /**
-     * 总优惠金额
+     * 订单商品总优惠金额
      */
     private BigDecimal goodRecordTotalCoupon;
 
     /**
-     * 商品数量
+     * 订单商品购买数量
      */
-    @Excel(name = "商品数量", width = 15)
-    @ApiModelProperty(value = "商品数量")
+    @Excel(name = "订单商品购买数量", width = 15)
+    @ApiModelProperty(value = "订单商品购买数量")
     private java.math.BigDecimal goodRecordAmount;
 
     /**
-     * 关闭原因，关联字典 refund_close_explain
+     * 售后单关闭原因，关联字典 refund_close_explain
      */
     @ApiModelProperty(value = "关闭原因，关联字典 refund_close_explain")
     @Dict(dicCode = "refund_close_explain")
     private String closeExplain;
 
     /**
-     * 拒绝原因
+     * 商家拒绝原因
      */
     private String refusedExplain;
 
     /**
-     * 商家收件人姓名
+     * 退货/换货商家邮寄信息：商家收件人姓名
      */
     private String merchantConsigneeName;
 
     /**
-     * 商家收件地址
+     * 退货/换货商家邮寄信息：商家收件地址
      */
     private String merchantConsigneeAddress;
 
     /**
-     * 商家收件手机号
+     * 退货/换货商家邮寄信息：商家收件手机号
      */
     private String merchantConsigneePhone;
 
     /**
-     * 商家收件地址：省
+     * 退货/换货商家邮寄信息：商家收件地址：省
      */
     private String merchantConsigneeProvinceId;
 
     /**
-     * 商家收件地址：市
+     * 退货/换货商家邮寄信息：商家收件地址：市
      */
     private String merchantConsigneeCityId;
 
     /**
-     * 商家收件地址：区
+     * 退货/换货商家邮寄信息：商家收件地址：区
      */
     private String merchantConsigneeAreaId;
 
 
     /**
-     * 买家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
+     * 买家寄回物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
      */
+    @Dict(dicCode = "logistics_company")
     private java.lang.String buyerLogisticsCompany;
     /**
-     * 买家快递单号
+     * 买家寄回快递单号
      */
     private java.lang.String buyerTrackingNumber;
 
     /**
-     * 买家物流跟踪信息的json保存（每次查询的时候更新）
+     * 买家寄回物流跟踪信息的json保存（每次查询的时候更新）
      */
     private String buyerLogisticsTracking;
 
     /**
-     * 换货商品规格id，逗号分隔
+     * 买家换货商品规格id，逗号分隔
      */
-    @Excel(name = "商品规格id（只做对象映射）", width = 15)
-    @ApiModelProperty(value = "商品规格id（只做对象映射）")
     private java.lang.String exchangeGoodSpecificationId;
 
     /**
-     * 换货规格名称，按照顺序逗号隔开
+     * 买家换货规格名称，按照顺序逗号隔开
      */
-    @Excel(name = "规格名称，按照顺序逗号隔开", width = 15)
-    @ApiModelProperty(value = "规格名称，按照顺序逗号隔开")
     private java.lang.String exchangeGoodSpecification;
 
     /**
-     * 换货：买家收货地址
+     * 买家换货：买家收货地址json
      */
     private java.lang.String exchangeMemberShippingAddress;
 
     /**
-     * 换货：商家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
+     * 换货时卖家寄回：商家物流公司；0：顺丰速运；1：圆通快递；2：申通快递；3：中通快递；4：韵达快递；5：天天快递；6：中国邮政；7：EMS邮政特快专递；8：德邦快递；对应数据字典：logistics_company；
      */
+    @Dict(dicCode = "logistics_company")
     private java.lang.String merchantLogisticsCompany;
     /**
-     * 换货：商家快递单号
+     * 换货时卖家寄回：商家快递单号
      */
     private java.lang.String merchantTrackingNumber;
 
     /**
-     * 换货：商家物流跟踪信息的json保存（每次查询的时候更新）
+     * 换货时卖家寄回：商家物流跟踪信息的json保存（每次查询的时候更新）
      */
     private String merchantLogisticsTracking;
 
@@ -362,10 +360,13 @@ public class OrderRefundList implements Serializable {
     private BigDecimal actualRefundGiftCardBalance;
 
     /**
-     * 积分价值
+     * 订单商品抵扣福利金价值（专区商品）
      */
     private BigDecimal welfarePaymentsPrice;
 
+    /**
+     * 订单商品抵扣福利金（专区商品）
+     */
     private BigDecimal welfarePayments;
 
 

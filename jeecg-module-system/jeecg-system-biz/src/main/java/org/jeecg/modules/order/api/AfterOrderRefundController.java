@@ -109,7 +109,6 @@ public class AfterOrderRefundController {
      * @param req
      * @return
      */
-    //@AutoLog(value = "order_refund_list-分页列表查询")
     @GetMapping(value = "/list")
     public Result<IPage<OrderRefundList>> queryPageList(OrderRefundList orderRefundList,
                                                         @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
@@ -127,7 +126,6 @@ public class AfterOrderRefundController {
      * @param orderRefundList
      * @return
      */
-    //@RequiresPermissions("order:order_refund_list:edit")
     @PostMapping(value = "/edit")
     public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
         if (StrUtil.isBlank(orderRefundList.getId())) {
@@ -167,7 +165,6 @@ public class AfterOrderRefundController {
         }
         String updateStatus = StrUtil.equals(orderRefundListServiceById.getRefundType(), "2") ? "7" : "6";
         orderRefundListServiceById.setStatus(updateStatus);
-        // TODO: 2023/4/21 参考 close_explain 新增关闭原因字典 @zhangshaolin
         orderRefundListServiceById.setCloseExplain("0");
         orderRefundListService.updateById(orderRefundListServiceById);
         return Result.OK("编辑成功!");
@@ -179,7 +176,6 @@ public class AfterOrderRefundController {
      * @param id
      * @return
      */
-    //@AutoLog(value = "order_refund_list-通过id查询")
     @GetMapping(value = "/queryById")
     public Result<OrderRefundList> queryById(@RequestParam(name = "id", required = true) String id) {
         return Result.OK(orderRefundListService.getOrderRefundListById(id));
@@ -190,7 +186,6 @@ public class AfterOrderRefundController {
      *
      * @return
      */
-    //@RequiresPermissions("order:order_refund_list:edit")
     @PostMapping(value = "/editLogisticsInfo")
     public Result<String> editLogisticsInfo(
             @RequestParam(name = "id") String id,

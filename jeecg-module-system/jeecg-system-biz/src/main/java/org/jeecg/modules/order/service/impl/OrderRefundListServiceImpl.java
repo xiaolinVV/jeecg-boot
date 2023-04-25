@@ -506,6 +506,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     .setWelfarePayments(orderProviderGoodRecord.getWelfarePayments())
                     .setWelfarePaymentsPrice(orderProviderGoodRecord.getWelfarePaymentsPrice())
                     .setGoodRecordAmount(orderProviderGoodRecord.getAmount())
+                    .setSysUserId(orderProviderList.getSysUserId())
                     .setMemberId(memberId)
                     .setOrderListId(orderList.getId())
                     .setSysUserId("")
