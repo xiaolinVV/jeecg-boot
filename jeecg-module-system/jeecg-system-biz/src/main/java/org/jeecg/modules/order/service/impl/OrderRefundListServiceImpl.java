@@ -345,7 +345,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
      * @param exchangeMemberShippingAddressJson 换货地址json
      */
     @Override
-    public void applyOrderStoreRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson) {
+    public List<OrderRefundList> applyOrderStoreRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson) {
         List<String> orderGoodRecordIds = applyOrderRefundDto.getOrderRefundListDtos().stream().map(OrderRefundListDto::getOrderGoodRecordId).collect(Collectors.toList());
         if (CollUtil.isEmpty(orderGoodRecordIds)) {
             throw new JeecgBootException("orderGoodRecordIds 不能为空");
@@ -439,6 +439,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (CollUtil.isNotEmpty(orderRefundLists)) {
             orderRefundListService.saveBatch(orderRefundLists);
         }
+        return orderRefundLists;
+
     }
 
     /**
@@ -449,7 +451,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
      * @param exchangeMemberShippingAddressJson 换货地址json
      */
     @Override
-    public void applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson) {
+    public List<OrderRefundList> applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson) {
         List<String> orderGoodRecordIds = applyOrderRefundDto.getOrderRefundListDtos().stream().map(OrderRefundListDto::getOrderGoodRecordId).collect(Collectors.toList());
         if (CollUtil.isEmpty(orderGoodRecordIds)) {
             throw new JeecgBootException("orderGoodRecordIds 不能为空");
@@ -535,6 +537,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (CollUtil.isNotEmpty(orderRefundLists)) {
             orderRefundListService.saveBatch(orderRefundLists);
         }
+        return orderRefundLists;
     }
 
     /**

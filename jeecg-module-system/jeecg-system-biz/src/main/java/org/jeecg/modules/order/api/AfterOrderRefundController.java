@@ -53,7 +53,7 @@ public class AfterOrderRefundController {
      * @return
      */
     @PostMapping(value = "/apply")
-    public Result<String> applyOrderRefund(@RequestBody ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
+    public Result<List<OrderRefundList>> applyOrderRefund(@RequestBody ApplyOrderRefundDto applyOrderRefundDto, HttpServletRequest request) {
         String isPlatform = applyOrderRefundDto.getIsPlatform();
         String refundType = applyOrderRefundDto.getRefundType();
         String memberId = Convert.toStr(request.getAttribute("memberId"));
@@ -93,12 +93,13 @@ public class AfterOrderRefundController {
             exchangeMemberShippingAddressJson = exchangeMemberShippingAddress.toJSONString();
         }
 
+        List<OrderRefundList> orderRefundLists = CollUtil.newArrayList();
         if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "0")) {
-            orderRefundListService.applyOrderStoreRefund(applyOrderRefundDto, memberId, exchangeMemberShippingAddressJson);
+            orderRefundLists = orderRefundListService.applyOrderStoreRefund(applyOrderRefundDto, memberId, exchangeMemberShippingAddressJson);
         } else if (StrUtil.equals(applyOrderRefundDto.getIsPlatform(), "1")) {
-            orderRefundListService.applyOrderRefund(applyOrderRefundDto, memberId, exchangeMemberShippingAddressJson);
+            orderRefundLists = orderRefundListService.applyOrderRefund(applyOrderRefundDto, memberId, exchangeMemberShippingAddressJson);
         }
-        return Result.OK("申请成功");
+        return Result.OK(orderRefundLists);
     }
 
     /**

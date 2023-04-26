@@ -41,7 +41,7 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @param memberId                          会员id
      * @param exchangeMemberShippingAddressJson 换货地址json
      */
-    void applyOrderStoreRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
+    List<OrderRefundList> applyOrderStoreRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
 
     /**
      * 平台订单商品售后申请
@@ -50,7 +50,7 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @param memberId                          会员id
      * @param exchangeMemberShippingAddressJson 换货地址json
      */
-    void applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
+    List<OrderRefundList> applyOrderRefund(ApplyOrderRefundDto applyOrderRefundDto, String memberId, String exchangeMemberShippingAddressJson);
 
     /**
      * 查询用户在订单下的所有售后单(进行中或已完成)
