@@ -1,9 +1,9 @@
 package org.jeecg.modules.order.service;
 
+import com.github.yulichang.base.MPJBaseService;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.entity.OrderRefundList;
-import com.github.yulichang.base.MPJBaseService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -59,6 +59,14 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @return
      */
     List<OrderRefundList> getOrderRefundListByMemberIdAndOrderId(String memberId, String orderId);
+
+    /**
+     * 修改申请
+     *
+     * @param orderRefundList
+     * @return
+     */
+    Result<String> editApplyRefund(OrderRefundList orderRefundList);
 
 
 }

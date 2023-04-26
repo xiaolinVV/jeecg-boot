@@ -128,20 +128,7 @@ public class AfterOrderRefundController {
      */
     @PostMapping(value = "/edit")
     public Result<String> edit(@RequestBody OrderRefundList orderRefundList) {
-        if (StrUtil.isBlank(orderRefundList.getId())) {
-            throw new JeecgBootException("id 不能为空");
-        }
-        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(orderRefundList.getId());
-        if (orderRefundListServiceById == null) {
-            throw new JeecgBootException("该售后单不存在");
-        }
-        String status = orderRefundListServiceById.getStatus();
-        if (!StrUtil.containsAny(status, "0", "5")) {
-            throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
-        }
-        // TODO: 2023/4/21 退款金额、退款件数、申请类型业务字段校验 @zhangshaolin
-        orderRefundListService.updateById(orderRefundList);
-        return Result.OK("修改申请成功!");
+        return orderRefundListService.editApplyRefund(orderRefundList);
     }
 
     /**

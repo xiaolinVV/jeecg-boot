@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.huifu.adapay.core.exception.BaseAdaPayException;
 import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
 import org.jeecg.modules.member.service.IMemberListService;
@@ -634,5 +635,31 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 .eq(OrderRefundList::getOrderListId, orderId)
                 .eq(OrderRefundList::getDelFlag, "0");
         return orderRefundListService.list(orderRefundListLambdaQueryWrapper);
+    }
+
+    @Override
+    public Result<String> editApplyRefund(OrderRefundList orderRefundList) {
+        if (StrUtil.isBlank(orderRefundList.getId())) {
+            throw new JeecgBootException("id 不能为空");
+        }
+        OrderRefundList orderRefundListServiceById = orderRefundListService.getById(orderRefundList.getId());
+        if (orderRefundListServiceById == null) {
+            throw new JeecgBootException("该售后单不存在");
+        }
+        String status = orderRefundListServiceById.getStatus();
+        if (!StrUtil.containsAny(status, "0", "5")) {
+            throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
+        }
+        // 退款金额、退款件数、申请类型业务字段校验
+        List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
+        if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "0")) {
+            OrderStoreGoodRecord goodRecord = orderStoreGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+            verifyApplyOrderStoreRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, goodRecord);
+        } else if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "1")) {
+            OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+            verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
+        }
+        orderRefundListService.updateById(orderRefundList);
+        return Result.OK("修改申请成功!");
     }
 }
