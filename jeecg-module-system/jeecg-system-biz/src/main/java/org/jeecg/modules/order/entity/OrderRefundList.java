@@ -188,6 +188,11 @@ public class OrderRefundList implements Serializable {
     @Excel(name = "规格名称，按照顺序逗号隔开", width = 15)
     @ApiModelProperty(value = "规格名称，按照顺序逗号隔开")
     private java.lang.String goodSpecification;
+
+    /**订单商品销售单价*/
+    @Excel(name = "订单商品销售单价", width = 15)
+    @ApiModelProperty(value = "订单商品销售单价")
+    private BigDecimal goodUnitPrice;
     /**
      * 申请退款凭证图片，按照顺序逗号隔开
      */
