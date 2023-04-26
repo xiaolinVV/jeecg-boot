@@ -4,6 +4,7 @@ import com.github.yulichang.base.MPJBaseService;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.entity.OrderRefundList;
+import org.jeecg.modules.order.entity.OrderStoreList;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -67,6 +68,14 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @return
      */
     Result<String> editApplyRefund(OrderRefundList orderRefundList);
+
+    /**
+     * 退款退店铺优惠券
+     *
+     * @param orderStoreList
+     * @param orderRefundList
+     */
+    void refundForSendBackOrderStoreMarketingDiscountCoupon(OrderStoreList orderStoreList, OrderRefundList orderRefundList);
 
 
 }

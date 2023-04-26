@@ -36,6 +36,15 @@ public interface OrderStoreGoodRecordMapper extends BaseMapper<OrderStoreGoodRec
      */
     List<Map<String,Object>> getOrderStoreGoodRecordByOrderId(@Param("orderId") String orderId);
 
+    /**
+     * 根据订单id、优惠券记录id查询记录商品信息
+     *
+     * @param orderId
+     * @param marketingDiscountCouponId
+     * @return
+     */
+    List<Map<String, Object>> getOrderStoreGoodRecordByOrderIdAndMarketingDiscountCouponId(@Param("orderId") String orderId, @Param("marketingDiscountCouponId") String marketingDiscountCouponId);
+
 
     /**
      * 根据订单id查询记录商品信息(评价)

@@ -23,6 +23,12 @@ public class OrderStoreGoodRecordServiceImpl extends ServiceImpl<OrderStoreGoodR
     public List<Map<String,Object>> getOrderStoreGoodRecordByOrderId(String orderId) {
         return baseMapper.getOrderStoreGoodRecordByOrderId(orderId);
     }
+
+    @Override
+    public List<Map<String, Object>> getOrderStoreGoodRecordByOrderIdAndMarketingDiscountCouponId(String orderId, String marketingDiscountCouponId) {
+        return baseMapper.getOrderStoreGoodRecordByOrderIdAndMarketingDiscountCouponId(orderId, marketingDiscountCouponId);
+    }
+
     /***
      * 查询等于店铺列表Id 的集合
      * @param orderStoreSubListId

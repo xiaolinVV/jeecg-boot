@@ -249,6 +249,11 @@ public class OrderRefundList implements Serializable {
     private java.math.BigDecimal goodRecordAmount;
 
     /**
+     * 订单商品优惠券记录id,多个用逗号分隔
+     */
+    private String goodRecordMarketingDiscountCouponId;
+
+    /**
      * 售后单关闭原因，关联字典 refund_close_explain
      */
     @ApiModelProperty(value = "关闭原因，关联字典 refund_close_explain")
@@ -370,6 +375,12 @@ public class OrderRefundList implements Serializable {
      * 订单商品抵扣福利金（专区商品）
      */
     private BigDecimal welfarePayments;
+
+    /**
+     * 实际退款优惠券记录id
+     */
+    private String actualRefundMarketingDiscountCouponId;
+
 
 
 

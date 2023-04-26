@@ -20,6 +20,7 @@ public interface IOrderStoreGoodRecordService extends IService<OrderStoreGoodRec
      * @return
      */
     List<Map<String,Object>> getOrderStoreGoodRecordByOrderId(String orderId);
+    List<Map<String,Object>> getOrderStoreGoodRecordByOrderIdAndMarketingDiscountCouponId(String orderId,String marketingDiscountCouponId);
     /***
      * 查询等于店铺列表Id 的集合
      * @param orderStoreSubListId

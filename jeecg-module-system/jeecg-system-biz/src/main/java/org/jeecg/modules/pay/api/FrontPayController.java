@@ -1,5 +1,6 @@
 package org.jeecg.modules.pay.api;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -18,6 +19,7 @@ import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagR
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.order.entity.OrderRefundList;
+import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.service.IOrderListService;
 import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -123,12 +126,14 @@ public class FrontPayController {
     @Autowired
     private IPayMarketingStoreGiftbagLogService iPayMarketingStoreGiftbagLogService;
 
-
     @Autowired
     private IMarketingStoreGiftbagRecordService iMarketingStoreGiftbagRecordService;
 
     @Autowired
     private IOrderRefundListService orderRefundListService;
+
+    @Autowired
+    private IMarketingDiscountCouponService marketingDiscountCouponService;
 
 
     /**
@@ -314,7 +319,13 @@ public class FrontPayController {
                     orderRefundList.setStatus("4");
                     orderRefundList.setRefundJson(data);
                     orderRefundListService.updateById(orderRefundList);
-                    // TODO: 2023/4/23 退优惠券、退库存、兑换券等 @zhangshaolin
+                    //判断当前商品所有金额全部退款后，退还优惠券
+                    if (StrUtil.equals(orderRefundList.getIsPlatform(),"0")) {
+                        OrderStoreList orderStoreList = iOrderStoreListService.getById(orderRefundList.getOrderListId());
+                        orderRefundListService.refundForSendBackOrderStoreMarketingDiscountCoupon(orderStoreList, orderRefundList);
+                    } else if (StrUtil.equals(orderRefundList.getIsPlatform(),"1")) {
+                        // TODO: 2023/4/23 平台订单退优惠券、退库存、兑换券等 @zhangshaolin
+                    }
                 }
             } else {
                 log.info("汇付天下微信退款失败：" + data);
