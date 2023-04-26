@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.config.jwt.def.JwtConstants;
 import org.jeecg.modules.member.entity.MemberShippingAddress;
 import org.jeecg.modules.member.service.IMemberShippingAddressService;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
@@ -114,7 +115,9 @@ public class AfterOrderRefundController {
                                                         @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                         HttpServletRequest req) {
+        String memberId = Convert.toStr(req.getAttribute(JwtConstants.CURRENT_USER_NAME));
         QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
+        queryWrapper.eq("member_id", memberId);
         Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
         IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
         return Result.OK(pageList);
