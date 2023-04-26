@@ -70,7 +70,7 @@ public class AfterOrderRefundController {
         }
 
         // 换货收货地址
-        String exchangeMemberShippingAddressJson = "";
+        String exchangeMemberShippingAddressJson = null;
         if (StrUtil.equals(refundType, "2")) {
             if (CollUtil.size(applyOrderRefundDto.getOrderRefundListDtos()) > 1) {
                 throw new JeecgBootException("换货只能选择一种商品");

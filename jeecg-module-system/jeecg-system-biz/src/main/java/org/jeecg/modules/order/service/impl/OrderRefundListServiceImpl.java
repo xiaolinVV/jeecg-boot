@@ -368,6 +368,10 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         }
         //批量查询订单商品列表
         List<OrderStoreGoodRecord> orderStoreGoodRecordList = orderStoreGoodRecordService.listByIds(orderGoodRecordIds);
+        if (CollUtil.isEmpty(orderStoreGoodRecordList)) {
+            throw new JeecgBootException("订单商品数据为空，请检查参数");
+        }
+
         Map<String, OrderStoreGoodRecord> orderStoreGoodRecordMap = orderStoreGoodRecordList.stream().collect(Collectors.toMap(OrderStoreGoodRecord::getId, orderStoreGoodRecord -> orderStoreGoodRecord));
 
         //批量查询供应商订单列表
