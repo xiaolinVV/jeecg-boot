@@ -1,6 +1,7 @@
 package org.jeecg.modules.good.api;
 
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -493,6 +494,8 @@ public class FrontGoodListController {
 
             GoodStoreSpecification goodStoreSpecification=iGoodStoreSpecificationService.getSmallGoodSpecification(goodId);
             goodStoreListMap.put("smallSpecification",goodStoreSpecification.getSpecification());
+            goodStoreListMap.put("specificationId",goodStoreSpecification.getId());
+            goodStoreListMap.put("goodId", Convert.toStr(goodStoreListMap.get("id")));
             goodStoreListMap.put("goodsSale",goodsSale);
             goodStoreListMap.put("isViewShopCar",1);
 
@@ -919,6 +922,8 @@ public class FrontGoodListController {
                         return result.error500("商品已下架");
                     }
                     goodlistMap.put("smallSpecification", goodSpecification.getSpecification());
+                    goodlistMap.put("specificationId",goodSpecification.getId());
+                    goodlistMap.put("goodId", Convert.toStr(goodlistMap.get("id")));
                     goodlistMap.put("smallPrice",goodSpecification.getPrice());
                     goodlistMap.put("smallVipPrice",goodSpecification.getVipPrice());
 
