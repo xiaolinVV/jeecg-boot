@@ -213,8 +213,7 @@ public class AfterOrderRefundController {
      * @param id 售后单id
      * @return
      */
-    @RequestMapping("/refundOrderTimer")
-    @ResponseBody
+    @GetMapping("/refundOrderTimer")
     public Result<Map<String,Object>> refundOrderTimer(String id){
         Result<Map<String,Object>> result=new Result<>();
         Map<String,Object> objectMap= Maps.newHashMap();
