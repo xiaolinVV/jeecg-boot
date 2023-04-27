@@ -606,10 +606,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         List<String> discountGoods = Lists.newArrayList(); // 订单中参与优惠券的商品id列表
         Map<String,Map<String, Object>> marketingPrefectureGoods = MapUtil.newHashMap();
         MarketingDiscount marketingDiscount = null;//优惠券信息
-
+        String discountId = null;
         if (model == 0) {
             //通过优惠券判断优惠金额
-            String discountId = jsonGoods.getString("discountId");
+            discountId = jsonGoods.getString("discountId");
             if (!oConvertUtils.isEmpty(discountId)) {
                 //设置优惠金额
                 MarketingDiscountCoupon marketingDiscountCoupon = iMarketingDiscountCouponService.getById(discountId);
@@ -1063,6 +1063,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             BigDecimal temSum = new BigDecimal("0");
             for (int i = 0; i < discountOrderProviderGoodRecords.size(); i++) {
                 OrderProviderGoodRecord orderProviderGoodRecord = discountOrderProviderGoodRecords.get(i);
+                orderProviderGoodRecord.setMarketingDiscountCouponId(discountId);
                 if (i == discountOrderProviderGoodRecords.size() - 1) {
                     BigDecimal goodDiscountPrice = NumberUtil.sub(couponPriceMarketingDiscount,temSum);
                     orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);

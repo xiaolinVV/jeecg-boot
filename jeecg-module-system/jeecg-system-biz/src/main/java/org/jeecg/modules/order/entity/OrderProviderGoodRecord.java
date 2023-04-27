@@ -199,4 +199,9 @@ public class OrderProviderGoodRecord {
 	 */
 	private BigDecimal actualPayment;
 
+	/**
+	 * 优惠券记录id
+	 */
+	private String marketingDiscountCouponId;
+
 }

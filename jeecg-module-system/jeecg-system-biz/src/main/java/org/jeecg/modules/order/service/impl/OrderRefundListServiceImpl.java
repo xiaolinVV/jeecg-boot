@@ -538,7 +538,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
                     .setRefundPrice(orderRefundListDto.getRefundPrice())
                     .setRefundAmount(orderRefundListDto.getRefundAmount())
-                    .setIsPlatform(applyOrderRefundDto.getIsPlatform());
+                    .setIsPlatform(applyOrderRefundDto.getIsPlatform())
+                    .setGoodRecordMarketingDiscountCouponId(orderProviderGoodRecord.getMarketingDiscountCouponId());
         }).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(orderRefundLists)) {
             orderRefundListService.saveBatch(orderRefundLists);
