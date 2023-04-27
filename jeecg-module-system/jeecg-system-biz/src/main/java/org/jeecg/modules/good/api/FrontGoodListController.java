@@ -1111,6 +1111,8 @@ public class FrontGoodListController {
             }else{
                 paramMap.put("price",goodStoreSpecification.getPrice());
             }
+            paramMap.put("goodId",goodStoreList.getId());
+            paramMap.put("specificationId",goodStoreSpecification.getId());
 
             /*店铺专区*/
             if(StringUtils.isNotBlank(marketingStorePrefectureGoodId)){
@@ -1142,6 +1144,8 @@ public class FrontGoodListController {
                     paramMap.put("specificationPicture",goodSpecification.getSpecificationPicture());
                 }
                 paramMap.put("repertory",goodSpecification.getRepertory());
+                paramMap.put("goodId",goodList.getId());
+                paramMap.put("specificationId",goodSpecification.getId());
 
                 //普通商品
                 if(StringUtils.isBlank(marketingPrefectureId)&&StringUtils.isBlank(marketingFreeGoodListId)&&StringUtils.isBlank(marketingLeagueGoodListId)) {

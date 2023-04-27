@@ -1051,6 +1051,13 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
             orderStoreList.setPayWelfarePaymentsPrice(orderStoreList.getPayWelfarePayments().multiply(integralValue));
         }
         // TODO: 2023/4/20 计算商品实际支付金额占比 @zhangshaolin
+        List<Map<String, Object>> storeGoodRecordList = iOrderStoreGoodRecordService.getOrderStoreGoodRecordByOrderId(orderStoreList.getId());
+        if (CollUtil.isNotEmpty(storeGoodRecordList)) {
+            for (int i = 0; i < storeGoodRecordList.size(); i++) {
+                Map<String, Object> storeOrderGoodRecordMap = storeGoodRecordList.get(i);
+
+            }
+        }
 
 
         orderStoreList.setPayTime(new Date());
