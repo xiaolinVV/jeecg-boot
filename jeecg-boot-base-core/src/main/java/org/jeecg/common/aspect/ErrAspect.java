@@ -16,6 +16,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.vo.LoginMemberList;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.SpringContextUtils;
@@ -59,6 +60,9 @@ public class ErrAspect {
 
     @AfterThrowing(value = "excudeService()", throwing = "ex")
     public void getErr(JoinPoint joinPoint, Exception ex) throws IOException {
+        if (ex instanceof JeecgBootException){
+            return;
+        }
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         //请求的方法名
         String className = joinPoint.getTarget().getClass().getName();
