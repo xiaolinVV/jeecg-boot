@@ -77,5 +77,10 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      */
     void refundForSendBackOrderStoreMarketingDiscountCoupon(OrderStoreList orderStoreList, OrderRefundList orderRefundList);
 
-
+    /**
+     *  待退货售后单单计时器
+     * @param id 售后单id
+     * @return
+     */
+    String refundOrderTimer(String id);
 }

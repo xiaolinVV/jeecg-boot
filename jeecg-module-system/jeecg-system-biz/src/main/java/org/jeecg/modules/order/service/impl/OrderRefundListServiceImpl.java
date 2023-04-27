@@ -25,6 +25,7 @@ import org.jeecg.modules.order.service.*;
 import org.jeecg.modules.order.utils.PayUtils;
 import org.jeecg.modules.pay.utils.HftxPayUtils;
 import org.jeecg.modules.pay.utils.NotifyUrlUtils;
+import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecg.utils.logistics.LogisticsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -92,6 +93,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 
     @Autowired
     private IMarketingDiscountCouponService marketingDiscountCouponService;
+
+    @Autowired
+    private ISysDictService sysDictService;
 
 
     @Override
@@ -701,5 +705,11 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         }
     }
 
-
+    @Override
+    public String refundOrderTimer(String id) {
+        //过期时间(小时)
+        String hour = sysDictService
+                .queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "common_refund_return_timeout");
+        return baseMapper.getRefundOrderTimer(id,hour);
+    }
 }

@@ -1438,16 +1438,21 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     };
 
     public static void main(String[] args) {
-        JSONObject orderJson = new JSONObject();
-        JSONArray storeGoods = new JSONArray();
-        JSONObject storeGood = new JSONObject();
-        storeGood.put("id","168f004bbe6893e07ac2aa4b2562c02d");
-        storeGood.put("discountId","89205518a4e9feb3aa43e2f118e6727c");
-        storeGoods.add(storeGood);
-        orderJson.put("storeGoods",storeGoods);
+//        JSONObject orderJson = new JSONObject();
+//        JSONArray storeGoods = new JSONArray();
+//        JSONObject storeGood = new JSONObject();
+//        storeGood.put("id","168f004bbe6893e07ac2aa4b2562c02d");
+//        storeGood.put("discountId","89205518a4e9feb3aa43e2f118e6727c");
+//        storeGoods.add(storeGood);
+//        orderJson.put("storeGoods",storeGoods);
+//
+//        String jsonString = orderJson.toJSONString();
+//        System.out.println(jsonString);
 
-        String jsonString = orderJson.toJSONString();
-        System.out.println(jsonString);
+//        BigDecimal mul = NumberUtil.mul(NumberUtil.div(new BigDecimal("50"), new BigDecimal("110")), new BigDecimal("50"));
+//        BigDecimal mul1 = NumberUtil.mul(NumberUtil.div(new BigDecimal("50"), new BigDecimal("110")), new BigDecimal("60"));
+//        System.out.println(mul);
+//        System.out.println(mul1);
     }
 
 }
