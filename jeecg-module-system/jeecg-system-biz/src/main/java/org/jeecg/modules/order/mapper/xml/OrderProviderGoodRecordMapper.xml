@@ -24,12 +24,15 @@
     </select>
     <select id="getOrderProviderGoodRecordByOrderId" resultType="map">
         SELECT
+          id,
           main_picture AS mainPicture,
           good_name AS goodName,
           specification,
           unit_price AS price,
           amount,
-          prefecture_label AS label
+          prefecture_label AS label,
+          good_list_id as goodId,
+         good_specification_id as specificationId
         FROM
           `order_provider_good_record`
         WHERE order_provider_list_id IN

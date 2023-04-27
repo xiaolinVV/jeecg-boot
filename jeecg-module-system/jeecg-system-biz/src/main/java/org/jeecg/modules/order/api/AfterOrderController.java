@@ -315,7 +315,7 @@ public class AfterOrderController {
      */
     @RequestMapping("viewOrderInfo")
     @ResponseBody
-    public Result<Map<String,Object>> viewOrderInfo(String id,Integer isPlatform){
+    public Result<Map<String,Object>> viewOrderInfo(@RequestParam("id") String id,@RequestParam("isPlatform") Integer isPlatform){
         Result<Map<String,Object>> result=new Result<>();
         Map<String,Object> objectMap= Maps.newHashMap();
         //参数判断
