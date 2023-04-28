@@ -29,6 +29,11 @@ public class OrderProviderGoodRecordServiceImpl extends ServiceImpl<OrderProvide
         return baseMapper.getOrderProviderGoodRecordByOrderId(orderId);
     }
 
+    @Override
+    public List<Map<String, Object>> getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId(String orderId, String marketingDiscountCouponId) {
+        return baseMapper.getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId(orderId,marketingDiscountCouponId);
+    }
+
     /**
      * 根据订单id查询记录商品信息(评价)
      * @param orderId

@@ -18,6 +18,7 @@ import org.jeecg.modules.marketing.service.*;
 import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagRecordService;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
+import org.jeecg.modules.order.entity.OrderList;
 import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.service.IOrderListService;
@@ -313,18 +314,19 @@ public class FrontPayController {
                 // 发送通知等
                 OrderRefundList orderRefundList = orderRefundListService.getById(refundId);
                 log.info("退款回调id：" + refundId);
-                if (StrUtil.equals(orderRefundList.getStatus(),"3")) {
+                if (StrUtil.equals(orderRefundList.getStatus(), "3")) {
                     BigDecimal refund_amt = jsonObject.getBigDecimal("refund_amt");
                     orderRefundList.setActualRefundPrice(refund_amt);
                     orderRefundList.setStatus("4");
                     orderRefundList.setRefundJson(data);
                     orderRefundListService.updateById(orderRefundList);
                     //判断当前商品所有金额全部退款后，退还优惠券
-                    if (StrUtil.equals(orderRefundList.getIsPlatform(),"0")) {
+                    if (StrUtil.equals(orderRefundList.getIsPlatform(), "0")) {
                         OrderStoreList orderStoreList = iOrderStoreListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderStoreMarketingDiscountCoupon(orderStoreList, orderRefundList);
-                    } else if (StrUtil.equals(orderRefundList.getIsPlatform(),"1")) {
-                        // TODO: 2023/4/23 平台订单退优惠券、退库存、兑换券等 @zhangshaolin
+                    } else if (StrUtil.equals(orderRefundList.getIsPlatform(), "1")) {
+                        OrderList orderList = iOrderListService.getById(orderRefundList.getOrderListId());
+                        orderRefundListService.refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
                     }
                 }
             } else {

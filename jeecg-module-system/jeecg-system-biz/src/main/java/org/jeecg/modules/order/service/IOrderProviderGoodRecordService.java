@@ -23,6 +23,7 @@ public interface IOrderProviderGoodRecordService extends IService<OrderProviderG
      * @return
      */
     List<Map<String,Object>> getOrderProviderGoodRecordByOrderId(String orderId);
+    List<Map<String,Object>> getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId(String orderId,String marketingDiscountCouponId);
     /**
      * 根据订单id查询记录商品信息(评价)
      * @param orderId

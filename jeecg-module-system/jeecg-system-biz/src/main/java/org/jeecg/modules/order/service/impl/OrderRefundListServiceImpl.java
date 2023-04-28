@@ -251,7 +251,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             orderRefundList.setStatus("3");
         }
         orderRefundListService.updateById(orderRefundList);
-        // TODO: 2023/4/27 退还优惠券 @zhangshaolin
+        //退还优惠券
+        refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
     }
 
 
@@ -702,6 +703,28 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
                 //退款金额等于商品实际付款或者退款数量等于实际购买数量，退还优惠券
                 marketingDiscountCouponService.sendBackOrderStoreMarketingDiscountCoupon(orderStoreList);
+                orderRefundList.setActualRefundMarketingDiscountCouponId(orderRefundList.getGoodRecordMarketingDiscountCouponId());
+                orderRefundListService.updateById(orderRefundList);
+            }
+        }
+    }
+
+    @Override
+    public void refundForSendBackOrderMarketingDiscountCoupon(OrderList orderList, OrderRefundList orderRefundList) {
+        //判断当前商品所有金额全部退款后，退还优惠券
+        if (StrUtil.isNotBlank(orderRefundList.getGoodRecordMarketingDiscountCouponId())) {
+            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
+            BigDecimal price = orderRefundListList.stream().filter(o -> StrUtil.equals(o.getStatus(), "4") && StrUtil.equals(o.getGoodRecordMarketingDiscountCouponId(), orderRefundList.getGoodRecordMarketingDiscountCouponId())).map(OrderRefundList::getActualRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal balance = orderRefundListList.stream().filter(o -> StrUtil.equals(o.getStatus(), "4") && StrUtil.equals(o.getGoodRecordMarketingDiscountCouponId(), orderRefundList.getGoodRecordMarketingDiscountCouponId())).map(OrderRefundList::getActualRefundBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(o -> StrUtil.equals(o.getStatus(), "4") && StrUtil.equals(o.getGoodRecordMarketingDiscountCouponId(), orderRefundList.getGoodRecordMarketingDiscountCouponId())).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+
+            List<Map<String, Object>> list = orderProviderGoodRecordService.getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId(orderList.getId(), orderRefundList.getGoodRecordMarketingDiscountCouponId());
+            BigDecimal actualPayment = list.stream().map(m -> Convert.toBigDecimal(m.get("actualPayment"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal amount = list.stream().map(m -> Convert.toBigDecimal(m.get("amount"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+
+            if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
+                //退款金额等于商品实际付款或者退款数量等于实际购买数量，退还优惠券
+                marketingDiscountCouponService.sendBackOrderMarketingDiscountCoupon(orderList);
                 orderRefundList.setActualRefundMarketingDiscountCouponId(orderRefundList.getGoodRecordMarketingDiscountCouponId());
                 orderRefundListService.updateById(orderRefundList);
             }

@@ -3,6 +3,7 @@ package org.jeecg.modules.order.service;
 import com.github.yulichang.base.MPJBaseService;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
+import org.jeecg.modules.order.entity.OrderList;
 import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreList;
 
@@ -76,6 +77,13 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @param orderRefundList
      */
     void refundForSendBackOrderStoreMarketingDiscountCoupon(OrderStoreList orderStoreList, OrderRefundList orderRefundList);
+
+    /**
+     * 退款退平台优惠券
+     * @param orderList
+     * @param orderRefundList
+     */
+    void refundForSendBackOrderMarketingDiscountCoupon(OrderList orderList, OrderRefundList orderRefundList);
 
     /**
      *  待退货售后单单计时器

@@ -38,6 +38,8 @@ public interface OrderProviderGoodRecordMapper extends BaseMapper<OrderProviderG
      */
     List<Map<String, Object>> getOrderProviderGoodRecordByOrderId(@Param("orderId") String orderId);
 
+    List<Map<String, Object>> getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId(@Param("orderId") String orderId, @Param("marketingDiscountCouponId") String marketingDiscountCouponId);
+
 
     /**
      * 获取商品记录数据

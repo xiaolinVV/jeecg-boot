@@ -43,6 +43,30 @@
           WHERE order_list_id = #{orderId}
           )
     </select>
+
+    <select id="getOrderProviderGoodRecordByOrderIdAndMarketingDiscountCouponId" resultType="map">
+        SELECT
+        id,
+        main_picture AS mainPicture,
+        good_name AS goodName,
+        specification,
+        unit_price AS price,
+        amount,
+        prefecture_label AS label,
+        good_list_id as goodId,
+        good_specification_id as specificationId,
+        marketing_discount_coupon_id as marketingDiscountCouponId
+        FROM
+        `order_provider_good_record`
+        WHERE order_provider_list_id IN
+        (SELECT
+        id
+        FROM
+        `order_provider_list`
+        WHERE order_list_id = #{orderId}
+        )
+        AND marketing_discount_coupon_id = #{marketingDiscountCouponId}
+    </select>
     <select id="getOrderProviderGoodRecordByOrderIdNew" resultType="map">
         SELECT
         main_picture AS mainPicture,
