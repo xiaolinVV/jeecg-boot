@@ -1,5 +1,6 @@
 package org.jeecg.modules.member.api;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -42,7 +43,7 @@ public class AfterMemberShippingAddressController {
      */
     @RequestMapping("addAddress")
     @ResponseBody
-    public Result<String> addAddress(String linkman, String phone, String areaAddress, String houseNumber, Integer isDefault, String id, String sysAreaId, String areaExplan, String areaExplanIds, @RequestParam(name = "longitude",defaultValue ="0")BigDecimal longitude,@RequestParam(name = "latitude",defaultValue ="0")BigDecimal latitude, HttpServletRequest request){
+    public Result<String> addAddress(String linkman, String phone, String areaAddress, String houseNumber, @RequestParam(value = "isDefault",required = false,defaultValue = "0") Integer isDefault, String id, String sysAreaId, String areaExplan, String areaExplanIds, @RequestParam(name = "longitude",defaultValue ="0")BigDecimal longitude,@RequestParam(name = "latitude",defaultValue ="0")BigDecimal latitude, HttpServletRequest request){
         String memberId=request.getAttribute("memberId").toString();
         Result<String> result=new Result<>();
 
@@ -71,10 +72,6 @@ public class AfterMemberShippingAddressController {
         }
         if(oConvertUtils.isEmpty(areaExplan)){
             result.error500("城市区域描述！！！");
-            return result;
-        }
-        if(oConvertUtils.isEmpty(isDefault)){
-            result.error500("是否默认不能为空！！！");
             return result;
         }
 
