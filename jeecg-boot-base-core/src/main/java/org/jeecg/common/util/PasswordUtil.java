@@ -1,5 +1,8 @@
 package org.jeecg.common.util;
 
+import cn.hutool.core.util.StrUtil;
+
+import java.nio.charset.Charset;
 import java.security.Key;
 import java.security.SecureRandom;
 import javax.crypto.Cipher;
@@ -136,7 +139,7 @@ public class PasswordUtil {
 		catch (Exception e) {
 			// TODO: handle exception
 		}
-		return new String(passDec);
+		return StrUtil.str(passDec, Charset.defaultCharset());
 	}
 
 	/**
