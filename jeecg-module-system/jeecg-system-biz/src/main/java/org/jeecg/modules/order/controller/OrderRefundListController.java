@@ -122,8 +122,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     //@RequiresPermissions("order:order_refund_list:add")
     @PostMapping(value = "/pass")
     public Result<String> pass(@RequestParam("id") String id,
-                               @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
-                               @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance,
+                               @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
+                               @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance,
                                @RequestParam(value = "merchantConsigneeName", required = false) String merchantConsigneeName,
                                @RequestParam(value = "merchantConsigneeAddress", required = false) String merchantConsigneeAddress,
                                @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone,
@@ -173,8 +173,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     //@RequiresPermissions("order:order_refund_list:add")
     @PostMapping(value = "/confirm")
     public Result<String> confirm(@RequestParam("id") String id,
-                                  @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
-                                  @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
+                                  @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
+                                  @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
         }
