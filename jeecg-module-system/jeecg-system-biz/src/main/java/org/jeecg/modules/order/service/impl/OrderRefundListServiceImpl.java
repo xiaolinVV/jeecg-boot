@@ -201,7 +201,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.sub(welfarePayments, decimal));
             } else {
                 //按数量比例退
-                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.mul(NumberUtil.div(welfarePayments, goodRecordAmount), orderRefundList.getRefundAmount()));
+                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.mul(NumberUtil.div(welfarePayments, goodRecordAmount,2), orderRefundList.getRefundAmount()));
             }
             //退福利金
             memberWelfarePaymentsService.addWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualRefundDiscountWelfarePayments(), "20", orderRefundList.getId(), "平台订单售后退款");
@@ -291,7 +291,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 orderRefundList.setActualRefundGiftCardBalance(NumberUtil.sub(goodRecordGiftCardCoupon, decimal));
             } else {
                 //按数量比例退
-                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.mul(NumberUtil.div(goodRecordGiftCardCoupon, goodRecordAmount), orderRefundList.getRefundAmount()));
+                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.mul(NumberUtil.div(goodRecordGiftCardCoupon, goodRecordAmount,2), orderRefundList.getRefundAmount()));
             }
             marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), orderRefundList.getActualRefundGiftCardBalance(), orderStoreList.getOrderNo(), "2");
         }

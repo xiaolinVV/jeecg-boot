@@ -860,7 +860,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                         g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
                         g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
                     } else {
-                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.mul(NumberUtil.div(welfareProportionPrice, welfarePayments), memberWelfarePayments);
+                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.mul(NumberUtil.div(welfareProportionPrice, welfarePayments,2), memberWelfarePayments);
                         g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
                         g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
                         tempSum = tempSum.add(goodActualWelfareProportionPrice);
@@ -1068,7 +1068,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     BigDecimal goodDiscountPrice = NumberUtil.sub(couponPriceMarketingDiscount,temSum);
                     orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
                 } else {
-                    BigDecimal goodDiscountPrice = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPriceMarketingDiscount), couponPriceMarketingDiscount);
+                    BigDecimal goodDiscountPrice = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPriceMarketingDiscount,2), couponPriceMarketingDiscount);
                     orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
                     temSum = NumberUtil.add(goodDiscountPrice,temSum);
                 }
