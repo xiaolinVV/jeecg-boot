@@ -60,9 +60,9 @@ public class ErrAspect {
 
     @AfterThrowing(value = "excudeService()", throwing = "ex")
     public void getErr(JoinPoint joinPoint, Exception ex) throws IOException {
-        if (ex instanceof JeecgBootException){
-            return;
-        }
+//        if (ex instanceof JeecgBootException){
+//            return;
+//        }
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         //请求的方法名
         String className = joinPoint.getTarget().getClass().getName();
