@@ -184,7 +184,7 @@ public interface IStoreManageService extends IService<StoreManage> {
      * @param memberId
      * @return
      */
-    public IPage<Map<String,Object>> getPrivilege(Page<Map<String,Object>> page,String memberId);
+    public IPage<Map<String,Object>> getPrivilege(Page<Map<String,Object>> page,Map<String,Object> paramMap);
 
     /**
      * 获取特权店铺详情

@@ -2035,8 +2035,8 @@ public class StoreManageServiceImpl extends ServiceImpl<StoreManageMapper, Store
     }
 
     @Override
-    public IPage<Map<String, Object>> getPrivilege(Page<Map<String, Object>> page, String memberId) {
-        return baseMapper.getPrivilege(page,memberId);
+    public IPage<Map<String, Object>> getPrivilege(Page<Map<String, Object>> page, Map<String,Object> paramMap) {
+        return baseMapper.getPrivilege(page,paramMap);
     }
 
     @Override

@@ -1154,6 +1154,8 @@
                md.logo_addr   AS mlogoAddr,
                 ( SELECT COUNT( 1 ) FROM `marketing_discount` WHERE STATUS = 1 AND del_flag = '0' AND total &gt;
                 released_quantity AND sys_user_id = sm.sys_user_id ) AS disCount,
+                POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2
+                ) AS extent,
                 sm.sort,
                 sm.area_address AS areaAddress,
                 sm.take_out_phone AS takeOutPhone
@@ -1161,7 +1163,7 @@
                  LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
                  LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id
                  LEFT JOIN member_designation md ON mdml.member_designation_id = md.id
-        WHERE mdml.member_list_id = #{memberId}
+        WHERE mdml.member_list_id = #{paramMap.memberId}
           AND mdml.del_flag = '0'
           and sm.id is not null
         ORDER BY mdml.create_time DESC
@@ -1210,7 +1212,9 @@
                    WHERE del_flag = '0'
                      AND member_list_id = mdml.member_list_id
                      AND `status` = '1'
-               )              AS discountCount
+               )              AS discountCount,
+            POWER( POWER( sm.longitude - #{paramMap.longitude}, 2 ) + POWER( sm.latitude - #{paramMap.latitude}, 2 ), 1 / 2
+            ) AS extent
         FROM member_designation_member_list mdml
                  LEFT JOIN member_designation_group mdg ON mdml.member_designation_group_id = mdg.id
                  LEFT JOIN store_manage sm ON sm.id = mdg.store_manage_id

@@ -27,10 +27,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.RequestAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -263,10 +260,17 @@ public class AfterStoreManageController {
      */
     @RequestMapping("getPrivilegeStoreList")
     @ResponseBody
-    public Result<?> getPrivilegeStoreList( @RequestAttribute("memberId") String memberId,
+    public Result<?> getPrivilegeStoreList(
+                                    @RequestHeader(defaultValue = "") String longitude,
+                                    @RequestHeader(defaultValue = "") String latitude,
+                                    @RequestAttribute("memberId") String memberId,
                                    @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
                                    @RequestParam(name="pageSize", defaultValue="10") Integer pageSize){
-        return Result.ok(iStoreManageService.getPrivilege(new Page<>(pageNo,pageSize),memberId));
+        Map<String,Object> paramMap=Maps.newHashMap();
+        paramMap.put("longitude",longitude);
+        paramMap.put("latitude",latitude);
+        paramMap.put("memberId",memberId);
+        return Result.ok(iStoreManageService.getPrivilege(new Page<>(pageNo,pageSize),paramMap));
     }
 
     /**
@@ -278,11 +282,16 @@ public class AfterStoreManageController {
      */
     @RequestMapping("getPrivilegeStoreInfo")
     @ResponseBody
-    public Result<?> getPrivilegeStoreInfo(@RequestAttribute("memberId") String memberId,
+    public Result<?> getPrivilegeStoreInfo(
+                                            @RequestHeader(defaultValue = "") String longitude,
+                                            @RequestHeader(defaultValue = "") String latitude,
+                                            @RequestAttribute("memberId") String memberId,
                                                 String sysUserId){
         Map<String,Object> paramMap=Maps.newHashMap();
         paramMap.put("memberId",memberId);
         paramMap.put("sysUserId",sysUserId);
+        paramMap.put("longitude",longitude);
+        paramMap.put("latitude",latitude);
         Map<String,Object> resultMap=iStoreManageService.getPrivilegeInfo(paramMap);
         MemberList memberList=iMemberListService.getById(memberId);
         resultMap.put("welfarePayments",memberList.getWelfarePayments());

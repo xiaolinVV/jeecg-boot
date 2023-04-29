@@ -120,7 +120,7 @@ public interface StoreManageMapper extends BaseMapper<StoreManage> {
      * @param memberId
      * @return
      */
-    public IPage<Map<String,Object>> getPrivilege(Page<Map<String,Object>> page,@Param("memberId") String memberId);
+    public IPage<Map<String, Object>> getPrivilege(Page<Map<String, Object>> page, @Param("paramMap") Map<String, Object> paramMap);
 
     /**
      * 获取特权店铺详情
