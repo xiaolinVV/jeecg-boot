@@ -732,7 +732,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                     orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                     orderStoreGoodRecord.setTotalCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
                 } else {
-                    BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(total, marketingTotalPrice), actualPayment);
+                    BigDecimal orderGoodActualPayment = NumberUtil.mul(NumberUtil.div(total, marketingTotalPrice,2), actualPayment);
                     orderStoreGoodRecord.setCustomaryDues(orderGoodActualPayment);
                     orderStoreGoodRecord.setActualPayment(orderGoodActualPayment);
                     orderStoreGoodRecord.setCoupon(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderStoreGoodRecord.getActualPayment()));
@@ -770,7 +770,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                         orderStoreGoodRecord.setTotalCoupon(orderGoodActualGiftCardPayment);
                     } else {
                         //商品实际礼品卡抵扣金额
-                        BigDecimal orderGoodActualGiftCardPayment = NumberUtil.mul(NumberUtil.div(orderStoreGoodRecord.getTotal(), goodGiftCardtotal), actuaGoodGiftCardtotal);
+                        BigDecimal orderGoodActualGiftCardPayment = NumberUtil.mul(NumberUtil.div(orderStoreGoodRecord.getTotal(), goodGiftCardtotal,2), actuaGoodGiftCardtotal);
                         orderStoreGoodRecord.setCustomaryDues(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
                         orderStoreGoodRecord.setActualPayment(NumberUtil.sub(orderStoreGoodRecord.getTotal(),orderGoodActualGiftCardPayment));
                         orderStoreGoodRecord.setGiftCardCoupon(orderGoodActualGiftCardPayment);
@@ -1453,6 +1453,10 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 //        BigDecimal mul1 = NumberUtil.mul(NumberUtil.div(new BigDecimal("50"), new BigDecimal("110")), new BigDecimal("60"));
 //        System.out.println(mul);
 //        System.out.println(mul1);
+
+        BigDecimal add = NumberUtil.add(new BigDecimal("908.35"), new BigDecimal("1068.11"));
+        BigDecimal sub = NumberUtil.sub(new BigDecimal("2862"), add);
+        System.out.println(sub);
     }
 
 }
