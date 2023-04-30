@@ -270,7 +270,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             throw new JeecgBootException("订单不存在");
         }
         String orderType = orderStoreList.getOrderType();
-        // TODO: 2023/4/23 1、判断订单中所有参与优惠券优惠的商品全部退款后，退还优惠券 2、还库存 @zhangshaolin
         // 普通订单，走余额、微信退款，优先退余额
         BigDecimal totalRefundPrice = NumberUtil.add(actualRefundPrice, actualRefundBalance);
         if (totalRefundPrice.compareTo(orderRefundList.getRefundPrice()) > 0) {

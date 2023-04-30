@@ -107,16 +107,17 @@ public class FrontMarketingMaterialListController {
         IPage<Map<String,Object>>  marketingMaterialPage =null ;
         //组织查询参数
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
-        if(StringUtils.isBlank(marketingMaterialColumnId)){
-            //推荐素材
-          List<String> stringList = marketingMaterialRecommendService.getMarketingMaterialListIdList();
-              paramMap.put("strings",stringList);
-              marketingMaterialPage  =  iMarketingMaterialListService.findMarketingMaterial(page,paramMap);
-        }else{
-            paramMap.put("marketingMaterialColumnId",marketingMaterialColumnId);
+        page.setSearchCount(false);
+//        if(StringUtils.isBlank(marketingMaterialColumnId)){
+//            //推荐素材
+//          List<String> stringList = marketingMaterialRecommendService.getMarketingMaterialListIdList();
+//              paramMap.put("strings",stringList);
+//              marketingMaterialPage  =  iMarketingMaterialListService.findMarketingMaterial(page,paramMap);
+//        }else{
+//            paramMap.put("marketingMaterialColumnId",marketingMaterialColumnId);
             marketingMaterialPage  =  iMarketingMaterialListService.findMarketingMaterial(page,paramMap);
 
-        }
+//        }
 
         if(memberId!=null){
             marketingMaterialPage.getRecords().forEach(mmp->{
