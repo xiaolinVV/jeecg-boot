@@ -595,7 +595,6 @@ public class AfterOrderController {
             //给订单查询商品数据
             //平台商品
             if(o.get("isPlatform").toString().equals("1")) {
-                // TODO: 2023/4/26 返回订单商品已使用优惠券id @zhangshaolin
                 o.put("goods", iOrderProviderGoodRecordService.getOrderProviderGoodRecordByOrderId(o.get("id").toString()));
             }
             //店铺商品
