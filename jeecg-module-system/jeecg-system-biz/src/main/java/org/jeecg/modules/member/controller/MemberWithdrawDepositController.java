@@ -402,6 +402,7 @@ public class MemberWithdrawDepositController {
 	@ResponseBody
 	@Transactional
 	public Result<String> transferPay( MemberWithdrawDepositVO memberWithdrawDepositVO, HttpServletRequest request) {
+		// TODO: 2023/5/4 提现打款 @zhangshaolin
 		Result<String> result = new Result<>();
         if(!memberWithdrawDepositVO.getStatus().equals("2")){
 			result.setMessage("操作成功!");

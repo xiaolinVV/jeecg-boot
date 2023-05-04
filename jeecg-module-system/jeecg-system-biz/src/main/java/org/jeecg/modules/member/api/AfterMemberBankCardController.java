@@ -71,7 +71,7 @@ public class AfterMemberBankCardController {
         }
         memberBankCard.setMemberListId(memberId);
         iMemberBankCardService.saveOrUpdate(memberBankCard);
-        //是否同步汇付银行卡信息
+        //是否同步汇付银行卡信息：https://docs.adapay.tech/api/busiprocess.html#id2
         String huifuBankcardVerify = iSysDictService.queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "huifu_bankcard_verify");
         if(huifuBankcardVerify.equals("1")){
             if(StringUtils.isBlank(memberBankCard.getSettleAccount())){

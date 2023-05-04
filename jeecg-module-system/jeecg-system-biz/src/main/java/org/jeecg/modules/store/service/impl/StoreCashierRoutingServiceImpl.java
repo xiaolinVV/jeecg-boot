@@ -172,6 +172,7 @@ public class StoreCashierRoutingServiceImpl extends ServiceImpl<StoreCashierRout
 
     @Override
     public void independentAccountShouYinBalance(PayShouyinLog payShouyinLog) {
+        // TODO: 2023/5/4 收银台余额分账  @zhangshaolin
         BigDecimal allTotalPrice=payShouyinLog.getAllTotalPrice();
         //收银设置
         StoreCashierSetting storeCashierSetting=iStoreCashierSettingService.getOne(new LambdaQueryWrapper<StoreCashierSetting>().eq(StoreCashierSetting::getStoreManageId,payShouyinLog.getStoreManageId()));
