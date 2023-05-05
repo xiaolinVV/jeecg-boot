@@ -674,13 +674,15 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
         }
         // 退款金额、退款件数、申请类型业务字段校验
-        List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
-        if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "0")) {
-            OrderStoreGoodRecord goodRecord = orderStoreGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
-            verifyApplyOrderStoreRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, goodRecord);
-        } else if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "1")) {
-            OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
-            verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
+        if (!ObjectUtil.hasNull(orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount())) {
+            List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
+            if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "0")) {
+                OrderStoreGoodRecord goodRecord = orderStoreGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+                verifyApplyOrderStoreRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, goodRecord);
+            } else if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "1")) {
+                OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+                verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
+            }
         }
         orderRefundListService.updateById(orderRefundList);
         return Result.OK("修改申请成功!");
