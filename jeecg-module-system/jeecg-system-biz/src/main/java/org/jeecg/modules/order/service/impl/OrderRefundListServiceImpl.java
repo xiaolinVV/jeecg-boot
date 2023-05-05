@@ -164,6 +164,19 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
     @Transactional(rollbackFor = Exception.class)
     public void refund(OrderRefundList orderRefundList, BigDecimal actualRefundPrice, BigDecimal actualRefundBalance) {
         String isPlatform = orderRefundList.getIsPlatform();
+        String status = orderRefundList.getStatus();
+        // 退款、退货退款 状态拦截
+        if (StrUtil.equals(orderRefundList.getRefundType(), "0")) {
+            if (!StrUtil.equals(status, "0")) {
+                throw new JeecgBootException("售后单不是待处理状态，无法退款！");
+            }
+        } else if (StrUtil.equals(orderRefundList.getRefundType(), "1")) {
+            if (!StrUtil.equals(status, "2")) {
+                throw new JeecgBootException("售后状态不是待商家确认收货，无法操作");
+            }
+        } else {
+            throw new JeecgBootException("售后服务类型异常，无法退款");
+        }
         if (StrUtil.equals(isPlatform, "0")) {
             refundOrderStoreGood(orderRefundList, actualRefundPrice, actualRefundBalance);
         } else if (StrUtil.equals(isPlatform, "1")) {
@@ -201,10 +214,15 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.sub(welfarePayments, decimal));
             } else {
                 //按数量比例退
-                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.mul(NumberUtil.div(welfarePayments, goodRecordAmount,2), orderRefundList.getRefundAmount()));
+                orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.mul(NumberUtil.div(welfarePayments, goodRecordAmount, 2), orderRefundList.getRefundAmount()));
             }
             //退福利金
-            memberWelfarePaymentsService.addWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualRefundDiscountWelfarePayments(), "20", orderRefundList.getId(), "平台订单售后退款");
+            if (orderRefundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0) {
+                boolean addWelfarePayments = memberWelfarePaymentsService.addWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualRefundDiscountWelfarePayments(), "20", orderRefundList.getId(), "平台订单售后退款");
+                if (addWelfarePayments) {
+                    orderRefundList.setStatus("4");
+                }
+            }
         }
 
         //  先退余额，状态改为退款成功
@@ -290,9 +308,10 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 orderRefundList.setActualRefundGiftCardBalance(NumberUtil.sub(goodRecordGiftCardCoupon, decimal));
             } else {
                 //按数量比例退
-                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.mul(NumberUtil.div(goodRecordGiftCardCoupon, goodRecordAmount,2), orderRefundList.getRefundAmount()));
+                orderRefundList.setActualRefundGiftCardBalance(NumberUtil.mul(NumberUtil.div(goodRecordGiftCardCoupon, goodRecordAmount, 2), orderRefundList.getRefundAmount()));
             }
             marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), orderRefundList.getActualRefundGiftCardBalance(), orderStoreList.getOrderNo(), "2");
+            orderRefundList.setStatus("4");
         }
         //  先退余额，状态改为退款成功
         if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
@@ -737,6 +756,6 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         //过期时间(小时)
         String hour = sysDictService
                 .queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "common_refund_return_timeout");
-        return baseMapper.getRefundOrderTimer(id,hour);
+        return baseMapper.getRefundOrderTimer(id, hour);
     }
 }
