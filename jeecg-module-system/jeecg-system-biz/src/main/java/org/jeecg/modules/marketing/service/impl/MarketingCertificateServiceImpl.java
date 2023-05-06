@@ -264,7 +264,7 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
         //判断券剩余的数量够不够,不够弹出
         while (certificateCount > 0) {
             if (marketingCertificate.getTotal().subtract(marketingCertificate.getReleasedQuantity()).longValue() <= 0) {
-                continue;
+                break;
             }
             MarketingCertificateRecord marketingCertificateRecord = new MarketingCertificateRecord();
             marketingCertificateRecord.setMemberListId(memberId);
