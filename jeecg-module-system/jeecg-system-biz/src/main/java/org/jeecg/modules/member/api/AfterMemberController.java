@@ -161,11 +161,14 @@ public class AfterMemberController {
      *
      * @param memberId
      * @param headPortrait
+     * @param sex
      * @param nickName
      * @return
      */
     @PostMapping("completeInformation")
-    public Result<?> completeInformation(@RequestAttribute("memberId") String memberId, String headPortrait, String nickName) {
+    public Result<?> completeInformation(@RequestAttribute("memberId") String memberId, String headPortrait, String nickName,
+                                         @RequestParam(value = "sex",required = false,defaultValue = "0") String sex,
+                                         @RequestParam(value = "areaAddr",required = false) String areaAddr) {
         //参数校验
         if (StringUtils.isBlank(headPortrait)) {
             return Result.error("请上传头像");
@@ -173,7 +176,7 @@ public class AfterMemberController {
         if (StringUtils.isBlank(nickName)) {
             return Result.error("请填写昵称");
         }
-        iMemberListService.updateById(new MemberList().setId(memberId).setHeadPortrait(headPortrait).setNickName(nickName));
+        iMemberListService.updateById(new MemberList().setId(memberId).setHeadPortrait(headPortrait).setNickName(nickName).setSex(sex).setAreaAddr(areaAddr));
         return Result.ok("完善资料成功！！！");
     }
 
