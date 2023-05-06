@@ -453,8 +453,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     .setRemarks(StrUtil.blankToDefault(orderRefundListDto.getRemarks(), applyOrderRefundDto.getRemarks()))
                     .setStatus("0")
                     .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
-                    .setRefundPrice(orderRefundListDto.getRefundPrice())
-                    .setRefundAmount(orderRefundListDto.getRefundAmount())
+                    .setRefundPrice(refundPrice)
+                    .setRefundAmount(refundAmount)
                     .setExchangeGoodSpecificationId(orderRefundListDto.getExchangeGoodSpecificationId())
                     .setExchangeGoodSpecification(orderRefundListDto.getExchangeGoodSpecification())
                     .setExchangeMemberShippingAddress(finalExchangeMemberShippingAddressJson)
@@ -557,8 +557,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     .setRemarks(StrUtil.blankToDefault(orderRefundListDto.getRemarks(), applyOrderRefundDto.getRemarks()))
                     .setStatus("0")
                     .setRefundCertificate(StrUtil.blankToDefault(orderRefundListDto.getRefundCertificate(), applyOrderRefundDto.getRefundCertificate()))
-                    .setRefundPrice(orderRefundListDto.getRefundPrice())
-                    .setRefundAmount(orderRefundListDto.getRefundAmount())
+                    .setRefundPrice(refundPrice)
+                    .setRefundAmount(refundAmount)
                     .setIsPlatform(applyOrderRefundDto.getIsPlatform())
                     .setGoodRecordMarketingDiscountCouponId(orderProviderGoodRecord.getMarketingDiscountCouponId());
         }).collect(Collectors.toList());
