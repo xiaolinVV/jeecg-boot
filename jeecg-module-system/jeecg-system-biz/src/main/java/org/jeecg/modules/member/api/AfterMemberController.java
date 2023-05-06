@@ -280,6 +280,7 @@ public class AfterMemberController {
         memberObjectMap.put("openid", memberList.getOpenid());
         memberObjectMap.put("createTime", DateUtils.formatDate(memberList.getCreateTime(), "yyyy-MM-dd HH:mm:ss"));
         memberObjectMap.put("areaAddr",memberList.getAreaAddr());
+        memberObjectMap.put("sex",memberList.getSex());
 
         //是否设置交易密码
         if (StringUtils.isBlank(memberList.getTransactionPassword())) {
