@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.huifu.adapay.core.exception.BaseAdaPayException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
@@ -757,5 +758,26 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         String hour = sysDictService
                 .queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "common_refund_return_timeout");
         return baseMapper.getRefundOrderTimer(id, hour);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelReturnsTimeoutRefundOrderJob() {
+        //过期时间(小时)
+        String hour = sysDictService
+                .queryTableDictTextByKey("sys_dict_item", "item_value", "item_text", "common_refund_return_timeout");
+        if (StringUtils.isNotBlank(hour)) {
+            List<OrderRefundList> orderRefundLists = baseMapper.getCancelReturnsTimeoutRefundOrderList(hour);
+            orderRefundLists.forEach(orderRefundList -> {
+                if (StrUtil.equals(orderRefundList.getRefundType(),"1")) {
+                    orderRefundList.setStatus("6");
+                    orderRefundList.setCloseExplain("1");
+                }else if (StrUtil.equals(orderRefundList.getRefundType(),"2")){
+                    orderRefundList.setStatus("7");
+                    orderRefundList.setCloseExplain("1");
+                }
+            });
+            orderRefundListService.updateBatchById(orderRefundLists);
+        }
     }
 }

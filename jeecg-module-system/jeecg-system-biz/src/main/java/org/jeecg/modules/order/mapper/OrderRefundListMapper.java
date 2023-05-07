@@ -4,6 +4,8 @@ import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.order.entity.OrderRefundList;
 
+import java.util.List;
+
 /**
  * @Description: order_refund_list
  * @Author: jeecg-boot
@@ -18,6 +20,14 @@ public interface OrderRefundListMapper extends MPJBaseMapper<OrderRefundList> {
      * @param id 售后单id
      * @return
      */
-    String getRefundOrderTimer(@Param("id") String id,@Param("hour") String hour);
+    String getRefundOrderTimer(@Param("id") String id, @Param("hour") String hour);
+
+    /**
+     * 退货超时售后单数据
+     *
+     * @param hour
+     * @return
+     */
+    List<OrderRefundList> getCancelReturnsTimeoutRefundOrderList(@Param("hour") String hour);
 
 }

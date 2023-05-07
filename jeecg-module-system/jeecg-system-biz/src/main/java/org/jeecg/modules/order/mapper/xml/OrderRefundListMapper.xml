@@ -21,4 +21,18 @@
             AND id=#{id}
         </if>
     </select>
+
+    <select id="getCancelReturnsTimeoutRefundOrderList" resultType="org.jeecg.modules.order.entity.OrderRefundList">
+        SELECT
+        *
+        from order_refund_list
+        where del_flag = '0'
+        and status = '1'
+        and refund_type in ('1','2')
+        <if test="hour != null and hour != ''">
+            and DATE_ADD(create_time, INTERVAL #{hour} HOUR) <![CDATA[<=]]>  NOW()
+        </if>
+        order by create_time
+        limit 50
+    </select>
 </mapper>

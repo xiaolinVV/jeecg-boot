@@ -91,4 +91,9 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
      * @return
      */
     String refundOrderTimer(String id);
+
+    /**
+     * 退货超时售后单
+     */
+    void cancelReturnsTimeoutRefundOrderJob();
 }
