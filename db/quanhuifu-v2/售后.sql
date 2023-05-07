@@ -67,3 +67,53 @@ create table order_refund_list
 )
     comment 'order_refund_list' charset = utf8mb4;
 
+ALTER TABLE `shop-boot`.`order_store_good_record` MODIFY COLUMN `customary_dues` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '应付款（支付前标准金额）' AFTER `total`;
+
+ALTER TABLE `shop-boot`.`order_store_good_record` MODIFY COLUMN `actual_payment` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '实付款（支付后标准金额）' AFTER `customary_dues`;
+
+ALTER TABLE `shop-boot`.`order_store_good_record` ADD COLUMN `marketing_discount_coupon_id` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '优惠券记录id,多个用逗号分隔' AFTER `actual_payment`;
+
+ALTER TABLE `shop-boot`.`order_store_good_record` ADD COLUMN `coupon` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '优惠券优惠金额' AFTER `weight`;
+
+ALTER TABLE `shop-boot`.`order_store_good_record` ADD COLUMN `gift_card_coupon` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '礼品卡优惠金额' AFTER `coupon`;
+
+ALTER TABLE `shop-boot`.`order_store_good_record` ADD COLUMN `total_coupon` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '优惠总金额' AFTER `gift_card_coupon`;
+
+
+# select *
+# from sys_dict
+# where dict_code in ('order_refund_status', 'refund_close_explain', 'refund_type', 'order_refund_reason');
+#
+# select * from sys_dict_item where dict_id in (select sys_dict.id
+#                                               from sys_dict
+#                                               where dict_code in ('order_refund_status', 'refund_close_explain', 'refund_type', 'order_refund_reason'));
+
+INSERT INTO sys_dict (id, dict_name, dict_code, description, del_flag, create_by, create_time, update_by, update_time, type) VALUES ('1645366805847371778', '订单退款原因', 'order_refund_reason', '店铺订单退款原因', 0, 'admin', '2023-04-10 18:03:11', 'jeecg', '2023-04-28 10:23:14', 0000000000);
+INSERT INTO sys_dict (id, dict_name, dict_code, description, del_flag, create_by, create_time, update_by, update_time, type) VALUES ('1650687055926046721', '售后单状态', 'order_refund_status', '售后单状态', 0, 'jeecg', '2023-04-25 10:23:57', null, null, 0000000000);
+INSERT INTO sys_dict (id, dict_name, dict_code, description, del_flag, create_by, create_time, update_by, update_time, type) VALUES ('1650686209347727361', '售后单关闭原因', 'refund_close_explain', '售后单关闭原因', 0, 'jeecg', '2023-04-25 10:20:35', 'jeecg', '2023-04-25 10:20:45', 0000000000);
+INSERT INTO sys_dict (id, dict_name, dict_code, description, del_flag, create_by, create_time, update_by, update_time, type) VALUES ('1645385512262856706', '订单售后方式', 'refund_type', '订单售后方式', 0, 'admin', '2023-04-10 19:17:31', null, null, 0000000000);
+
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d2679f20d78711ed9324000c29eb6d2d', '1645366805847371778', '商品无货', '6', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:12:41', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d27ebcd4d78711ed9324000c29eb6d2d', '1645366805847371778', '订单不能按预计时间送达', '1', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:09:22', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d28b6211d78711ed9324000c29eb6d2d', '1645366805847371778', '重复下单/误下单', '3', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:11:42', 'admin', '2020-01-07 23:23:46');
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d29b884fd78711ed9324000c29eb6d2d', '1645366805847371778', '其他渠道价格更低', '4', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:12:05', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d2b0ab38d78711ed9324000c29eb6d2d', '1645366805847371778', '不想买了', '5', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:12:25', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d2c302e4d78711ed9324000c29eb6d2d', '1645366805847371778', '操作有误（商品、地址等选错）', '2', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:09:41', 'admin', '2019-11-16 16:11:29');
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('d2d007d9d78711ed9324000c29eb6d2d', '1645366805847371778', '其他原因', '7', '买家关闭原因', 1, 1, 'admin', '2019-11-16 16:12:56', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687151774281730', '1650687055926046721', '待处理', '0', '待处理', 1, 1, 'jeecg', '2023-04-25 10:24:20', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687212621049858', '1650687055926046721', '待买家退回', '1', '待买家退回', 2, 1, 'jeecg', '2023-04-25 10:24:34', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687359413301249', '1650687055926046721', '换货中（等待店铺确认收货）', '2', '换货中（等待店铺确认收货）', 3, 1, 'jeecg', '2023-04-25 10:25:09', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687412248948737', '1650687055926046721', '退款中', '3', '退款中', 4, 1, 'jeecg', '2023-04-25 10:25:22', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687474790215681', '1650687055926046721', '退款成功', '4', '退款成功', 5, 1, 'jeecg', '2023-04-25 10:25:37', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687533405614082', '1650687055926046721', '已拒绝', '5', '已拒绝', 6, 1, 'jeecg', '2023-04-25 10:25:51', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687591232483330', '1650687055926046721', '退款关闭', '6', '退款关闭', 7, 1, 'jeecg', '2023-04-25 10:26:05', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687645410308098', '1650687055926046721', '换货关闭', '7', '换货关闭', 8, 1, 'jeecg', '2023-04-25 10:26:18', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650687703157485570', '1650687055926046721', '换货完成', '8', '换货完成', 9, 1, 'jeecg', '2023-04-25 10:26:31', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1650686319104274433', '1650686209347727361', '买家撤销', '0', '买家撤销', 1, 1, 'jeecg', '2023-04-25 10:21:01', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1655067154414809090', '1650686209347727361', '退换货超时自动关闭', '1', '退换货超时自动关闭', 2, 1, 'jeecg', '2023-05-07 12:28:54', 'jeecg', '2023-05-07 12:29:08');
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1645385678025945089', '1645385512262856706', '仅退款', '0', '', 1, 1, 'admin', '2023-04-10 19:18:10', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1645385739380224001', '1645385512262856706', '退货退款', '1', '', 2, 1, 'admin', '2023-04-10 19:18:25', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1645385820267376641', '1645385512262856706', '换货', '2', '', 3, 1, 'admin', '2023-04-10 19:18:44', null, null);
+
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1651521417630441474', '74547a7681b0592591bd8234560b66c2', 'common_refund_return_timeout', '167', '售后单退货超时时间7天（167小时）', 1, 1, 'jeecg', '2023-04-27 17:39:24', null, null);
+
