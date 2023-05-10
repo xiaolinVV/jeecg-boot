@@ -80,7 +80,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
-    @PostMapping(value = "/refused")
+    @RequestMapping(value = "/refused")
     public Result<String> refused(@RequestParam("id") String id, @RequestParam("refusedExplain") String refusedExplain) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
@@ -120,7 +120,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
-    @PostMapping(value = "/pass")
+    @RequestMapping(value = "/pass")
     public Result<String> pass(@RequestParam("id") String id,
                                @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
                                @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance,
@@ -171,7 +171,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
-    @PostMapping(value = "/confirm")
+    @RequestMapping(value = "/confirm")
     public Result<String> confirm(@RequestParam("id") String id,
                                   @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
                                   @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance) {
@@ -199,7 +199,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:edit")
-    @PostMapping(value = "/editLogisticsInfo")
+    @RequestMapping(value = "/editLogisticsInfo")
     public Result<String> editLogisticsInfo(
             @RequestParam(name = "id") String id,
             @RequestParam(name = "merchantLogisticsCompany") String merchantLogisticsCompany,
