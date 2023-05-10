@@ -704,6 +704,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
             }
         }
+        orderRefundList.setStatus("0");
         orderRefundListService.updateById(orderRefundList);
         return Result.OK("修改申请成功!");
     }
