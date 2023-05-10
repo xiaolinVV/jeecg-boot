@@ -11,8 +11,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Maps;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.config.jwt.def.JwtConstants;
@@ -210,28 +212,48 @@ public class AfterOrderRefundController {
 
     /**
      * 待退货售后单单计时器
+     *
      * @param id 售后单id
      * @return
      */
     @GetMapping("/refundOrderTimer")
-    public Result<Map<String,Object>> refundOrderTimer(String id){
-        Result<Map<String,Object>> result=new Result<>();
-        Map<String,Object> objectMap= Maps.newHashMap();
+    public Result<Map<String, Object>> refundOrderTimer(String id) {
+        Result<Map<String, Object>> result = new Result<>();
+        Map<String, Object> objectMap = Maps.newHashMap();
 
-        if(StringUtils.isBlank(id)){
+        if (StringUtils.isBlank(id)) {
             result.error500("id不能为空！！！");
             return result;
         }
         //获取倒计时时间
-        String  timer= orderRefundListService.refundOrderTimer(id);
-        if(StringUtils.isBlank(timer)){
+        String timer = orderRefundListService.refundOrderTimer(id);
+        if (StringUtils.isBlank(timer)) {
             result.error500("未找到售后单倒计时数据!");
             return result;
         }
-        objectMap.put("timer",timer);
+        objectMap.put("timer", timer);
         result.setResult(objectMap);
         result.success("请求成功");
-        return  result;
+        return result;
+    }
+
+    /**
+     * 通过id删除
+     * <p>
+     * 仅客户端，售后完成订单可删除
+     *
+     * @param id
+     * @return
+     */
+    @PostMapping(value = "/delete")
+    public Result<String> delete(@RequestParam(name = "id", required = true) String id) {
+        OrderRefundList orderRefundList = orderRefundListService.getById(id);
+        String status = orderRefundList.getStatus();
+        if (!StrUtil.containsAny(status, "4", "8")) {
+            throw new JeecgBootException("售后完成才能删除");
+        }
+        orderRefundListService.removeById(id);
+        return Result.OK("删除成功!");
     }
 
 }
