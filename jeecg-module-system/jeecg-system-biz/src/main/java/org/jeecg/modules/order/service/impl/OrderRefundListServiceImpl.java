@@ -416,14 +416,14 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             OrderStoreGoodRecord orderStoreGoodRecord = orderStoreGoodRecordMap.get(orderStoreGoodRecordId);
             if (orderStoreGoodRecord == null) {
-                throw new JeecgBootException("订单商品id: " + orderRefundListDto.getOrderGoodRecordId() + "不存在");
+                throw new JeecgBootException("订单商品不存在");
             }
             OrderStoreSubList orderStoreSubList = orderStoreSubListMap.get(orderStoreGoodRecord.getOrderStoreSubListId());
             if (orderStoreSubList == null) {
                 throw new JeecgBootException("店铺供应商订单不存在");
             }
             if (StrUtil.containsAny(applyOrderRefundDto.getRefundType(), "1", "2") && StrUtil.equals(orderStoreSubList.getParentId(), "0")) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "还未发货，无法发起退货换货售后申请");
+                throw new JeecgBootException("订单商品还未发货，无法发起退货换货售后申请");
             }
             BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderStoreGoodRecord.getActualPayment());
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
@@ -585,7 +585,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             long count = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "2") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2")).count();
             if (count > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在换货中的售后单，无法发起退款退货申请");
+                throw new JeecgBootException("订单商品存在换货中的售后单，无法发起退款退货申请");
             }
             //金额、个数检查
             BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
@@ -594,14 +594,14 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + refundPrice + "已售后金额：" + ongoingPrice);
+                throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
             if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + refundAmount + "已售后数量：" + (count1 + count2));
+                throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
         } else if (StrUtil.equals(refundType, "2")) {
             //退款中数量
@@ -610,7 +610,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
             if (count1 + count2 > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在退款或退货退款的售后单，无法发起换货申请");
+                throw new JeecgBootException("订单商品存在退款或退货退款的售后单，无法发起换货申请");
             }
         }
     }
@@ -632,7 +632,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             long count = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "2") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2")).count();
             if (count > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在换货中的售后单，无法发起退款退货申请");
+                throw new JeecgBootException("订单商品存在换货中的售后单，无法发起退款退货申请");
             }
             //金额、个数检查
             BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
@@ -641,14 +641,14 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + " 实付金额：" + orderStoreGoodRecord.getActualPayment() + "申请金额：" + refundPrice + "已售后金额：" + ongoingPrice);
+                throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
             if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "实际购买数量：" + orderStoreGoodRecord.getAmount() + "申请数量：" + refundAmount + "已售后数量：" + (count1 + count2));
+                throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
         } else if (StrUtil.equals(refundType, "2")) {
             //退款中数量
@@ -657,7 +657,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
                     && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
             if (count1 + count2 > 0) {
-                throw new JeecgBootException("订单商品" + orderStoreGoodRecord.getId() + "存在退款或退货退款的售后单，无法发起换货申请");
+                throw new JeecgBootException("订单商品存在退款或退货退款的售后单，无法发起换货申请");
             }
         }
     }
