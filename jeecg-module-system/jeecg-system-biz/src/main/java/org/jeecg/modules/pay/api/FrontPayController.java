@@ -324,9 +324,11 @@ public class FrontPayController {
                     if (StrUtil.equals(orderRefundList.getIsPlatform(), "0")) {
                         OrderStoreList orderStoreList = iOrderStoreListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderStoreMarketingDiscountCoupon(orderStoreList, orderRefundList);
+                        orderRefundListService.updateOrderStoreForRefund(orderStoreList,orderRefundList);
                     } else if (StrUtil.equals(orderRefundList.getIsPlatform(), "1")) {
                         OrderList orderList = iOrderListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
+                        orderRefundListService.updateOrderForRefund(orderList,orderRefundList);
                     }
                 }
             } else {

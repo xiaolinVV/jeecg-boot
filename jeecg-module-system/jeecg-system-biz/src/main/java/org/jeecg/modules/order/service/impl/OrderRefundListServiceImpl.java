@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -272,6 +273,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         orderRefundListService.updateById(orderRefundList);
         //退还优惠券
         refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
+
+        // 退款完成后，订单状态并无变化，仍可进行发货、退款/退货退款申请 @zhangshaolin
+        updateOrderForRefund(orderList, orderRefundList);
     }
 
 
@@ -361,6 +365,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 
         //退还优惠券
         refundForSendBackOrderStoreMarketingDiscountCoupon(orderStoreList, orderRefundList);
+
+        // 退款完成后，订单状态并无变化，仍可进行发货、退款/退货退款申请 @zhangshaolin
+        updateOrderStoreForRefund(orderStoreList, orderRefundList);
     }
 
     /**
@@ -732,6 +739,63 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateOrderStoreForRefund(OrderStoreList orderStoreList, OrderRefundList orderRefundList) {
+        //判断所有商品退款成功，更新订单状态
+        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderRefundListLambdaQueryWrapper
+                .eq(OrderRefundList::getMemberId, orderRefundList.getMemberId())
+                .eq(OrderRefundList::getStatus, "4")
+                .eq(OrderRefundList::getOrderListId, orderStoreList.getId())
+                .eq(OrderRefundList::getDelFlag, "0");
+        List<OrderRefundList> orderRefundListList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
+        BigDecimal price = orderRefundListList.stream().map(OrderRefundList::getActualRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal balance = orderRefundListList.stream().map(OrderRefundList::getActualRefundBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal count = orderRefundListList.stream().map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+
+        List<Map<String, Object>> list = orderStoreGoodRecordService.getOrderStoreGoodRecordByOrderId(orderStoreList.getId());
+        BigDecimal actualPayment = list.stream().map(m -> Convert.toBigDecimal(m.get("actualPayment"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal amount = list.stream().map(m -> Convert.toBigDecimal(m.get("amount"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+
+        if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
+            //更新订单状态
+            orderStoreList.setStatus("4");
+            orderStoreList.setCloseTime(new Date());
+            orderStoreList.setCloseType("15");
+            orderStoreList.setCloseExplain("7");
+            orderStoreListService.updateById(orderStoreList);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateOrderForRefund(OrderList orderList, OrderRefundList orderRefundList) {
+        //判断所有商品退款成功，更新订单状态
+        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderRefundListLambdaQueryWrapper
+                .eq(OrderRefundList::getMemberId, orderRefundList.getMemberId())
+                .eq(OrderRefundList::getStatus, "4")
+                .eq(OrderRefundList::getOrderListId, orderList.getId())
+                .eq(OrderRefundList::getDelFlag, "0");
+        List<OrderRefundList> orderRefundListList = orderRefundListService.list(orderRefundListLambdaQueryWrapper);
+        BigDecimal price = orderRefundListList.stream().map(OrderRefundList::getActualRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal balance = orderRefundListList.stream().map(OrderRefundList::getActualRefundBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal count = orderRefundListList.stream().map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+
+        List<Map<String, Object>> list = orderProviderGoodRecordService.getOrderProviderGoodRecordByOrderId(orderList.getId());
+        BigDecimal actualPayment = list.stream().map(m -> Convert.toBigDecimal(m.get("actualPayment"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+        BigDecimal amount = list.stream().map(m -> Convert.toBigDecimal(m.get("amount"), BigDecimal.ZERO)).reduce(BigDecimal.ZERO, NumberUtil::add);
+        if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
+            //更新订单状态
+            orderList.setStatus("4");
+            orderList.setCloseTime(new Date());
+            orderList.setCloseType("15");
+            orderList.setCloseExplain("7");
+            orderListService.updateById(orderList);
+        }
+    }
+
+    @Override
     public void refundForSendBackOrderMarketingDiscountCoupon(OrderList orderList, OrderRefundList orderRefundList) {
         //判断当前商品所有金额全部退款后，退还优惠券
         if (StrUtil.isNotBlank(orderRefundList.getGoodRecordMarketingDiscountCouponId())) {
@@ -770,10 +834,10 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (StringUtils.isNotBlank(hour)) {
             List<OrderRefundList> orderRefundLists = baseMapper.getCancelReturnsTimeoutRefundOrderList(hour);
             orderRefundLists.forEach(orderRefundList -> {
-                if (StrUtil.equals(orderRefundList.getRefundType(),"1")) {
+                if (StrUtil.equals(orderRefundList.getRefundType(), "1")) {
                     orderRefundList.setStatus("6");
                     orderRefundList.setCloseExplain("1");
-                }else if (StrUtil.equals(orderRefundList.getRefundType(),"2")){
+                } else if (StrUtil.equals(orderRefundList.getRefundType(), "2")) {
                     orderRefundList.setStatus("7");
                     orderRefundList.setCloseExplain("1");
                 }

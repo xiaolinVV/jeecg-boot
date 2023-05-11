@@ -79,14 +79,32 @@ public interface IOrderRefundListService extends MPJBaseService<OrderRefundList>
     void refundForSendBackOrderStoreMarketingDiscountCoupon(OrderStoreList orderStoreList, OrderRefundList orderRefundList);
 
     /**
+     * 退款后更新店铺订单状态为交易失败
+     *
+     * @param orderStoreList
+     * @param orderRefundList
+     */
+    void updateOrderStoreForRefund(OrderStoreList orderStoreList, OrderRefundList orderRefundList);
+
+    /**
+     * 退款后更新订单状态为交易失败
+     *
+     * @param orderStoreList
+     * @param orderRefundList
+     */
+    void updateOrderForRefund(OrderList orderList, OrderRefundList orderRefundList);
+
+    /**
      * 退款退平台优惠券
+     *
      * @param orderList
      * @param orderRefundList
      */
     void refundForSendBackOrderMarketingDiscountCoupon(OrderList orderList, OrderRefundList orderRefundList);
 
     /**
-     *  待退货售后单单计时器
+     * 待退货售后单单计时器
+     *
      * @param id 售后单id
      * @return
      */
