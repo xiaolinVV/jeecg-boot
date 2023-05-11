@@ -1,5 +1,6 @@
 package org.jeecg.modules.order.controller;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -122,8 +123,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     //@RequiresPermissions("order:order_refund_list:add")
     @RequestMapping(value = "/pass")
     public Result<String> pass(@RequestParam("id") String id,
-                               @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
-                               @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance,
+                               @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
+                               @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance,
                                @RequestParam(value = "merchantConsigneeName", required = false) String merchantConsigneeName,
                                @RequestParam(value = "merchantConsigneeAddress", required = false) String merchantConsigneeAddress,
                                @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone,
@@ -144,6 +145,11 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         }
         String refundType = orderRefundList.getRefundType();
         if (StrUtil.equals(refundType, "0")) {
+            if (ObjectUtil.isNull(actualRefundPrice) && ObjectUtil.isNull(actualRefundBalance)) {
+                throw new JeecgBootException("退款金额不能为空");
+            }
+            actualRefundPrice = ObjectUtil.defaultIfNull(actualRefundPrice, BigDecimal.ZERO);
+            actualRefundBalance = ObjectUtil.defaultIfNull(actualRefundBalance, BigDecimal.ZERO);
             orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
             if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {
@@ -173,8 +179,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     //@RequiresPermissions("order:order_refund_list:add")
     @RequestMapping(value = "/confirm")
     public Result<String> confirm(@RequestParam("id") String id,
-                                  @RequestParam(value = "actualRefundPrice", required = false,defaultValue = "0") BigDecimal actualRefundPrice,
-                                  @RequestParam(value = "actualRefundBalance", required = false,defaultValue = "0") BigDecimal actualRefundBalance) {
+                                  @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
+                                  @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
         if (StrUtil.isBlank(id)) {
             throw new JeecgBootException("id 不能为空");
         }
@@ -186,6 +192,11 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         if (!StrUtil.equals(status, "2")) {
             throw new JeecgBootException("售后状态不是待商家确认收货，无法操作");
         }
+        if (ObjectUtil.isNull(actualRefundPrice) && ObjectUtil.isNull(actualRefundBalance)) {
+            throw new JeecgBootException("退款金额不能为空");
+        }
+        actualRefundPrice = ObjectUtil.defaultIfNull(actualRefundPrice, BigDecimal.ZERO);
+        actualRefundBalance = ObjectUtil.defaultIfNull(actualRefundBalance, BigDecimal.ZERO);
         orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         return Result.OK("确认收货成功，退款中");
     }
