@@ -10,6 +10,7 @@ import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
 import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.vo.OrderStoreListVO;
 import org.jeecg.modules.pay.entity.PayOrderCarLog;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -130,5 +131,12 @@ public interface IOrderStoreListService extends IService<OrderStoreList> {
      * @return
      */
     List<OrderStoreListExportDTO> getOrderStoreListDtoExport(Map<String,Object> orderStoreListVO);
+
+    /**
+     * 订单发货
+     * @param listMap
+     * @return
+     */
+    Result<String> ordereDlivery(String listMap);
 
 }

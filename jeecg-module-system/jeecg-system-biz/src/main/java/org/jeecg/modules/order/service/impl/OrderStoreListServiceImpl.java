@@ -41,6 +41,7 @@ import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
 import org.jeecg.modules.order.dto.OrderStoreListDTO;
 import org.jeecg.modules.order.dto.OrderStoreListExportDTO;
 import org.jeecg.modules.order.dto.OrderStoreSubListDTO;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
 import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.entity.OrderStoreSubList;
@@ -189,6 +190,9 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Autowired
     private IMarketingDiscountCouponRecordService marketingDiscountCouponRecordService;
+
+    @Autowired
+    private IOrderStoreSubListService orderStoreSubListService;
 
     @Override
     public IPage<OrderStoreListDTO> getOrderStoreListDto(Page<OrderStoreList> page, OrderStoreListVO orderListVO, String sysUserId) {
@@ -1435,7 +1439,161 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     @Override
     public  List<OrderStoreListExportDTO> getOrderStoreListDtoExport(Map<String,Object> orderStoreListVO){
        return baseMapper.getOrderStoreListDtoExport(orderStoreListVO);
-    };
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<String> ordereDlivery(String listMap) {
+        Result<String> result = new Result<String>();
+        try{
+            JSONObject jsonObject = JSONObject.parseObject(new String(listMap));
+            List<Map<String,Object>> listObjectSec	= jsonObject.getJSONArray("listMap").toJavaObject(List.class);
+            OrderStoreSubList orderStoreSubList = new OrderStoreSubList();
+            OrderStoreGoodRecord orderStoreGoodRecord;
+            //OrderStoreSubList orderStoreSubList;
+            List<Map<String,Object>> orderProviderGoodRecordInfoList;
+            String addorderProviderId;
+            if(listObjectSec.size()>0){
+                for(Map<String,Object> map:listObjectSec){
+                    System.out.println("map++++"+map);
+                    //包裹数据
+                    List<Map<String,Object>> listParcelMapSS = (List<Map<String,Object>>)(List)map.get("listParcel");
+                    for(Map<String,Object> listParcelMap:listParcelMapSS){
+                        System.out.println("listParcelMap++++"+listParcelMap);
+                        //包裹内的商品修改供应商订单id
+                        orderProviderGoodRecordInfoList = (List<Map<String,Object>>)(List)listParcelMap.get("orderProviderGoodRecordInfo");
+                        System.out.println("orderProviderGoodRecordInfoList++++"+orderProviderGoodRecordInfoList);
+                        if(orderProviderGoodRecordInfoList.size()>0){
+                            //查询供应商订单信息
+                            orderStoreSubList =  orderStoreSubListService.getById(listParcelMap.get("id").toString());
+                            //添加包裹,并返回新增ID
+                            addorderProviderId = addorderStoreSubList(orderStoreSubList,listParcelMap.get("logisticsCompany").toString(),listParcelMap.get("trackingNumber").toString());
+
+                            for(Map<String,Object> orderProviderGoodRecordId:orderProviderGoodRecordInfoList){
+                                //订单商品信息
+                                orderStoreGoodRecord = orderStoreGoodRecordService.getById(orderProviderGoodRecordId.get("id").toString());
+                                if (orderStoreGoodRecord == null) {
+                                    throw new JeecgBootException("订单商品信息不存在");
+                                }
+                                //判断当前商品是否在售后中
+//                                LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+//                                orderRefundListLambdaQueryWrapper.eq(OrderRefundList::getOrderGoodRecordId,orderStoreGoodRecord.getId())
+//                                        .in(OrderRefundList::getStatus,"0",)
+
+                                //修改商品的OrderProviderListId为包裹的已发货包裹
+                                orderStoreGoodRecord.setOrderStoreSubListId(addorderProviderId);
+                                orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
+                            }
+                        }
+                    }
+
+                }
+                //调用方法
+                //是否全部发货,修改orderList的状态内容
+                ShipmentOrderModification(orderStoreSubList);
+                result.success("添加成功!");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            result.error500("添加失败！");
+        }
+        return result;
+    }
+
+    /**
+     * 添加已发货的供应商包裹信息
+     * @param orderStoreSubList
+     * @param logisticsCompany 物流公司
+     * @param trackingNumber 快递单号
+     */
+    public String addorderStoreSubList(OrderStoreSubList orderStoreSubList,String logisticsCompany,String trackingNumber){
+        try{
+            OrderStoreSubList opl= new OrderStoreSubList();
+            // opl.setDelFlag(orderStoreSubList.getDelFlag());
+            //opl = orderStoreSubList;
+            opl.setDelFlag(orderStoreSubList.getDelFlag());
+            opl.setMemberListId(orderStoreSubList.getMemberListId());
+            opl.setOrderStoreListId(orderStoreSubList.getOrderStoreListId());
+            opl.setSysUserId(orderStoreSubList.getSysUserId());
+            opl.setOrderNo(orderStoreSubList.getOrderNo());
+            opl.setDistribution(orderStoreSubList.getDistribution());
+            opl.setStoreTemplateId(orderStoreSubList.getStoreTemplateId());
+            opl.setTemplateName(orderStoreSubList.getTemplateName());
+            opl.setAccountingRules(orderStoreSubList.getAccountingRules());
+            opl.setChargeMode(orderStoreSubList.getChargeMode());
+            opl.setAmount(orderStoreSubList.getAmount());
+            opl.setShipFee(orderStoreSubList.getShipFee());
+            opl.setStoreAddressIdSender(orderStoreSubList.getStoreAddressIdSender());
+            opl.setStoreAddressIdTui(orderStoreSubList.getStoreAddressIdTui());
+            opl.setLogisticsTracking(orderStoreSubList.getLogisticsTracking());
+            opl.setGoodsTotal(orderStoreSubList.getGoodsTotal());
+            //opl.setGoodsTotalCost(orderStoreSubList.getGoodsTotalCost());
+            opl.setCustomaryDues(orderStoreSubList.getCustomaryDues());
+            opl.setActualPayment(orderStoreSubList.getActualPayment());
+            //修改数据
+            opl.setParentId(orderStoreSubList.getId());
+            opl.setLogisticsCompany(logisticsCompany);
+            opl.setTrackingNumber(trackingNumber);
+            opl.setStatus("2");
+            orderStoreSubListService.save(opl);
+            String id = opl.getId();
+            return id;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * //是否全部发货,修改orderList的状态内容
+     * @param orderStoreSubList
+     * @return
+     */
+    public  void ShipmentOrderModification(OrderStoreSubList orderStoreSubList){
+        if(orderStoreSubList!=null){
+            List<OrderStoreGoodRecord>  listOrderStoreGoodRecord;
+            Boolean bl = false;
+            OrderStoreList orderStoreList  = getById(orderStoreSubList.getOrderStoreListId());
+            QueryWrapper<OrderStoreSubList> queryWrapper = new QueryWrapper<OrderStoreSubList>();
+            QueryWrapper<OrderStoreGoodRecord> queryWrapperOPGR = new QueryWrapper<OrderStoreGoodRecord>();
+            if(orderStoreList!=null){
+                queryWrapper.eq("order_store_list_id",orderStoreList.getId());
+                //queryWrapper.ne("parent_id","0");
+                //判断是否有发货
+                List<OrderStoreSubList> listOrderStoreSubList = orderStoreSubListService.list(queryWrapper);
+                if(listOrderStoreSubList.size()>0){
+                    for(OrderStoreSubList oplfh:listOrderStoreSubList){
+
+                        if(!"0".equals(oplfh.getParentId() )){
+                            //部分发货
+                            orderStoreList.setIsSender("1");
+                        }else{
+                            //是否全部发货
+                            queryWrapperOPGR = new QueryWrapper<OrderStoreGoodRecord>();
+                            queryWrapperOPGR.eq("order_store_sub_list_id",oplfh.getId());
+                            listOrderStoreGoodRecord = orderStoreGoodRecordService.list(queryWrapperOPGR);
+                            if(listOrderStoreGoodRecord.size()>0){
+                                //说明还没为发货商品
+                                bl = true;
+                            }
+                        }
+                    }
+                    //bl = false 为已全部发货，改变状态为待收货
+                    if(!bl){
+                        orderStoreList.setStatus("2");
+                    }
+                    if(orderStoreList.getShipmentsTime() ==null || "".equals(orderStoreList.getShipmentsTime())){
+                        //第一次发货时间
+                        orderStoreList.setShipmentsTime(new Date());
+                    }
+                    //子订单数量
+                    orderStoreList.setChildOrder(new BigDecimal(listOrderStoreSubList.size()));
+                    //修改订单信息
+                    updateById(orderStoreList) ;
+                }
+            }
+        }
+    }
 
     public static void main(String[] args) {
 //        JSONObject orderJson = new JSONObject();
