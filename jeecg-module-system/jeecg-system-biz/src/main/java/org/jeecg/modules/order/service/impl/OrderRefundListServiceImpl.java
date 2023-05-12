@@ -432,6 +432,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (StrUtil.containsAny(applyOrderRefundDto.getRefundType(), "1", "2") && StrUtil.equals(orderStoreSubList.getParentId(), "0")) {
                 throw new JeecgBootException("订单商品还未发货，无法发起退货换货售后申请");
             }
+            if (StrUtil.equals(applyOrderRefundDto.getRefundType(), "0") && !StrUtil.equals(orderStoreSubList.getParentId(), "0")) {
+                throw new JeecgBootException("订单商品已发货，无法发起退款售后申请");
+            }
             BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderStoreGoodRecord.getActualPayment());
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
 
@@ -531,7 +534,10 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 throw new JeecgBootException("店铺供应商订单不存在");
             }
             if (StrUtil.containsAny(refundType, "1", "2") && StrUtil.equals(orderProviderList.getParentId(), "0")) {
-                throw new JeecgBootException("订单商品" + orderGoodRecordId + "还未发货，无法发起退货换货售后申请");
+                throw new JeecgBootException("订单商品还未发货，无法发起退货换货售后申请");
+            }
+            if (StrUtil.equals(refundType, "0") && !StrUtil.equals(orderProviderList.getParentId(), "0")) {
+                throw new JeecgBootException("订单商品已发货，无法发起退款售后申请");
             }
 
             BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundPrice(), orderProviderGoodRecord.getActualPayment());
