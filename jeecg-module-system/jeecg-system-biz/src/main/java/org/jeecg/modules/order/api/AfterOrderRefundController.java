@@ -154,8 +154,8 @@ public class AfterOrderRefundController {
             throw new JeecgBootException("该售后单不存在");
         }
         String status = orderRefundListServiceById.getStatus();
-        if (!StrUtil.containsAny(status, "0")) {
-            throw new JeecgBootException("非待处理售后单无法撤销申请");
+        if (!StrUtil.containsAny(status, "0", "5")) {
+            throw new JeecgBootException("非待处理/已拒绝售后单无法撤销申请");
         }
         String updateStatus = StrUtil.equals(orderRefundListServiceById.getRefundType(), "2") ? "7" : "6";
         orderRefundListServiceById.setStatus(updateStatus);

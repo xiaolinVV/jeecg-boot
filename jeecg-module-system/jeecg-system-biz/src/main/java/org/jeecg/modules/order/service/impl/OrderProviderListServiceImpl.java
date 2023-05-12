@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
+import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.vo.DictModel;
 import org.jeecg.common.util.gongke.HttpUtils;
 import org.jeecg.modules.member.service.IMemberListService;
@@ -26,10 +27,12 @@ import org.jeecg.modules.order.dto.OrderProviderListDTO;
 import org.jeecg.modules.order.entity.OrderList;
 import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
 import org.jeecg.modules.order.entity.OrderProviderList;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.mapper.*;
 import org.jeecg.modules.order.service.IOrderListService;
 import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
 import org.jeecg.modules.order.service.IOrderProviderListService;
+import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.vo.OrderProviderListVO;
 import org.jeecg.modules.provider.entity.ProviderManage;
 import org.jeecg.modules.provider.mapper.ProviderTemplateMapper;
@@ -89,6 +92,9 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
 
     @Autowired
     private IAli1688Service ali1688Service;
+
+    @Autowired
+    private IOrderRefundListService orderRefundListService;
 
 
     @Override
@@ -233,6 +239,14 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
                 .last("limit 1"));
         log.info("进入发货状态：" + taobaoOrderId);
         if (orderProviderGoodRecord == null) {
+            return;
+        }
+        LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderRefundListLambdaQueryWrapper
+                .eq(OrderRefundList::getOrderGoodRecordId, orderProviderGoodRecord.getId())
+                .in(OrderRefundList::getRefundType, "0", "1")
+                .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+        if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
             return;
         }
         OrderProviderList orderProviderList = this.getById(orderProviderGoodRecord.getOrderProviderListId());

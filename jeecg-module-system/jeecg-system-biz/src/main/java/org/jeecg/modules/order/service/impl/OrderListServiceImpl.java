@@ -51,6 +51,7 @@ import org.jeecg.modules.order.dto.*;
 import org.jeecg.modules.order.entity.OrderList;
 import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
 import org.jeecg.modules.order.entity.OrderProviderList;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.mapper.OrderListMapper;
 import org.jeecg.modules.order.mapper.OrderProviderGoodRecordMapper;
 import org.jeecg.modules.order.mapper.OrderProviderListMapper;
@@ -327,6 +328,9 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
     @Value(value = "${jeecg.path.upload}")
     private String uploadpath;
+
+    @Autowired
+    private IOrderRefundListService orderRefundListService;
 
 
     @Override
@@ -3003,11 +3007,20 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                         for (Map<String, Object> orderProviderGoodRecordId : orderProviderGoodRecordInfoList) {
                             //订单商品信息
                             orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderProviderGoodRecordId.get("id").toString());
-                            if (orderProviderGoodRecord != null) {
-                                //修改商品的OrderProviderListId为包裹的已发货包裹
-                                orderProviderGoodRecord.setOrderProviderListId(addorderProviderId);
-                                orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+                            if (orderProviderGoodRecord == null) {
+                                throw new JeecgBootException("订单商品信息不存在");
                             }
+                            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                            orderRefundListLambdaQueryWrapper
+                                    .eq(OrderRefundList::getOrderGoodRecordId, orderProviderGoodRecord.getId())
+                                    .in(OrderRefundList::getRefundType, "0", "1")
+                                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+                            if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
+                                throw new JeecgBootException("售后待处理订单，处理售后才可进行发货");
+                            }
+                            //修改商品的OrderProviderListId为包裹的已发货包裹
+                            orderProviderGoodRecord.setOrderProviderListId(addorderProviderId);
+                            orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
                         }
                     }
                 }
