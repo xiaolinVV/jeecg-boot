@@ -177,7 +177,7 @@ jeecg:
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: tszpjifjtu7gz2kmh8qlk58a6mzjj736
   # 签名拦截接口
-  signUrls: /front/*,/sys/dict/getDictItems/*,/sys/dict/loadDict/*,/sys/dict/loadDictOrderByValue/*,/sys/dict/loadDictItem/*,/sys/dict/loadTreeData,/sys/api/queryTableDictItemsByCode,/sys/api/queryFilterTableDictInfo,/sys/api/queryTableDictByKeys,/sys/api/translateDictFromTable,/sys/api/translateDictFromTableByKeys
+  signUrls: /front/**,/sys/dict/getDictItems/*,/sys/dict/loadDict/*,/sys/dict/loadDictOrderByValue/*,/sys/dict/loadDictItem/*,/sys/dict/loadTreeData,/sys/api/queryTableDictItemsByCode,/sys/api/queryFilterTableDictInfo,/sys/api/queryTableDictByKeys,/sys/api/translateDictFromTable,/sys/api/translateDictFromTableByKeys
   #local、minio、alioss
   uploadType: local
   # 前端访问地址
