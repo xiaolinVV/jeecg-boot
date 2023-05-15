@@ -602,17 +602,17 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             //金额、个数检查
             BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3", "4")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal price2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3", "4")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3", "4")).count();
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3", "4")).count();
             if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
@@ -649,17 +649,17 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             //金额、个数检查
             BigDecimal price1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3", "4")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal price2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3", "4")).map(OrderRefundList::getRefundPrice).reduce(BigDecimal.ZERO, NumberUtil::add);
             BigDecimal ongoingPrice = NumberUtil.add(price1, price2);
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             long count1 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3")).count();
+                    && StrUtil.equals(orderRefundList.getRefundType(), "0") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "3", "4")).count();
             long count2 = ongoingOrderRefundList.stream().filter(orderRefundList -> StrUtil.equals(orderRefundList.getOrderGoodRecordId(), orderStoreGoodRecord.getId())
-                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3")).count();
+                    && StrUtil.equals(orderRefundList.getRefundType(), "1") && StrUtil.containsAny(orderRefundList.getStatus(), "0", "1", "2", "3", "4")).count();
             if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1 - count2) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
