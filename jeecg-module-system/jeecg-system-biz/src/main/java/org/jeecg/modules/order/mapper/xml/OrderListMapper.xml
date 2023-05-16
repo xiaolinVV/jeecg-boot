@@ -167,7 +167,8 @@
         create_time AS createTime,
         1 AS isPlatform,
         is_evaluate AS isEvaluate,
-        order_type AS orderType
+        order_type AS orderType,
+        is_sender as isSender
         FROM
         `order_list`
         WHERE
@@ -188,7 +189,8 @@
         create_time AS createTime,
         0 AS isPlatform,
         is_evaluate AS isEvaluate,
-        order_type AS orderType
+        order_type AS orderType,
+        is_sender as isSender
         FROM
         `order_store_list`
         WHERE

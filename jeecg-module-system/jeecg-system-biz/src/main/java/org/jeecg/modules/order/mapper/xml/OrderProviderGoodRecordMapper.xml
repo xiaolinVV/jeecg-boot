@@ -34,7 +34,8 @@
           good_list_id as goodId,
          good_specification_id as specificationId,
          marketing_discount_coupon_id as marketingDiscountCouponId,
-         actual_payment as actualPayment
+         actual_payment as actualPayment,
+        status as  status
 
         FROM
           `order_provider_good_record`
