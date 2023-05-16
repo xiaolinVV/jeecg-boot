@@ -223,6 +223,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 boolean addWelfarePayments = memberWelfarePaymentsService.addWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualRefundDiscountWelfarePayments(), "20", orderRefundList.getId(), "平台订单售后退款");
                 if (addWelfarePayments) {
                     orderRefundList.setStatus("4");
+                    OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+                    orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
                 }
             }
         }
@@ -233,6 +235,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (addBlance) {
                 orderRefundList.setActualRefundBalance(actualRefundBalance);
                 orderRefundList.setStatus("4");
+                OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+                orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
             }
         }
         // 微信退款，走汇付，状态改为退款中，走异步通知
@@ -544,6 +548,15 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderProviderGoodRecord.getAmount());
 
             verifyApplyOrderRefund(refundType, refundPrice, refundAmount, ongoingOrderRefundList, orderProviderGoodRecord);
+
+            if (StrUtil.containsAny(refundType, "0", "1")) {
+                orderProviderGoodRecord.setStatus("2");
+                orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+            } else if (StrUtil.equals(refundType, "2")) {
+                orderProviderGoodRecord.setStatus("4");
+                orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+            }
+
             return new OrderRefundList()
                     .setOrderNo(orderList.getOrderNo())
                     .setOrderType(orderList.getOrderType())

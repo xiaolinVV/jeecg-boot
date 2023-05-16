@@ -3013,13 +3013,14 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
                             orderRefundListLambdaQueryWrapper
                                     .eq(OrderRefundList::getOrderGoodRecordId, orderProviderGoodRecord.getId())
-                                    .in(OrderRefundList::getRefundType, "0", "1")
-                                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+                                    .in(OrderRefundList::getRefundType, "0")
+                                    .in(OrderRefundList::getStatus, "0", "3", "4", "5");
                             if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
                                 throw new JeecgBootException("售后待处理订单，处理售后才可进行发货");
                             }
                             //修改商品的OrderProviderListId为包裹的已发货包裹
                             orderProviderGoodRecord.setOrderProviderListId(addorderProviderId);
+                            orderProviderGoodRecord.setStatus("1");
                             orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
                         }
                     }

@@ -19,9 +19,11 @@ import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagR
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.order.entity.OrderList;
+import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
 import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreList;
 import org.jeecg.modules.order.service.IOrderListService;
+import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
 import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreListService;
 import org.jeecg.modules.pay.entity.*;
@@ -135,6 +137,9 @@ public class FrontPayController {
 
     @Autowired
     private IMarketingDiscountCouponService marketingDiscountCouponService;
+
+    @Autowired
+    private IOrderProviderGoodRecordService orderProviderGoodRecordService;
 
 
     /**
@@ -329,6 +334,8 @@ public class FrontPayController {
                         OrderList orderList = iOrderListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
                         orderRefundListService.updateOrderForRefund(orderList,orderRefundList);
+                        OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+                        orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
                     }
                 }
             } else {

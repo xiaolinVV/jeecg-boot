@@ -251,7 +251,7 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
         }
         OrderProviderList orderProviderList = this.getById(orderProviderGoodRecord.getOrderProviderListId());
         //获取物流信息
-        AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo itemsInfo =  ali1688Service.getAlibabaOpenplatformTradeModelNativeLogisticsItemsInfo(Convert.toLong(taobaoOrderId));
+        AlibabaOpenplatformTradeModelNativeLogisticsItemsInfo itemsInfo = ali1688Service.getAlibabaOpenplatformTradeModelNativeLogisticsItemsInfo(Convert.toLong(taobaoOrderId));
         if (itemsInfo != null) {
             orderProviderList.setParentId(orderProviderList.getId())
                     .setId(null)
@@ -296,18 +296,33 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
 
     @Override
     public void ShipmentOrderModification(OrderProviderList orderProviderList) {
-        if (orderProviderGoodRecordMapper.selectCount(new LambdaQueryWrapper<OrderProviderGoodRecord>()
+        OrderList orderList = orderListMapper.selectById(orderProviderList.getOrderListId());
+        LambdaQueryWrapper<OrderProviderGoodRecord> goodRecordLambdaQueryWrapper = new LambdaQueryWrapper<OrderProviderGoodRecord>()
                 .eq(OrderProviderGoodRecord::getDelFlag, "0")
-                .eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderList.getId())
-        ) <= 0) {
+                .eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderList.getId());
+        if (orderProviderGoodRecordMapper.selectCount(goodRecordLambdaQueryWrapper) <= 0) {
             this.updateById(orderProviderList.setStatus("2"));
-            OrderList orderList = orderListMapper.selectById(orderProviderList.getOrderListId());
+
             LambdaQueryWrapper<OrderProviderList> orderProviderListLambdaQueryWrapper = new LambdaQueryWrapper<OrderProviderList>()
                     .eq(OrderProviderList::getDelFlag, "0")
                     .eq(OrderProviderList::getOrderListId, orderList.getId())
                     .eq(OrderProviderList::getParentId, "0");
             if (this.count(orderProviderListLambdaQueryWrapper) == this.count(orderProviderListLambdaQueryWrapper.eq(OrderProviderList::getStatus, "2"))) {
-                orderListMapper.updateById(orderList.setStatus("2"));
+                orderList.setStatus("2");
+                orderListMapper.updateById(orderList);
+            } else {
+                orderList.setIsSender("1");
+                iOrderListService.saveOrUpdate(orderList);
+            }
+        } else {
+            goodRecordLambdaQueryWrapper.in(OrderProviderGoodRecord::getStatus, "0", "2", "4", "5");
+            if (orderProviderGoodRecordMapper.selectCount(goodRecordLambdaQueryWrapper) > 0) {
+                orderList.setIsSender("1");
+                iOrderListService.saveOrUpdate(orderList);
+            } else {
+                this.updateById(orderProviderList.setStatus("2"));
+                orderList.setStatus("2");
+                orderListMapper.updateById(orderList);
             }
         }
     }

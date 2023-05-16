@@ -13,7 +13,9 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
 import org.jeecg.modules.order.entity.OrderRefundList;
+import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
 import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,9 @@ import java.util.Arrays;
 public class OrderRefundListController extends JeecgController<OrderRefundList, IOrderRefundListService> {
     @Autowired
     private IOrderRefundListService orderRefundListService;
+
+    @Autowired
+    private IOrderProviderGoodRecordService orderProviderGoodRecordService;
 
     /**
      * 售后分页列表查询
@@ -100,6 +105,15 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         orderRefundListServiceById.setStatus("5");
         orderRefundListServiceById.setRefusedExplain(refusedExplain);
         orderRefundListService.updateById(orderRefundListServiceById);
+
+        String orderGoodRecordId = orderRefundListServiceById.getOrderGoodRecordId();
+        String isPlatform = orderRefundListServiceById.getIsPlatform();
+        if (StrUtil.equals(isPlatform,"0")) {
+
+        }else if (StrUtil.equals(isPlatform,"1")){
+            OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderGoodRecordId).setStatus("0");
+            orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+        }
         return Result.OK("拒绝成功！");
     }
 
@@ -233,6 +247,14 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
                 .setMerchantTrackingNumber(merchantTrackingNumber)
                 .setStatus("8");
         orderRefundListService.updateById(orderRefundList);
+        String orderGoodRecordId = orderRefundList.getOrderGoodRecordId();
+        String isPlatform = orderRefundList.getIsPlatform();
+        if (StrUtil.equals(isPlatform,"0")) {
+
+        }else if (StrUtil.equals(isPlatform,"1")){
+            OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderGoodRecordId).setStatus("5");
+            orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+        }
         return Result.OK("换货成功，商家已发货");
     }
 

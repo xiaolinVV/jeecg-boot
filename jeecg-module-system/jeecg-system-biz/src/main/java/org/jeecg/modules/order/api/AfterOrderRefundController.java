@@ -48,6 +48,9 @@ public class AfterOrderRefundController {
     @Autowired
     private IMemberShippingAddressService memberShippingAddressService;
 
+    @Autowired
+    private IOrderProviderGoodRecordService orderProviderGoodRecordService;
+
     /**
      * 申请订单售后
      *
@@ -161,6 +164,16 @@ public class AfterOrderRefundController {
         orderRefundListServiceById.setStatus(updateStatus);
         orderRefundListServiceById.setCloseExplain("0");
         orderRefundListService.updateById(orderRefundListServiceById);
+
+        String orderGoodRecordId = orderRefundListServiceById.getOrderGoodRecordId();
+        String isPlatform = orderRefundListServiceById.getIsPlatform();
+        if (StrUtil.equals(isPlatform,"0")) {
+
+        }else if (StrUtil.equals(isPlatform,"1")){
+            OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderGoodRecordId).setStatus("0");
+            orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
+        }
+
         return Result.OK("撤销成功!");
     }
 

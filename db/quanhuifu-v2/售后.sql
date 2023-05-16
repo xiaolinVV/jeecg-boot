@@ -117,3 +117,6 @@ INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort
 
 INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1651521417630441474', '74547a7681b0592591bd8234560b66c2', 'common_refund_return_timeout', '167', '售后单退货超时时间7天（167小时）', 1, 1, 'jeecg', '2023-04-27 17:39:24', null, null);
 
+alter table order_provider_good_record
+    add status varchar(1) default '0' null comment '订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功';
+
