@@ -321,6 +321,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
             marketingStoreGiftCardMemberListService.addBlance(orderStoreList.getActiveId(), orderRefundList.getActualRefundGiftCardBalance(), orderStoreList.getOrderNo(), "2");
             orderRefundList.setStatus("4");
+            OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+            orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
         }
         //  先退余额，状态改为退款成功
         if (actualRefundBalance.compareTo(BigDecimal.ZERO) > 0) {
@@ -328,6 +330,8 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (addBlance) {
                 orderRefundList.setActualRefundBalance(actualRefundBalance);
                 orderRefundList.setStatus("4");
+                OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+                orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
             }
         }
         // 微信退款，走汇付，状态改为退款中，走异步通知
@@ -443,6 +447,15 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundListDto.getRefundAmount(), orderStoreGoodRecord.getAmount());
 
             verifyApplyOrderStoreRefund(refundType, refundPrice, refundAmount, ongoingOrderRefundList, orderStoreGoodRecord);
+
+            if (StrUtil.containsAny(refundType, "0", "1")) {
+                orderStoreGoodRecord.setStatus("2");
+                orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
+            } else if (StrUtil.equals(refundType, "2")) {
+                orderStoreGoodRecord.setStatus("4");
+                orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
+            }
+
             OrderRefundList orderRefundList = new OrderRefundList()
                     .setOrderNo(orderStoreList.getOrderNo())
                     .setOrderType(orderStoreList.getOrderType())

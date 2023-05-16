@@ -120,3 +120,6 @@ INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort
 alter table order_provider_good_record
     add status varchar(1) default '0' null comment '订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功';
 
+alter table order_store_good_record
+    add status varchar(1) default '0' not null comment '订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功';
+

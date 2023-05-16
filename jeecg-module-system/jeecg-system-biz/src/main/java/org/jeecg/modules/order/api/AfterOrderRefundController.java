@@ -51,6 +51,9 @@ public class AfterOrderRefundController {
     @Autowired
     private IOrderProviderGoodRecordService orderProviderGoodRecordService;
 
+    @Autowired
+    private IOrderStoreGoodRecordService orderStoreGoodRecordService;
+
     /**
      * 申请订单售后
      *
@@ -168,7 +171,8 @@ public class AfterOrderRefundController {
         String orderGoodRecordId = orderRefundListServiceById.getOrderGoodRecordId();
         String isPlatform = orderRefundListServiceById.getIsPlatform();
         if (StrUtil.equals(isPlatform,"0")) {
-
+            OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(orderGoodRecordId).setStatus("0");
+            orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
         }else if (StrUtil.equals(isPlatform,"1")){
             OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderGoodRecordId).setStatus("0");
             orderProviderGoodRecordService.updateById(orderProviderGoodRecord);

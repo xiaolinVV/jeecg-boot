@@ -1488,13 +1488,14 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
                             orderRefundListLambdaQueryWrapper
                                     .eq(OrderRefundList::getOrderGoodRecordId, orderStoreGoodRecord.getId())
-                                    .in(OrderRefundList::getRefundType, "0", "1")
-                                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+                                    .in(OrderRefundList::getRefundType, "0")
+                                    .in(OrderRefundList::getStatus, "0", "3", "4", "5");
                             if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
                                 throw new JeecgBootException("售后待处理订单，处理售后才可进行发货");
                             }
                             //修改商品的OrderProviderListId为包裹的已发货包裹
                             orderStoreGoodRecord.setOrderStoreSubListId(addorderProviderId);
+                            orderStoreGoodRecord.setStatus("1");
                             orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
                         }
                     }
@@ -1582,6 +1583,7 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                             //是否全部发货
                             queryWrapperOPGR = new QueryWrapper<OrderStoreGoodRecord>();
                             queryWrapperOPGR.eq("order_store_sub_list_id", oplfh.getId());
+                            queryWrapperOPGR.in("status","0", "2", "4", "5");
                             listOrderStoreGoodRecord = orderStoreGoodRecordService.list(queryWrapperOPGR);
                             if (listOrderStoreGoodRecord.size() > 0) {
                                 //说明还没为发货商品

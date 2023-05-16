@@ -18,14 +18,8 @@ import org.jeecg.modules.marketing.service.*;
 import org.jeecg.modules.marketing.store.giftbag.service.IMarketingStoreGiftbagRecordService;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
-import org.jeecg.modules.order.entity.OrderList;
-import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
-import org.jeecg.modules.order.entity.OrderRefundList;
-import org.jeecg.modules.order.entity.OrderStoreList;
-import org.jeecg.modules.order.service.IOrderListService;
-import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
-import org.jeecg.modules.order.service.IOrderRefundListService;
-import org.jeecg.modules.order.service.IOrderStoreListService;
+import org.jeecg.modules.order.entity.*;
+import org.jeecg.modules.order.service.*;
 import org.jeecg.modules.pay.entity.*;
 import org.jeecg.modules.pay.service.*;
 import org.jeecg.modules.store.entity.StoreManage;
@@ -140,6 +134,9 @@ public class FrontPayController {
 
     @Autowired
     private IOrderProviderGoodRecordService orderProviderGoodRecordService;
+
+    @Autowired
+    private IOrderStoreGoodRecordService orderStoreGoodRecordService;
 
 
     /**
@@ -330,6 +327,8 @@ public class FrontPayController {
                         OrderStoreList orderStoreList = iOrderStoreListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderStoreMarketingDiscountCoupon(orderStoreList, orderRefundList);
                         orderRefundListService.updateOrderStoreForRefund(orderStoreList,orderRefundList);
+                        OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
+                        orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
                     } else if (StrUtil.equals(orderRefundList.getIsPlatform(), "1")) {
                         OrderList orderList = iOrderListService.getById(orderRefundList.getOrderListId());
                         orderRefundListService.refundForSendBackOrderMarketingDiscountCoupon(orderList, orderRefundList);
