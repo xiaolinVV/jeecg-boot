@@ -752,7 +752,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         orderRefundListServiceById.setRemarks(orderRefundList.getRemarks());
         orderRefundListServiceById.setRefundCertificate(orderRefundList.getRefundCertificate());
         orderRefundListServiceById.setApplyTime(new Date());
-        orderRefundListService.updateById(orderRefundList);
+        orderRefundListService.updateById(orderRefundListServiceById);
         return Result.OK("修改申请成功!");
     }
 
