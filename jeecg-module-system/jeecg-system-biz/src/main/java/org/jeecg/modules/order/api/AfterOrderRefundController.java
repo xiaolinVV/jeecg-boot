@@ -128,6 +128,7 @@ public class AfterOrderRefundController {
         String memberId = Convert.toStr(req.getAttribute(JwtConstants.CURRENT_USER_NAME));
         QueryWrapper<OrderRefundList> queryWrapper = QueryGenerator.initQueryWrapper(orderRefundList, req.getParameterMap());
         queryWrapper.eq("member_id", memberId);
+        queryWrapper.orderByDesc("apply_time");
         Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
         IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
         return Result.OK(pageList);

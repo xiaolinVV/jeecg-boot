@@ -457,6 +457,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
 
             OrderRefundList orderRefundList = new OrderRefundList()
+                    .setApplyTime(new Date())
                     .setOrderNo(orderStoreList.getOrderNo())
                     .setOrderType(orderStoreList.getOrderType())
                     .setGoodMainPicture(orderStoreGoodRecord.getMainPicture())
@@ -571,6 +572,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             }
 
             return new OrderRefundList()
+                    .setApplyTime(new Date())
                     .setOrderNo(orderList.getOrderNo())
                     .setOrderType(orderList.getOrderType())
                     .setGoodMainPicture(orderProviderGoodRecord.getMainPicture())
@@ -750,6 +752,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         orderRefundListServiceById.setRefundReason(orderRefundList.getRefundReason());
         orderRefundListServiceById.setRemarks(orderRefundList.getRemarks());
         orderRefundListServiceById.setRefundCertificate(orderRefundList.getRefundCertificate());
+        orderRefundListServiceById.setApplyTime(new Date());
         orderRefundListService.updateById(orderRefundList);
         return Result.OK("修改申请成功!");
     }

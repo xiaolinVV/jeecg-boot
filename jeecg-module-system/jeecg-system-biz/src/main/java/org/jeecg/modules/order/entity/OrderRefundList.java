@@ -52,6 +52,14 @@ public class OrderRefundList implements Serializable {
     @ApiModelProperty(value = "创建时间")
     private java.util.Date createTime;
     /**
+     * 申请时间
+     */
+    @Excel(name = "创建时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty(value = "申请时间")
+    private java.util.Date applyTime;
+    /**
      * 修改人
      */
     @ApiModelProperty(value = "修改人")

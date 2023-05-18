@@ -6,6 +6,7 @@ create table order_refund_list
     create_time                                datetime                    null comment '创建时间',
     update_by                                  varchar(36)    default ''   null comment '修改人',
     update_time                                datetime                    null comment '修改时间',
+    apply_time                                 datetime                    null comment '申请时间',
     year                                       int            default -1   null comment '创建年',
     month                                      int            default -1   null comment '创建月',
     day                                        int            default -1   null comment '创建日',
@@ -66,6 +67,8 @@ create table order_refund_list
     actual_refund_marketing_discount_coupon_id varchar(500)   default ''   null comment '实际退款优惠券记录id'
 )
     comment 'order_refund_list' charset = utf8mb4;
+
+
 
 ALTER TABLE `shop-boot`.`order_store_good_record` MODIFY COLUMN `customary_dues` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '应付款（支付前标准金额）' AFTER `total`;
 
