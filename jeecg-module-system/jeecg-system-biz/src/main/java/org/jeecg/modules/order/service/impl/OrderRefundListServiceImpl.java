@@ -734,20 +734,19 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (!StrUtil.containsAny(status, "0", "5")) {
             throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
         }
-//        BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundList.getRefundPrice(),orderRefundListServiceById.getGoodRecordActualPayment());
+        BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundList.getRefundPrice(), orderRefundListServiceById.getGoodRecordActualPayment());
+        BigDecimal refundAmount = ObjectUtil.defaultIfNull(orderRefundList.getRefundAmount(), orderRefundListServiceById.getGoodRecordAmount());
         // 退款金额、退款件数、申请类型业务字段校验
-        if (!ObjectUtil.hasNull(orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount())) {
-            List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
-            if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "0")) {
-                OrderStoreGoodRecord goodRecord = orderStoreGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
-                verifyApplyOrderStoreRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, goodRecord);
-            } else if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "1")) {
-                OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
-                verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
-            }
-            orderRefundListServiceById.setRefundPrice(orderRefundList.getRefundPrice());
-            orderRefundListServiceById.setRefundAmount(orderRefundList.getRefundAmount());
+        List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
+        if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "0")) {
+            OrderStoreGoodRecord goodRecord = orderStoreGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+            verifyApplyOrderStoreRefund(orderRefundListServiceById.getRefundType(), refundPrice, refundAmount, ongoingOrderRefundList, goodRecord);
+        } else if (StrUtil.equals(orderRefundListServiceById.getIsPlatform(), "1")) {
+            OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
+            verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), refundPrice, refundAmount, ongoingOrderRefundList, orderProviderGoodRecord);
         }
+        orderRefundListServiceById.setRefundPrice(refundPrice);
+        orderRefundListServiceById.setRefundAmount(refundAmount);
         orderRefundListServiceById.setStatus("0");
         orderRefundListServiceById.setRefundReason(orderRefundList.getRefundReason());
         orderRefundListServiceById.setRemarks(orderRefundList.getRemarks());
