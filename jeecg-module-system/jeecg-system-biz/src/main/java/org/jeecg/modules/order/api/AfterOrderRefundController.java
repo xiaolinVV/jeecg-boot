@@ -131,6 +131,7 @@ public class AfterOrderRefundController {
         queryWrapper.orderByDesc("apply_time");
         Page<OrderRefundList> page = new Page<OrderRefundList>(pageNo, pageSize);
         IPage<OrderRefundList> pageList = orderRefundListService.page(page, queryWrapper);
+        pageList.getRecords().forEach(o -> o.setCreateTime(o.getApplyTime()));
         return Result.OK(pageList);
     }
 
