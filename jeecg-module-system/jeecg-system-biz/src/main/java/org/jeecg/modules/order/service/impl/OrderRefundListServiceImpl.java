@@ -732,6 +732,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (!StrUtil.containsAny(status, "0", "5")) {
             throw new JeecgBootException("非待处理/已拒绝售后单无法修改申请");
         }
+//        BigDecimal refundPrice = ObjectUtil.defaultIfNull(orderRefundList.getRefundPrice(),orderRefundListServiceById.getGoodRecordActualPayment());
         // 退款金额、退款件数、申请类型业务字段校验
         if (!ObjectUtil.hasNull(orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount())) {
             List<OrderRefundList> ongoingOrderRefundList = getOrderRefundListByMemberIdAndOrderId(orderRefundListServiceById.getMemberId(), orderRefundListServiceById.getOrderListId());
@@ -742,8 +743,13 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 OrderProviderGoodRecord orderProviderGoodRecord = orderProviderGoodRecordService.getById(orderRefundListServiceById.getOrderGoodRecordId());
                 verifyApplyOrderRefund(orderRefundListServiceById.getRefundType(), orderRefundList.getRefundPrice(), orderRefundList.getRefundAmount(), ongoingOrderRefundList, orderProviderGoodRecord);
             }
+            orderRefundListServiceById.setRefundPrice(orderRefundList.getRefundPrice());
+            orderRefundListServiceById.setRefundAmount(orderRefundList.getRefundAmount());
         }
-        orderRefundList.setStatus("0");
+        orderRefundListServiceById.setStatus("0");
+        orderRefundListServiceById.setRefundReason(orderRefundList.getRefundReason());
+        orderRefundListServiceById.setRemarks(orderRefundList.getRemarks());
+        orderRefundListServiceById.setRefundCertificate(orderRefundList.getRefundCertificate());
         orderRefundListService.updateById(orderRefundList);
         return Result.OK("修改申请成功!");
     }
