@@ -1,7 +1,10 @@
 package org.jeecg.modules.order.controller;
 
+import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.validation.ValidationUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -174,6 +177,9 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
             if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {
                 throw new JeecgBootException("邮寄地址信息不能为空");
+            }
+            if (!Validator.isMobile(merchantConsigneePhone)) {
+                throw new JeecgBootException("请输入正确格式的手机号");
             }
             orderRefundList.setMerchantConsigneeName(merchantConsigneeName);
             orderRefundList.setMerchantConsigneePhone(merchantConsigneePhone);
