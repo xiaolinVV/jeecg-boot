@@ -810,6 +810,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
             //更新订单状态
             orderStoreList.setStatus("4");
+            orderStoreList.setIsSender("0");
             orderStoreList.setCloseTime(new Date());
             orderStoreList.setCloseType("15");
             orderStoreList.setCloseExplain("7");
@@ -838,6 +839,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
         if (NumberUtil.add(price, balance).compareTo(actualPayment) == 0 || count.compareTo(amount) == 0) {
             //更新订单状态
             orderList.setStatus("4");
+            orderList.setIsSender("0");
             orderList.setCloseTime(new Date());
             orderList.setCloseType("15");
             orderList.setCloseExplain("7");
