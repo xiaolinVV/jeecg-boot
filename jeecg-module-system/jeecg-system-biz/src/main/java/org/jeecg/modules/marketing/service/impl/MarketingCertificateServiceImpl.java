@@ -330,19 +330,20 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
                 if(!isContinuous){
                     myCalendar = Calendar.getInstance();
                 }
+                Calendar instance = Calendar.getInstance();
                 marketingCertificateRecord.setStartTime(myCalendar.getTime());
 
                 if (marketingCertificate.getMonad().equals("天")) {
-                    myCalendar.add(Calendar.DATE, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.DATE, marketingCertificate.getDisData().intValue());
                 }
                 if (marketingCertificate.getMonad().equals("周")) {
-                    myCalendar.add(Calendar.WEEK_OF_MONTH, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.WEEK_OF_MONTH, marketingCertificate.getDisData().intValue());
                 }
                 if (marketingCertificate.getMonad().equals("月")) {
-                    myCalendar.add(Calendar.MONTH, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.MONTH, marketingCertificate.getDisData().intValue());
                 }
 
-                marketingCertificateRecord.setEndTime(myCalendar.getTime());
+                marketingCertificateRecord.setEndTime(instance.getTime());
             }
             //领券次日起
             if (marketingCertificate.getVouchersWay().equals("2")) {
@@ -351,19 +352,20 @@ public class MarketingCertificateServiceImpl extends ServiceImpl<MarketingCertif
                     myCalendar = Calendar.getInstance();
                 }
                 myCalendar.add(Calendar.DATE, 1);
+                Calendar instance = Calendar.getInstance();
                 marketingCertificateRecord.setStartTime(myCalendar.getTime());
 
                 if (marketingCertificate.getMonad().equals("天")) {
-                    myCalendar.add(Calendar.DATE, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.DATE, marketingCertificate.getDisData().intValue());
                 }
                 if (marketingCertificate.getMonad().equals("周")) {
-                    myCalendar.add(Calendar.WEEK_OF_MONTH, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.WEEK_OF_MONTH, marketingCertificate.getDisData().intValue());
                 }
                 if (marketingCertificate.getMonad().equals("月")) {
-                    myCalendar.add(Calendar.MONTH, marketingCertificate.getDisData().intValue());
+                    instance.add(Calendar.MONTH, marketingCertificate.getDisData().intValue());
                 }
 
-                marketingCertificateRecord.setEndTime(myCalendar.getTime());
+                marketingCertificateRecord.setEndTime(instance.getTime());
             }
             if (new Date().getTime() >= marketingCertificateRecord.getStartTime().getTime() && new Date().getTime() <= marketingCertificateRecord.getEndTime().getTime()) {
                 //设置生效

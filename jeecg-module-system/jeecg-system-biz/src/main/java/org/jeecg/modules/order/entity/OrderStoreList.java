@@ -293,7 +293,9 @@ public class OrderStoreList {
 	 */
 	private String refundJson;
 
-	/*赠送的积分*/
+	/**
+	 * 赠送的积分
+	 */
 	private BigDecimal giveWelfarePayments;
 
 	/**

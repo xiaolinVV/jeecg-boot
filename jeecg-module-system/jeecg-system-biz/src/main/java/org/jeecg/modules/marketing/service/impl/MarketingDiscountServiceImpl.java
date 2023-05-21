@@ -66,7 +66,7 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
             while (discountCount > 0) {
                 //优惠券量不足时候跳过领取
                 if (marketingDiscount.getTotal().subtract(marketingDiscount.getReleasedQuantity()).longValue() <= 0) {
-                    continue;
+                    break;
                 }
                 MarketingDiscountCoupon marketingDiscountCoupon = new MarketingDiscountCoupon();
                 marketingDiscountCoupon.setPrice(marketingDiscount.getSubtract());
@@ -111,18 +111,18 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
                         myCalendar = Calendar.getInstance();
                     }
                     marketingDiscountCoupon.setStartTime(myCalendar.getTime());
-
+                    Calendar instance = Calendar.getInstance();
                     if (marketingDiscount.getMonad().equals("天")) {
-                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("周")) {
-                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("月")) {
-                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
                     }
 
-                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
+                    marketingDiscountCoupon.setEndTime(instance.getTime());
                 }
                 //领券次日起
                 if (marketingDiscount.getVouchersWay().equals("2")) {
@@ -131,19 +131,20 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
                         myCalendar = Calendar.getInstance();
                     }
                     myCalendar.add(Calendar.DATE, 1);
+                    Calendar instance = Calendar.getInstance();
                     marketingDiscountCoupon.setStartTime(myCalendar.getTime());
 
                     if (marketingDiscount.getMonad().equals("天")) {
-                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("周")) {
-                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("月")) {
-                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                        instance.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
                     }
 
-                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
+                    marketingDiscountCoupon.setEndTime(instance.getTime());
                 }
 
                 if (new Date().getTime() >= marketingDiscountCoupon.getStartTime().getTime() && new Date().getTime() <= marketingDiscountCoupon.getEndTime().getTime()) {
