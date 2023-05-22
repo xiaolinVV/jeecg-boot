@@ -419,6 +419,12 @@ public class OrderRefundList implements Serializable {
     @TableField(exist = false)
     private String memberShippingAddressId;
 
+    /**
+     * 实际退还积分
+     *
+     */
+    private BigDecimal actualReturnWelfarePayments;
+
 
 
 

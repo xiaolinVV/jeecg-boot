@@ -16,6 +16,7 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
 import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
+import org.jeecg.modules.member.entity.MemberList;
 import org.jeecg.modules.member.entity.MemberShippingAddress;
 import org.jeecg.modules.member.service.IMemberListService;
 import org.jeecg.modules.member.service.IMemberShippingAddressService;
@@ -103,6 +104,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 
     @Autowired
     private IMemberShippingAddressService memberShippingAddressService;
+
+    @Autowired
+    private IMemberListService iMemberListService;
 
 
     @Override
@@ -313,7 +317,33 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 //            }
         // todo 设置了下单送福利金的店铺，店铺商品发生退款后，福利金没有回收 @张少林
         if (orderRefundList.getGoodRecordGiveWelfarePayments().compareTo(BigDecimal.ZERO) > 0) {
-
+            BigDecimal goodRecordGiveWelfarePayments = orderRefundList.getGoodRecordGiveWelfarePayments();
+            BigDecimal goodRecordAmount = orderRefundList.getGoodRecordAmount();
+            List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> {
+                return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                        && refundList.getActualReturnWelfarePayments().compareTo(BigDecimal.ZERO) > 0 && StrUtil.equals(refundList.getStatus(), "4");
+            }).map(OrderRefundList::getActualReturnWelfarePayments).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(refundList -> {
+                return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                        && refundList.getActualReturnWelfarePayments().compareTo(BigDecimal.ZERO) > 0 && StrUtil.equals(refundList.getStatus(), "4");
+            }).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+            if (NumberUtil.sub(goodRecordAmount, count).compareTo(new BigDecimal("1")) == 0) {
+                orderRefundList.setActualReturnWelfarePayments(NumberUtil.sub(goodRecordGiveWelfarePayments, decimal));
+            } else {
+                //按数量比例退
+                orderRefundList.setActualReturnWelfarePayments(NumberUtil.mul(NumberUtil.div(goodRecordGiveWelfarePayments, goodRecordAmount, 2), orderRefundList.getRefundAmount()));
+            }
+            if (orderRefundList.getActualReturnWelfarePayments().compareTo(BigDecimal.ZERO) > 0) {
+                MemberList memberList = iMemberListService.getById(orderRefundList.getMemberId());
+                if (memberList == null) {
+                    throw new JeecgBootException("会员信息异常");
+                }
+                if (memberList.getWelfarePayments().compareTo(orderRefundList.getActualReturnWelfarePayments()) < 0) {
+                    throw new JeecgBootException("会员积分不足，无法退款");
+                }
+                memberWelfarePaymentsService.subtractWelfarePayments(orderRefundList.getMemberId(), orderRefundList.getActualReturnWelfarePayments(), "20", orderRefundList.getId(), "售后退款归还积分");
+            }
         }
 
 
@@ -323,8 +353,14 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal goodRecordGiftCardCoupon = orderRefundList.getGoodRecordGiftCardCoupon();
             BigDecimal goodRecordAmount = orderRefundList.getGoodRecordAmount();
             List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
-            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getActualRefundGiftCardBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
-            BigDecimal count = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> {
+                return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                        && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0 && StrUtil.equals(refundList.getStatus(), "4");
+            }).map(OrderRefundList::getActualRefundGiftCardBalance).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(refundList -> {
+                return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                        && refundList.getActualRefundGiftCardBalance().compareTo(BigDecimal.ZERO) > 0 && StrUtil.equals(refundList.getStatus(), "4");
+            }).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
             if (NumberUtil.sub(goodRecordAmount, count).compareTo(new BigDecimal("1")) == 0) {
                 orderRefundList.setActualRefundGiftCardBalance(NumberUtil.sub(goodRecordGiftCardCoupon, decimal));
             } else {
@@ -772,7 +808,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (memberShippingAddress == null) {
                 throw new JeecgBootException("收货地址不存在！！！");
             }
-            if (StrUtil.hasBlank(orderRefundList.getExchangeGoodSpecification(),orderRefundList.getExchangeGoodSpecificationId())) {
+            if (StrUtil.hasBlank(orderRefundList.getExchangeGoodSpecification(), orderRefundList.getExchangeGoodSpecificationId())) {
                 throw new JeecgBootException("换货商品规格数据不能为空");
             }
             // 设置收货地址
