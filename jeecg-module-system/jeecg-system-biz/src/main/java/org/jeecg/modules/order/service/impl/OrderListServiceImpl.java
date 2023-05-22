@@ -338,7 +338,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         IPage<OrderListDTO> page1 = orderListMapper.getOrderListDto(page, orderListVO);
 
         page1.getRecords().forEach(ol -> {
-            if(StringUtils.isNotBlank(ol.getSerialNumber())) {
+            if (StringUtils.isNotBlank(ol.getSerialNumber())) {
                 PayOrderCarLog payOrderCarLog = iPayOrderCarLogService.getById(ol.getSerialNumber());
                 ol.setIntegral(payOrderCarLog.getIntegral());
                 ol.setIntegralPrice(payOrderCarLog.getIntegralPrice());
@@ -372,17 +372,16 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 }
 
                 List<OrderProviderGoodRecord> orderProviderGoodRecords = orderProviderGoodRecordService.selectOrderProviderListId(opl.getId());
-                if (orderProviderGoodRecords.size()>0){
+                if (orderProviderGoodRecords.size() > 0) {
                     //添加供应商订单商品记录
                     opl.setOrderProviderGoodRecords(orderProviderGoodRecords);
                 }
 
                 List<OrderProviderGoodRecordDTO> orderProviderGoodRecordDTOList = orderProviderGoodRecordService.selectOrderProviderListIdDTO(opl.getId());
-                if (orderProviderGoodRecordDTOList.size()>0){
+                if (orderProviderGoodRecordDTOList.size() > 0) {
                     //添加供应商订单商品记录
                     opl.setOrderProviderGoodRecordDTOList(orderProviderGoodRecordDTOList);
                 }
-
 
 
                 //供应商发货信息
@@ -416,7 +415,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             if (orderProviderLists.size() > 0) {
 
                 ol.setOrderProviderListDTOs(orderProviderLists.stream()
-                        .filter(item->item.getOrderProviderGoodRecords()!=null&&item.getOrderProviderGoodRecords().size()>0).collect(Collectors.toList()));
+                        .filter(item -> item.getOrderProviderGoodRecords() != null && item.getOrderProviderGoodRecords().size() > 0).collect(Collectors.toList()));
 
 
                 List<String> orderProviderIdList = new ArrayList<>();
@@ -557,9 +556,9 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         BigDecimal memberDiscountPriceTotal = new BigDecimal(0);
 
         //免单专区商品id
-        String marketingFreeGoodListId=null;
+        String marketingFreeGoodListId = null;
 
-        String marketingGroupRecordId=null;
+        String marketingGroupRecordId = null;
 
         //优惠金额总金额   coupon
         BigDecimal couponTotal = new BigDecimal(0);
@@ -608,7 +607,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         BigDecimal couponPriceMarketingDiscount = new BigDecimal(0);//优惠券优惠金额
         List<String> marketingDiscountGoods = Lists.newArrayList();
         List<String> discountGoods = Lists.newArrayList(); // 订单中参与优惠券的商品id列表
-        Map<String,Map<String, Object>> marketingPrefectureGoods = MapUtil.newHashMap();
+        Map<String, Map<String, Object>> marketingPrefectureGoods = MapUtil.newHashMap();
         MarketingDiscount marketingDiscount = null;//优惠券信息
         String discountId = null;
         if (model == 0) {
@@ -695,7 +694,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
         //设置未评价
         orderList.setIsEvaluate("0");
-        BigDecimal integralValue=iMarketingWelfarePaymentsSettingService.getIntegralValue();
+        BigDecimal integralValue = iMarketingWelfarePaymentsSettingService.getIntegralValue();
         //供应商信息列表
         List<Map<String, Object>> goodsMap = Lists.newArrayList();
         String memberGradeContent = "";
@@ -748,7 +747,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 }
 
                 //加盟专区判断
-                if(g.get("marketingLeagueGoodListId")!=null){
+                if (g.get("marketingLeagueGoodListId") != null) {
                     orderList.setOrderType("7");
                     orderList.setActiveId(g.get("marketingLeagueGoodListId").toString());
                 }
@@ -774,9 +773,9 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     BigDecimal welfareProportionPrice = null;
 
                     if (marketingPrefectureGoodSpecification.getIsWelfare().equals("3")) {
-                        welfareProportionPrice = marketingPrefectureGoodSpecification.getPrefecturePrice().subtract(goodSpecification.getSupplyPrice()).multiply(welfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue,2,RoundingMode.DOWN);
+                        welfareProportionPrice = marketingPrefectureGoodSpecification.getPrefecturePrice().subtract(goodSpecification.getSupplyPrice()).multiply(welfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue, 2, RoundingMode.DOWN);
                     } else {
-                        welfareProportionPrice = marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(welfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue,2,RoundingMode.DOWN);
+                        welfareProportionPrice = marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(welfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue, 2, RoundingMode.DOWN);
                     }
 
                     //判断专区会员直降
@@ -785,38 +784,37 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     if (marketingPrefecture.getIsVipLower().equals("1") && memberList.getMemberType().equals("1")) {
                         vipLowerTotal = vipLowerTotal.add(welfareProportionPrice).multiply(integralValue);
                         welfareProportionPrice = new BigDecimal(0);
-                        g.put("vipLowerTotal",welfareProportionPrice.multiply(integralValue).setScale(2,RoundingMode.HALF_UP));
+                        g.put("vipLowerTotal", welfareProportionPrice.multiply(integralValue).setScale(2, RoundingMode.HALF_UP));
                     }
 
                     log.info("商品福利金抵扣：" + welfareProportionPrice);
-                    g.put("welfareProportionPrice",welfareProportionPrice);
-                    g.put("welfarePaymentsPrice",(welfareProportionPrice.multiply(integralValue).setScale(2,RoundingMode.HALF_UP)));
+                    g.put("welfareProportionPrice", welfareProportionPrice);
+                    g.put("welfarePaymentsPrice", (welfareProportionPrice.multiply(integralValue).setScale(2, RoundingMode.HALF_UP)));
 
                     welfarePayments = welfarePayments.add(welfareProportionPrice);
 
                     //赠送福利金的计算
                     BigDecimal giveWelfareProportion = marketingPrefectureGoodSpecification.getGiveWelfareProportion();
-                    giveWelfarePayments = giveWelfarePayments.add(marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity"))).divide(integralValue,2,RoundingMode.DOWN);
-                    g.put("giveWelfarePayments",marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue,2,RoundingMode.DOWN));
+                    giveWelfarePayments = giveWelfarePayments.add(marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity"))).divide(integralValue, 2, RoundingMode.DOWN);
+                    g.put("giveWelfarePayments", marketingPrefectureGoodSpecification.getPrefecturePrice().multiply(giveWelfareProportion.divide(new BigDecimal(100))).multiply((BigDecimal) g.get("quantity")).divide(integralValue, 2, RoundingMode.DOWN));
                     //专区订单
                     orderList.setOrderType("5");
                     orderList.setActiveId(marketingPrefecture.getId());
                     orderList.setMarketingPrefectureGoodId(marketingPrefectureGood.getId());
                     orderList.setMarketingRushGroupId(String.valueOf(g.get("marketingRushGroupId")));
-                    marketingPrefectureGoods.put(Convert.toStr(g.get("goodId")),g);
+                    marketingPrefectureGoods.put(Convert.toStr(g.get("goodId")), g);
                 }
                 //中奖拼团商品
-                if(g.get("marketingGroupRecordId")!=null){
-                    marketingGroupRecordId=g.get("marketingGroupRecordId").toString();
+                if (g.get("marketingGroupRecordId") != null) {
+                    marketingGroupRecordId = g.get("marketingGroupRecordId").toString();
                 }
-
 
 
             }
-            if(model==1){
+            if (model == 1) {
                 //给免单专区商品赋予专区商品id
-                if(marketingFreeGoodListId==null&&g.get("marketingFreeGoodListId")!=null){
-                    marketingFreeGoodListId=g.get("marketingFreeGoodListId").toString();
+                if (marketingFreeGoodListId == null && g.get("marketingFreeGoodListId") != null) {
+                    marketingFreeGoodListId = g.get("marketingFreeGoodListId").toString();
                     orderList.setActiveId(marketingFreeGoodListId);
                 }
             }
@@ -860,24 +858,24 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     Map<String, Object> g = list.get(i);
                     BigDecimal welfareProportionPrice = Convert.toBigDecimal(g.get("welfareProportionPrice"), BigDecimal.ZERO);
                     if (i == list.size() - 1) {
-                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.sub(memberWelfarePayments,tempSum);
-                        g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
-                        g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
+                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.sub(memberWelfarePayments, tempSum);
+                        g.put("welfareProportionPrice", goodActualWelfareProportionPrice);
+                        g.put("welfarePaymentsPrice", NumberUtil.mul(goodActualWelfareProportionPrice, integralValue));
                     } else {
-                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.mul(NumberUtil.div(welfareProportionPrice, welfarePayments,2), memberWelfarePayments);
-                        g.put("welfareProportionPrice",goodActualWelfareProportionPrice);
-                        g.put("welfarePaymentsPrice",NumberUtil.mul(goodActualWelfareProportionPrice,integralValue));
+                        BigDecimal goodActualWelfareProportionPrice = NumberUtil.mul(NumberUtil.div(welfareProportionPrice, welfarePayments, 2), memberWelfarePayments);
+                        g.put("welfareProportionPrice", goodActualWelfareProportionPrice);
+                        g.put("welfarePaymentsPrice", NumberUtil.mul(goodActualWelfareProportionPrice, integralValue));
                         tempSum = tempSum.add(goodActualWelfareProportionPrice);
                     }
                 }
                 //控制抵扣福利金金额
                 welfarePayments = memberWelfarePayments;
-                marketingPrefectureGoods = list.stream().collect(Collectors.toMap(g -> Convert.toStr(g.get("goodId")),g -> g));
+                marketingPrefectureGoods = list.stream().collect(Collectors.toMap(g -> Convert.toStr(g.get("goodId")), g -> g));
             }
             orderList.setWelfarePayments(welfarePayments);
-            orderList.setWelfarePaymentsPrice(welfarePayments.multiply(integralValue).setScale(2,RoundingMode.HALF_UP));
+            orderList.setWelfarePaymentsPrice(welfarePayments.multiply(integralValue).setScale(2, RoundingMode.HALF_UP));
             //添加优惠金额(福利金抵扣)
-            couponTotal = couponTotal.add(welfarePayments.multiply(integralValue)).setScale(2,RoundingMode.HALF_UP);
+            couponTotal = couponTotal.add(welfarePayments.multiply(integralValue)).setScale(2, RoundingMode.HALF_UP);
         }
 
 
@@ -900,13 +898,13 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         //保存订单信息
         this.saveOrUpdate(orderList);
         //免单专区加入专区订单信息
-        if(marketingFreeGoodListId!=null){
+        if (marketingFreeGoodListId != null) {
             iMarketingFreeOrderService.submitOrder(orderList.getId());
         }
         //中奖拼团记录加入订单id
-        if(marketingGroupRecordId!=null){
-           orderList.setOrderType("4");
-           orderList.setActiveId(marketingGroupRecordId);
+        if (marketingGroupRecordId != null) {
+            orderList.setOrderType("4");
+            orderList.setActiveId(marketingGroupRecordId);
         }
 
         List<OrderProviderGoodRecord> discountOrderProviderGoodRecords = new ArrayList<>();
@@ -972,8 +970,8 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 orderProviderGoodRecord.setSkuNo(goodSpecification.getSkuNo());
                 orderProviderGoodRecord.setTotal(orderProviderGoodRecord.getUnitPrice().multiply(orderProviderGoodRecord.getAmount()));
                 Map<String, Object> objectMap = marketingPrefectureGoods.get(p.get("goodId").toString());
-                orderProviderGoodRecord.setWelfarePayments(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfareProportionPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfareProportionPrice"),BigDecimal.ZERO));
-                orderProviderGoodRecord.setWelfarePaymentsPrice(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfarePaymentsPrice"),BigDecimal.ZERO): Convert.toBigDecimal(p.get("welfarePaymentsPrice"),BigDecimal.ZERO));
+                orderProviderGoodRecord.setWelfarePayments(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfareProportionPrice"), BigDecimal.ZERO) : Convert.toBigDecimal(p.get("welfareProportionPrice"), BigDecimal.ZERO));
+                orderProviderGoodRecord.setWelfarePaymentsPrice(objectMap != null ? Convert.toBigDecimal(objectMap.get("welfarePaymentsPrice"), BigDecimal.ZERO) : Convert.toBigDecimal(p.get("welfarePaymentsPrice"), BigDecimal.ZERO));
                 orderProviderGoodRecord.setDiscountCoupon(BigDecimal.ZERO);
 
                 //商品总重量
@@ -1069,12 +1067,12 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 OrderProviderGoodRecord orderProviderGoodRecord = discountOrderProviderGoodRecords.get(i);
                 orderProviderGoodRecord.setMarketingDiscountCouponId(discountId);
                 if (i == discountOrderProviderGoodRecords.size() - 1) {
-                    BigDecimal goodDiscountPrice = NumberUtil.sub(couponPriceMarketingDiscount,temSum);
+                    BigDecimal goodDiscountPrice = NumberUtil.sub(couponPriceMarketingDiscount, temSum);
                     orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
                 } else {
-                    BigDecimal goodDiscountPrice = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPriceMarketingDiscount,2), couponPriceMarketingDiscount);
+                    BigDecimal goodDiscountPrice = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPriceMarketingDiscount, 2), couponPriceMarketingDiscount);
                     orderProviderGoodRecord.setDiscountCoupon(goodDiscountPrice);
-                    temSum = NumberUtil.add(goodDiscountPrice,temSum);
+                    temSum = NumberUtil.add(goodDiscountPrice, temSum);
                 }
             }
             iOrderProviderGoodRecordService.updateBatchById(discountOrderProviderGoodRecords);
@@ -1140,12 +1138,12 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
             for (int i = 0; i < allOrderProviderGoodRecords.size(); i++) {
                 OrderProviderGoodRecord orderProviderGoodRecord = allOrderProviderGoodRecords.get(i);
                 if (i == allOrderProviderGoodRecords.size() - 1) {
-                    BigDecimal goodActualPayment = NumberUtil.sub(orderList.getActualPayment(),temSum);
+                    BigDecimal goodActualPayment = NumberUtil.sub(orderList.getActualPayment(), temSum);
                     orderProviderGoodRecord.setActualPayment(goodActualPayment);
                 } else {
                     BigDecimal goodActualPayment = NumberUtil.sub(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPrice), orderList.getActualPayment());
                     orderProviderGoodRecord.setActualPayment(goodActualPayment);
-                    temSum = NumberUtil.add(temSum,goodActualPayment);
+                    temSum = NumberUtil.add(temSum, goodActualPayment);
                 }
             }
             iOrderProviderGoodRecordService.updateBatchById(allOrderProviderGoodRecords);
@@ -1174,7 +1172,6 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         } else {
             orderList.setLatitude(new BigDecimal(0));
         }
-
 
 
         //分销佣金
@@ -1233,32 +1230,32 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         }
 
         //实际分销支出
-        BigDecimal actualDistribution=new BigDecimal(0);
+        BigDecimal actualDistribution = new BigDecimal(0);
 
         /**
          * 订单是否分销
          */
-        boolean distributionCommission=true;
+        boolean distributionCommission = true;
 
 
         //修改中奖拼团记录信息
-        if(marketingGroupRecordId!=null){
-            MarketingGroupRecord marketingGroupRecord=iMarketingGroupRecordService.getById(marketingGroupRecordId);
+        if (marketingGroupRecordId != null) {
+            MarketingGroupRecord marketingGroupRecord = iMarketingGroupRecordService.getById(marketingGroupRecordId);
             marketingGroupRecord.setOrderListId(orderList.getId());
             marketingGroupRecord.setStatus("1");
             marketingGroupRecord.setUserTime(new Date());
             iMarketingGroupRecordService.saveOrUpdate(marketingGroupRecord);
             //规则信息
-            MarketingGroupBaseSetting marketingGroupBaseSetting=iMarketingGroupBaseSettingService.getOne(new LambdaQueryWrapper<>());
+            MarketingGroupBaseSetting marketingGroupBaseSetting = iMarketingGroupBaseSettingService.getOne(new LambdaQueryWrapper<>());
             //中奖拼团不参与分销
-            if(marketingGroupBaseSetting.getDistributionCommission().equals("0")){
-                distributionCommission=false;
+            if (marketingGroupBaseSetting.getDistributionCommission().equals("0")) {
+                distributionCommission = false;
             }
         }
 
         if (orderList.getWelfarePayments().doubleValue() > 0) {
             //扣除积分
-            iMemberWelfarePaymentsService.subtractWelfarePayments(memberList.getId(),orderList.getWelfarePayments(),"6",orderList.getOrderNo(),"");
+            iMemberWelfarePaymentsService.subtractWelfarePayments(memberList.getId(), orderList.getWelfarePayments(), "6", orderList.getOrderNo(), "");
 
             log.info("形成待支付订单扣减福利金：" + orderList.getWelfarePayments() + "--会员福利金：" + memberList.getWelfarePayments() + "--会员：" + memberList.getNickName() + "会员等级折扣优惠价格:" + orderList.getMemberDiscountPriceTotal());
         }
@@ -1267,19 +1264,19 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
         //计算分销利润
         //普通订单参与分层
-        if (model == 0&&distributionCommission) {
+        if (model == 0 && distributionCommission) {
             //分配佣金（冻结）
 
             //归属店铺查询条件
             LambdaQueryWrapper<StoreManage> storeManageLambdaQueryWrapper = new LambdaQueryWrapper<StoreManage>()
                     .eq(StoreManage::getSysUserId, memberList.getSysUserId())
                     .in(StoreManage::getPayStatus, "1", "2");
-                //获取资金分配比例
-                MarketingDistributionSetting marketingDistributionSetting = iMarketingDistributionSettingService.getOne(new LambdaQueryWrapper<MarketingDistributionSetting>()
-                        .eq(MarketingDistributionSetting::getStatus,"1")
-                        .orderByDesc(MarketingDistributionSetting::getCreateTime)
-                        .last("limit 1"));
-            if (marketingDistributionSetting!=null) {
+            //获取资金分配比例
+            MarketingDistributionSetting marketingDistributionSetting = iMarketingDistributionSettingService.getOne(new LambdaQueryWrapper<MarketingDistributionSetting>()
+                    .eq(MarketingDistributionSetting::getStatus, "1")
+                    .orderByDesc(MarketingDistributionSetting::getCreateTime)
+                    .last("limit 1"));
+            if (marketingDistributionSetting != null) {
                 //启用状态
                 if (marketingDistributionSetting.getStatus().equals("1") && orderList.getDistributionCommission().doubleValue() > 0) {
                     if (StringUtils.isNotBlank(memberList.getPromoterType()) && StringUtils.isNotBlank(memberList.getPromoter())) {
@@ -1311,7 +1308,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                         memberRechargeRecord.setTMemberListId(orderList.getMemberListId());
                                         iMemberRechargeRecordService.save(memberRechargeRecord);
                                         //加入实际分销金额
-                                        actualDistribution=actualDistribution.add(memberRechargeRecord.getAmount());
+                                        actualDistribution = actualDistribution.add(memberRechargeRecord.getAmount());
                                         for (Map<String, Object> gm : goodsMap) {
                                             //建立供应商商品快照
                                             List<Map<String, Object>> provideGoodsList = (List<Map<String, Object>>) gm.get("provideGoodsList");
@@ -1358,7 +1355,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                         memberRechargeRecord.setTMemberListId(orderList.getMemberListId());
                                         iMemberRechargeRecordService.save(memberRechargeRecord);
                                         //加入实际分销金额
-                                        actualDistribution=actualDistribution.add(memberRechargeRecord.getAmount());
+                                        actualDistribution = actualDistribution.add(memberRechargeRecord.getAmount());
                                         for (Map<String, Object> gm : goodsMap) {
                                             //建立供应商商品快照
                                             List<Map<String, Object>> provideGoodsList = (List<Map<String, Object>>) gm.get("provideGoodsList");
@@ -1389,27 +1386,27 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                     if (firstMemberList.getPromoterType().equals("1")) {
                                         MemberList secondMemberList = null;
                                         //非二级延伸
-                                        if(marketingDistributionSetting.getSecondaryStretching().equals("0")){
-                                            secondMemberList=iMemberListService.getById(firstMemberList.getPromoter());
+                                        if (marketingDistributionSetting.getSecondaryStretching().equals("0")) {
+                                            secondMemberList = iMemberListService.getById(firstMemberList.getPromoter());
                                         }
                                         //二级延伸，确定是会员
-                                        if(marketingDistributionSetting.getSecondaryStretching().equals("1")){
-                                            secondMemberList=iMemberListService.getById(firstMemberList.getPromoter());
-                                            while (true){
+                                        if (marketingDistributionSetting.getSecondaryStretching().equals("1")) {
+                                            secondMemberList = iMemberListService.getById(firstMemberList.getPromoter());
+                                            while (true) {
                                                 //二级是会员身份就停止
-                                                if(secondMemberList.getMemberType().equals("1")){
+                                                if (secondMemberList.getMemberType().equals("1")) {
                                                     break;
                                                 }
                                                 //为空
-                                                if(oConvertUtils.isNotEmpty(secondMemberList)){
+                                                if (oConvertUtils.isNotEmpty(secondMemberList)) {
                                                     break;
                                                 }
                                                 //上一级数据不会会员
-                                                if(!secondMemberList.getPromoterType().equals("1")){
-                                                    secondMemberList=null;
+                                                if (!secondMemberList.getPromoterType().equals("1")) {
+                                                    secondMemberList = null;
                                                     break;
                                                 }
-                                                secondMemberList=iMemberListService.getById(secondMemberList.getPromoter());
+                                                secondMemberList = iMemberListService.getById(secondMemberList.getPromoter());
                                             }
                                         }
                                         /*if (marketingDistributionSetting.getIsThreshold().equals("0") && oConvertUtils.isNotEmpty(secondMemberList)) {*/
@@ -1435,7 +1432,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                                     memberRechargeRecord.setTMemberListId(orderList.getMemberListId());
                                                     iMemberRechargeRecordService.save(memberRechargeRecord);
                                                     //加入实际分销金额
-                                                    actualDistribution=actualDistribution.add(memberRechargeRecord.getAmount());
+                                                    actualDistribution = actualDistribution.add(memberRechargeRecord.getAmount());
                                                     for (Map<String, Object> gm : goodsMap) {
                                                         //建立供应商商品快照
                                                         List<Map<String, Object>> provideGoodsList = (List<Map<String, Object>>) gm.get("provideGoodsList");
@@ -1451,7 +1448,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                                             memberDistributionRecord.setGoodName(goodList.getGoodName());
                                                             memberDistributionRecord.setGoodSpecification(goodSpecification.getSpecification());
                                                             memberDistributionRecord.setCommission(((BigDecimal) p.get("price")).multiply((BigDecimal) p.get("quantity"))
-                                                                    .divide(orderList.getGoodsTotal(), 2,RoundingMode.DOWN)
+                                                                    .divide(orderList.getGoodsTotal(), 2, RoundingMode.DOWN)
                                                                     .multiply(memberRechargeRecord.getAmount()));
                                                             iMemberDistributionRecordService.save(memberDistributionRecord);
 
@@ -1482,7 +1479,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                                     memberRechargeRecord.setTMemberListId(orderList.getMemberListId());
                                                     iMemberRechargeRecordService.save(memberRechargeRecord);
                                                     //加入实际分销金额
-                                                    actualDistribution=actualDistribution.add(memberRechargeRecord.getAmount());
+                                                    actualDistribution = actualDistribution.add(memberRechargeRecord.getAmount());
                                                     for (Map<String, Object> gm : goodsMap) {
                                                         //建立供应商商品快照
                                                         List<Map<String, Object>> provideGoodsList = (List<Map<String, Object>>) gm.get("provideGoodsList");
@@ -1534,7 +1531,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                             storeRechargeRecord.setTradeNo(orderList.getOrderNo());
                             iStoreRechargeRecordService.save(storeRechargeRecord);
                             //加入实际分销金额
-                            actualDistribution=actualDistribution.add(storeRechargeRecord.getAmount());
+                            actualDistribution = actualDistribution.add(storeRechargeRecord.getAmount());
 
                             log.info("形成待支付订单归属店铺：" + storeRechargeRecord.getAmount() + "--店铺冻结金额：" + storeManage.getAccountFrozen() + "--店铺：" + storeManage.getStoreName());
                         }
@@ -1562,7 +1559,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                             storeRechargeRecord.setTradeNo(orderList.getOrderNo());
                             iStoreRechargeRecordService.save(storeRechargeRecord);
                             //加入实际分销金额
-                            actualDistribution=actualDistribution.add(storeRechargeRecord.getAmount());
+                            actualDistribution = actualDistribution.add(storeRechargeRecord.getAmount());
 
                             log.info("形成待支付订单渠道店铺：" + storeRechargeRecord.getAmount() + "--店铺冻结金额：" + storeManage.getAccountFrozen() + "--店铺：" + storeManage.getStoreName());
                         }
@@ -1577,27 +1574,27 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
             //加盟商
             StoreManage storeManage = iStoreManageService.getOne(storeManageLambdaQueryWrapper);
-            if (oConvertUtils.isNotEmpty(storeManage)){
+            if (oConvertUtils.isNotEmpty(storeManage)) {
                 if (storeManage.getPromoterType().equals("3") || StringUtils.isNotBlank(storeManage.getAllianceUserId())) {
                     //处理加盟商业务
                     AllianceManage allianceManage = iAllianceManageService.getOne(new LambdaUpdateWrapper<AllianceManage>()
-                            .eq(AllianceManage::getDelFlag,"0")
-                            .eq(AllianceManage::getStatus,"1")
+                            .eq(AllianceManage::getDelFlag, "0")
+                            .eq(AllianceManage::getStatus, "1")
                             .eq(AllianceManage::getSysUserId, storeManage.getAllianceUserId()));
-                    if (oConvertUtils.isNotEmpty(allianceManage)){
+                    if (oConvertUtils.isNotEmpty(allianceManage)) {
                         //独享控制
                         if (allianceManage.getProfitType().equals("0")) {
                             isExecute = false;
                         }
-                        if (oConvertUtils.isNotEmpty(allianceManage) && allianceManage.getOrderCommissionRate().doubleValue() > 0 && allianceManage.getStatus().equals("1")&&orderList.getDistributionCommission().doubleValue()>0) {
+                        if (oConvertUtils.isNotEmpty(allianceManage) && allianceManage.getOrderCommissionRate().doubleValue() > 0 && allianceManage.getStatus().equals("1") && orderList.getDistributionCommission().doubleValue() > 0) {
                             //代理余额明细
                             AllianceRechargeRecord allianceRechargeRecord = new AllianceRechargeRecord();
                             allianceRechargeRecord.setSysUserId(allianceManage.getSysUserId());
                             allianceRechargeRecord.setPayType("0");
                             allianceRechargeRecord.setGoAndCome("0");
-                            if (allianceManage.getProfitType().equals("0")){
+                            if (allianceManage.getProfitType().equals("0")) {
                                 allianceRechargeRecord.setAmount(orderList.getDistributionCommission().multiply(allianceManage.getOrderCommissionRate().divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
-                            }else {
+                            } else {
                                 allianceRechargeRecord.setAmount(orderList.getDistributionCommission().multiply(allianceManage.getOrderCommissionRate().multiply(allianceManage.getFranchiseeRatio().divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN).divide(new BigDecimal(100))).setScale(2, RoundingMode.DOWN));
                             }
                             allianceRechargeRecord.setOrderNo(OrderNoUtils.getOrderNo());
@@ -1608,7 +1605,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                             allianceRechargeRecord.setRemark("订单交易 [" + orderList.getOrderNo() + "]");
                             iAllianceRechargeRecordService.save(allianceRechargeRecord);
                             //加入实际分销金额
-                            actualDistribution=actualDistribution.add(allianceRechargeRecord.getAmount());
+                            actualDistribution = actualDistribution.add(allianceRechargeRecord.getAmount());
                             log.info("形成待支付订单加盟商分配：" + allianceRechargeRecord.getAmount() + "--加盟商冻结金额：" + allianceManage.getAccountFrozen() + "--加盟商：" + allianceManage.getId());
                         }
                     }
@@ -1636,16 +1633,16 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                         }
                         sysAreas.forEach(sid -> {
                             SysArea sysArea1 = iSysAreaService.getById(sid);
-                            if(sysArea1.getLeve()==2&&oConvertUtils.isNotEmpty(storeManage)){
+                            if (sysArea1.getLeve() == 2 && oConvertUtils.isNotEmpty(storeManage)) {
                                 AllianceManage allianceManage = iAllianceManageService.getOne(new LambdaUpdateWrapper<AllianceManage>()
-                                        .eq(AllianceManage::getDelFlag,"0")
-                                        .eq(AllianceManage::getStatus,"1")
+                                        .eq(AllianceManage::getDelFlag, "0")
+                                        .eq(AllianceManage::getStatus, "1")
                                         .eq(AllianceManage::getSysUserId, storeManage.getAllianceUserId()));
-                                if (oConvertUtils.isNotEmpty(allianceManage)){
-                                    if (allianceManage.getMutualAdvantages().equals("0")){
+                                if (oConvertUtils.isNotEmpty(allianceManage)) {
+                                    if (allianceManage.getMutualAdvantages().equals("0")) {
                                         if (StringUtils.isNotBlank(sysArea1.getAgencyManageId())) {
                                             AgencyManage agencyManage = iAgencyManageService.getById(sysArea1.getAgencyManageId());
-                                            if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1")&&orderList.getDistributionCommission().doubleValue()>0) {
+                                            if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1") && orderList.getDistributionCommission().doubleValue() > 0) {
                                                 //代理余额明细
                                                 AgencyRechargeRecord agencyRechargeRecord = new AgencyRechargeRecord();
                                                 agencyRechargeRecord.setSysUserId(agencyManage.getSysUserId());
@@ -1664,12 +1661,12 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                                 log.info("形成待支付订单代理分配：" + agencyRechargeRecord.getAmount() + "--代理冻结金额：" + agencyManage.getAccountFrozen() + "--代理：" + agencyManage.getId());
                                             }
                                         }
-                                    }else {
-                                        if (StringUtils.isNotBlank(allianceManage.getCountyId())){
+                                    } else {
+                                        if (StringUtils.isNotBlank(allianceManage.getCountyId())) {
                                             SysArea area = iSysAreaService.getById(allianceManage.getCountyId());
-                                            if (StringUtils.isNotBlank(area.getAgencyManageId())){
+                                            if (StringUtils.isNotBlank(area.getAgencyManageId())) {
                                                 AgencyManage agencyManage = iAgencyManageService.getById(area.getAgencyManageId());
-                                                if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1")&&orderList.getDistributionCommission().doubleValue()>0) {
+                                                if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1") && orderList.getDistributionCommission().doubleValue() > 0) {
                                                     //代理余额明细
                                                     AgencyRechargeRecord agencyRechargeRecord = new AgencyRechargeRecord();
                                                     agencyRechargeRecord.setSysUserId(agencyManage.getSysUserId());
@@ -1690,10 +1687,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                         }
                                     }
                                 }
-                            }else {
+                            } else {
                                 if (StringUtils.isNotBlank(sysArea1.getAgencyManageId())) {
                                     AgencyManage agencyManage = iAgencyManageService.getById(sysArea1.getAgencyManageId());
-                                    if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1")&&orderList.getDistributionCommission().doubleValue()>0) {
+                                    if (agencyManage != null && agencyManage.getOrderCommissionRate().doubleValue() > 0 && agencyManage.getStatus().equals("1") && orderList.getDistributionCommission().doubleValue() > 0) {
                                         //代理余额明细
                                         AgencyRechargeRecord agencyRechargeRecord = new AgencyRechargeRecord();
                                         agencyRechargeRecord.setSysUserId(agencyManage.getSysUserId());
@@ -1732,21 +1729,21 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
     public Boolean paySuccessOrder(String id, int model, PayOrderCarLog payOrderCarLog) {
         //修改订单成功状态信息
         OrderList orderList = this.getById(id);
-        if(orderList.getStatus().equals("1")){
+        if (orderList.getStatus().equals("1")) {
             return true;
         }
 
         orderList.setStatus("1");
         orderList.setModePayment(payOrderCarLog.getPayModel());//支付方式的设定
-        log.info("支付成功后日志内容："+JSON.toJSONString(payOrderCarLog));
-        BigDecimal integralValue=iMarketingWelfarePaymentsSettingService.getIntegralValue();
-        if(payOrderCarLog.getPayPrice().doubleValue()!=0) {
+        log.info("支付成功后日志内容：" + JSON.toJSONString(payOrderCarLog));
+        BigDecimal integralValue = iMarketingWelfarePaymentsSettingService.getIntegralValue();
+        if (payOrderCarLog.getPayPrice().doubleValue() != 0) {
             orderList.setPayPrice(payOrderCarLog.getPayPrice());
         }
-        if(payOrderCarLog.getBalance().doubleValue()!=0) {
+        if (payOrderCarLog.getBalance().doubleValue() != 0) {
             orderList.setBalance(payOrderCarLog.getBalance());
         }
-        if(payOrderCarLog.getWelfarePayments().doubleValue()!=0) {
+        if (payOrderCarLog.getWelfarePayments().doubleValue() != 0) {
             orderList.setPayWelfarePayments(payOrderCarLog.getWelfarePayments());
             orderList.setPayWelfarePaymentsPrice(orderList.getPayWelfarePayments().multiply(integralValue));
         }
@@ -1759,7 +1756,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         this.saveOrUpdate(orderList);
 
         //加盟专区分配
-        if(orderList.getOrderType().equals("7")){
+        if (orderList.getOrderType().equals("7")) {
             iMarketingLeagueBuyerRecordService.allocation(orderList);
         }
         //修改子订单状态
@@ -1903,16 +1900,16 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
 
         }
         //免单专区订单
-        if(model==1){
-            MarketingFreeOrder marketingFreeOrder=iMarketingFreeOrderService.getOne(new LambdaQueryWrapper<MarketingFreeOrder>()
-                    .eq(MarketingFreeOrder::getOrderListId,orderList.getId()));
+        if (model == 1) {
+            MarketingFreeOrder marketingFreeOrder = iMarketingFreeOrderService.getOne(new LambdaQueryWrapper<MarketingFreeOrder>()
+                    .eq(MarketingFreeOrder::getOrderListId, orderList.getId()));
             marketingFreeOrder.setPayTime(orderList.getPayTime());
             marketingFreeOrder.setPayType("1");
             iMarketingFreeOrderService.saveOrUpdate(marketingFreeOrder);
         }
 
         //生成平台利润和平台资金
-        iSysBlanceService.add(orderList.getRetainedProfits(),"0",orderList.getOrderNo());
+        iSysBlanceService.add(orderList.getRetainedProfits(), "0", orderList.getOrderNo());
         return true;
     }
 
@@ -1943,15 +1940,15 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         orderList.setStatus("4");
         this.saveOrUpdate(orderList);
         //如果是中奖拼团在代付款的时候取消归还中奖拼团类型
-        if(orderList.getStatus().equals("0")&&orderList.getOrderType().equals("4")){
-            MarketingGroupRecord marketingGroupRecord=iMarketingGroupRecordService.getById(orderList.getActiveId());
+        if (orderList.getStatus().equals("0") && orderList.getOrderType().equals("4")) {
+            MarketingGroupRecord marketingGroupRecord = iMarketingGroupRecordService.getById(orderList.getActiveId());
             marketingGroupRecord.setOrderListId(null);
             marketingGroupRecord.setStatus("0");
             marketingGroupRecord.setUserTime(null);
             iMarketingGroupRecordService.saveOrUpdate(marketingGroupRecord);
         }
         //退回积分
-        iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(),orderList.getWelfarePayments(),"17",orderList.getOrderNo(),"");
+        iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(), orderList.getWelfarePayments(), "17", orderList.getOrderNo(), "");
 
 
         /*退回优惠券*/
@@ -2040,8 +2037,8 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
     @Override
     @Transactional
     public Result<?> refundAndAbrogateOrder(String id, String closeExplain, String closeType) {
-        OrderList orderList=this.getById(id);
-        if(orderList.getStatus().equals("0")||orderList.getStatus().equals("4")){
+        OrderList orderList = this.getById(id);
+        if (orderList.getStatus().equals("0") || orderList.getStatus().equals("4")) {
             return Result.error("订单状态不正确");
         }
         if (orderList.getPayPrice().doubleValue() > 0.0D) {
@@ -2069,11 +2066,11 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         }
         this.saveOrUpdate(orderList);
         //退回余额
-        iMemberListService.addBlance(orderList.getMemberListId(),orderList.getBalance(),orderList.getOrderNo(),"2");
+        iMemberListService.addBlance(orderList.getMemberListId(), orderList.getBalance(), orderList.getOrderNo(), "2");
         //退回交易积分
-        iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(),orderList.getPayWelfarePayments(),"20",orderList.getOrderNo(),"");
+        iMemberWelfarePaymentsService.addWelfarePayments(orderList.getMemberListId(), orderList.getPayWelfarePayments(), "20", orderList.getOrderNo(), "");
         //取消订单
-        this.abrogateOrder(id,closeExplain,closeType);
+        this.abrogateOrder(id, closeExplain, closeType);
 
         return Result.ok("退款成功");
     }
@@ -2082,7 +2079,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
     @Transactional
     public void affirmOrder(String id) {
         this.updateById(new OrderList().setId(id).setStatus("3").setDeliveryTime(new Date()));
-        iOrderProviderListService.update(new OrderProviderList().setStatus("3"),new LambdaQueryWrapper<OrderProviderList>().eq(OrderProviderList::getOrderListId,id));
+        iOrderProviderListService.update(new OrderProviderList().setStatus("3"), new LambdaQueryWrapper<OrderProviderList>().eq(OrderProviderList::getOrderListId, id));
     }
 
     /**
@@ -2477,7 +2474,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         });
         if (orderList.getDistributionCommission().doubleValue() > 0) {
             MarketingDistributionSetting marketingDistributionSetting = iMarketingDistributionSettingService.getOne(new LambdaQueryWrapper<MarketingDistributionSetting>()
-                    .eq(MarketingDistributionSetting::getStatus,"1")
+                    .eq(MarketingDistributionSetting::getStatus, "1")
                     .orderByDesc(MarketingDistributionSetting::getCreateTime)
                     .last("limit 1"));
 
@@ -2497,18 +2494,18 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     iMemberListService.saveOrUpdate(distributionMember
                             .setAccountFrozen(distributionMember.getAccountFrozen().subtract(mrrs.getAmount())));
 
-                        //将资金记录交易类型改为交易完成
-                        iMemberRechargeRecordService.saveOrUpdate(mrrs
-                                .setTradeStatus("5"));
+                    //将资金记录交易类型改为交易完成
+                    iMemberRechargeRecordService.saveOrUpdate(mrrs
+                            .setTradeStatus("5"));
                     //分销获取金额
-                    if(marketingDistributionSetting.getCommissionType().equals("0")) {
-                        iMemberListService.addBlance(mrrs.getMemberListId(),mrrs.getAmount(),mrrs.getOrderNo(),"3");
+                    if (marketingDistributionSetting.getCommissionType().equals("0")) {
+                        iMemberListService.addBlance(mrrs.getMemberListId(), mrrs.getAmount(), mrrs.getOrderNo(), "3");
                     }
 
                     // 分销获取积分
-                    if(marketingDistributionSetting.getCommissionType().equals("1")) {
-                        BigDecimal integralValue=iMarketingWelfarePaymentsSettingService.getIntegralValue();
-                        iMemberWelfarePaymentsService.addWelfarePayments(mrrs.getMemberListId(),mrrs.getAmount().divide(integralValue,2,RoundingMode.DOWN),"19",mrrs.getOrderNo(),"");
+                    if (marketingDistributionSetting.getCommissionType().equals("1")) {
+                        BigDecimal integralValue = iMarketingWelfarePaymentsSettingService.getIntegralValue();
+                        iMemberWelfarePaymentsService.addWelfarePayments(mrrs.getMemberListId(), mrrs.getAmount().divide(integralValue, 2, RoundingMode.DOWN), "19", mrrs.getOrderNo(), "");
                     }
 
                 });
@@ -2688,8 +2685,8 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                     .eq(MemberWelfarePayments::getMemberListId, orderList.getMemberListId())
                     .eq(MemberWelfarePayments::getIsFreeze, "2")
                     .eq(MemberWelfarePayments::getWeType, "0"));
-            if (memberWelfarePayments.size()>0) {
-                memberWelfarePayments.forEach(mwps->{
+            if (memberWelfarePayments.size() > 0) {
+                memberWelfarePayments.forEach(mwps -> {
                     //退还用户福利金
                     MemberList memberList = iMemberListService.getById(mwps.getMemberListId());
                     memberList.setWelfarePayments(memberList.getWelfarePayments().add(mwps.getBargainPayments()));
@@ -3013,8 +3010,8 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
                             orderRefundListLambdaQueryWrapper
                                     .eq(OrderRefundList::getOrderGoodRecordId, orderProviderGoodRecord.getId())
-                                    .in(OrderRefundList::getRefundType, "0")
-                                    .in(OrderRefundList::getStatus, "0", "3", "4", "5");
+                                    .in(OrderRefundList::getRefundType, "0", "1")
+                                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
                             if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
                                 throw new JeecgBootException("售后待处理订单，处理售后才可进行发货");
                             }
@@ -3027,7 +3024,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 }
                 //调用方法
                 //是否全部发货,修改orderList的状态内容
-                if (org.apache.commons.lang.StringUtils.isNotBlank(orderProviderList.getId())){
+                if (org.apache.commons.lang.StringUtils.isNotBlank(orderProviderList.getId())) {
                     orderProviderListService.ShipmentOrderModification(orderProviderList);
                 }
             }
@@ -3044,7 +3041,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
      * @param trackingNumber    快递单号
      */
     public String addorderProviderList(OrderProviderList orderProviderList, String logisticsCompany, String trackingNumber) {
-        if (StrUtil.hasBlank(logisticsCompany,trackingNumber)) {
+        if (StrUtil.hasBlank(logisticsCompany, trackingNumber)) {
             throw new JeecgBootException("物流公司/快递单号不能为空~");
         }
         //获取1688订单物流信息
