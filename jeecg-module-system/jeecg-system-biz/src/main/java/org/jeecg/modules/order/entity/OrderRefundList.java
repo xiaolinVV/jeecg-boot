@@ -71,6 +71,22 @@ public class OrderRefundList implements Serializable {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty(value = "修改时间")
     private java.util.Date updateTime;
+
+    /**
+     * 余额到账时间
+     */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty(value = "余额到账时间")
+    private java.util.Date balanceReceiveTime;
+    /**
+     * 微信到账时间
+     */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty(value = "微信到账时间")
+    private java.util.Date huifuReceiveTime;
+
     /**
      * 创建年
      */

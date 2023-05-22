@@ -64,9 +64,13 @@ create table order_refund_list
     actual_refund_discount_welfare_payments    decimal(20, 2) default 0.00 null comment '实际退还抵扣的福利金（专区商品）',
     welfare_payments_price                     decimal(20, 2) default 0.00 null comment '订单商品抵扣福利金价值（专区商品）',
     welfare_payments                           decimal(20, 2) default 0.00 null comment '订单商品抵扣福利金（专区商品）',
-    actual_refund_marketing_discount_coupon_id varchar(500)   default ''   null comment '实际退款优惠券记录id'
+    actual_refund_marketing_discount_coupon_id varchar(500)   default ''   null comment '实际退款优惠券记录id',
+    balance_receive_time                       datetime                    null comment '余额到账时间',
+    huifu_receive_time                         datetime                    null comment '微信到账时间'
 )
     comment 'order_refund_list' charset = utf8mb4;
+
+
 
 
 

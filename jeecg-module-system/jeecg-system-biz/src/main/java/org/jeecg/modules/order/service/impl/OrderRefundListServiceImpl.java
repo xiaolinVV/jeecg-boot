@@ -235,6 +235,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (addBlance) {
                 orderRefundList.setActualRefundBalance(actualRefundBalance);
                 orderRefundList.setStatus("4");
+                orderRefundList.setBalanceReceiveTime(new Date());
                 OrderProviderGoodRecord orderProviderGoodRecord = new OrderProviderGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
                 orderProviderGoodRecordService.updateById(orderProviderGoodRecord);
             }
@@ -331,6 +332,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (addBlance) {
                 orderRefundList.setActualRefundBalance(actualRefundBalance);
                 orderRefundList.setStatus("4");
+                orderRefundList.setBalanceReceiveTime(new Date());
                 OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(orderRefundList.getOrderGoodRecordId()).setStatus("3");
                 orderStoreGoodRecordService.updateById(orderStoreGoodRecord);
             }

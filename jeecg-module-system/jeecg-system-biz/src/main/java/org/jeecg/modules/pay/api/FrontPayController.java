@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -321,6 +322,7 @@ public class FrontPayController {
                     orderRefundList.setActualRefundPrice(refund_amt);
                     orderRefundList.setStatus("4");
                     orderRefundList.setRefundJson(data);
+                    orderRefundList.setHuifuReceiveTime(new Date());
                     orderRefundListService.updateById(orderRefundList);
                     //判断当前商品所有金额全部退款后，退还优惠券
                     if (StrUtil.equals(orderRefundList.getIsPlatform(), "0")) {
