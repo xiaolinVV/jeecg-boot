@@ -219,8 +219,17 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             BigDecimal welfarePayments = orderRefundList.getWelfarePayments();
             BigDecimal goodRecordAmount = orderRefundList.getGoodRecordAmount();
             List<OrderRefundList> orderRefundListList = getOrderRefundListByMemberIdAndOrderId(orderRefundList.getMemberId(), orderRefundList.getOrderListId());
-            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getActualRefundDiscountWelfarePayments).reduce(BigDecimal.ZERO, NumberUtil::add);
-            BigDecimal count = orderRefundListList.stream().filter(refundList -> StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId()) && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal decimal = orderRefundListList.stream().filter(refundList -> {
+                        return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                                && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0
+                                && StrUtil.equals(refundList.getStatus(),"4");
+                    }
+            ).map(OrderRefundList::getActualRefundDiscountWelfarePayments).reduce(BigDecimal.ZERO, NumberUtil::add);
+            BigDecimal count = orderRefundListList.stream().filter(refundList -> {
+                return StrUtil.equals(refundList.getOrderGoodRecordId(), orderRefundList.getOrderGoodRecordId())
+                        && refundList.getActualRefundDiscountWelfarePayments().compareTo(BigDecimal.ZERO) > 0
+                        && StrUtil.equals(refundList.getStatus(),"4");
+            }).map(OrderRefundList::getRefundAmount).reduce(BigDecimal.ZERO, NumberUtil::add);
             if (NumberUtil.sub(goodRecordAmount, count).compareTo(new BigDecimal("1")) == 0) {
                 orderRefundList.setActualRefundDiscountWelfarePayments(NumberUtil.sub(welfarePayments, decimal));
             } else {
