@@ -151,4 +151,9 @@ public class OrderStoreGoodRecord {
 	 * 订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功
 	 */
 	private String status;
+
+	/**
+	 * 赠送的积分
+	 */
+	private BigDecimal giveWelfarePayments;
 }

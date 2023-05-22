@@ -16,7 +16,9 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.modules.marketing.service.IMarketingDiscountCouponService;
 import org.jeecg.modules.marketing.service.IMarketingStoreGiftCardMemberListService;
+import org.jeecg.modules.member.entity.MemberShippingAddress;
 import org.jeecg.modules.member.service.IMemberListService;
+import org.jeecg.modules.member.service.IMemberShippingAddressService;
 import org.jeecg.modules.member.service.IMemberWelfarePaymentsService;
 import org.jeecg.modules.order.dto.ApplyOrderRefundDto;
 import org.jeecg.modules.order.dto.OrderRefundListDto;
@@ -98,6 +100,9 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 
     @Autowired
     private ISysDictService sysDictService;
+
+    @Autowired
+    private IMemberShippingAddressService memberShippingAddressService;
 
 
     @Override
@@ -306,7 +311,12 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
 //            if (totalRefundPrice.compareTo(NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO))) > 0) {
 //                throw new JeecgBootException("退款总金额：" + totalRefundPrice + " 大于实际可退款金额：" + NumberUtil.sub(orderRefundList.getGoodRecordActualPayment(), refundPriceMap.getOrDefault(orderRefundList.getOrderGoodRecordId(), BigDecimal.ZERO)) + ",无法操作");
 //            }
-        // TODO: 2023/5/21 设置了下单送福利金的店铺，店铺商品发生退款后，福利金没有回收 @张少林
+        // todo 设置了下单送福利金的店铺，店铺商品发生退款后，福利金没有回收 @张少林
+        if (orderRefundList.getGoodRecordGiveWelfarePayments().compareTo(BigDecimal.ZERO) > 0) {
+
+        }
+
+
         // 优先退礼品卡
         if (StrUtil.equals(orderType, "7") && StrUtil.isNotBlank(orderStoreList.getActiveId()) && orderRefundList.getGoodRecordGiftCardCoupon().doubleValue() > 0) {
             //实际支付礼品卡金额
@@ -491,6 +501,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                     .setExchangeGoodSpecification(orderRefundListDto.getExchangeGoodSpecification())
                     .setExchangeMemberShippingAddress(finalExchangeMemberShippingAddressJson)
                     .setIsPlatform(applyOrderRefundDto.getIsPlatform())
+                    .setGoodRecordGiveWelfarePayments(orderStoreGoodRecord.getGiveWelfarePayments())
                     .setGoodRecordMarketingDiscountCouponId(orderStoreGoodRecord.getMarketingDiscountCouponId());
             return orderRefundList;
         }).collect(Collectors.toList());
@@ -753,10 +764,25 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             orderRefundListServiceById.setRefundPrice(refundPrice);
             orderRefundListServiceById.setRefundAmount(refundAmount);
         } else if (StrUtil.equals(refundType, "2")) {
-//            if (StringUtils.isBlank(applyOrderRefundDto.getMemberShippingAddressId())) {
-//                throw new JeecgBootException("收货地址id不能为空！！！");
-//            }
-            // TODO: 2023/5/18 换货逻辑修改调整 @张少林
+            if (StringUtils.isBlank(orderRefundList.getMemberShippingAddressId())) {
+                throw new JeecgBootException("收货地址id不能为空！！！");
+            }
+            //查询收货地址
+            MemberShippingAddress memberShippingAddress = memberShippingAddressService.getById(orderRefundList.getMemberShippingAddressId());
+            if (memberShippingAddress == null) {
+                throw new JeecgBootException("收货地址不存在！！！");
+            }
+            if (StrUtil.hasBlank(orderRefundList.getExchangeGoodSpecification(),orderRefundList.getExchangeGoodSpecificationId())) {
+                throw new JeecgBootException("换货商品规格数据不能为空");
+            }
+            // 设置收货地址
+            JSONObject exchangeMemberShippingAddress = new JSONObject();
+            exchangeMemberShippingAddress.put("consignee", memberShippingAddress.getLinkman());
+            exchangeMemberShippingAddress.put("contactNumber", memberShippingAddress.getPhone());
+            exchangeMemberShippingAddress.put("shippingAddress", memberShippingAddress.getAreaExplan() + memberShippingAddress.getAreaAddress());
+            exchangeMemberShippingAddress.put("houseNumber", memberShippingAddress.getHouseNumber());
+            String exchangeMemberShippingAddressJson = exchangeMemberShippingAddress.toJSONString();
+            orderRefundList.setExchangeMemberShippingAddress(exchangeMemberShippingAddressJson);
         }
 
 

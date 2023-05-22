@@ -2,46 +2,67 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jeecg.modules.order.mapper.OrderStoreGoodRecordMapper">
     <select id="getOrderStoreGoodRecordByOrderId" resultType="map">
-        SELECT id,main_picture AS mainPicture,good_name AS goodName,specification ,price,amount,customary_dues as customaryDues, actual_payment as actualPayment,marketing_discount_coupon_id as marketingDiscountCouponId,good_store_list_id as goodId,good_store_specification_id as specificationId,coupon as discountCoupon,gift_card_coupon as giftCardCoupon, status as  status FROM `order_store_good_record`
-        WHERE order_store_sub_list_id IN(SELECT id FROM `order_store_sub_list` WHERE order_store_list_id=#{orderId})
-
+        SELECT id,
+               main_picture                 AS mainPicture,
+               good_name                    AS goodName,
+               specification,
+               price,
+               amount,
+               customary_dues               as customaryDues,
+               actual_payment               as actualPayment,
+               marketing_discount_coupon_id as marketingDiscountCouponId,
+               good_store_list_id           as goodId,
+               good_store_specification_id  as specificationId,
+               coupon                       as discountCoupon,
+               gift_card_coupon             as giftCardCoupon,
+               status                       as status,
+                total as total
+        FROM `order_store_good_record`
+        WHERE order_store_sub_list_id IN (SELECT id FROM `order_store_sub_list` WHERE order_store_list_id = #{orderId})
     </select>
     <select id="getOrderStoreGoodRecordByOrderIdAndMarketingDiscountCouponId" resultType="map">
-        SELECT id,main_picture AS mainPicture,good_name AS goodName,specification ,price,amount,customary_dues as customaryDues, actual_payment as actualPayment,marketing_discount_coupon_id as marketingDiscountCouponId FROM `order_store_good_record`
-        WHERE order_store_sub_list_id IN(SELECT id FROM `order_store_sub_list` WHERE order_store_list_id=#{orderId}) and marketing_discount_coupon_id = #{marketingDiscountCouponId}
-
+        SELECT id,
+               main_picture                 AS mainPicture,
+               good_name                    AS goodName,
+               specification,
+               price,
+               amount,
+               customary_dues               as customaryDues,
+               actual_payment               as actualPayment,
+               marketing_discount_coupon_id as marketingDiscountCouponId
+        FROM `order_store_good_record`
+        WHERE order_store_sub_list_id IN (SELECT id FROM `order_store_sub_list` WHERE order_store_list_id = #{orderId})
+          and marketing_discount_coupon_id = #{marketingDiscountCouponId}
     </select>
     <select id="selectOrderStoreSubListId" resultType="org.jeecg.modules.order.entity.OrderStoreGoodRecord">
-        select * from  order_store_good_record  where del_flag = 0
-        <if test="orderStoreSubListId!=null and orderStoreSubListId!=''">
-            and  order_store_sub_list_id = #{orderStoreSubListId}
+        select *
+        from order_store_good_record  where del_flag = 0
+        <if test="orderStoreSubListId != null and orderStoreSubListId != ''">
+            and order_store_sub_list_id = #{orderStoreSubListId}
         </if>
         ORDER BY create_time DESC
     </select>
     <select id="selectOrderStoreSubListIdDTO" resultType="org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO">
-        SELECT osgr.*,gsl.`good_no` AS goodNo FROM  order_store_good_record osgr LEFT JOIN good_store_list gsl ON gsl.id =osgr.good_store_list_id  WHERE osgr.del_flag = 0
-        <if test="orderStoreSubListId!=null and orderStoreSubListId!=''">
-            and  osgr.order_store_sub_list_id = #{orderStoreSubListId}
+        SELECT osgr.*, gsl.`good_no` AS goodNo
+        FROM order_store_good_record osgr
+                 LEFT JOIN good_store_list gsl ON gsl.id = osgr.good_store_list_id  WHERE osgr.del_flag = 0
+        <if test="orderStoreSubListId != null and orderStoreSubListId != ''">
+            and osgr.order_store_sub_list_id = #{orderStoreSubListId}
         </if>
         ORDER BY osgr.create_time DESC
     </select>
     <select id="getOrderStoreGoodRecordByOrderIdEvaluate" resultType="map">
-       SELECT
-          id,
-          main_picture AS mainPicture,
-          good_name AS goodName,
-          specification,
-          5 AS descriptionStar,
-          '' AS content,
-          '' AS pictures
-        FROM
-          `order_store_good_record`
+        SELECT id,
+               main_picture AS mainPicture,
+               good_name    AS goodName,
+               specification,
+               5            AS descriptionStar,
+               ''           AS content,
+               ''           AS pictures
+        FROM `order_store_good_record`
         WHERE order_store_sub_list_id IN
-          (SELECT
-            id
-          FROM
-            `order_store_sub_list`
-          WHERE order_store_list_id = #{orderId});
-
+              (SELECT id
+               FROM `order_store_sub_list`
+               WHERE order_store_list_id = #{orderId});
     </select>
 </mapper>

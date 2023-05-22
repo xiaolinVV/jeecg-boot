@@ -5,10 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -410,6 +407,17 @@ public class OrderRefundList implements Serializable {
      * 实际退款优惠券记录id
      */
     private String actualRefundMarketingDiscountCouponId;
+
+    /**
+     * 商品赠送的积分
+     */
+    private BigDecimal goodRecordGiveWelfarePayments;
+
+    /**
+     * 买家换货：收货地址id
+     */
+    @TableField(exist = false)
+    private String memberShippingAddressId;
 
 
 
