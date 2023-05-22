@@ -119,6 +119,7 @@ public class OrderRefundList implements Serializable {
      */
     @Excel(name = "订单类型；0：普通订单；1：拼团订单；2：抢购订单；3：自选订单；4：兑换订单；数据字典：order_type；", width = 15)
     @ApiModelProperty(value = "订单类型；0：普通订单；1：拼团订单；2：抢购订单；3：自选订单；4：兑换订单；数据字典：order_type；")
+    @Dict(dicCode = "order_type")
     private java.lang.String orderType;
     /**
      * 订单商品记录id
