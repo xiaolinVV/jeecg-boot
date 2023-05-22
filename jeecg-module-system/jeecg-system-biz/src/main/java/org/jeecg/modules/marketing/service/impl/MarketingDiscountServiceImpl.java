@@ -111,18 +111,18 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
                         myCalendar = Calendar.getInstance();
                     }
                     marketingDiscountCoupon.setStartTime(myCalendar.getTime());
-                    Calendar instance = Calendar.getInstance();
+
                     if (marketingDiscount.getMonad().equals("天")) {
-                        instance.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("周")) {
-                        instance.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("月")) {
-                        instance.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
                     }
 
-                    marketingDiscountCoupon.setEndTime(instance.getTime());
+                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
                 }
                 //领券次日起
                 if (marketingDiscount.getVouchersWay().equals("2")) {
@@ -131,20 +131,19 @@ public class MarketingDiscountServiceImpl extends ServiceImpl<MarketingDiscountM
                         myCalendar = Calendar.getInstance();
                     }
                     myCalendar.add(Calendar.DATE, 1);
-                    Calendar instance = Calendar.getInstance();
                     marketingDiscountCoupon.setStartTime(myCalendar.getTime());
 
                     if (marketingDiscount.getMonad().equals("天")) {
-                        instance.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.DATE, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("周")) {
-                        instance.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.WEEK_OF_MONTH, marketingDiscount.getDisData().intValue());
                     }
                     if (marketingDiscount.getMonad().equals("月")) {
-                        instance.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
+                        myCalendar.add(Calendar.MONTH, marketingDiscount.getDisData().intValue());
                     }
 
-                    marketingDiscountCoupon.setEndTime(instance.getTime());
+                    marketingDiscountCoupon.setEndTime(myCalendar.getTime());
                 }
 
                 if (new Date().getTime() >= marketingDiscountCoupon.getStartTime().getTime() && new Date().getTime() <= marketingDiscountCoupon.getEndTime().getTime()) {

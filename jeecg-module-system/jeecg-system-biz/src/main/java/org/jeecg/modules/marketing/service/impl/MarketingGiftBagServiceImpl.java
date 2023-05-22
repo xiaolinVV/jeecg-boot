@@ -575,7 +575,7 @@ public class MarketingGiftBagServiceImpl extends ServiceImpl<MarketingGiftBagMap
         List<MarketingGiftBagCertificate> marketingGiftBagCertificates = iMarketingGiftBagCertificateService.list(marketingGiftBagCertificateQueryWrapper);
         for (MarketingGiftBagCertificate mgc : marketingGiftBagCertificates) {
             //生成兑换券
-            iMarketingCertificateService.generate(mgc.getMarketingCertificateId(), distributionChannel, mgc.getDistributedAmount(), memberId.toString(), true);
+            iMarketingCertificateService.generate(mgc.getMarketingCertificateId(), distributionChannel, mgc.getDistributedAmount(), memberId.toString(), mgc.getValidityType().equals("0")?true:false);
         }
         log.info("礼包购买发放兑换券：" + marketingGiftBagCertificates);
     }
