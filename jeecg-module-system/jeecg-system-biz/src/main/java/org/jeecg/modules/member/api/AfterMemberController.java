@@ -793,7 +793,8 @@ public class AfterMemberController {
         LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
         orderRefundListLambdaQueryWrapper
                 .eq(OrderRefundList::getDelFlag, "0")
-                .eq(OrderRefundList::getMemberId, memberId);
+                .eq(OrderRefundList::getMemberId, memberId)
+                .in(OrderRefundList::getStatus,"0","1","2","3","5");
         long refundCount = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
         map.put("refundCount", refundCount);
 
