@@ -45,13 +45,15 @@ public class AfterMarketingStoreGiftbagListController {
         MarketingStoreGiftbagSetting marketingStoreGiftbagSetting=iMarketingStoreGiftbagSettingService.getMarketingStoreGiftbagSetting();
         resultMap.put("rule",marketingStoreGiftbagSetting.getRule());
         MarketingStoreGiftbagList marketingStoreGiftbagList=iMarketingStoreGiftbagListService.getMarketingStoreGiftbagListByStoreManageId(storeManageId);
-        resultMap.put("price",marketingStoreGiftbagList.getPrice());
-        resultMap.put("detailsFigure",marketingStoreGiftbagList.getDetailsFigure());
-        resultMap.put("id",marketingStoreGiftbagList.getId());
-        resultMap.put("buyCount",iMarketingStoreGiftbagRecordService.count(new LambdaQueryWrapper<MarketingStoreGiftbagRecord>()
-                .eq(MarketingStoreGiftbagRecord::getMarketingStoreGiftbagListId,marketingStoreGiftbagList.getId())
-                .eq(MarketingStoreGiftbagRecord::getMemebrListId,memberId)));
-        resultMap.put("shareFigure",marketingStoreGiftbagList.getShareFigure());
+        if (marketingStoreGiftbagList != null) {
+            resultMap.put("price",marketingStoreGiftbagList.getPrice());
+            resultMap.put("detailsFigure",marketingStoreGiftbagList.getDetailsFigure());
+            resultMap.put("id",marketingStoreGiftbagList.getId());
+            resultMap.put("buyCount",iMarketingStoreGiftbagRecordService.count(new LambdaQueryWrapper<MarketingStoreGiftbagRecord>()
+                    .eq(MarketingStoreGiftbagRecord::getMarketingStoreGiftbagListId,marketingStoreGiftbagList.getId())
+                    .eq(MarketingStoreGiftbagRecord::getMemebrListId,memberId)));
+            resultMap.put("shareFigure",marketingStoreGiftbagList.getShareFigure());
+        }
         return Result.ok(resultMap);
     }
 }
