@@ -114,7 +114,7 @@ public class FrontMarketingMaterialListController {
 //              paramMap.put("strings",stringList);
 //              marketingMaterialPage  =  iMarketingMaterialListService.findMarketingMaterial(page,paramMap);
 //        }else{
-//            paramMap.put("marketingMaterialColumnId",marketingMaterialColumnId);
+            paramMap.put("marketingMaterialColumnId",marketingMaterialColumnId);
             marketingMaterialPage  =  iMarketingMaterialListService.findMarketingMaterial(page,paramMap);
 
 //        }
