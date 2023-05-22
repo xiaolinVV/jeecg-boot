@@ -1,11 +1,13 @@
 package org.jeecg.modules.store.service.impl;
 
+import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Maps;
 import com.ijpay.core.kit.WxPayKit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,7 @@ import org.jeecg.modules.store.dto.StoreManageDTO;
 import org.jeecg.modules.store.entity.*;
 import org.jeecg.modules.store.mapper.StoreManageMapper;
 import org.jeecg.modules.store.service.*;
+import org.jeecg.modules.store.util.StoreUtils;
 import org.jeecg.modules.store.vo.StoreManageVO;
 import org.jeecg.modules.store.vo.StoreWorkbenchVO;
 import org.jeecg.modules.system.entity.SysArea;
@@ -145,6 +148,9 @@ public class StoreManageServiceImpl extends ServiceImpl<StoreManageMapper, Store
 
     @Autowired
     private IStoreSettingService iStoreSettingService;
+
+    @Autowired
+    private StoreUtils storeUtils;
 
 
     @Override
@@ -2036,12 +2042,28 @@ public class StoreManageServiceImpl extends ServiceImpl<StoreManageMapper, Store
 
     @Override
     public IPage<Map<String, Object>> getPrivilege(Page<Map<String, Object>> page, Map<String,Object> paramMap) {
-        return baseMapper.getPrivilege(page,paramMap);
+        IPage<Map<String,Object>> storeManageMapList = baseMapper.getPrivilege(page,paramMap);
+        if (storeManageMapList.getRecords().size()>0) {
+            Map<String, Object> mapsMap = Maps.newHashMap();
+            storeManageMapList.getRecords().forEach(s -> {
+                s.put("distance", "");
+                mapsMap.put(s.get("latitude") + "," + s.get("longitude"), s);
+            });
+            //位置判断
+            storeUtils.setLocation(Convert.toStr(paramMap.get("longitude")),Convert.toStr(paramMap.get("latitude")),mapsMap);
+        }
+        return storeManageMapList;
     }
 
     @Override
     public Map<String, Object> getPrivilegeInfo(Map<String,Object> paramMap) {
-        return baseMapper.getPrivilegeInfo(paramMap);
+        Map<String, Object> privilegeInfo = baseMapper.getPrivilegeInfo(paramMap);
+        privilegeInfo.put("distance", "");
+        Map<String, Object> mapsMap = Maps.newHashMap();
+        mapsMap.put(privilegeInfo.get("latitude") + "," + privilegeInfo.get("longitude"), privilegeInfo);
+        //位置判断
+        storeUtils.setLocation(Convert.toStr(paramMap.get("longitude")),Convert.toStr(paramMap.get("latitude")),mapsMap);
+        return privilegeInfo;
     }
 
 }
