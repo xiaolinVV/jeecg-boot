@@ -425,6 +425,11 @@ public class OrderRefundList implements Serializable {
      */
     private BigDecimal actualReturnWelfarePayments;
 
+    /**
+     * 退款渠道  0=微信 1=余额。 全部勾选则逗号分隔，如0,1
+     */
+    private String refundChannel;
+
 
 
 

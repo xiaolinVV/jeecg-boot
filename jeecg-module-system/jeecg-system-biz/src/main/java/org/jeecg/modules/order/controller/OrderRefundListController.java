@@ -141,6 +141,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
      * @param merchantConsigneeProvinceId 省
      * @param merchantConsigneeCityId     市
      * @param merchantConsigneeAreaId     区
+     * @param refundChannel 退款渠道  0=微信 1=余额。 全部勾选则逗号分隔，如0,1
      * @return
      */
     //@RequiresPermissions("order:order_refund_list:add")
@@ -148,6 +149,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     public Result<String> pass(@RequestParam("id") String id,
                                @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
                                @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance,
+                               @RequestParam(value = "refundChannel", required = false) String refundChannel,
                                @RequestParam(value = "merchantConsigneeName", required = false) String merchantConsigneeName,
                                @RequestParam(value = "merchantConsigneeAddress", required = false) String merchantConsigneeAddress,
                                @RequestParam(value = "merchantConsigneePhone", required = false) String merchantConsigneePhone,
@@ -173,6 +175,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
             }
             actualRefundPrice = ObjectUtil.defaultIfNull(actualRefundPrice, BigDecimal.ZERO);
             actualRefundBalance = ObjectUtil.defaultIfNull(actualRefundBalance, BigDecimal.ZERO);
+            orderRefundList.setRefundChannel(refundChannel);
+            orderRefundListService.updateById(orderRefundList);
             orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         } else if (StrUtil.containsAny(refundType, "1", "2")) {
             if (StrUtil.hasBlank(merchantConsigneeName, merchantConsigneePhone, merchantConsigneeAddress, merchantConsigneeProvinceId, merchantConsigneeCityId, merchantConsigneeAreaId)) {
@@ -205,6 +209,7 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
     //@RequiresPermissions("order:order_refund_list:add")
     @RequestMapping(value = "/confirm")
     public Result<String> confirm(@RequestParam("id") String id,
+                                  @RequestParam(value = "refundChannel", required = false) String refundChannel,
                                   @RequestParam(value = "actualRefundPrice", required = false) BigDecimal actualRefundPrice,
                                   @RequestParam(value = "actualRefundBalance", required = false) BigDecimal actualRefundBalance) {
         if (StrUtil.isBlank(id)) {
@@ -223,6 +228,8 @@ public class OrderRefundListController extends JeecgController<OrderRefundList, 
         }
         actualRefundPrice = ObjectUtil.defaultIfNull(actualRefundPrice, BigDecimal.ZERO);
         actualRefundBalance = ObjectUtil.defaultIfNull(actualRefundBalance, BigDecimal.ZERO);
+        orderRefundList.setRefundChannel(refundChannel);
+        orderRefundListService.updateById(orderRefundList);
         orderRefundListService.refund(orderRefundList, actualRefundPrice, actualRefundBalance);
         return Result.OK("确认收货成功，退款中");
     }

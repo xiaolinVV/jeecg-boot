@@ -68,16 +68,10 @@ create table order_refund_list
     balance_receive_time                       datetime                    null comment '余额到账时间',
     huifu_receive_time                         datetime                    null comment '微信到账时间',
     good_record_give_welfare_payments          decimal(20, 2) default 0.00 null comment '商品赠送的积分',
-    actual_return_welfare_payments             decimal(20, 2) default 0.00 null comment '实际退还积分'
+    actual_return_welfare_payments             decimal(20, 2) default 0.00 null comment '实际退还积分',
+    refund_channel                             varchar(1)                  null comment '退款渠道  0=微信 1=余额。 全部勾选则逗号分隔，如0,1'
 )
     comment 'order_refund_list' charset = utf8mb4;
-
-
-
-
-
-
-
 
 
 ALTER TABLE `shop-boot`.`order_store_good_record` MODIFY COLUMN `customary_dues` decimal(9, 2) NULL DEFAULT 0.00 COMMENT '应付款（支付前标准金额）' AFTER `total`;
