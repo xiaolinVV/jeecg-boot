@@ -34,7 +34,6 @@ public class OrderStoreGoodRecordServiceImpl extends ServiceImpl<OrderStoreGoodR
             LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
             orderRefundListLambdaQueryWrapper
                     .eq(OrderRefundList::getOrderGoodRecordId, m.get("id"))
-                    .in(OrderRefundList::getRefundType, "0", "1")
                     .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
             long ongoingRefundCount = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
             m.put("ongoingRefundCount",ongoingRefundCount);
