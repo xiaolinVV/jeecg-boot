@@ -39,7 +39,8 @@
                     posters as posters,
                     id AS mid,
                     residue_pay_times AS residuePayTimes,
-                    total_fee AS totalFee
+                    total_fee AS totalFee,
+                    distribution_channel AS sysUserId
                     FROM
                     `marketing_gift_bag_record`
                     WHERE id=#{id}
