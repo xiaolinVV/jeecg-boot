@@ -1,10 +1,14 @@
 package org.jeecg.modules.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jeecg.modules.order.dto.OrderProviderGoodRecordDTO;
 import org.jeecg.modules.order.entity.OrderProviderGoodRecord;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.mapper.OrderProviderGoodRecordMapper;
 import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
+import org.jeecg.modules.order.service.IOrderRefundListService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +23,9 @@ import java.util.Map;
 @Service
 public class OrderProviderGoodRecordServiceImpl extends ServiceImpl<OrderProviderGoodRecordMapper, OrderProviderGoodRecord> implements IOrderProviderGoodRecordService {
 
+    @Autowired
+    IOrderRefundListService orderRefundListService;
+
     @Override
     public List<OrderProviderGoodRecord> selectOrderProviderListId(String orderProviderListId) {
         return baseMapper.selectOrderProviderListId(orderProviderListId);
@@ -26,7 +33,18 @@ public class OrderProviderGoodRecordServiceImpl extends ServiceImpl<OrderProvide
 
     @Override
     public List<Map<String,Object>> getOrderProviderGoodRecordByOrderId(String orderId) {
-        return baseMapper.getOrderProviderGoodRecordByOrderId(orderId);
+        List<Map<String, Object>> providerGoodRecordByOrderId = baseMapper.getOrderProviderGoodRecordByOrderId(orderId);
+        providerGoodRecordByOrderId.forEach(m -> {
+            //查询售后中数量 by zhangshaolin
+            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderRefundListLambdaQueryWrapper
+                    .eq(OrderRefundList::getOrderGoodRecordId, m.get("id"))
+                    .in(OrderRefundList::getRefundType, "0", "1")
+                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+            long ongoingRefundCount = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
+            m.put("ongoingRefundCount",ongoingRefundCount);
+        });
+        return providerGoodRecordByOrderId;
     }
 
     @Override

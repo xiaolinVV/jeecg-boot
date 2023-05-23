@@ -1,10 +1,14 @@
 package org.jeecg.modules.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
+import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.entity.OrderStoreGoodRecord;
 import org.jeecg.modules.order.mapper.OrderStoreGoodRecordMapper;
+import org.jeecg.modules.order.service.IOrderRefundListService;
 import org.jeecg.modules.order.service.IOrderStoreGoodRecordService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,9 +23,23 @@ import java.util.Map;
 @Service
 public class OrderStoreGoodRecordServiceImpl extends ServiceImpl<OrderStoreGoodRecordMapper, OrderStoreGoodRecord> implements IOrderStoreGoodRecordService {
 
+    @Autowired
+    IOrderRefundListService orderRefundListService;
+
     @Override
     public List<Map<String,Object>> getOrderStoreGoodRecordByOrderId(String orderId) {
-        return baseMapper.getOrderStoreGoodRecordByOrderId(orderId);
+        List<Map<String, Object>> orderStoreGoodRecordByOrderId = baseMapper.getOrderStoreGoodRecordByOrderId(orderId);
+        orderStoreGoodRecordByOrderId.forEach(m -> {
+            //查询售后中数量 by zhangshaolin
+            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderRefundListLambdaQueryWrapper
+                    .eq(OrderRefundList::getOrderGoodRecordId, m.get("id"))
+                    .in(OrderRefundList::getRefundType, "0", "1")
+                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
+            long ongoingRefundCount = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
+            m.put("ongoingRefundCount",ongoingRefundCount);
+        });
+        return orderStoreGoodRecordByOrderId;
     }
 
     @Override
