@@ -1,6 +1,7 @@
 package org.jeecg.modules.order.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.comparator.CompareUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
@@ -193,6 +194,9 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
 
     @Autowired
     private IOrderRefundListService orderRefundListService;
+
+    @Autowired
+    private IMemberWelfarePaymentsService memberWelfarePaymentsService;
 
     @Override
     public IPage<OrderStoreListDTO> getOrderStoreListDto(Page<OrderStoreList> page, OrderStoreListVO orderListVO, String sysUserId) {
@@ -1117,8 +1121,20 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void abrogateOrder(String id, String CloseExplain, String closeType) {
         OrderStoreList orderStoreList = this.getById(id);
+
+        // fix 在后台操作，取消并退款，福利金没有回收。by zhangshaolin
+        if (CompareUtil.compare(orderStoreList.getGiveWelfarePayments(), BigDecimal.ZERO) > 0) {
+            MemberList memberList = iMemberListService.getById(orderStoreList.getMemberListId());
+            if (CompareUtil.compare(memberList.getWelfarePayments(), orderStoreList.getGiveWelfarePayments()) < 0) {
+                throw new JeecgBootException("会员福利金小于订单赠送福利金，无法取消订单");
+            }
+            //扣除店铺订单赠送的积分 by zhangshaolin
+            memberWelfarePaymentsService.subtractWelfarePayments(memberList.getId(), orderStoreList.getGiveWelfarePayments(), "17", orderStoreList.getId(), "订单取消");
+        }
+
         //买家关闭
         orderStoreList.setCloseType(closeType);
         orderStoreList.setCloseExplain(CloseExplain);
@@ -1185,6 +1201,15 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
         if (orderStoreList.getStatus().equals("0") || orderStoreList.getStatus().equals("4")) {
             return Result.error("订单状态不正确");
         }
+
+        // fix 在后台操作，取消并退款，福利金没有回收。by zhangshaolin
+        if (CompareUtil.compare(orderStoreList.getGiveWelfarePayments(), BigDecimal.ZERO) > 0) {
+            MemberList memberList = iMemberListService.getById(orderStoreList.getMemberListId());
+            if (CompareUtil.compare(memberList.getWelfarePayments(), orderStoreList.getGiveWelfarePayments()) < 0) {
+                return Result.error("会员福利金小于订单赠送福利金，无法退款");
+            }
+        }
+
         if (orderStoreList.getPayPrice().doubleValue() > 0.0D) {
             Map balanceMap;
             try {
