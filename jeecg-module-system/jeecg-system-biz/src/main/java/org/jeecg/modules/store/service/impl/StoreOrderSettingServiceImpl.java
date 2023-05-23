@@ -70,7 +70,7 @@ public class StoreOrderSettingServiceImpl extends ServiceImpl<StoreOrderSettingM
                     OrderStoreGoodRecord orderStoreGoodRecord = new OrderStoreGoodRecord().setId(Convert.toStr(storeOrderGoodRecordMap.get("id")));
                     BigDecimal temSum = new BigDecimal("0");
                     if (i == storeGoodRecordList.size() - 1) {
-                        BigDecimal giveWelfarePayments = NumberUtil.sub(orderStoreList.getActualPayment().subtract(orderStoreList.getShipFee()),temSum);
+                        BigDecimal giveWelfarePayments = NumberUtil.sub(orderStoreList.getGiveWelfarePayments().subtract(orderStoreList.getShipFee()),temSum);
                         orderStoreGoodRecord.setGiveWelfarePayments(giveWelfarePayments);
                     } else {
                         BigDecimal giveWelfarePayments = NumberUtil.mul(orderStoreList.getGiveWelfarePayments(), NumberUtil.div(actualPayment, orderStoreList.getActualPayment().subtract(orderStoreList.getShipFee()), 2));
