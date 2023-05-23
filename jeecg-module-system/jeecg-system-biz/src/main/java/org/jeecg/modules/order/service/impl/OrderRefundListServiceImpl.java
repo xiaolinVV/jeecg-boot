@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.huifu.adapay.core.exception.BaseAdaPayException;
 import lombok.extern.slf4j.Slf4j;
@@ -696,13 +697,12 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
-            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderRefundListLambdaQueryWrapper
-                    .eq(OrderRefundList::getOrderGoodRecordId, orderStoreGoodRecord.getId())
-                    .in(OrderRefundList::getRefundType, "0", "1")
-                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
-            long count1 = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
-            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1) {
+            QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderStoreGoodRecord.getId());
+            orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
+            Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
+            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - Convert.toLong(map.get("ongoingRefundCount"))) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
         } else if (StrUtil.equals(refundType, "2")) {
@@ -745,13 +745,12 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
             if (refundPrice.compareTo(NumberUtil.sub(orderStoreGoodRecord.getActualPayment(), ongoingPrice)) > 0) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
-            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderRefundListLambdaQueryWrapper
-                    .eq(OrderRefundList::getOrderGoodRecordId, orderStoreGoodRecord.getId())
-                    .in(OrderRefundList::getRefundType, "0", "1")
-                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
-            long count1 = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
-            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - count1) {
+            QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderStoreGoodRecord.getId());
+            orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
+            Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
+            if (Convert.toLong(refundAmount) > Convert.toLong(orderStoreGoodRecord.getAmount()) - Convert.toLong(map.get("ongoingRefundCount"))) {
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
         } else if (StrUtil.equals(refundType, "2")) {

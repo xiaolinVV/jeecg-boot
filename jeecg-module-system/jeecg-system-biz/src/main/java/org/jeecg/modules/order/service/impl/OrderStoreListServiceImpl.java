@@ -1510,12 +1510,12 @@ public class OrderStoreListServiceImpl extends ServiceImpl<OrderStoreListMapper,
                             if (orderStoreGoodRecord == null) {
                                 throw new JeecgBootException("订单商品信息不存在");
                             }
-                            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                            orderRefundListLambdaQueryWrapper
-                                    .eq(OrderRefundList::getOrderGoodRecordId, orderStoreGoodRecord.getId())
-                                    .in(OrderRefundList::getRefundType, "0", "1")
-                                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
-                            if (orderRefundListService.count(orderRefundListLambdaQueryWrapper) > 0) {
+                            QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
+                            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+                            orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderStoreGoodRecord.getId());
+                            orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
+                            Map<String, Object> refundMap = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
+                            if (Convert.toLong(refundMap.get("ongoingRefundCount")) > 0) {
                                 throw new JeecgBootException("售后待处理订单，处理售后才可进行发货");
                             }
                             //修改商品的OrderProviderListId为包裹的已发货包裹

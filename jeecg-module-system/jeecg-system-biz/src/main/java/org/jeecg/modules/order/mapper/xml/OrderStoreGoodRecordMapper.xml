@@ -16,7 +16,8 @@
                coupon                       as discountCoupon,
                gift_card_coupon             as giftCardCoupon,
                status                       as status,
-                total as total
+                total as total,
+                give_welfare_payments as giveWelfarePayments
         FROM `order_store_good_record`
         WHERE order_store_sub_list_id IN (SELECT id FROM `order_store_sub_list` WHERE order_store_list_id = #{orderId})
     </select>

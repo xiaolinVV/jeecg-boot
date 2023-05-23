@@ -1,6 +1,7 @@
 package org.jeecg.modules.order.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jeecg.modules.order.dto.OrderStoreGoodRecordDTO;
 import org.jeecg.modules.order.entity.OrderRefundList;
@@ -31,12 +32,12 @@ public class OrderStoreGoodRecordServiceImpl extends ServiceImpl<OrderStoreGoodR
         List<Map<String, Object>> orderStoreGoodRecordByOrderId = baseMapper.getOrderStoreGoodRecordByOrderId(orderId);
         orderStoreGoodRecordByOrderId.forEach(m -> {
             //查询售后中数量 by zhangshaolin
-            LambdaQueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderRefundListLambdaQueryWrapper
-                    .eq(OrderRefundList::getOrderGoodRecordId, m.get("id"))
-                    .in(OrderRefundList::getStatus, "0", "1", "2", "3", "4", "5");
-            long ongoingRefundCount = orderRefundListService.count(orderRefundListLambdaQueryWrapper);
-            m.put("ongoingRefundCount",ongoingRefundCount);
+            QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.eq("order_good_record_id", m.get("id"));
+            orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
+            Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
+            m.put("ongoingRefundCount",map.get("ongoingRefundCount"));
         });
         return orderStoreGoodRecordByOrderId;
     }
