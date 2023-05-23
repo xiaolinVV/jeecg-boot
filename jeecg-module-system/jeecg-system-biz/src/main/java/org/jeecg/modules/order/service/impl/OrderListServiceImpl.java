@@ -340,8 +340,10 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
         page1.getRecords().forEach(ol -> {
             if (StringUtils.isNotBlank(ol.getSerialNumber())) {
                 PayOrderCarLog payOrderCarLog = iPayOrderCarLogService.getById(ol.getSerialNumber());
-                ol.setIntegral(payOrderCarLog.getIntegral());
-                ol.setIntegralPrice(payOrderCarLog.getIntegralPrice());
+                if (payOrderCarLog != null) {
+                    ol.setIntegral(payOrderCarLog.getIntegral());
+                    ol.setIntegralPrice(payOrderCarLog.getIntegralPrice());
+                }
             }
 
             //会员信息
