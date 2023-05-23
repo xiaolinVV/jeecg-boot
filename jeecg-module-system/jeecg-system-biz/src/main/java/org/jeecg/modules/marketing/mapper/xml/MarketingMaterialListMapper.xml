@@ -79,7 +79,7 @@
         LEFT JOIN `sys_user` su
         ON su.id = mml.sys_user_id
         WHERE mml.del_flag = 0 AND mml.is_publish = 1
-         <if test="paramMap != null and paramMap.containsKey('marketingMaterialColumnId')">
+         <if test="paramMap != null and paramMap.marketingMaterialColumnId != ''">
            and mml.marketing_material_column_id =#{paramMap.marketingMaterialColumnId}
              Order by mml.sort asc
          </if>

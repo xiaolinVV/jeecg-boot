@@ -107,7 +107,7 @@ public class FrontMarketingMaterialListController {
         IPage<Map<String,Object>>  marketingMaterialPage =null ;
         //组织查询参数
         Page<Map<String,Object>> page = new Page<Map<String,Object>>(pageNo, pageSize);
-        page.setSearchCount(false);
+        page.setSearchCount(true);
 //        if(StringUtils.isBlank(marketingMaterialColumnId)){
 //            //推荐素材
 //          List<String> stringList = marketingMaterialRecommendService.getMarketingMaterialListIdList();
