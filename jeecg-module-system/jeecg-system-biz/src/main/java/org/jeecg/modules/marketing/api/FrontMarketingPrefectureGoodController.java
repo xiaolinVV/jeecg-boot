@@ -233,7 +233,9 @@ public class FrontMarketingPrefectureGoodController {
                 QueryWrapper<MarketingPrefectureGood> marketingPrefectureGoodQueryWrapper=new QueryWrapper<>();
                 marketingPrefectureGoodQueryWrapper.eq("marketing_prefecture_id",marketingPrefecture.getId());
                 marketingPrefectureGoodQueryWrapper.eq("good_list_id",mp.get("id").toString());
-                MarketingPrefectureGood marketingPrefectureGood=iMarketingPrefectureGoodService.getOne(marketingPrefectureGoodQueryWrapper);
+                marketingPrefectureGoodQueryWrapper.orderByDesc("create_time");
+                marketingPrefectureGoodQueryWrapper.last("limit 1");
+                MarketingPrefectureGood marketingPrefectureGood=iMarketingPrefectureGoodService.getOne(marketingPrefectureGoodQueryWrapper,false);
                 if(marketingPrefectureGood==null){
                     continue;
                 }
