@@ -143,7 +143,7 @@
         ),TIMESTAMPDIFF(
         SECOND,
         NOW(),
-        DATE_ADD(shipments_time, INTERVAL (#{hour}+0)*60 MINUTE)
+        DATE_ADD(shipments_time, INTERVAL #{hour}*60 MINUTE)
         )) AS timer
         FROM
         order_store_list
