@@ -136,7 +136,7 @@
     <!--确认收货计时器(秒)-->
     <select id="getStoreConfirmReceiptTimer" parameterType="java.lang.String" resultType="String">
         SELECT
-        IF((#{hour}+0)>=1,TIMESTAMPDIFF(
+        IF((#{hour})>=1,TIMESTAMPDIFF(
         SECOND,
         NOW(),
         DATE_ADD(shipments_time, INTERVAL #{hour} HOUR)
