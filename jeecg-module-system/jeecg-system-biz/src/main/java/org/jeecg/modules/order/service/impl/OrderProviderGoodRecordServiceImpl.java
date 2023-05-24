@@ -9,6 +9,7 @@ import org.jeecg.modules.order.entity.OrderRefundList;
 import org.jeecg.modules.order.mapper.OrderProviderGoodRecordMapper;
 import org.jeecg.modules.order.service.IOrderProviderGoodRecordService;
 import org.jeecg.modules.order.service.IOrderRefundListService;
+import org.jeecg.modules.system.service.ISysDictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +28,17 @@ public class OrderProviderGoodRecordServiceImpl extends ServiceImpl<OrderProvide
     @Autowired
     IOrderRefundListService orderRefundListService;
 
+    @Autowired
+    ISysDictService sysDictService;
+
     @Override
     public List<OrderProviderGoodRecord> selectOrderProviderListId(String orderProviderListId) {
-        return baseMapper.selectOrderProviderListId(orderProviderListId);
+        List<OrderProviderGoodRecord> orderProviderGoodRecords = baseMapper.selectOrderProviderListId(orderProviderListId);
+        orderProviderGoodRecords.forEach(orderProviderGoodRecord -> {
+            String statusText = sysDictService.queryDictTextByKey("order_good_record_status", orderProviderGoodRecord.getStatus());
+            orderProviderGoodRecord.setStatus_dictText(statusText);
+        });
+        return orderProviderGoodRecords;
     }
 
     @Override
@@ -68,7 +77,12 @@ public class OrderProviderGoodRecordServiceImpl extends ServiceImpl<OrderProvide
      */
     @Override
     public List<OrderProviderGoodRecordDTO>  selectOrderProviderListIdDTO(String orderProviderListId){
-        return baseMapper.selectOrderProviderListIdDTO(orderProviderListId);
+        List<OrderProviderGoodRecordDTO> orderProviderGoodRecordDTOS = baseMapper.selectOrderProviderListIdDTO(orderProviderListId);
+        orderProviderGoodRecordDTOS.forEach(orderProviderGoodRecordDTO -> {
+            String statusText = sysDictService.queryDictTextByKey("order_good_record_status", orderProviderGoodRecordDTO.getStatus());
+            orderProviderGoodRecordDTO.setStatus_dictText(statusText);
+        });
+        return orderProviderGoodRecordDTOS;
     }
 
     @Override

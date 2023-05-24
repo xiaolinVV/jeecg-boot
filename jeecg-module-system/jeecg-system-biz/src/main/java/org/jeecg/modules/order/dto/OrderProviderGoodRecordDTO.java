@@ -1,9 +1,6 @@
 package org.jeecg.modules.order.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -149,4 +146,7 @@ public class OrderProviderGoodRecordDTO {
 	 * 订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功
 	 */
 	private String status;
+
+	@TableField(exist = false)
+	private String status_dictText;
 }

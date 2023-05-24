@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -150,6 +151,7 @@ public class OrderStoreGoodRecord {
 	/**
 	 * 订单商品状态 0=下单成功 1=已发货 2=退款中 3=退款成功 4=换货中 5=换货成功
 	 */
+	@Dict(dicCode = "order_good_record_status")
 	private String status;
 
 	/**
