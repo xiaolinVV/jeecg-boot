@@ -297,6 +297,10 @@ public class OrderProviderListServiceImpl extends ServiceImpl<OrderProviderListM
     @Override
     public void ShipmentOrderModification(OrderProviderList orderProviderList) {
         OrderList orderList = orderListMapper.selectById(orderProviderList.getOrderListId());
+        // 修复订单表首次发货时间 shipments_time 为空，导致获取自动收货倒计时接口报错问题---------- by 张少林
+        if (orderList.getShipmentsTime() == null) {
+            orderList.setShipmentsTime(new Date());
+        }
         LambdaQueryWrapper<OrderProviderGoodRecord> goodRecordLambdaQueryWrapper = new LambdaQueryWrapper<OrderProviderGoodRecord>()
                 .eq(OrderProviderGoodRecord::getDelFlag, "0")
                 .eq(OrderProviderGoodRecord::getOrderProviderListId, orderProviderList.getId());
