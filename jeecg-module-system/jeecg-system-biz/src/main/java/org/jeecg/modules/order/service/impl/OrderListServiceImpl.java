@@ -1141,9 +1141,11 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                 OrderProviderGoodRecord orderProviderGoodRecord = allOrderProviderGoodRecords.get(i);
                 if (i == allOrderProviderGoodRecords.size() - 1) {
                     BigDecimal goodActualPayment = NumberUtil.sub(orderList.getActualPayment(), temSum);
+                    goodActualPayment = goodActualPayment.compareTo(BigDecimal.ZERO) <= 0 ? BigDecimal.ZERO:goodActualPayment;
                     orderProviderGoodRecord.setActualPayment(goodActualPayment);
                 } else {
-                    BigDecimal goodActualPayment = NumberUtil.sub(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPrice), orderList.getActualPayment());
+                    BigDecimal goodActualPayment = NumberUtil.mul(NumberUtil.div(orderProviderGoodRecord.getTotal(), totalPrice, 2), orderList.getActualPayment());
+                    goodActualPayment = goodActualPayment.compareTo(BigDecimal.ZERO) <= 0 ? BigDecimal.ZERO:goodActualPayment;
                     orderProviderGoodRecord.setActualPayment(goodActualPayment);
                     temSum = NumberUtil.add(temSum, goodActualPayment);
                 }
