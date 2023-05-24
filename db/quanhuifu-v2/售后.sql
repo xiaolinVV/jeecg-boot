@@ -133,3 +133,10 @@ alter table order_store_good_record
 alter table order_store_good_record
     add give_welfare_payments decimal(20,2) default 0.00 null comment '赠送的积分';
 
+INSERT INTO sys_dict (id, dict_name, dict_code, description, del_flag, create_by, create_time, update_by, update_time, type) VALUES ('1661265894062387201', '订单商品状态', 'order_good_record_status', '订单商品状态', 0, 'jeecg', '2023-05-24 15:00:29', null, null, 0000000000);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661265943307710466', '1661265894062387201', '下单成功', '0', '', 1, 1, 'jeecg', '2023-05-24 15:00:40', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661265989247922178', '1661265894062387201', '已发货', '1', '', 2, 1, 'jeecg', '2023-05-24 15:00:51', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661266028540162050', '1661265894062387201', '退款中', '2', '', 3, 1, 'jeecg', '2023-05-24 15:01:01', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661266061264121857', '1661265894062387201', '退款成功', '3', '', 4, 1, 'jeecg', '2023-05-24 15:01:08', 'jeecg', '2023-05-24 15:02:20');
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661266097293193217', '1661265894062387201', '换货中', '4', '', 5, 1, 'jeecg', '2023-05-24 15:01:17', null, null);
+INSERT INTO sys_dict_item (id, dict_id, item_text, item_value, description, sort_order, status, create_by, create_time, update_by, update_time) VALUES ('1661266144906932225', '1661265894062387201', '换货成功', '5', '', 6, 1, 'jeecg', '2023-05-24 15:01:28', null, null);
