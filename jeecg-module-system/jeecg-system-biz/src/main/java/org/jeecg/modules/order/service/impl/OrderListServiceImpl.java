@@ -3012,7 +3012,7 @@ public class OrderListServiceImpl extends ServiceImpl<OrderListMapper, OrderList
                                 throw new JeecgBootException("订单商品信息不存在");
                             }
                             QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
-                            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+                            orderRefundListLambdaQueryWrapper.select("IFNULL(sum(refund_amount),0) as ongoingRefundCount");
                             orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderProviderGoodRecord.getId());
                             orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
                             Map<String, Object> refundMap = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);

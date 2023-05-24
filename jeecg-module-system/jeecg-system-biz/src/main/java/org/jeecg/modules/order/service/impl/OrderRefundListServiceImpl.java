@@ -698,7 +698,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
-            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum(refund_amount),0) as ongoingRefundCount");
             orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderStoreGoodRecord.getId());
             orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
             Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
@@ -746,7 +746,7 @@ public class OrderRefundListServiceImpl extends MPJBaseServiceImpl<OrderRefundLi
                 throw new JeecgBootException("该订单已申请售后，请勿重复提交");
             }
             QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
-            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum(refund_amount),0) as ongoingRefundCount");
             orderRefundListLambdaQueryWrapper.eq("order_good_record_id", orderStoreGoodRecord.getId());
             orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
             Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);

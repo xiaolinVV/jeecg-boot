@@ -33,7 +33,7 @@ public class OrderStoreGoodRecordServiceImpl extends ServiceImpl<OrderStoreGoodR
         orderStoreGoodRecordByOrderId.forEach(m -> {
             //查询售后中数量 by zhangshaolin
             QueryWrapper<OrderRefundList> orderRefundListLambdaQueryWrapper = new QueryWrapper<>();
-            orderRefundListLambdaQueryWrapper.select("IFNULL(sum('refund_amount'),0) as ongoingRefundCount");
+            orderRefundListLambdaQueryWrapper.select("IFNULL(sum(refund_amount),0) as ongoingRefundCount");
             orderRefundListLambdaQueryWrapper.eq("order_good_record_id", m.get("id"));
             orderRefundListLambdaQueryWrapper.in("status", "0", "1", "2", "3", "4", "5");
             Map<String, Object> map = orderRefundListService.getMap(orderRefundListLambdaQueryWrapper);
