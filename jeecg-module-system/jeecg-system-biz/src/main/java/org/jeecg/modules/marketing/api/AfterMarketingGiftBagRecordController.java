@@ -49,7 +49,7 @@ public class AfterMarketingGiftBagRecordController {
             resultMap.put("id",marketingGiftBagRecord.getId());
             return Result.ok(resultMap);
         }
-        return Result.error("未知错误");
+        return Result.OK().success("未知错误");
     }
 
 
