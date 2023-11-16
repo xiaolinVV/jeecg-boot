@@ -1,12 +1,12 @@
 package org.jeecg.modules.system.mapper;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.system.entity.SysUser;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.jeecg.modules.system.model.SysUserSysDepartModel;
 import org.jeecg.modules.system.vo.SysUserDepVo;
 
@@ -38,6 +38,14 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	IPage<SysUser> getUserByDepId(Page page, @Param("departId") String departId, @Param("username") String username);
 
 	/**
+	 * 根据部门和子部门下的所有用户账号
+	 *
+	 * @param orgCode 部门编码
+	 * @return
+	 */
+	List<String> getUserAccountsByDepCode(@Param("orgCode") String orgCode);
+
+	/**
 	 *  根据用户Ids,查询用户所属部门名称信息
 	 * @param userIds
 	 * @return
@@ -67,7 +75,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 * @param username
 	 * @param orgCode
 	 */
-	void updateUserDepart(@Param("username") String username,@Param("orgCode") String orgCode);
+	void updateUserDepart(@Param("username") String username,@Param("orgCode") String orgCode, @Param("loginTenantId") Integer loginTenantId);
 	
 	/**
 	 * 根据手机号查询用户信息
@@ -157,4 +165,43 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 * @return
 	 */
 	List<SysUser> queryByDepIds(@Param("departIds")List<String> departIds,@Param("username") String username);
+
+	/**
+	 * 获取用户信息
+	 * @param page
+	 * @param roleId
+	 * @param keyword
+	 * @return
+	 */
+	IPage<SysUser> selectUserListByRoleId(Page<SysUser> page,  @Param("roleId") String roleId,  @Param("keyword") String keyword,  @Param("tenantId") Integer tenantId);
+
+    /**
+     * 更新刪除状态和离职状态
+     * @param userIds  存放用户id集合
+     * @param sysUser
+     * @return boolean
+     */
+    void updateStatusAndFlag(@Param("userIds") List<String> userIds, @Param("sysUser") SysUser sysUser);
+
+	/**
+	 * 获取租户下的离职列表信息
+	 * @param tenantId
+	 * @return
+	 */
+	List<SysUser> getTenantQuitList(@Param("tenantId") Integer tenantId);
+	
+	/**
+	 * 获取租户下的有效用户ids
+	 * @param tenantId
+	 * @return
+	 */
+	List<String> getTenantUserIdList(@Param("tenantId") Integer tenantId);
+	
+	/**
+	 * 根据部门id和租户id获取用户数据 
+	 * @param departIds
+	 * @param tenantId
+	 * @return
+	 */
+	List<SysUser> getUserByDepartsTenantId(@Param("departIds") List<String> departIds,@Param("tenantId") Integer tenantId);
 }

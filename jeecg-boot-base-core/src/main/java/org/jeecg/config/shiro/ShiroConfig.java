@@ -20,7 +20,6 @@ import org.jeecg.config.shiro.filters.CustomShiroFilterFactoryBean;
 import org.jeecg.config.shiro.filters.JwtFilter;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -111,19 +110,16 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/**/*.png", "anon");
         filterChainDefinitionMap.put("/**/*.gif", "anon");
         filterChainDefinitionMap.put("/**/*.ico", "anon");
-
-        // update-begin--Author:sunjianlei Date:20190813 for：排除字体格式的后缀
         filterChainDefinitionMap.put("/**/*.ttf", "anon");
         filterChainDefinitionMap.put("/**/*.woff", "anon");
         filterChainDefinitionMap.put("/**/*.woff2", "anon");
-        // update-begin--Author:sunjianlei Date:20190813 for：排除字体格式的后缀
 
         filterChainDefinitionMap.put("/druid/**", "anon");
         filterChainDefinitionMap.put("/swagger-ui.html", "anon");
         filterChainDefinitionMap.put("/swagger**/**", "anon");
         filterChainDefinitionMap.put("/webjars/**", "anon");
         filterChainDefinitionMap.put("/v2/**", "anon");
-
+        
         filterChainDefinitionMap.put("/sys/annountCement/show/**", "anon");
 
         //积木报表排除
@@ -131,6 +127,12 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/**/*.js.map", "anon");
         filterChainDefinitionMap.put("/**/*.css.map", "anon");
         
+        //拖拽仪表盘设计器排除
+        filterChainDefinitionMap.put("/drag/view", "anon");
+        filterChainDefinitionMap.put("/drag/page/queryById", "anon");
+        filterChainDefinitionMap.put("/drag/onlDragDatasetHead/getAllChartData", "anon");
+        filterChainDefinitionMap.put("/drag/onlDragDatasetHead/getTotalData", "anon");
+        filterChainDefinitionMap.put("/drag/mock/json/**", "anon");
         //大屏模板例子
         filterChainDefinitionMap.put("/test/bigScreen/**", "anon");
         filterChainDefinitionMap.put("/bigscreen/template1/**", "anon");
@@ -144,12 +146,15 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/newsWebsocket/**", "anon");//CMS模块
         filterChainDefinitionMap.put("/vxeSocket/**", "anon");//JVxeTable无痕刷新示例
 
-
-        //性能监控，放开排除会存在安全漏洞泄露TOEKN（durid连接池也有）
+        //性能监控——安全隐患泄露TOEKN（durid连接池也有）
         //filterChainDefinitionMap.put("/actuator/**", "anon");
-
         //测试模块排除
         filterChainDefinitionMap.put("/test/seata/**", "anon");
+
+        // update-begin--author:liusq Date:20230522 for：[issues/4829]访问不存在的url时会提示Token失效，请重新登录呢
+        //错误路径排除
+        filterChainDefinitionMap.put("/error", "anon");
+        // update-end--author:liusq Date:20230522 for：[issues/4829]访问不存在的url时会提示Token失效，请重新登录呢
 
         // 添加自己的过滤器并且取名为jwt
         Map<String, Filter> filterMap = new HashMap<String, Filter>(1);
@@ -247,8 +252,8 @@ public class ShiroConfig {
         // redis 单机支持，在集群为空，或者集群无机器时候使用 add by jzyadmin@163.com
         if (lettuceConnectionFactory.getClusterConfiguration() == null || lettuceConnectionFactory.getClusterConfiguration().getClusterNodes().isEmpty()) {
             RedisManager redisManager = new RedisManager();
-            redisManager.setHost(lettuceConnectionFactory.getHostName());
-            redisManager.setPort(lettuceConnectionFactory.getPort());
+            redisManager.setHost(lettuceConnectionFactory.getHostName() + ":" + lettuceConnectionFactory.getPort());
+            //(lettuceConnectionFactory.getPort());
             redisManager.setDatabase(lettuceConnectionFactory.getDatabase());
             redisManager.setTimeout(0);
             if (!StringUtils.isEmpty(lettuceConnectionFactory.getPassword())) {

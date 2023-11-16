@@ -43,6 +43,16 @@ public class HttpUtils {
         if (pathVariable.contains(SymbolConstant.COMMA)) {
             log.info(" pathVariable: {}",pathVariable);
             String deString = URLDecoder.decode(pathVariable, "UTF-8");
+          
+            //https://www.52dianzi.com/category/article/37/565371.html
+            if(deString.contains("%")){
+                try {
+                    deString = URLDecoder.decode(deString, "UTF-8");
+                    log.info("存在%情况下，执行两次解码 — pathVariable decode: {}",deString);
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                }
+            }
             log.info(" pathVariable decode: {}",deString);
             result.put(SignUtil.X_PATH_VARIABLE, deString);
         }
@@ -81,6 +91,12 @@ public class HttpUtils {
         if (pathVariable.contains(SymbolConstant.COMMA)) {
             log.info(" pathVariable: {}",pathVariable);
             String deString = URLDecoder.decode(pathVariable, "UTF-8");
+           
+            //https://www.52dianzi.com/category/article/37/565371.html
+            if(deString.contains("%")){
+                deString = URLDecoder.decode(deString, "UTF-8");
+                log.info("存在%情况下，执行两次解码 — pathVariable decode: {}",deString);
+            }
             log.info(" pathVariable decode: {}",deString);
             result.put(SignUtil.X_PATH_VARIABLE, deString);
         }

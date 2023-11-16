@@ -6,8 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.config.TenantContext;
 import org.jeecg.common.constant.CacheConstant;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.system.query.QueryGenerator;
@@ -16,6 +17,7 @@ import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.ImportExcelUtil;
 import org.jeecg.common.util.YouBianCodeUtil;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.mybatis.MybatisPlusSaasConfig;
 import org.jeecg.modules.system.entity.SysDepart;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.model.DepartIdModel;
@@ -23,6 +25,7 @@ import org.jeecg.modules.system.model.SysDepartTreeModel;
 import org.jeecg.modules.system.service.ISysDepartService;
 import org.jeecg.modules.system.service.ISysUserDepartService;
 import org.jeecg.modules.system.service.ISysUserService;
+import org.jeecg.modules.system.vo.lowapp.ExportDepartVo;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -135,6 +138,8 @@ public class SysDepartController {
 			result.setSuccess(true);
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);
+			result.setSuccess(false);
+			result.setMessage("查询失败");
 		}
 		return result;
 	}
@@ -148,8 +153,7 @@ public class SysDepartController {
 	@GetMapping("/queryAllParentId")
 	public Result queryParentIds(
 			@RequestParam(name = "departId", required = false) String departId,
-			@RequestParam(name = "orgCode", required = false) String orgCode
-	) {
+			@RequestParam(name = "orgCode", required = false) String orgCode) {
 		try {
 			JSONObject data;
 			if (oConvertUtils.isNotEmpty(departId)) {
@@ -172,7 +176,7 @@ public class SysDepartController {
 	 * @param sysDepart
 	 * @return
 	 */
-	//@RequiresRoles({"admin"})
+    @RequiresPermissions("system:depart:add")
 	@RequestMapping(value = "/add", method = RequestMethod.POST)
 	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
 	public Result<SysDepart> add(@RequestBody SysDepart sysDepart, HttpServletRequest request) {
@@ -198,7 +202,7 @@ public class SysDepartController {
 	 * @param sysDepart
 	 * @return
 	 */
-	//@RequiresRoles({"admin"})
+    @RequiresPermissions("system:depart:edit")
 	@RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
 	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
 	public Result<SysDepart> edit(@RequestBody SysDepart sysDepart, HttpServletRequest request) {
@@ -226,7 +230,7 @@ public class SysDepartController {
     * @param id
     * @return
     */
-	//@RequiresRoles({"admin"})
+    @RequiresPermissions("system:depart:delete")
     @RequestMapping(value = "/delete", method = RequestMethod.DELETE)
 	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
    public Result<SysDepart> delete(@RequestParam(name="id",required=true) String id) {
@@ -236,13 +240,11 @@ public class SysDepartController {
        if(sysDepart==null) {
            result.error500("未找到对应实体");
        }else {
-           boolean ok = sysDepartService.delete(id);
-           if(ok) {
-	            //清除部门树内存
-	   		   //FindsDepartsChildrenUtil.clearSysDepartTreeList();
-	   		   // FindsDepartsChildrenUtil.clearDepartIdModel();
-               result.success("删除成功!");
-           }
+           sysDepartService.deleteDepart(id);
+			//清除部门树内存
+		   //FindsDepartsChildrenUtil.clearSysDepartTreeList();
+		   // FindsDepartsChildrenUtil.clearDepartIdModel();
+		   result.success("删除成功!");
        }
        return result;
    }
@@ -254,7 +256,7 @@ public class SysDepartController {
 	 * @param ids
 	 * @return
 	 */
-	//@RequiresRoles({"admin"})
+    @RequiresPermissions("system:depart:deleteBatch")
 	@RequestMapping(value = "/deleteBatch", method = RequestMethod.DELETE)
 	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
 	public Result<SysDepart> deleteBatch(@RequestParam(name = "ids", required = true) String ids) {
@@ -341,6 +343,13 @@ public class SysDepartController {
      */
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(SysDepart sysDepart,HttpServletRequest request) {
+		//------------------------------------------------------------------------------------------------
+		//是否开启系统管理模块的多租户数据隔离【SAAS多租户模式】
+		if(MybatisPlusSaasConfig.OPEN_SYSTEM_TENANT_CONTROL){
+			sysDepart.setTenantId(oConvertUtils.getInt(TenantContext.getTenant(), 0));
+		}
+		//------------------------------------------------------------------------------------------------
+		
         // Step.1 组装查询条件
         QueryWrapper<SysDepart> queryWrapper = QueryGenerator.initQueryWrapper(sysDepart, request.getParameterMap());
         //Step.2 AutoPoi 导出Excel
@@ -371,7 +380,7 @@ public class SysDepartController {
      * @param response
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresPermissions("system:depart:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
 	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
@@ -409,6 +418,8 @@ public class SysDepartController {
                 		SysDepart parentDept = sysDepartService.getOne(queryWrapper);
                 		if(!parentDept.equals(null)) {
 							sysDepart.setParentId(parentDept.getId());
+							//更新父级部门不是叶子结点
+							sysDepartService.updateIzLeaf(parentDept.getId(),CommonConstant.NOT_LEAF);
 						} else {
 							sysDepart.setParentId("");
 						}
@@ -526,4 +537,122 @@ public class SysDepartController {
 		result.setResult(sysUsers);
 		return result;
 	}
+
+	/**
+	 * @功能：根据id 批量查询
+	 * @param deptIds
+	 * @return
+	 */
+	@RequestMapping(value = "/queryByIds", method = RequestMethod.GET)
+	public Result<Collection<SysDepart>> queryByIds(@RequestParam String deptIds) {
+		Result<Collection<SysDepart>> result = new Result<>();
+		String[] ids = deptIds.split(",");
+		Collection<String> idList = Arrays.asList(ids);
+		Collection<SysDepart> deptList = sysDepartService.listByIds(idList);
+		result.setSuccess(true);
+		result.setResult(deptList);
+		return result;
+	}
+
+	@GetMapping("/getMyDepartList")
+    public Result<List<SysDepart>> getMyDepartList(){
+        List<SysDepart> list = sysDepartService.getMyDepartList();
+        return Result.ok(list);
+    }
+
+	/**
+	 * 异步查询部门list
+	 * @param parentId 父节点 异步加载时传递
+	 * @return
+	 */
+	@RequestMapping(value = "/queryBookDepTreeSync", method = RequestMethod.GET)
+	public Result<List<SysDepartTreeModel>> queryBookDepTreeSync(@RequestParam(name = "pid", required = false) String parentId,
+																 @RequestParam(name = "tenantId") Integer tenantId,
+																 @RequestParam(name = "departName",required = false) String departName) {
+		Result<List<SysDepartTreeModel>> result = new Result<>();
+		try {
+			List<SysDepartTreeModel> list = sysDepartService.queryBookDepTreeSync(parentId, tenantId, departName);
+			result.setResult(list);
+			result.setSuccess(true);
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		return result;
+	}
+
+	/**
+	 * 通过部门id和租户id获取用户 【低代码应用: 用于选择部门负责人】
+	 * @param departId
+	 * @return
+	 */
+	@GetMapping("/getUsersByDepartTenantId")
+	public Result<List<SysUser>> getUsersByDepartTenantId(@RequestParam("departId") String departId){
+		int tenantId = oConvertUtils.getInt(TenantContext.getTenant(), 0);
+		List<SysUser> sysUserList = sysUserDepartService.getUsersByDepartTenantId(departId,tenantId);
+		return Result.ok(sysUserList);
+	}
+
+	/**
+	 * 导出excel【低代码应用: 用于导出部门】
+	 *
+	 * @param request
+	 */
+	@RequestMapping(value = "/appExportXls")
+	public ModelAndView appExportXls(SysDepart sysDepart,HttpServletRequest request) {
+		// Step.1 组装查询条件
+		int tenantId = oConvertUtils.getInt(TenantContext.getTenant(), 0);
+		ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+		List<ExportDepartVo> pageList = sysDepartService.getExcelDepart(tenantId);
+		//Step.2 AutoPoi 导出Excel
+		//导出文件名称
+		mv.addObject(NormalExcelConstants.FILE_NAME, "部门列表");
+		mv.addObject(NormalExcelConstants.CLASS, ExportDepartVo.class);
+		LoginUser user = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+		mv.addObject(NormalExcelConstants.PARAMS, new ExportParams("部门列表数据", "导出人:"+user.getRealname(), "导出信息"));
+		mv.addObject(NormalExcelConstants.DATA_LIST, pageList);
+		return mv;
+	}
+
+	/**
+	 * 导入excel【低代码应用: 用于导出部门】
+	 *
+	 * @param request
+	 */
+	@RequestMapping(value = "/appImportExcel", method = RequestMethod.POST)
+	@CacheEvict(value= {CacheConstant.SYS_DEPARTS_CACHE,CacheConstant.SYS_DEPART_IDS_CACHE}, allEntries=true)
+	public Result<?> appImportExcel(HttpServletRequest request, HttpServletResponse response) {
+		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+		List<String> errorMessageList = new ArrayList<>();
+		List<ExportDepartVo> listSysDeparts = null;
+		Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
+		for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
+			// 获取上传文件对象
+			MultipartFile file = entity.getValue();
+			ImportParams params = new ImportParams();
+			params.setTitleRows(2);
+			params.setHeadRows(1);
+			params.setNeedSave(true);
+			try {
+				listSysDeparts = ExcelImportUtil.importExcel(file.getInputStream(), ExportDepartVo.class, params);
+				sysDepartService.importExcel(listSysDeparts,errorMessageList);
+				//清空部门缓存
+				Set keys3 = redisTemplate.keys(CacheConstant.SYS_DEPARTS_CACHE + "*");
+				Set keys4 = redisTemplate.keys(CacheConstant.SYS_DEPART_IDS_CACHE + "*");
+				redisTemplate.delete(keys3);
+				redisTemplate.delete(keys4);
+				return ImportExcelUtil.imporReturnRes(errorMessageList.size(), listSysDeparts.size() - errorMessageList.size(), errorMessageList);
+			} catch (Exception e) {
+				log.error(e.getMessage(),e);
+				return Result.error("文件导入失败:"+e.getMessage());
+			} finally {
+				try {
+					file.getInputStream().close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return Result.error("文件导入失败！");
+	}
+	
 }

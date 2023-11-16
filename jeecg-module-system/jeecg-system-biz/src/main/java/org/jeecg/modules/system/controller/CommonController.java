@@ -4,17 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.constant.SymbolConstant;
+import org.jeecg.common.constant.enums.FileTypeEnum;
 import org.jeecg.common.exception.JeecgBootException;
 import org.jeecg.common.util.CommonUtils;
-import org.jeecg.common.util.filter.FileTypeFilter;
+import org.jeecg.common.util.filter.SsrfFileTypeFilter;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.system.service.ISysFilesService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.HandlerMapping;
@@ -90,7 +90,7 @@ public class CommonController {
         }
         if(CommonConstant.UPLOAD_TYPE_LOCAL.equals(uploadType)){
             //update-begin-author:liusq date:20221102 for: 过滤上传文件类型
-            FileTypeFilter.fileTypeFilter(file);
+            SsrfFileTypeFilter.checkUploadFileType(file);
             //update-end-author:liusq date:20221102 for: 过滤上传文件类型
             //update-begin-author:lvdandan date:20200928 for:修改JEditor编辑器本地上传
             savePath = this.uploadLocal(file,bizPath);
@@ -222,11 +222,17 @@ public class CommonController {
             if (imgPath.endsWith(SymbolConstant.COMMA)) {
                 imgPath = imgPath.substring(0, imgPath.length() - 1);
             }
+            //update-begin---author:liusq ---date:20230912  for：检查下载文件类型--------------
+            SsrfFileTypeFilter.checkDownloadFileType(imgPath);
+            //update-end---author:liusq ---date:20230912  for：检查下载文件类型--------------
+
             String filePath = uploadpath + File.separator + imgPath;
             File file = new File(filePath);
             if(!file.exists()){
                 response.setStatus(404);
-                throw new RuntimeException("文件["+imgPath+"]不存在..");
+                log.error("文件["+imgPath+"]不存在..");
+                return;
+                //throw new RuntimeException();
             }
             // 设置强制下载不打开
             response.setContentType("application/force-download");

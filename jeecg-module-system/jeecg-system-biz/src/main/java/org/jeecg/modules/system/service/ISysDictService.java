@@ -5,7 +5,9 @@ import org.jeecg.common.system.vo.DictModel;
 import org.jeecg.common.system.vo.DictQuery;
 import org.jeecg.modules.system.entity.SysDict;
 import org.jeecg.modules.system.entity.SysDictItem;
+import org.jeecg.modules.system.model.DuplicateCheckVo;
 import org.jeecg.modules.system.model.TreeSelectModel;
+import org.jeecg.modules.system.vo.lowapp.SysDictVo;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,15 @@ import java.util.Map;
  * @since 2018-12-28
  */
 public interface ISysDictService extends IService<SysDict> {
+
+	/**
+	 *  校验数据是否可用，不存在重复数据
+	 *  
+	 * @param duplicateCheckVo
+	 * @return
+	 */
+	@Deprecated
+	public boolean duplicateCheckData(DuplicateCheckVo duplicateCheckVo);
 
     /**
      * 通过字典code获取字典数据
@@ -50,13 +61,13 @@ public interface ISysDictService extends IService<SysDict> {
 
     /**
      * 查通过查询指定table的 text code 获取字典
-     * @param table
+     * @param tableFilterSql
      * @param text
      * @param code
      * @return
      */
     @Deprecated
-    List<DictModel> queryTableDictItemsByCode(String table, String text, String code);
+    List<DictModel> queryTableDictItemsByCode(String tableFilterSql, String text, String code);
 
     /**
      * 通过查询指定table的 text code 获取字典（指定查询条件）
@@ -255,4 +266,22 @@ public interface ISysDictService extends IService<SysDict> {
      */
     List<DictModel> loadDict(String dictCode, String keyword, Integer pageSize);
 
+	/**
+	 * 根据应用id获取字典列表和详情
+	 * @param lowAppId
+	 * @return
+	 */
+	List<SysDictVo> getDictListByLowAppId(String lowAppId);
+
+	/**
+	 * 创建字典
+	 * @param sysDictVo
+	 */
+	String addDictByLowAppId(SysDictVo sysDictVo);
+
+	/**
+	 * 编辑字典
+	 * @param sysDictVo
+	 */
+	void editDictByLowAppId(SysDictVo sysDictVo);
 }
