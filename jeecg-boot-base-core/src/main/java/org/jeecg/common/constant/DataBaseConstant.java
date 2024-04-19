@@ -17,6 +17,9 @@ public interface DataBaseConstant {
 
     /**postgreSQL达梦数据库*/
 	public static final String DB_TYPE_POSTGRESQL = "POSTGRESQL";
+	
+    /**人大金仓数据库*/
+	public static final String DB_TYPE_KINGBASEES = "KINGBASEES";
 
     /**sqlserver数据库*/
 	public static final String DB_TYPE_SQLSERVER = "SQLSERVER";
@@ -138,16 +141,6 @@ public interface DataBaseConstant {
 	 */
 	public static final String BPM_STATUS_TABLE = "bpm_status";
 	//*********系统建表标准字段****************************************
-
-
-	/**
-	 * 租户ID 实体字段名
-	 */
-	String TENANT_ID = "tenantId";
-	/**
-	 * 租户ID 数据库字段名
-	 */
-	String TENANT_ID_TABLE = "tenant_id";
 
     /**
      * sql语句 where

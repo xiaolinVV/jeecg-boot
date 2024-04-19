@@ -136,6 +136,12 @@ public class SysPermissionTree implements Serializable {
 	private boolean internalOrExternal;
 	/*update_end author:wuxianquan date:20190908 for:model增加字段 */
 
+	/*update_begin author:liusq date:20230601 for:【issues/4986】model增加hideTab字段 */
+	/**
+	 * 是否隐藏Tab: 0否,1是（默认值0）
+	 */
+	private boolean hideTab;
+	/*update_end author:liusq date:20230601 for:【issues/4986】model增加hideTab字段 */
 
 	public SysPermissionTree() {
 	}
@@ -169,6 +175,9 @@ public class SysPermissionTree implements Serializable {
 		this.internalOrExternal = permission.isInternalOrExternal();
 		/*update_end author:wuxianquan date:20190908 for:赋值 */
 		this.title=permission.getName();
+		/*update_end author:liusq date:20230601 for:【issues/4986】model增加hideTab字段 */
+		this.hideTab = permission.isHideTab();
+		/*update_end author:liusq date:20230601 for:【issues/4986】model增加hideTab字段 */
 		if (!permission.isLeaf()) {
 			this.children = new ArrayList<SysPermissionTree>();
 		}
@@ -409,4 +418,12 @@ public class SysPermissionTree implements Serializable {
 		this.internalOrExternal = internalOrExternal;
 	}
 	/*update_end author:wuxianquan date:20190908 for:get set 方法 */
+
+	public boolean isHideTab() {
+		return hideTab;
+	}
+
+	public void setHideTab(boolean hideTab) {
+		this.hideTab = hideTab;
+	}
 }

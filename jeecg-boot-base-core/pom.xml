@@ -2,35 +2,48 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
-		<artifactId>jeecg-boot-parent</artifactId>
 		<groupId>org.jeecgframework.boot</groupId>
-		<version>3.4.4</version>
+		<artifactId>jeecg-boot-parent</artifactId>
+		<version>3.6.3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-
 	<artifactId>jeecg-boot-base-core</artifactId>
 
+	<repositories>
+		<repository>
+			<id>aliyun</id>
+			<name>aliyun Repository</name>
+			<url>https://maven.aliyun.com/repository/public</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>jeecg</id>
+			<name>jeecg Repository</name>
+			<url>https://maven.jeecg.org/nexus/content/repositories/jeecg</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>jeecg-snapshots</id>
+			<name>jeecg-snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	
 	<dependencies>
 		<!--jeecg-tools-->
 		<dependency>
 			<groupId>org.jeecgframework.boot</groupId>
 			<artifactId>jeecg-boot-common</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>hutool-core</artifactId>
-					<groupId>cn.hutool</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>hutool-crypto</artifactId>
-					<groupId>cn.hutool</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!--加载hutool-->
-		<dependency>
-			<groupId>cn.hutool</groupId>
-			<artifactId>hutool-all</artifactId>
-			<version>5.8.5</version>
 		</dependency>
 		<!--集成springmvc框架并实现自动配置 -->
 		<dependency>
@@ -69,7 +82,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>${commons.version}</version>
+			<version>${commons-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -132,7 +145,7 @@
 			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-
+      
 		<!-- Quartz定时任务 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -162,18 +175,27 @@
 					<groupId>org.apache.shiro</groupId>
 					<artifactId>shiro-core</artifactId>
 				</exclusion>
+				<exclusion>
+					<artifactId>checkstyle</artifactId>
+					<groupId>com.puppycrawl.tools</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
 		<!-- knife4j -->
-		<dependency>
+<!--		<dependency>
 			<groupId>com.github.xiaoymin</groupId>
 			<artifactId>knife4j-spring-boot-starter</artifactId>
+			<version>3.0.3</version>
+		</dependency>-->
+		<dependency>
+			<groupId>com.github.xiaoymin</groupId>
+			<artifactId>knife4j-openapi2-spring-boot-starter</artifactId>
 			<version>${knife4j-spring-boot-starter.version}</version>
 		</dependency>
 
 		<!-- 代码生成器 -->
-		<!-- 如下载失败，请参考此文档  http://doc.jeecg.com/2043876 -->
+		<!-- 如下载失败，请参考此文档  https://help.jeecg.com/java/setup/maven.html -->
 		<dependency>
 			<groupId>org.jeecgframework.boot</groupId>
 			<artifactId>codegenerate</artifactId>
@@ -190,7 +212,17 @@
 					<groupId>commons-codec</groupId>
 					<artifactId>commons-codec</artifactId>
 				</exclusion>
+				<exclusion>
+					<artifactId>xercesImpl</artifactId>
+					<groupId>xerces</groupId>
+				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>xerces</groupId>
+			<artifactId>xercesImpl</artifactId>
+			<version>2.12.2</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- mini文件存储服务 -->
@@ -224,6 +256,33 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-kotlin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+		</dependency>
+
+
+		<!-- 对 mybatis-plus 多表查询的扩展-->
+		<dependency>
+			<groupId>com.github.yulichang</groupId>
+			<artifactId>mybatis-plus-join-boot-starter</artifactId>
+			<version>1.4.2</version>
+		</dependency>
+		<!--使用线程池时，ThreadLocal 父线程到子线程值传递问题需要 TransmittableThreadLocal 来解决-->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>transmittable-thread-local</artifactId>
+			<version>2.14.2</version>
+		</dependency>
+		<!--加载hutool-->
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-crypto</artifactId>
 		</dependency>
 	</dependencies>
 

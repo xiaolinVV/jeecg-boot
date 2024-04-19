@@ -51,17 +51,39 @@ public interface ISysUserDepartService extends IService<SysUserDepart> {
 	 * @param pageNo
      * @param realname
      * @param id
+     * @param isMultiTranslate 是否多字段翻译
 	 * @return
 	 */
-	IPage<SysUser> queryDepartUserPageList(String departId, String username, String realname, int pageSize, int pageNo,String id);
+	IPage<SysUser> queryDepartUserPageList(String departId, String username, String realname, int pageSize, int pageNo,String id,String isMultiTranslate);
 
     /**
      * 获取用户信息
+	 * @param tenantId
      * @param departId
      * @param keyword
      * @param pageSize
      * @param pageNo
      * @return
      */
-    IPage<SysUser> getUserInformation(String departId, String keyword, Integer pageSize, Integer pageNo);
+    IPage<SysUser> getUserInformation(Integer tenantId, String departId, String keyword, Integer pageSize, Integer pageNo);
+
+	/**
+	 * 获取用户信息
+	 * @param tenantId
+	 * @param departId
+	 * @param roleId
+	 * @param keyword
+	 * @param pageSize
+	 * @param pageNo
+	 * @return
+	 */
+	IPage<SysUser> getUserInformation(Integer tenantId,String departId,String roleId, String keyword, Integer pageSize, Integer pageNo, String excludeUserIdList);
+
+	/**
+	 * 通过部门id和租户id获取多个用户
+	 * @param departId
+	 * @param tenantId
+	 * @return
+	 */
+	List<SysUser> getUsersByDepartTenantId(String departId,Integer tenantId);
 }

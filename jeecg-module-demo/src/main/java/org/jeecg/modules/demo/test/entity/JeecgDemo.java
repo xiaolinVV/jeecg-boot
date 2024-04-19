@@ -2,6 +2,7 @@ package org.jeecg.modules.demo.test.entity;
 
 import java.io.Serializable;
 
+import com.baomidou.mybatisplus.annotation.Version;
 import org.jeecg.common.system.base.entity.JeecgEntity;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,11 +45,11 @@ public class JeecgDemo extends JeecgEntity implements Serializable {
 	private java.util.Date punchTime;
 	/** 工资 */
 	@ApiModelProperty(value = "工资",example = "0")
-	@Excel(name="工资",width=15)
+	@Excel(name="工资",type = 4,width=15)
 	private java.math.BigDecimal salaryMoney;
 	/** 奖金 */
 	@ApiModelProperty(value = "奖金",example = "0")
-	@Excel(name="奖金",width=15)
+	@Excel(name="奖金",type = 4,width=15)
 	private java.lang.Double bonusMoney;
 	/** 性别 {男:1,女:2} */
 	@ApiModelProperty(value = "性别")
@@ -56,7 +57,7 @@ public class JeecgDemo extends JeecgEntity implements Serializable {
 	private java.lang.String sex;
 	/** 年龄 */
 	@ApiModelProperty(value = "年龄",example = "0")
-	@Excel(name="年龄",width=15)
+	@Excel(name="年龄",type = 4,width=15)
 	private java.lang.Integer age;
 	/** 生日 */
 	@ApiModelProperty(value = "生日")
@@ -78,5 +79,8 @@ public class JeecgDemo extends JeecgEntity implements Serializable {
 
 	@ApiModelProperty(value = "租户ID")
 	private java.lang.Integer tenantId;
+	/** 乐观锁字段 */
+	@Version
+	private java.lang.Integer updateCount;
 
 }

@@ -1,5 +1,6 @@
 package org.jeecg.modules.system.controller;
 
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,18 +8,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
+import org.jeecg.common.config.TenantContext;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.ImportExcelUtil;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.quartz.service.IQuartzJobService;
+import org.jeecg.config.mybatis.MybatisPlusSaasConfig;
 import org.jeecg.modules.system.entity.SysPosition;
+import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.service.ISysPositionService;
+import org.jeecg.modules.system.service.ISysUserPositionService;
+import org.jeecg.modules.system.service.ISysUserService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -39,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Description: 职务表
@@ -54,6 +59,12 @@ public class SysPositionController {
 
     @Autowired
     private ISysPositionService sysPositionService;
+
+    @Autowired
+    private ISysUserPositionService userPositionService;
+
+    @Autowired
+    private ISysUserService userService;
 
     /**
      * 分页列表查询
@@ -72,6 +83,12 @@ public class SysPositionController {
                                                     @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                     HttpServletRequest req) {
         Result<IPage<SysPosition>> result = new Result<IPage<SysPosition>>();
+        //------------------------------------------------------------------------------------------------
+        //是否开启系统管理模块的多租户数据隔离【SAAS多租户模式】
+        if(MybatisPlusSaasConfig.OPEN_SYSTEM_TENANT_CONTROL){
+            sysPosition.setTenantId(oConvertUtils.getInt(TenantContext.getTenant(),0));
+        }
+        //------------------------------------------------------------------------------------------------
         QueryWrapper<SysPosition> queryWrapper = QueryGenerator.initQueryWrapper(sysPosition, req.getParameterMap());
         Page<SysPosition> page = new Page<SysPosition>(pageNo, pageSize);
         IPage<SysPosition> pageList = sysPositionService.page(page, queryWrapper);
@@ -92,6 +109,13 @@ public class SysPositionController {
     public Result<SysPosition> add(@RequestBody SysPosition sysPosition) {
         Result<SysPosition> result = new Result<SysPosition>();
         try {
+            //update-begin---author:wangshuai ---date:20230313  for：【QQYUN-4558】vue3职位功能调整，去掉编码和级别，可以先隐藏------------
+            //编号是空的，不需要判断多租户隔离了
+            if(oConvertUtils.isEmpty(sysPosition.getCode())){
+                //生成职位编码10位
+                sysPosition.setCode(RandomUtil.randomString(10));
+            }
+            //update-end---author:wangshuai ---date:20230313  for：【QQYUN-4558】vue3职位功能调整，去掉编码和级别，可以先隐藏-------------
             sysPositionService.save(sysPosition);
             result.success("添加成功！");
         } catch (Exception e) {
@@ -138,6 +162,8 @@ public class SysPositionController {
     public Result<?> delete(@RequestParam(name = "id", required = true) String id) {
         try {
             sysPositionService.removeById(id);
+            //删除用户职位关系表
+            userPositionService.removeByPositionId(id);
         } catch (Exception e) {
             log.error("删除失败", e.getMessage());
             return Result.error("删除失败!");
@@ -201,6 +227,12 @@ public class SysPositionController {
             if (oConvertUtils.isNotEmpty(paramsStr)) {
                 String deString = URLDecoder.decode(paramsStr, "UTF-8");
                 SysPosition sysPosition = JSON.parseObject(deString, SysPosition.class);
+                //------------------------------------------------------------------------------------------------
+                //是否开启系统管理模块的多租户数据隔离【SAAS多租户模式】
+                if(MybatisPlusSaasConfig.OPEN_SYSTEM_TENANT_CONTROL){
+                    sysPosition.setTenantId(oConvertUtils.getInt(TenantContext.getTenant(),0));
+                }
+                //------------------------------------------------------------------------------------------------
                 queryWrapper = QueryGenerator.initQueryWrapper(sysPosition, request.getParameterMap());
             }
         } catch (UnsupportedEncodingException e) {
@@ -280,5 +312,84 @@ public class SysPositionController {
             result.setSuccess(true);
         }
         return result;
+    }
+
+
+    /**
+     * 通过多个ID查询
+     *
+     * @param ids
+     * @return
+     */
+    @AutoLog(value = "职务表-通过多个查询")
+    @ApiOperation(value = "职务表-通过多个id查询", notes = "职务表-通过多个id查询")
+    @GetMapping(value = "/queryByIds")
+    public Result<List<SysPosition>> queryByIds(@RequestParam(name = "ids") String ids) {
+        Result<List<SysPosition>> result = new Result<>();
+        QueryWrapper<SysPosition> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in(true,"id",ids.split(","));
+        List<SysPosition> list = sysPositionService.list(queryWrapper);
+        if (list == null) {
+            result.error500("未找到对应实体");
+        } else {
+            result.setResult(list);
+            result.setSuccess(true);
+        }
+        return result;
+    }
+
+
+
+    /**
+     * 获取职位用户列表
+     *
+     * @param pageNo
+     * @param pageSize
+     * @param positionId
+     * @return
+     */
+    @GetMapping("/getPositionUserList")
+    public Result<IPage<SysUser>> getPositionUserList(@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
+                                                      @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                      @RequestParam(name = "positionId") String positionId) {
+
+        Page<SysUser> page = new Page<>(pageNo, pageSize);
+        IPage<SysUser> pageList = userPositionService.getPositionUserList(page, positionId);
+        List<String> userIds = pageList.getRecords().stream().map(SysUser::getId).collect(Collectors.toList());
+        if (null != userIds && userIds.size() > 0) {
+            Map<String, String> useDepNames = userService.getDepNamesByUserIds(userIds);
+            pageList.getRecords().forEach(item -> {
+                item.setOrgCodeTxt(useDepNames.get(item.getId()));
+            });
+        }
+        return Result.ok(pageList);
+    }
+
+    /**
+     * 添加成员到用户职位关系表
+     *
+     * @param userIds
+     * @param positionId
+     * @return
+     */
+    @PostMapping("/savePositionUser")
+    public Result<String> saveUserPosition(@RequestParam(name = "userIds") String userIds,
+                                           @RequestParam(name = "positionId") String positionId) {
+        userPositionService.saveUserPosition(userIds, positionId);
+        return Result.ok("添加成功");
+    }
+
+    /**
+     * 职位列表移除成员
+     *
+     * @param userIds
+     * @param positionId
+     * @return
+     */
+    @DeleteMapping("/removePositionUser")
+    public Result<String> removeUserPosition(@RequestParam(name = "userIds") String userIds,
+                                             @RequestParam(name = "positionId") String positionId) {
+        userPositionService.removePositionUser(userIds, positionId);
+        return Result.OK("移除成员成功");
     }
 }
