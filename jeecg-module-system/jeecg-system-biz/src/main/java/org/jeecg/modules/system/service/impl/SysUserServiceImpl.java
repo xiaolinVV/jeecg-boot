@@ -120,6 +120,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private SysPositionMapper sysPositionMapper;
 	@Autowired
 	private SystemSendMsgHandle systemSendMsgHandle;
+	
 	@Autowired
 	private ISysThirdAccountService sysThirdAccountService;
 	
@@ -178,8 +179,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				} else {
 					item.setRelTenantIds("");
 				}
+				Integer posTenantId = null;
+				if (MybatisPlusSaasConfig.OPEN_SYSTEM_TENANT_CONTROL) {
+					posTenantId = tenantId;		
+				}
 				//查询用户职位关系表(获取租户下面的)
-				List<String> positionList =  sysUserPositionMapper.getPositionIdByUserTenantId(item.getId(),tenantId);
+				//update-begin---author:wangshuai---date:2023-11-15---for:【QQYUN-7028】用户职务保存后未回显---
+				List<String> positionList =  sysUserPositionMapper.getPositionIdByUserTenantId(item.getId(),posTenantId);
+				//update-end---author:wangshuai---date:2023-11-15---for:【QQYUN-7028】用户职务保存后未回显---
 				//update-end---author:wangshuai ---date:20230228  for：[QQYUN-4354]加入更多字段：当前加入时间应该取当前租户的/职位也是当前租户下的------------
 				item.setPost(CommonUtils.getSplitText(positionList,SymbolConstant.COMMA));
 				
@@ -828,6 +835,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		SysUserTenant userTenant = new SysUserTenant();
 		userTenant.setStatus(CommonConstant.USER_TENANT_QUIT);
 		userTenantMapper.update(userTenant,query);
+		//update-end---author:wangshuai ---date:20230111  for：[QQYUN-3951]租户用户离职重构------------
     }
 
     @Override
@@ -1378,7 +1386,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * 保存用户职位
 	 *
 	 * @param userId
-	 * @param postIds
+	 * @param positionIds
 	 */
 	private void saveUserPosition(String userId, String positionIds) {
 		if (oConvertUtils.isNotEmpty(positionIds)) {
@@ -1796,5 +1804,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		//update-end---author:wangshuai ---date:20230710  for：【QQYUN-5731】导入用户时，没有提醒------------
 	}
 	//======================================= end 用户与部门 用户列表导入 =========================================
-	
+	@Override
+	public void checkUserAdminRejectDel(String userIds) {
+		LambdaQueryWrapper<SysUser> query = new LambdaQueryWrapper<>();
+		query.in(SysUser::getId,Arrays.asList(userIds.split(SymbolConstant.COMMA)));
+		query.eq(SysUser::getUsername,"admin");
+		Long adminRoleCount = this.baseMapper.selectCount(query);
+		//大于0说明存在管理员用户，不允许删除
+		if(adminRoleCount>0){
+			throw new JeecgBootException("admin用户，不允许删除！");
+		}
+	}
 }

@@ -7,13 +7,13 @@
 JEECG BOOT 低代码开发平台
 ===============
 
-当前最新版本： 3.6.0（发布日期：2023-10-23） 
+当前最新版本： 3.6.3（发布日期：2024-03-11） 
 
 
 [![AUR](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/zhangdaiscott/jeecg-boot/blob/master/LICENSE)
 [![](https://img.shields.io/badge/Author-北京国炬软件-orange.svg)](http://jeecg.com/aboutusIndex)
 [![](https://img.shields.io/badge/Blog-官方博客-blue.svg)](https://jeecg.blog.csdn.net)
-[![](https://img.shields.io/badge/version-3.6.0-brightgreen.svg)](https://github.com/zhangdaiscott/jeecg-boot)
+[![](https://img.shields.io/badge/version-3.6.3-brightgreen.svg)](https://github.com/zhangdaiscott/jeecg-boot)
 [![GitHub stars](https://img.shields.io/github/stars/zhangdaiscott/jeecg-boot.svg?style=social&label=Stars)](https://github.com/zhangdaiscott/jeecg-boot)
 [![GitHub forks](https://img.shields.io/github/forks/zhangdaiscott/jeecg-boot.svg?style=social&label=Fork)](https://github.com/zhangdaiscott/jeecg-boot)
 
@@ -49,16 +49,17 @@ Jeecg-Boot低代码开发平台，可以应用在任何J2EE项目的开发中，
 | Github | [jeecgboot-vue3](https://github.com/jeecgboot/jeecgboot-vue3)   | [jeecg-boot](https://github.com/jeecgboot/jeecg-boot) |
 | 码云 | [jeecgboot-vue3](https://gitee.com/jeecg/jeecgboot-vue3)   | [jeecg-boot](https://gitee.com/jeecg/jeecg-boot) |
 
+> 官方已推出 `SpringBoot3+JDK17版本` [分支源码下载](https://github.com/jeecgboot/jeecg-boot/tree/springboot3)  |  [升级SpringBoot3博客](https://blog.csdn.net/zhangdaiscott/article/details/134805602)
 
 #### 项目说明
 
 | 项目名                | 说明                     | 
 |--------------------|------------------------|
-| `jeecg-boot`    | JAVA后台源码（支持微服务）        |
 | `jeecgboot-vue3` | 前端源码 (Vue3版本) |
+| `jeecg-boot`    | 后端JAVA源码（支持微服务）        |
 | `jeecg-uniapp` | [APP开发框架，一份代码多终端适配，同时支持APP、小程序、H5](https://github.com/jeecgboot/jeecg-uniapp) |
-| `jeecg-boot-starter` | [Stater依赖项目单独维护，点击下载](https://gitee.com/jeecg/jeecg-boot-starter) |
-| `更多开源项目` | [更多源码下载](http://jeecg.com/download) |
+| `更多开源项目` | [更多底层源码下载](http://jeecg.com/download) |
+
 
 
 快速搭建开发环境
@@ -68,7 +69,7 @@ Jeecg-Boot低代码开发平台，可以应用在任何J2EE项目的开发中，
 - [通过IDEA启动前后端项目](https://help.jeecg.com/java/setup/idea/startup.html)
 - [Vue3前端项目快速启动](http://help.jeecg.com/setup/startup.html)
 - [单体快速切换为微服务版](https://help.jeecg.com/java/springcloud/switchcloud/monomer.html)
-
+- [ChatGPT AI助手配置文档](https://help.jeecg.com/java/chatgpt.html)
 
 Docker快速启动项目
 -----------------------------------
@@ -82,16 +83,22 @@ Docker快速启动项目
 -----------------------------------
 
 - 项目官网：  [http://www.jeecg.com](http://www.jeecg.com)
-- 开发文档：  [http://help.jeecg.com](http://help.jeecg.com)
+- 开发文档：  [https://help.jeecg.com](https://help.jeecg.com)
 - 新手指南： [快速入门](http://www.jeecg.com/doc/quickstart)  |   [常见问题 ](http://www.jeecg.com/doc/qa) |  [视频教程](https://space.bilibili.com/454617261/channel/series)  |  [1分钟低代码体验](https://my.oschina.net/jeecg/blog/3083313) 
 
 - 在线演示 ：  [Vue3演示](http://boot3.jeecg.com)   | [APP演示](http://jeecg.com/appIndex) |  [敲敲云零代码](https://qiaoqiaoyun.com)
 > 演示系统的登录账号密码，请点击 [获取账号密码](http://jeecg.com/doc/demo) 获取 
 >
-- QQ交流群 ： ⑧825232878、⑦791696430(满)、⑥730954414(满)、683903138(满)、⑤860162132(满)、④774126647(满)、③816531124(满)、②769925425(满)、①284271917(满)
+- QQ交流群 ： ⑨808791225、⑧825232878、⑦791696430(满)、⑥730954414(满)、683903138(满)、⑤860162132(满)、④774126647(满)、③816531124(满)、②769925425(满)、①284271917(满)
 > ` 提醒：【QQ群是自助服务群，建议给帮助您解决问题的同学发送指定红包，表示感谢！】 `
 
 
+大龄码农的思考
+-----------------------------------
+> 作为码农年纪大了写不动代码了怎么办？？哎！！
+所以我们团队在追求不写代码也可实现复杂业务系统！目前已经做到了，不信你到敲敲云零代码试试（通过流程串联修改业务数据）
+
+- https://www.qiaoqiaoyun.com
 
 
 技术支持
@@ -100,8 +107,6 @@ Docker快速启动项目
 关闭gitee的issue通道，使用中遇到问题或者BUG可以在 [Github上提Issues](https://github.com/jeecgboot/jeecg-boot/issues/new)
 
 官方支持： [http://jeecg.com/doc/help](http://jeecg.com/doc/help)
-
-
 
 
 
@@ -191,8 +196,8 @@ Star走势图
 * 17.支持SAAS服务模式，提供SaaS多租户架构方案。
 * 18.分布式文件服务，集成minio、阿里OSS等优秀的第三方，提供便捷的文件上传与管理，同时也支持本地存储。
 * 19.主流数据库兼容，一套代码完全兼容Mysql、Postgresql、Oracle、Sqlserver、MariaDB、达梦等主流数据库。
-* 20.集成工作流activiti、flowable，并实现了只需在页面配置流程转向，可极大的简化bpm工作流的开发；用bpm的流程设计器画出了流程走向，一个工作流基本就完成了，只需写很少量的java代码；
-* 21.低代码能力：在线流程设计，采用开源Activiti流程引擎，实现在线画流程,自定义表单,表单挂靠,业务流转
+* 20.集成工作流flowable、activiti，并实现了只需在页面配置流程转向，可极大的简化bpm工作流的开发；用bpm的流程设计器画出了流程走向，一个工作流基本就完成了，只需写很少量的java代码；
+* 21.低代码能力：在线流程设计，采用开源flowable、activiti流程引擎，实现在线画流程,自定义表单,表单挂靠,业务流转
 * 22.多数据源：及其简易的使用方式，在线配置数据源配置，便捷的从其他数据抓取数据；
 * 23.提供单点登录CAS集成方案，项目中已经提供完善的对接代码
 * 24.低代码能力：表单设计器，支持用户自定义表单布局，支持单表，一对多表单、支持select、radio、checkbox、textarea、date、popup、列表、宏等控件
@@ -462,12 +467,19 @@ Star走势图
    
 ```
 
+### 流程引擎推荐
 
+JeecgBoot企业版本默认集成了activiti和flowable两套方案，大家在使用本开源项目时，如果想进一步集成流程引擎，推荐结合贺波老师的书 [《深入Activiti流程引擎：核心原理与高阶实战》](https://item.m.jd.com/product/13928958.html?gx=RnAomTM2bmCImZxDqYAkVCoIHuIYVqc)
 
+<img src="https://jeecgos.oss-cn-beijing.aliyuncs.com/files/tuijian20231220161656.png" width="25%" height="auto">
 
 
 ### 系统效果
 
+
+##### ChatGPT AI交互
+> 进入JeecgBoot后台首页，点击首页右侧中间“AI助手”，弹出AI助手对话界面。
+![](https://oscimg.oschina.net/oscnet/up-7c6405641a40f56638999d52da0cb5b4343.png)
 
 
 ##### PC端

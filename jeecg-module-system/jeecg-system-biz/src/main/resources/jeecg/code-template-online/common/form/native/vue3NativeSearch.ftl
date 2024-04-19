@@ -1,5 +1,7 @@
 <#include "/common/utils.ftl">
-<#if po.isQuery=='Y'>
+<#-- update-begin---author:chenrui ---date:20240108  for：[issues/5755]vue代码不加入逻辑删除字段---------- -->
+<#if po.isQuery=='Y' && po.fieldName !='delFlag'>
+<#-- update-end---author:chenrui ---date:20240108  for：[issues/5755]vue代码不加入逻辑删除字段---------- -->
 <#assign query_flag=true>
 	<#if query_field_no==2>
           <template v-if="toggleSearchStatus">
@@ -19,7 +21,9 @@
             <#if po.classType=='sel_search'>
               <#if query_field_no gt 1>  </#if><j-search-select placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" dict="${po.dictTable},${po.dictText},${po.dictField}" />
             <#elseif po.classType=='sel_user'>
-              <#if query_field_no gt 1>  </#if><j-select-user-by-dept placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" @change="(value)=>handleFormJoinChange('${po.fieldName}',value)"/>
+              <#-- update-begin---author:chenrui ---date:20240102  for：[issue/#5711]修复用户选择组件在生成代码后变成部门用户选择组件---------- -->
+              <#if query_field_no gt 1>  </#if><j-select-user placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" @change="(value)=>handleFormJoinChange('${po.fieldName}',value)"/>
+              <#-- update-end---author:chenrui ---date:20240102  for：[issue/#5711]修复用户选择组件在生成代码后变成部门用户选择组件---------- -->
             <#elseif po.classType=='switch'>
               <#if query_field_no gt 1>  </#if><j-switch placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" <#if po.dictField!= 'is_open'>:options="${po.dictField}"</#if> query />
             <#elseif po.classType=='sel_depart'>
@@ -35,7 +39,7 @@
             <#elseif po.classType=='time'>
               <#if query_field_no gt 1>  </#if><time-picker valueFormat="HH:mm:ss" placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" />
             <#elseif po.classType=='pca'>
-              <#if query_field_no gt 1>  </#if><j-area-linkage v-model:value="queryParam.${po.fieldName}" placeholder="请选择${po.filedComment}" @change="(value) => handleFormJoinChange('${po.fieldName}', value)" /> 
+              <#if query_field_no gt 1>  </#if><j-area-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${po.filedComment}" /> 
             <#elseif po.classType=='sel_tree'>
               <#if query_field_no gt 1>  </#if><j-tree-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${po.filedComment}" <#if po.dictText??><#if po.dictText?split(',')[2]?? && po.dictText?split(',')[0]??>dict="${po.dictTable},${po.dictText?split(',')[2]},${po.dictText?split(',')[0]}" <#elseif po.dictText?split(',')[1]??>pidField:"${po.dictText?split(',')[1]}", <#elseif po.dictText?split(',')[3]??>hasChildField:"${po.dictText?split(',')[3]}"</#if> </#if>pidValue="${po.dictField}" />
             <#elseif po.classType=='popup'>
