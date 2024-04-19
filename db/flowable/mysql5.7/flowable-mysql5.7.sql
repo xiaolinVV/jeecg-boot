@@ -87,7 +87,7 @@ INSERT INTO `ACT_GE_PROPERTY` VALUES ('eventsubscription.schema.version', '6.5.0
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('task.schema.version', '6.5.0.6', 1);
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('variable.schema.version', '6.5.0.6', 1);
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('job.schema.version', '6.5.0.6', 1);
-INSERT INTO `ACT_GE_PROPERTY` VALUES ('batch.schema.version', '6.5.0.6', 1);
+# INSERT INTO `ACT_GE_PROPERTY` VALUES ('batch.schema.version', '6.5.0.6', 1);
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('schema.version', '6.5.0.6', 1);
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('schema.history', 'create(6.5.0.6)', 1);
 INSERT INTO `ACT_GE_PROPERTY` VALUES ('cfg.execution-related-entities-count', 'true', 1);

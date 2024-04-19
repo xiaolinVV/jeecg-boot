@@ -92,7 +92,7 @@ public class SendMessageTest {
         messageDTO.setTitle("【流程错误】");
         messageDTO.setFromUser("admin");
         HashMap data = new HashMap<>();
-        data.put(CommonConstant.NOTICE_MSG_BUS_TYPE, "msg_node");
+//        data.put(CommonConstant.NOTICE_MSG_BUS_TYPE, "msg_node");
         messageDTO.setData(data);
         messageDTO.setContent("TEST:流程执行失败！任务节点未找到");
         sysBaseAPI.sendTemplateMessage(messageDTO);
