@@ -2,6 +2,12 @@ package ${bussiPackage}.${entityPackage}.service;
 
 import ${bussiPackage}.${entityPackage}.entity.${entityName};
 import com.github.yulichang.base.MPJBaseService;
+<#assign bpm_flag=false>
+<#list originalColumns as po>
+<#if po.fieldDbName=='bpm_status'>
+  <#assign bpm_flag=true>
+</#if>
+</#list>
 
 /**
  * @Description: ${tableVo.ftlDescription}
@@ -11,4 +17,11 @@ import com.github.yulichang.base.MPJBaseService;
  */
 public interface I${entityName}Service extends MPJBaseService<${entityName}> {
 
+    <#if bpm_flag>
+    /**
+     * 关联流程
+     * @param dataId 业务id
+     */
+    void relationAct(String dataId);
+    </#if>
 }
