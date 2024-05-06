@@ -1,6 +1,9 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+alter table sys_permission rename as sys_permission_v3;
+alter table sys_permission_v2 rename as sys_permission;
+
 -- ----------------------------
 -- Table structure for flow_my_business
 -- ----------------------------
