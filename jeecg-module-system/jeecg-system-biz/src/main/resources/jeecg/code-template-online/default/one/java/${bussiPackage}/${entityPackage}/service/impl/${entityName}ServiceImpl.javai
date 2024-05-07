@@ -102,8 +102,23 @@ public class ${entityName}ServiceImpl extends MPJBaseServiceImpl<${entityName}Ma
     @Override
     public boolean removeById(Serializable id) {
         /**删除数据，移除流程关联信息**/
-        flowCommonService.delActBusiness(id.toString());
-        return super.removeById(id);
+        boolean remove = super.removeById(id);
+        if (remove) {
+            flowCommonService.delActBusiness(id.toString());
+        }
+        return remove;
+    }
+
+    @Override
+    public boolean removeByIds(Collection<?> list) {
+        boolean remove = super.removeByIds(list);
+        if (remove) {
+            list.forEach(id -> {
+                /**删除数据，移除流程关联信息**/
+                flowCommonService.delActBusiness(id.toString());
+            });
+        }
+        return remove;
     }
 
     @Override
