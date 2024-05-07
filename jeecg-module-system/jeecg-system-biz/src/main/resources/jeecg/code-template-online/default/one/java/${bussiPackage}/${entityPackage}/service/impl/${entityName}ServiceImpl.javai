@@ -86,6 +86,7 @@ public class ${entityName}ServiceImpl extends MPJBaseServiceImpl<${entityName}Ma
     public boolean save(${entityName} ${entityName?uncap_first}) {
         /**新增数据，初始化流程关联信息**/
         ${entityName?uncap_first}.setId(IdUtil.fastSimpleUUID());
+        ${entityName?uncap_first}.setBpmStatus("0");
         boolean saved = super.save(${entityName?uncap_first});
         this.relationAct(${entityName?uncap_first}.getId());
 
