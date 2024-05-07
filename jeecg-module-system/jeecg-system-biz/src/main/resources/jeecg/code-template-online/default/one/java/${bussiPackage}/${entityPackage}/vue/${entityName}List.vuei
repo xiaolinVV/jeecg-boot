@@ -188,22 +188,25 @@
         </template>
 
         <span slot="action" slot-scope="text, record">
-          <a @click="handleEdit(record)">编辑</a>
+          <a <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> @click="handleEdit(record)">编辑</a>
 
-          <a-divider type="vertical" />
+          <a-divider <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> type="vertical" />
           <a-dropdown>
             <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
             <a-menu slot="overlay">
               <a-menu-item>
                 <a @click="handleDetail(record)">详情</a>
               </a-menu-item>
+              <a-menu-item <#if bpm_flag> v-if='record.jimuReportId'</#if>>
+                 <a @click="goToApplyDoc(record)">审批单据</a>
+              </a-menu-item>
               <#if bpm_flag>
-              <a-menu-item v-if="record.bpmStatus === '1'">
+              <a-menu-item v-if="record.bpmStatus === '0'">
                 <a @click="startProcess(record)">发起流程</a>
               </a-menu-item>
               </#if>
               <a-menu-item>
-                <a-popconfirm title="确定删除吗?" @confirm="() => handleDelete(record.id)">
+                <a-popconfirm <#if bpm_flag> v-if='isEditOrDelete(record)' </#if> title="确定删除吗?" @confirm="() => handleDelete(record.id)">
                   <a>删除</a>
                 </a-popconfirm>
               </a-menu-item>
@@ -226,6 +229,9 @@
   import ${entityName}Modal from './modules/${entityName}Modal'
   <#if bpm_flag>
   import { postAction } from '@/api/manage'
+  import { FlowableMixin } from '@views/flowable/mixin/FlowableMixin'
+  import Vue from 'vue'
+  import { ACCESS_TOKEN } from '@/store/mutation-types'
   </#if>
   <#if list_need_category>
   import { loadCategoryData } from '@/api/api'
@@ -239,7 +245,7 @@
 
   export default {
     name: '${entityName}List',
-    mixins:[JeecgListMixin, mixinDevice],
+    mixins:[JeecgListMixin, mixinDevice <#if bpm_flag>,FlowableMixin</#if>],
     components: {
       ${entityName}Modal
     },
@@ -323,12 +329,8 @@
           deleteBatch: "/${entityPackage}/${entityName?uncap_first}/deleteBatch",
           exportXlsUrl: "/${entityPackage}/${entityName?uncap_first}/exportXls",
           importExcelUrl: "${entityPackage}/${entityName?uncap_first}/importExcel",
-          <#if bpm_flag>startProcess: '/act/process/extActProcess/startMutilProcess'</#if>
+          <#if bpm_flag>startProcess: '/flowable/definition/startByDataId/'</#if>
         },
-        <#if bpm_flag>
-        //代码生成后需手动设置流程编码
-        flowCode: 'dev_${tableName}_001',
-        </#if>
         dictOptions:{},
         <#if list_need_pca>
         pcaData:'',
@@ -377,13 +379,8 @@
           title:'提示',
           content:'确认提交流程吗?',
           onOk:()=>{
-            let params = {
-              flowCode: this.flowCode,
-              id: record.id,
-              formUrl: '${entityPackage}/modules/${entityName}Form',
-              formUrlMobile: ''
-            }
-            postAction(this.url.startProcess, params).then(res=>{
+            let params = Object.assign({dataId: record.id}, record);
+            postAction(this.url.startProcess + record.id, params).then(res=>{
               if(res.success){
                 this.$message.success(res.message);
                 this.loadData();
@@ -396,6 +393,13 @@
             })
           }
         })
+      },
+      </#if>
+      <#if bpm_flag>
+      goToApplyDoc(record) {
+        let jimuReportId = record.jimuReportId
+        let reportUrl = window._CONFIG['domianURL'] + '/jmreport/view/' + jimuReportId + '?token=' + Vue.ls.get(ACCESS_TOKEN) + '&id=' + record.id
+        window.open(reportUrl)
       },
       </#if>
       initDictConfig(){
