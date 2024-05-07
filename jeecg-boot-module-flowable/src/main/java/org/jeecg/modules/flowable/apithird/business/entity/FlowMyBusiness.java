@@ -1,9 +1,6 @@
 package org.jeecg.modules.flowable.apithird.business.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -45,6 +42,9 @@ public class FlowMyBusiness implements Serializable {
 	/**修改人*/
     @ApiModelProperty(value = "修改人")
     private String updateBy;
+    /**逻辑删除 0=否 1=是*/
+    @TableLogic
+    private String delFlag;
 	/**修改时间*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern="yyyy-MM-dd")
