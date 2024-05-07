@@ -32,7 +32,7 @@ public class FlowMyBusinessConfigServiceImpl extends ServiceImpl<FlowMyBusinessC
         lambdaQueryWrapper.eq(FlowMyBusinessConfig::getTableName,tableName);
         FlowMyBusinessConfig flowMyBusinessConfig = getOne(lambdaQueryWrapper, false);
         if (flowMyBusinessConfig == null) {
-            throw new JeecgBootException("请先配置流程业务关联！");
+            throw new JeecgBootException("请先前往【流程设计/流程配置】配置业务关联~");
         }
         return flowMyBusinessConfig;
     }
