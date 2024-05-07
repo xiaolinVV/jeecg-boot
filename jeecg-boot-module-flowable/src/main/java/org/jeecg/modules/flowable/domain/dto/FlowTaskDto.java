@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import org.jeecg.common.aspect.annotation.Dict;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -40,6 +41,7 @@ public class FlowTaskDto implements Serializable {
     private String assigneeName;
 
     @ApiModelProperty("流程发起人Id")
+    @Dict(dictTable = "sys_user",dicCode = "username",dicText = "realname")
     private String startUserId;
 
     @ApiModelProperty("流程发起人名称")

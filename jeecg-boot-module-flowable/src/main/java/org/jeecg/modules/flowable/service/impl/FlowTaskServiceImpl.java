@@ -781,6 +781,8 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             flowTask.setCreateTime(hisIns.getStartTime());
             flowTask.setFinishTime(hisIns.getEndTime());
             flowTask.setProcInsId(hisIns.getId());
+            flowTask.setProcDefKey(hisIns.getProcessDefinitionKey());
+            flowTask.setStartUserId(hisIns.getStartUserId());
 
             // 计算耗时
             if (Objects.nonNull(hisIns.getEndTime())) {
