@@ -157,7 +157,7 @@ public class SysUserController {
 			user.setCreateTime(new Date());//设置创建时间
 			String salt = oConvertUtils.randomGen(8);
 			user.setSalt(salt);
-			String passwordEncode = PasswordUtil.encrypt(user.getPassword(), user.getUsername(), salt);
+			String passwordEncode = PasswordUtil.encrypt(user.getUsername(),user.getPassword(), salt);
 			user.setPassword(passwordEncode);
 			user.setStatus(1);
 			user.setDelFlag(CommonConstant.DEL_FLAG_0);
