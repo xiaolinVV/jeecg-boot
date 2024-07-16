@@ -1,5 +1,7 @@
 package org.jeecg.modules.demo.test.controller;
 
+import cn.hutool.json.JSONNull;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -32,10 +34,7 @@ import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Description: 单表示例
@@ -488,9 +487,9 @@ public class JeecgDemoController extends JeecgController<JeecgDemo, IJeecgDemoSe
 
 
     @PostMapping("/dify/chat")
-    public Result<?> difyChat(JSONObject jsonObject){
-        log.info("dify 聊天数据：{}",jsonObject.toJSONString());
-        return Result.OK(jsonObject);
+    public Result<?> difyChat(Map<String,Object> formData){
+        log.info("dify 聊天数据：{}", JSONUtil.toJsonPrettyStr(formData));
+        return Result.OK(formData);
     }
 
 }
