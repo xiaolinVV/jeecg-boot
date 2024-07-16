@@ -1,5 +1,6 @@
 package org.jeecg.modules.demo.test.controller;
 
+import cn.hutool.core.lang.Dict;
 import cn.hutool.json.JSONNull;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
@@ -487,9 +488,15 @@ public class JeecgDemoController extends JeecgController<JeecgDemo, IJeecgDemoSe
 
 
     @PostMapping("/dify/chat")
-    public Result<?> difyChat(@RequestParam("query") String query){
-        log.info("dify 聊天数据：{}", query);
-        return Result.OK(query);
+    public Result<?> difyChat(
+            @RequestParam("query") String query,
+            @RequestParam("conversationId") String conversationId,
+            @RequestParam("userId") String userId,
+            @RequestParam("text") String text
+    ){
+        Dict formData = Dict.create().set("query", query).set("conversationId", conversationId).set("userId", userId).set("text", text);
+        log.info("dify 聊天数据：{}", JSONUtil.toJsonPrettyStr(formData));
+        return Result.OK(formData);
     }
 
 }
