@@ -487,9 +487,9 @@ public class JeecgDemoController extends JeecgController<JeecgDemo, IJeecgDemoSe
 
 
     @PostMapping("/dify/chat")
-    public Result<?> difyChat(Map<String,Object> formData){
-        log.info("dify 聊天数据：{}", JSONUtil.toJsonPrettyStr(formData));
-        return Result.OK(formData);
+    public Result<?> difyChat(@RequestParam("query") String query){
+        log.info("dify 聊天数据：{}", query);
+        return Result.OK(query);
     }
 
 }
