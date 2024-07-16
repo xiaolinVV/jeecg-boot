@@ -158,6 +158,8 @@ public class ShiroConfig {
         //filterChainDefinitionMap.put("/test/jeecgDemo/rabbitMqClientTest/**", "anon"); //MQ测试
         //filterChainDefinitionMap.put("/test/jeecgDemo/html", "anon"); //模板页面
         //filterChainDefinitionMap.put("/test/jeecgDemo/redis/**", "anon"); //redis测试
+        filterChainDefinitionMap.put("/test/jeecgDemo/dify/chat", "anon"); //dify http 模块节点测试
+
 
         //websocket排除
         filterChainDefinitionMap.put("/websocket/**", "anon");//系统通知和公告
