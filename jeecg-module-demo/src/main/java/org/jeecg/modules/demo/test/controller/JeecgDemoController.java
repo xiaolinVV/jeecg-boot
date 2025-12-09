@@ -1,5 +1,8 @@
 package org.jeecg.modules.demo.test.controller;
 
+import cn.hutool.core.lang.Dict;
+import cn.hutool.json.JSONNull;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -32,10 +35,7 @@ import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Description: 单表示例
@@ -484,6 +484,19 @@ public class JeecgDemoController extends JeecgController<JeecgDemo, IJeecgDemoSe
         SecurityUtils.setSecurityManager(securityManager);
         
         return Mono.just("测试");
+    }
+
+
+    @PostMapping("/dify/chat")
+    public Result<?> difyChat(
+            @RequestParam("query") String query,
+            @RequestParam("conversationId") String conversationId,
+            @RequestParam("userId") String userId,
+            @RequestParam("text") String text
+    ){
+        Dict formData = Dict.create().set("query", query).set("conversationId", conversationId).set("userId", userId).set("text", text);
+        log.info("dify 聊天数据：{}", JSONUtil.toJsonPrettyStr(formData));
+        return Result.OK(formData);
     }
 
 }
