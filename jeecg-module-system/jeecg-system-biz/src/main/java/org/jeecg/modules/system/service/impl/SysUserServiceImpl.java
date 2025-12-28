@@ -325,10 +325,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	public SysRoleIndex getDynamicIndexByUserRole(String username,String version) {
 		List<String> roles = sysUserRoleMapper.getRoleByUserName(username);
-		String componentUrl = RoleIndexConfigEnum.getIndexByRoles(roles);
-		SysRoleIndex roleIndex = new SysRoleIndex(componentUrl);
-		//只有 X-Version=v3 的时候，才读取sys_role_index表获取角色首页配置
-		if (oConvertUtils.isNotEmpty(version) && roles!=null && roles.size()>0) {
+		SysRoleIndex roleIndex = null;
+		// 先读取 sys_role_index 表获取角色首页配置（按优先级）
+		if (roles != null && roles.size() > 0) {
 			LambdaQueryWrapper<SysRoleIndex> routeIndexQuery = new LambdaQueryWrapper();
 			//用户所有角色
 			routeIndexQuery.in(SysRoleIndex::getRoleCode, roles);
@@ -340,6 +339,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			if (null != list && list.size() > 0) {
 				roleIndex = list.get(0);
 			}
+		}
+
+		// 若表未命中，再按枚举顺序匹配角色
+		if (roleIndex == null) {
+			String componentUrl = RoleIndexConfigEnum.getIndexByRoles(roles);
+			roleIndex = new SysRoleIndex(componentUrl);
 		}
 		
 		//如果componentUrl为空，则返回空
