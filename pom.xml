@@ -84,6 +84,7 @@
         <module>jeecg-module-demo</module>
         <module>jeecg-module-system</module>
 		<module>jeecg-boot-module-flowable</module>
+		<module>jeecg-codegen-cli</module>
 	</modules>
 
 	<repositories>
