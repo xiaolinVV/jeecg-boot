@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.OutputStream;
+import java.util.Locale;
 
 public final class CodegenCli {
     private CodegenCli() {}
@@ -24,9 +25,7 @@ public final class CodegenCli {
             if (options.jspMode != null && !options.jspMode.trim().isEmpty()) {
                 mapOptions.jspMode = options.jspMode.trim();
             }
-            if (options.output != null && !options.output.trim().isEmpty()) {
-                mapOptions.projectPath = options.output.trim();
-            }
+            mapOptions.projectPath = resolveProjectPath(options.output);
             if (options.bussiPackage != null && !options.bussiPackage.trim().isEmpty()) {
                 mapOptions.bussiPackage = options.bussiPackage.trim();
             }
@@ -38,6 +37,7 @@ public final class CodegenCli {
             }
 
             CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
+            applyDefaults(spec, options);
             if (options.specOut != null && !options.specOut.trim().isEmpty()) {
                 writeYaml(spec, Paths.get(options.specOut));
             } else {
@@ -48,9 +48,7 @@ public final class CodegenCli {
 
         Path input = Paths.get(options.input);
         CodegenSpec spec = SpecLoader.load(input);
-        if (options.output != null && !options.output.trim().isEmpty()) {
-            spec.setProjectPath(options.output.trim());
-        }
+        applyDefaults(spec, options);
         if (options.templatePath != null && !options.templatePath.trim().isEmpty()) {
             spec.setTemplatePath(options.templatePath.trim());
         }
@@ -70,6 +68,75 @@ public final class CodegenCli {
         }
     }
 
+    private static void applyDefaults(CodegenSpec spec, Args options) {
+        if (spec == null) {
+            return;
+        }
+        if (options.output != null && !options.output.trim().isEmpty()) {
+            spec.setProjectPath(options.output.trim());
+        }
+        if (spec.getProjectPath() == null || spec.getProjectPath().trim().isEmpty()) {
+            spec.setProjectPath(resolveProjectPath(null));
+        }
+        if (options.bussiPackage != null && !options.bussiPackage.trim().isEmpty()) {
+            spec.setBussiPackage(options.bussiPackage.trim());
+        }
+        if (spec.getBussiPackage() == null || spec.getBussiPackage().trim().isEmpty()) {
+            spec.setBussiPackage("org.jeecg.modules");
+        }
+        if (spec.getTable() != null) {
+            if (options.entityPackage != null && !options.entityPackage.trim().isEmpty()) {
+                spec.getTable().setEntityPackage(options.entityPackage.trim());
+            }
+            if (spec.getTable().getEntityPackage() == null || spec.getTable().getEntityPackage().trim().isEmpty()) {
+                spec.getTable().setEntityPackage(deriveEntityPackage(spec.getTable().getTableName()));
+            }
+        }
+        if (options.frontendRoot != null && !options.frontendRoot.trim().isEmpty()) {
+            spec.setFrontendRoot(options.frontendRoot.trim());
+        }
+        if (spec.getFrontendRoot() == null || spec.getFrontendRoot().trim().isEmpty()) {
+            String frontendRoot = resolveFrontendRoot(null);
+            if (frontendRoot != null && !frontendRoot.isEmpty()) {
+                spec.setFrontendRoot(frontendRoot);
+            }
+        }
+    }
+
+    private static String resolveProjectPath(String output) {
+        if (output != null && !output.trim().isEmpty()) {
+            return output.trim();
+        }
+        Path defaultPath = Paths.get("jeecg-boot/jeecg-module-system/jeecg-system-biz");
+        if (Files.isDirectory(defaultPath)) {
+            return defaultPath.toAbsolutePath().normalize().toString();
+        }
+        return Paths.get(".").toAbsolutePath().normalize().toString();
+    }
+
+    private static String resolveFrontendRoot(String frontendRoot) {
+        if (frontendRoot != null && !frontendRoot.trim().isEmpty()) {
+            return frontendRoot.trim();
+        }
+        Path defaultPath = Paths.get("ant-design-vue-jeecg/src/views");
+        if (Files.isDirectory(defaultPath)) {
+            return defaultPath.toAbsolutePath().normalize().toString();
+        }
+        return null;
+    }
+
+    private static String deriveEntityPackage(String tableName) {
+        if (tableName == null || tableName.trim().isEmpty()) {
+            return "demo";
+        }
+        String value = tableName.trim();
+        int idx = value.indexOf('_');
+        if (idx > 0) {
+            return value.substring(0, idx).toLowerCase(Locale.ROOT);
+        }
+        return "demo";
+    }
+
     static final class Args {
         String input;
         String ddl;
@@ -80,6 +147,7 @@ public final class CodegenCli {
         String bussiPackage;
         String entityPackage;
         Integer fieldRowNum;
+        String frontendRoot;
 
         static Args parse(String[] args) {
             Args options = new Args();
@@ -124,6 +192,10 @@ public final class CodegenCli {
                     if (i + 1 < args.length) {
                         options.fieldRowNum = Integer.parseInt(args[++i]);
                     }
+                } else if ("--frontend-root".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.frontendRoot = args[++i];
+                    }
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {
                     return null;
                 }
@@ -136,7 +208,7 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --input <spec.yaml|json> [--output <path>] [--template <templatePath>]");
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
-            System.err.println("    [--field-row-num <n>]");
+            System.err.println("    [--field-row-num <n>] [--frontend-root <path>]");
         }
     }
 }

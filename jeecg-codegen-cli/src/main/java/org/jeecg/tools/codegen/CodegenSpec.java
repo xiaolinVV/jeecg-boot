@@ -14,6 +14,7 @@ public class CodegenSpec {
     private String webRootPackage;
     private String primaryKeyField;
     private String vueStyle;
+    private String frontendRoot;
 
     private TableSpec table;
     private List<ColumnSpec> columns;

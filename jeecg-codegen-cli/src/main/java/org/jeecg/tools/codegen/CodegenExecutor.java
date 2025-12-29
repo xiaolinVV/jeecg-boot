@@ -1,9 +1,15 @@
 package org.jeecg.tools.codegen;
 
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.jeecg.common.constant.enums.CgformEnum;
 import org.jeecgframework.codegenerate.generate.impl.CodeGenerateOne;
 import org.jeecgframework.codegenerate.generate.impl.CodeGenerateOneToMany;
@@ -35,6 +41,7 @@ final class CodegenExecutor {
         } else {
             generateOne(templatePath, stylePath);
         }
+        routeFrontendOutputs();
     }
 
     private void validate() {
@@ -90,6 +97,81 @@ final class CodegenExecutor {
         List<SubTableVo> subTables = toSubTables(spec.getSubTables(), spec.getTable().getEntityPackage());
         CodeGenerateOneToMany generator = new CodeGenerateOneToMany(mainTableVo, mainColumns, originalMainColumns, subTables);
         generator.generateCodeFile(spec.getProjectPath(), templatePath, stylePath);
+    }
+
+    private void routeFrontendOutputs() throws IOException {
+        String frontendRoot = spec.getFrontendRoot();
+        if (frontendRoot == null || frontendRoot.trim().isEmpty()) {
+            return;
+        }
+        String projectPath = spec.getProjectPath();
+        if (projectPath == null || projectPath.trim().isEmpty()) {
+            return;
+        }
+        String sourceRootPackage = spec.getSourceRootPackage();
+        if (sourceRootPackage == null || sourceRootPackage.trim().isEmpty()) {
+            sourceRootPackage = org.jeecgframework.codegenerate.a.a.h;
+        }
+        Path sourceRoot = Paths.get(projectPath, sourceRootPackage.replace(".", java.io.File.separator));
+        if (!Files.isDirectory(sourceRoot)) {
+            return;
+        }
+
+        String[] vueDirs = {"vue", "vue3", "vue3Native"};
+        List<String> conflicts = new ArrayList<>();
+        int moved = 0;
+
+        try (Stream<Path> stream = Files.walk(sourceRoot, FileVisitOption.FOLLOW_LINKS)) {
+            for (Path path : (Iterable<Path>) stream::iterator) {
+                if (!Files.isRegularFile(path)) {
+                    continue;
+                }
+                Path relative = sourceRoot.relativize(path);
+                int vueIndex = indexOfVueSegment(relative, vueDirs);
+                if (vueIndex < 0) {
+                    continue;
+                }
+                Path targetRel = relative.subpath(vueIndex + 1, relative.getNameCount());
+                if (vueIndex > 0) {
+                    String moduleSegment = relative.getName(vueIndex - 1).toString();
+                    if (!moduleSegment.isEmpty()) {
+                        targetRel = Paths.get(moduleSegment).resolve(targetRel);
+                    }
+                }
+                Path target = Paths.get(frontendRoot).resolve(targetRel);
+                if (Files.exists(target)) {
+                    conflicts.add(target.toString());
+                    continue;
+                }
+                if (target.getParent() != null) {
+                    Files.createDirectories(target.getParent());
+                }
+                Files.move(path, target);
+                moved++;
+            }
+        }
+
+        if (!conflicts.isEmpty()) {
+            System.out.println("[codegen] frontendRoot conflicts: " + conflicts.size());
+            for (String item : conflicts) {
+                System.out.println("[codegen] skip existing: " + item);
+            }
+        }
+        if (moved > 0) {
+            System.out.println("[codegen] frontendRoot moved files: " + moved);
+        }
+    }
+
+    private int indexOfVueSegment(Path relative, String[] vueDirs) {
+        for (int i = 0; i < relative.getNameCount(); i++) {
+            String segment = relative.getName(i).toString();
+            for (String vueDir : vueDirs) {
+                if (vueDir.equals(segment)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     private TableVo toTableVo(CodegenSpec.TableSpec table) {
