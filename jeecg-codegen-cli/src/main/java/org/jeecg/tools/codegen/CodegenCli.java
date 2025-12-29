@@ -20,7 +20,7 @@ public final class CodegenCli {
         }
 
         if (options.ddl != null) {
-            String ddl = Files.readString(Paths.get(options.ddl), StandardCharsets.UTF_8);
+            String ddl = new String(Files.readAllBytes(Paths.get(options.ddl)), StandardCharsets.UTF_8);
             DdlSpecMapper.Options mapOptions = new DdlSpecMapper.Options();
             if (options.jspMode != null && !options.jspMode.trim().isEmpty()) {
                 mapOptions.jspMode = options.jspMode.trim();
