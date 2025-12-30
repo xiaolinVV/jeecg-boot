@@ -45,7 +45,8 @@ public final class CodegenCli {
             if (options.specOut != null && !options.specOut.trim().isEmpty()) {
                 writeYaml(spec, Paths.get(options.specOut));
             } else {
-                writeYaml(spec, System.out);
+                Path out = defaultSpecOutPath(spec);
+                writeYaml(spec, out);
             }
             return;
         }
@@ -142,6 +143,25 @@ public final class CodegenCli {
             return defaultPath.toAbsolutePath().normalize().toString();
         }
         return null;
+    }
+
+    private static Path defaultSpecOutPath(CodegenSpec spec) throws Exception {
+        String specOutDir = CONFIG.getProperty("spec_out_dir");
+        Path base;
+        if (isNotBlank(specOutDir)) {
+            Path configured = Paths.get(specOutDir.trim());
+            if (configured.isAbsolute()) {
+                base = configured;
+            } else {
+                base = Paths.get(spec.getProjectPath()).resolve(configured);
+            }
+        } else {
+            base = Paths.get(spec.getProjectPath()).resolve("codegen-specs");
+        }
+        Files.createDirectories(base);
+        String tableName = spec.getTable() != null ? spec.getTable().getTableName() : null;
+        String fileName = isNotBlank(tableName) ? tableName + ".yaml" : "codegen-spec.yaml";
+        return base.resolve(fileName);
     }
 
     private static String deriveEntityPackage(String tableName, String entityName) {
@@ -255,6 +275,7 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
             System.err.println("    [--field-row-num <n>] [--frontend-root <path>]");
+            System.err.println("  note: when --spec-out is omitted, output path can be configured by jeecg/jeecg_config.properties (spec_out_dir)");
         }
     }
 }
