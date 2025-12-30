@@ -99,6 +99,9 @@ public final class CodegenCli {
         }
         if (isBlank(spec.getWebRootPackage())) {
             String cfg = CONFIG.getProperty("web_root_package");
+            if (isBlank(cfg)) {
+                cfg = CONFIG.getProperty("webroot_package");
+            }
             if (isNotBlank(cfg)) {
                 spec.setWebRootPackage(cfg.trim());
             }
