@@ -8,8 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.OutputStream;
 import java.util.Locale;
+import java.util.Properties;
+import java.io.InputStream;
 
 public final class CodegenCli {
+    private static final Properties CONFIG = loadConfig();
+
     private CodegenCli() {}
 
     public static void main(String[] args) throws Exception {
@@ -72,31 +76,46 @@ public final class CodegenCli {
         if (spec == null) {
             return;
         }
-        if (options.output != null && !options.output.trim().isEmpty()) {
+        if (isNotBlank(options.output)) {
             spec.setProjectPath(options.output.trim());
         }
-        if (spec.getProjectPath() == null || spec.getProjectPath().trim().isEmpty()) {
-            spec.setProjectPath(resolveProjectPath(null));
+        if (isBlank(spec.getProjectPath())) {
+            String cfg = CONFIG.getProperty("project_path");
+            spec.setProjectPath(isNotBlank(cfg) ? cfg.trim() : resolveProjectPath(null));
         }
-        if (options.bussiPackage != null && !options.bussiPackage.trim().isEmpty()) {
+        if (isNotBlank(options.bussiPackage)) {
             spec.setBussiPackage(options.bussiPackage.trim());
         }
-        if (spec.getBussiPackage() == null || spec.getBussiPackage().trim().isEmpty()) {
-            spec.setBussiPackage("org.jeecg.modules");
+        if (isBlank(spec.getBussiPackage())) {
+            String cfg = CONFIG.getProperty("bussi_package");
+            spec.setBussiPackage(isNotBlank(cfg) ? cfg.trim() : "org.jeecg.modules");
+        }
+        if (isBlank(spec.getSourceRootPackage())) {
+            String cfg = CONFIG.getProperty("source_root_package");
+            if (isNotBlank(cfg)) {
+                spec.setSourceRootPackage(cfg.trim());
+            }
+        }
+        if (isBlank(spec.getWebRootPackage())) {
+            String cfg = CONFIG.getProperty("web_root_package");
+            if (isNotBlank(cfg)) {
+                spec.setWebRootPackage(cfg.trim());
+            }
         }
         if (spec.getTable() != null) {
-            if (options.entityPackage != null && !options.entityPackage.trim().isEmpty()) {
+            if (isNotBlank(options.entityPackage)) {
                 spec.getTable().setEntityPackage(options.entityPackage.trim());
             }
-            if (spec.getTable().getEntityPackage() == null || spec.getTable().getEntityPackage().trim().isEmpty()) {
-                spec.getTable().setEntityPackage(deriveEntityPackage(spec.getTable().getTableName()));
+            if (isBlank(spec.getTable().getEntityPackage())) {
+                spec.getTable().setEntityPackage(deriveEntityPackage(spec.getTable().getTableName(), spec.getTable().getEntityName()));
             }
         }
-        if (options.frontendRoot != null && !options.frontendRoot.trim().isEmpty()) {
+        if (isNotBlank(options.frontendRoot)) {
             spec.setFrontendRoot(options.frontendRoot.trim());
         }
-        if (spec.getFrontendRoot() == null || spec.getFrontendRoot().trim().isEmpty()) {
-            String frontendRoot = resolveFrontendRoot(null);
+        if (isBlank(spec.getFrontendRoot())) {
+            String cfg = CONFIG.getProperty("frontend_root");
+            String frontendRoot = isNotBlank(cfg) ? cfg.trim() : resolveFrontendRoot(null);
             if (frontendRoot != null && !frontendRoot.isEmpty()) {
                 spec.setFrontendRoot(frontendRoot);
             }
@@ -125,16 +144,43 @@ public final class CodegenCli {
         return null;
     }
 
-    private static String deriveEntityPackage(String tableName) {
+    private static String deriveEntityPackage(String tableName, String entityName) {
         if (tableName == null || tableName.trim().isEmpty()) {
-            return "demo";
+            return lowerCamel(entityName, "demo");
         }
         String value = tableName.trim();
         int idx = value.indexOf('_');
         if (idx > 0) {
             return value.substring(0, idx).toLowerCase(Locale.ROOT);
         }
-        return "demo";
+        return lowerCamel(entityName, "demo");
+    }
+
+    private static String lowerCamel(String name, String fallback) {
+        if (name == null || name.trim().isEmpty()) {
+            return fallback;
+        }
+        String n = name.trim();
+        return Character.toLowerCase(n.charAt(0)) + n.substring(1);
+    }
+
+    private static Properties loadConfig() {
+        Properties p = new Properties();
+        try (InputStream in = CodegenCli.class.getClassLoader().getResourceAsStream("jeecg/jeecg_config.properties")) {
+            if (in != null) {
+                p.load(in);
+            }
+        } catch (Exception ignored) {
+        }
+        return p;
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    private static boolean isNotBlank(String s) {
+        return s != null && !s.trim().isEmpty();
     }
 
     static final class Args {

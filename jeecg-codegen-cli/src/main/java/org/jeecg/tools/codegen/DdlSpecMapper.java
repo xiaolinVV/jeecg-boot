@@ -277,18 +277,22 @@ final class DdlSpecMapper {
 
     private static boolean defaultShow(String name) {
         String lower = name.toLowerCase(Locale.ROOT);
+        // 表单默认隐藏所有系统字段
         return !(lower.equals("id")
+            || lower.equals("del_flag")
             || lower.equals("create_time")
-            || lower.equals("update_time")
             || lower.equals("create_by")
+            || lower.equals("update_time")
             || lower.equals("update_by"));
     }
 
     private static boolean defaultShowList(String name) {
         String lower = name.toLowerCase(Locale.ROOT);
+        // 列表允许展示 create_*，隐藏其他系统字段
         return !(lower.equals("id")
-            || lower.equals("create_time")
-            || lower.equals("update_time"));
+            || lower.equals("del_flag")
+            || lower.equals("update_time")
+            || lower.equals("update_by"));
     }
 
     private static void applyInference(CodegenSpec.ColumnSpec col, String tableName) {
