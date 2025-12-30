@@ -16,7 +16,7 @@ final class DdlSpecMapper {
         String projectPath = ".";
         String bussiPackage;
         String entityPackage;
-        Integer fieldRowNum = 2;
+        Integer fieldRowNum;
     }
 
     static CodegenSpec fromDdl(String ddl, Options options) {
@@ -32,8 +32,6 @@ final class DdlSpecMapper {
 
         Set<String> primaryKeys = new HashSet<>();
         List<CodegenSpec.ColumnSpec> columns = new ArrayList<>();
-        int order = 0;
-
         for (String segment : segments) {
             String stmt = segment.trim();
             if (stmt.isEmpty()) {
@@ -49,7 +47,6 @@ final class DdlSpecMapper {
             }
             CodegenSpec.ColumnSpec col = parseColumn(stmt, tableName);
             if (col != null) {
-                col.setFieldOrderNum(order++);
                 columns.add(col);
             }
         }
@@ -59,6 +56,9 @@ final class DdlSpecMapper {
                 col.setIsKey("Y");
             }
         }
+
+        columns = reorderColumns(columns);
+        resetFieldOrder(columns);
 
         CodegenSpec spec = new CodegenSpec();
         spec.setJspMode(opts.jspMode);
@@ -70,7 +70,11 @@ final class DdlSpecMapper {
         table.setEntityName(toPascal(tableName));
         table.setEntityPackage(resolveEntityPackage(opts.entityPackage, tableName));
         table.setFtlDescription(tableComment != null ? tableComment : tableName);
-        table.setFieldRowNum(opts.fieldRowNum);
+        if (opts.fieldRowNum != null) {
+            table.setFieldRowNum(opts.fieldRowNum);
+        } else {
+            table.setFieldRowNum(inferFieldRowNum(columns));
+        }
         spec.setTable(table);
         spec.setColumns(columns);
         return spec;
@@ -359,6 +363,58 @@ final class DdlSpecMapper {
         if (dictField != null) {
             col.setDictField(dictField);
         }
+    }
+
+    private static List<CodegenSpec.ColumnSpec> reorderColumns(List<CodegenSpec.ColumnSpec> columns) {
+        List<CodegenSpec.ColumnSpec> normal = new ArrayList<>();
+        List<CodegenSpec.ColumnSpec> files = new ArrayList<>();
+        List<CodegenSpec.ColumnSpec> rich = new ArrayList<>();
+        for (CodegenSpec.ColumnSpec col : columns) {
+            String classType = col.getClassType();
+            if ("file".equals(classType) || "image".equals(classType)) {
+                files.add(col);
+            } else if ("textarea".equals(classType) || "umeditor".equals(classType) || "markdown".equals(classType)) {
+                rich.add(col);
+            } else {
+                normal.add(col);
+            }
+        }
+        List<CodegenSpec.ColumnSpec> ordered = new ArrayList<>(columns.size());
+        ordered.addAll(normal);
+        ordered.addAll(files);
+        ordered.addAll(rich);
+        return ordered;
+    }
+
+    private static void resetFieldOrder(List<CodegenSpec.ColumnSpec> columns) {
+        int order = 0;
+        for (CodegenSpec.ColumnSpec col : columns) {
+            col.setFieldOrderNum(order++);
+        }
+    }
+
+    private static int inferFieldRowNum(List<CodegenSpec.ColumnSpec> columns) {
+        int visibleCount = 0;
+        for (CodegenSpec.ColumnSpec col : columns) {
+            if (!"Y".equals(col.getIsShow())) {
+                continue;
+            }
+            String fieldName = col.getFieldName();
+            if (fieldName != null && "id".equalsIgnoreCase(fieldName)) {
+                continue;
+            }
+            visibleCount++;
+        }
+        if (visibleCount <= 6) {
+            return 1;
+        }
+        if (visibleCount <= 12) {
+            return 2;
+        }
+        if (visibleCount <= 18) {
+            return 3;
+        }
+        return 4;
     }
 
     private static ColumnType mapType(String typeToken) {
