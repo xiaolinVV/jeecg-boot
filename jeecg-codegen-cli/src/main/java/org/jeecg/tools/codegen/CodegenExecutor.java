@@ -91,6 +91,12 @@ final class CodegenExecutor {
         if (table.getFieldRowNum() == null) {
             table.setFieldRowNum(2);
         }
+        if (table.getExtendParams() == null) {
+            table.setExtendParams(new HashMap<>());
+        }
+        if (!table.getExtendParams().containsKey("scroll")) {
+            table.getExtendParams().put("scroll", "0");
+        }
     }
 
     private void normalizeSubTable(CodegenSpec.SubTableSpec sub) {
@@ -108,6 +114,9 @@ final class CodegenExecutor {
         }
         if (sub.getForeignMainKeys() == null || sub.getForeignMainKeys().isEmpty()) {
             throw new IllegalArgumentException("subTables.foreignMainKeys is required");
+        }
+        if (sub.getExtendParams() == null) {
+            sub.setExtendParams(new HashMap<>());
         }
         for (CodegenSpec.ColumnSpec column : sub.getColumns()) {
             normalizeColumn(column);
@@ -156,6 +165,9 @@ final class CodegenExecutor {
         }
         if (isBlank(col.getFieldShowType())) {
             col.setFieldShowType(col.getClassType());
+        }
+        if (col.getExtendParams() == null) {
+            col.setExtendParams(new HashMap<>());
         }
         // enum checks
         enforceYN("isShow", col.getIsShow());
@@ -354,7 +366,7 @@ final class CodegenExecutor {
         if (spec.getVueStyle() != null && !spec.getVueStyle().trim().isEmpty()) {
             merged.put("vueStyle", spec.getVueStyle().trim());
         }
-        return merged.isEmpty() ? null : merged;
+        return merged;
     }
 
     private static final Set<String> VALID_CLASS_TYPES = new HashSet<>();
