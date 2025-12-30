@@ -7,8 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.jeecg.common.constant.enums.CgformEnum;
 import org.jeecgframework.codegenerate.generate.impl.CodeGenerateOne;
@@ -26,7 +28,7 @@ final class CodegenExecutor {
     }
 
     void run() throws Exception {
-        validate();
+        normalizeAndValidate();
         CgformEnum cgform = CgformEnum.getCgformEnumByConfig(spec.getJspMode());
         if (cgform == null) {
             throw new IllegalArgumentException("Unknown jspMode: " + spec.getJspMode());
@@ -44,25 +46,165 @@ final class CodegenExecutor {
         routeFrontendOutputs();
     }
 
-    private void validate() {
-        if (spec.getProjectPath() == null || spec.getProjectPath().trim().isEmpty()) {
+    private void normalizeAndValidate() {
+        if (spec == null) {
+            throw new IllegalArgumentException("spec is required");
+        }
+        if (isBlank(spec.getProjectPath())) {
             throw new IllegalArgumentException("projectPath is required");
         }
-        if (spec.getJspMode() == null || spec.getJspMode().trim().isEmpty()) {
+        if (isBlank(spec.getJspMode())) {
             throw new IllegalArgumentException("jspMode is required");
+        }
+        String jspMode = spec.getJspMode().trim();
+        if (!VALID_JSP_MODE.contains(jspMode)) {
+            throw new IllegalArgumentException("invalid jspMode: " + jspMode);
         }
         if (spec.getTable() == null) {
             throw new IllegalArgumentException("table is required");
         }
+        normalizeTable(spec.getTable());
         if (spec.getColumns() == null || spec.getColumns().isEmpty()) {
             throw new IllegalArgumentException("columns is required");
         }
-        if (CgformEnum.getCgformEnumByConfig(spec.getJspMode()) != null
-            && CgformEnum.getCgformEnumByConfig(spec.getJspMode()).getType() == 2) {
+        for (CodegenSpec.ColumnSpec column : spec.getColumns()) {
+            normalizeColumn(column);
+        }
+        if (CgformEnum.getCgformEnumByConfig(jspMode) != null
+            && CgformEnum.getCgformEnumByConfig(jspMode).getType() == 2) {
             if (spec.getSubTables() == null || spec.getSubTables().isEmpty()) {
                 throw new IllegalArgumentException("subTables is required for onetomany modes");
             }
+            for (CodegenSpec.SubTableSpec sub : spec.getSubTables()) {
+                normalizeSubTable(sub);
+            }
         }
+    }
+
+    private void normalizeTable(CodegenSpec.TableSpec table) {
+        if (isBlank(table.getTableName())) {
+            throw new IllegalArgumentException("table.tableName is required");
+        }
+        if (isBlank(table.getEntityName())) {
+            throw new IllegalArgumentException("table.entityName is required");
+        }
+        if (table.getFieldRowNum() == null) {
+            table.setFieldRowNum(2);
+        }
+    }
+
+    private void normalizeSubTable(CodegenSpec.SubTableSpec sub) {
+        if (isBlank(sub.getTableName())) {
+            throw new IllegalArgumentException("subTables.tableName is required");
+        }
+        if (isBlank(sub.getEntityName())) {
+            throw new IllegalArgumentException("subTables.entityName is required");
+        }
+        if (sub.getColumns() == null || sub.getColumns().isEmpty()) {
+            throw new IllegalArgumentException("subTables.columns is required");
+        }
+        if (sub.getForeignKeys() == null || sub.getForeignKeys().isEmpty()) {
+            throw new IllegalArgumentException("subTables.foreignKeys is required");
+        }
+        if (sub.getForeignMainKeys() == null || sub.getForeignMainKeys().isEmpty()) {
+            throw new IllegalArgumentException("subTables.foreignMainKeys is required");
+        }
+        for (CodegenSpec.ColumnSpec column : sub.getColumns()) {
+            normalizeColumn(column);
+        }
+        if (sub.getOriginalColumns() != null) {
+            for (CodegenSpec.ColumnSpec column : sub.getOriginalColumns()) {
+                normalizeColumn(column);
+            }
+        }
+    }
+
+    private void normalizeColumn(CodegenSpec.ColumnSpec col) {
+        if (isBlank(col.getFieldDbName())) {
+            throw new IllegalArgumentException("column.fieldDbName is required");
+        }
+        if (isBlank(col.getFieldName())) {
+            throw new IllegalArgumentException("column.fieldName is required");
+        }
+        // defaults
+        if (col.getIsShow() == null) {
+            col.setIsShow(defaultShow(col.getFieldDbName()) ? "Y" : "N");
+        }
+        if (col.getIsShowList() == null) {
+            col.setIsShowList(defaultShowList(col.getFieldDbName()) ? "Y" : "N");
+        }
+        if (col.getIsQuery() == null) {
+            col.setIsQuery("N");
+        }
+        if (col.getNullable() == null) {
+            col.setNullable("Y");
+        }
+        if (col.getSort() == null) {
+            col.setSort("N");
+        }
+        if (col.getReadonly() == null) {
+            col.setReadonly("N");
+        }
+        if (col.getIsKey() == null) {
+            col.setIsKey("N");
+        }
+        if (col.getQueryMode() == null) {
+            col.setQueryMode("single");
+        }
+        if (isBlank(col.getClassType())) {
+            col.setClassType("default");
+        }
+        if (isBlank(col.getFieldShowType())) {
+            col.setFieldShowType(col.getClassType());
+        }
+        // enum checks
+        enforceYN("isShow", col.getIsShow());
+        enforceYN("isShowList", col.getIsShowList());
+        enforceYN("isQuery", col.getIsQuery());
+        enforceYN("nullable", col.getNullable());
+        enforceYN("sort", col.getSort());
+        enforceYN("readonly", col.getReadonly());
+        enforceYN("isKey", col.getIsKey());
+        if (!"single".equals(col.getQueryMode()) && !"group".equals(col.getQueryMode())) {
+            throw new IllegalArgumentException("column.queryMode must be single or group for " + col.getFieldDbName());
+        }
+        if (!VALID_CLASS_TYPES.contains(col.getClassType())) {
+            throw new IllegalArgumentException("column.classType not supported: " + col.getClassType() + " @ " + col.getFieldDbName());
+        }
+        if (!col.getClassType().equals(col.getFieldShowType())) {
+            throw new IllegalArgumentException("column.fieldShowType must equal classType for " + col.getFieldDbName());
+        }
+        if (CLASS_TYPE_NEEDS_DICT.contains(col.getClassType())) {
+            if (isBlank(col.getDictField())) {
+                throw new IllegalArgumentException("column.dictField is required for classType=" + col.getClassType() + " @ " + col.getFieldDbName());
+            }
+        }
+    }
+
+    private void enforceYN(String field, String value) {
+        if (!"Y".equals(value) && !"N".equals(value)) {
+            throw new IllegalArgumentException(field + " must be Y or N");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private boolean defaultShow(String name) {
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        return !(lower.equals("id")
+            || lower.equals("create_time")
+            || lower.equals("update_time")
+            || lower.equals("create_by")
+            || lower.equals("update_by"));
+    }
+
+    private boolean defaultShowList(String name) {
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        return !(lower.equals("id")
+            || lower.equals("create_time")
+            || lower.equals("update_time"));
     }
 
     private void applyGlobalConfig(String templatePath) {
@@ -119,7 +261,7 @@ final class CodegenExecutor {
 
         String[] vueDirs = {"vue", "vue3", "vue3Native"};
         List<String> conflicts = new ArrayList<>();
-        int moved = 0;
+        int copied = 0;
 
         try (Stream<Path> stream = Files.walk(sourceRoot, FileVisitOption.FOLLOW_LINKS)) {
             for (Path path : (Iterable<Path>) stream::iterator) {
@@ -146,8 +288,8 @@ final class CodegenExecutor {
                 if (target.getParent() != null) {
                     Files.createDirectories(target.getParent());
                 }
-                Files.move(path, target);
-                moved++;
+                Files.copy(path, target);
+                copied++;
             }
         }
 
@@ -157,8 +299,8 @@ final class CodegenExecutor {
                 System.out.println("[codegen] skip existing: " + item);
             }
         }
-        if (moved > 0) {
-            System.out.println("[codegen] frontendRoot moved files: " + moved);
+        if (copied > 0) {
+            System.out.println("[codegen] frontendRoot copied files: " + copied);
         }
     }
 
@@ -213,6 +355,33 @@ final class CodegenExecutor {
             merged.put("vueStyle", spec.getVueStyle().trim());
         }
         return merged.isEmpty() ? null : merged;
+    }
+
+    private static final Set<String> VALID_CLASS_TYPES = new HashSet<>();
+    private static final Set<String> CLASS_TYPE_NEEDS_DICT = new HashSet<>();
+    private static final Set<String> VALID_JSP_MODE = new HashSet<>();
+
+    static {
+        String[] classTypes = {
+            "default", "date", "datetime", "time", "textarea", "password",
+            "list", "radio", "checkbox", "list_multi", "sel_search",
+            "sel_user", "sel_depart", "sel_tree", "cat_tree", "popup",
+            "switch", "file", "image", "umeditor", "markdown", "pca"
+        };
+        for (String t : classTypes) {
+            VALID_CLASS_TYPES.add(t);
+        }
+        String[] needsDict = {
+            "list", "radio", "checkbox", "list_multi",
+            "sel_search", "sel_user", "sel_depart", "sel_tree", "cat_tree", "popup"
+        };
+        for (String t : needsDict) {
+            CLASS_TYPE_NEEDS_DICT.add(t);
+        }
+        String[] jspModes = {"one", "tree", "many", "jvxe", "erp", "innerTable", "tab"};
+        for (String m : jspModes) {
+            VALID_JSP_MODE.add(m);
+        }
     }
 
     private List<ColumnVo> toColumnVoList(List<CodegenSpec.ColumnSpec> specs) {
