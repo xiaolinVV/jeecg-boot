@@ -1,6 +1,7 @@
 package org.jeecg.tools.codegen;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +20,12 @@ final class DdlSpecMapper {
         String entityPackage;
         Integer fieldRowNum;
         Map<String, String> queryFields;
+        boolean oneToMany;
+        String mainTable;
+        List<String> subTables;
+        String treePidField;
+        String treeTextField;
+        String treeHasChildrenField;
     }
 
     static CodegenSpec fromDdl(String ddl, Options options) {
@@ -26,7 +33,62 @@ final class DdlSpecMapper {
             throw new IllegalArgumentException("ddl is required");
         }
         Options opts = options != null ? options : new Options();
+        if (opts.oneToMany && !isOneToManyMode(opts.jspMode)) {
+            throw new IllegalArgumentException("one-to-many requires jspMode in many/jvxe/erp/innerTable/tab");
+        }
+        if (!opts.oneToMany && isOneToManyMode(opts.jspMode)) {
+            throw new IllegalArgumentException("jspMode " + opts.jspMode + " requires --one-to-many");
+        }
 
+        Map<String, ParsedTable> tables = parseTables(ddl);
+        ParsedTable mainTable = resolveMainTable(tables, opts);
+        List<CodegenSpec.ColumnSpec> columns = mainTable.columns;
+        applyQuerySettings(columns, opts);
+
+        CodegenSpec spec = new CodegenSpec();
+        spec.setJspMode(opts.jspMode);
+        spec.setProjectPath(opts.projectPath);
+        spec.setBussiPackage(opts.bussiPackage);
+
+        CodegenSpec.TableSpec table = new CodegenSpec.TableSpec();
+        table.setTableName(mainTable.tableName);
+        table.setEntityName(toPascal(mainTable.tableName));
+        table.setEntityPackage(resolveEntityPackage(opts.entityPackage, mainTable.tableName));
+        table.setFtlDescription(mainTable.tableComment != null ? mainTable.tableComment : mainTable.tableName);
+        if (opts.fieldRowNum != null) {
+            table.setFieldRowNum(opts.fieldRowNum);
+        } else {
+            table.setFieldRowNum(inferFieldRowNum(columns));
+        }
+        if ("tree".equalsIgnoreCase(opts.jspMode)) {
+            applyTreeParams(table, columns, opts);
+        }
+        spec.setTable(table);
+        spec.setColumns(columns);
+        if (opts.oneToMany) {
+            spec.setSubTables(buildSubTables(tables, mainTable, table, opts));
+        }
+        return spec;
+    }
+
+    private static Map<String, ParsedTable> parseTables(String ddl) {
+        List<String> statements = splitCreateTableStatements(ddl);
+        if (statements.isEmpty()) {
+            throw new IllegalArgumentException("cannot find CREATE TABLE statements in DDL");
+        }
+        Map<String, ParsedTable> tables = new HashMap<>();
+        for (String stmt : statements) {
+            ParsedTable table = parseTableStatement(stmt);
+            String key = normalizeTableKey(table.tableName);
+            if (tables.containsKey(key)) {
+                throw new IllegalArgumentException("duplicate table definition: " + table.tableName);
+            }
+            tables.put(key, table);
+        }
+        return tables;
+    }
+
+    private static ParsedTable parseTableStatement(String ddl) {
         String tableName = parseTableName(ddl);
         String tableComment = parseTableComment(ddl);
         String columnsBlock = extractColumnsBlock(ddl);
@@ -61,26 +123,267 @@ final class DdlSpecMapper {
 
         columns = reorderColumns(columns);
         resetFieldOrder(columns);
-        applyQuerySettings(columns, opts);
 
-        CodegenSpec spec = new CodegenSpec();
-        spec.setJspMode(opts.jspMode);
-        spec.setProjectPath(opts.projectPath);
-        spec.setBussiPackage(opts.bussiPackage);
+        ParsedTable table = new ParsedTable();
+        table.tableName = tableName;
+        table.tableComment = tableComment;
+        table.columns = columns;
+        table.primaryKeys = primaryKeys;
+        return table;
+    }
 
-        CodegenSpec.TableSpec table = new CodegenSpec.TableSpec();
-        table.setTableName(tableName);
-        table.setEntityName(toPascal(tableName));
-        table.setEntityPackage(resolveEntityPackage(opts.entityPackage, tableName));
-        table.setFtlDescription(tableComment != null ? tableComment : tableName);
-        if (opts.fieldRowNum != null) {
-            table.setFieldRowNum(opts.fieldRowNum);
-        } else {
-            table.setFieldRowNum(inferFieldRowNum(columns));
+    private static ParsedTable resolveMainTable(Map<String, ParsedTable> tables, Options opts) {
+        if (tables.size() == 1) {
+            ParsedTable only = tables.values().iterator().next();
+            if (opts.mainTable != null && !opts.mainTable.trim().isEmpty()) {
+                String key = normalizeTableKey(opts.mainTable);
+                ParsedTable selected = tables.get(key);
+                if (selected == null) {
+                    throw new IllegalArgumentException("main table not found: " + opts.mainTable);
+                }
+                return selected;
+            }
+            return only;
         }
-        spec.setTable(table);
-        spec.setColumns(columns);
-        return spec;
+        if (opts.mainTable == null || opts.mainTable.trim().isEmpty()) {
+            throw new IllegalArgumentException("mainTable is required when DDL contains multiple CREATE TABLE statements");
+        }
+        String key = normalizeTableKey(opts.mainTable);
+        ParsedTable main = tables.get(key);
+        if (main == null) {
+            throw new IllegalArgumentException("main table not found: " + opts.mainTable);
+        }
+        return main;
+    }
+
+    private static List<CodegenSpec.SubTableSpec> buildSubTables(Map<String, ParsedTable> tables,
+                                                                 ParsedTable mainTable,
+                                                                 CodegenSpec.TableSpec mainSpec,
+                                                                 Options opts) {
+        if (opts.subTables == null || opts.subTables.isEmpty()) {
+            throw new IllegalArgumentException("subTables is required when one-to-many is enabled");
+        }
+        if (opts.mainTable == null || opts.mainTable.trim().isEmpty()) {
+            throw new IllegalArgumentException("mainTable is required when one-to-many is enabled");
+        }
+        String mainKey = normalizeTableKey(mainTable.tableName);
+        String mainPk = resolvePrimaryKey(mainTable);
+        CodegenSpec.ColumnSpec mainPkCol = findColumnByName(mainTable.columns, mainPk);
+        if (mainPkCol == null) {
+            throw new IllegalArgumentException("main table primary key column not found: " + mainPk);
+        }
+        List<CodegenSpec.SubTableSpec> subTables = new ArrayList<>();
+        for (String raw : opts.subTables) {
+            String name = raw != null ? raw.trim() : null;
+            if (name == null || name.isEmpty()) {
+                continue;
+            }
+            String key = normalizeTableKey(name);
+            if (key.equals(mainKey)) {
+                throw new IllegalArgumentException("subTables cannot include main table: " + name);
+            }
+            ParsedTable sub = tables.get(key);
+            if (sub == null) {
+                throw new IllegalArgumentException("sub table not found: " + name);
+            }
+            String fk = resolveForeignKey(sub, mainTable, mainPkCol);
+            CodegenSpec.SubTableSpec subSpec = new CodegenSpec.SubTableSpec();
+            subSpec.setTableName(sub.tableName);
+            subSpec.setEntityName(toPascal(sub.tableName));
+            subSpec.setFtlDescription(sub.tableComment != null ? sub.tableComment : sub.tableName);
+            subSpec.setForeignRelationType("0");
+            List<String> foreignKeys = new ArrayList<>();
+            foreignKeys.add(fk);
+            subSpec.setForeignKeys(foreignKeys);
+            List<String> foreignMainKeys = new ArrayList<>();
+            foreignMainKeys.add(mainPk);
+            subSpec.setForeignMainKeys(foreignMainKeys);
+            subSpec.setColumns(sub.columns);
+            subTables.add(subSpec);
+        }
+        return subTables;
+    }
+
+    private static String resolvePrimaryKey(ParsedTable table) {
+        List<String> keys = new ArrayList<>();
+        for (CodegenSpec.ColumnSpec col : table.columns) {
+            if ("Y".equals(col.getIsKey())) {
+                keys.add(col.getFieldDbName());
+            }
+        }
+        if (keys.isEmpty()) {
+            throw new IllegalArgumentException("main table primary key is required for one-to-many");
+        }
+        if (keys.size() > 1) {
+            throw new IllegalArgumentException("composite primary key is not supported for one-to-many: " + table.tableName);
+        }
+        return keys.get(0);
+    }
+
+    private static String resolveForeignKey(ParsedTable subTable, ParsedTable mainTable, CodegenSpec.ColumnSpec mainPkCol) {
+        List<CodegenSpec.ColumnSpec> candidates = new ArrayList<>();
+        String mainTableName = mainTable.tableName.toLowerCase(Locale.ROOT);
+        String mainBase = resolveTableBase(mainTable.tableName);
+        String mainBaseLower = mainBase.toLowerCase(Locale.ROOT);
+        String mainSingular = singularize(mainBaseLower);
+        String mainEntity = toCamel(mainBase).toLowerCase(Locale.ROOT);
+        Set<String> nameMatches = new HashSet<>();
+        nameMatches.add(mainTableName + "_id");
+        if (!mainBaseLower.isEmpty()) {
+            nameMatches.add(mainBaseLower + "_id");
+        }
+        if (!mainSingular.isEmpty()) {
+            nameMatches.add(mainSingular + "_id");
+        }
+
+        for (CodegenSpec.ColumnSpec col : subTable.columns) {
+            String field = col.getFieldDbName() != null ? col.getFieldDbName().toLowerCase(Locale.ROOT) : "";
+            if (!field.endsWith("_id")) {
+                continue;
+            }
+            boolean matched = nameMatches.contains(field);
+            if (!matched && col.getFiledComment() != null) {
+                String comment = col.getFiledComment().toLowerCase(Locale.ROOT);
+                if (comment.contains(mainTableName) || comment.contains(mainBaseLower) || comment.contains(mainEntity)) {
+                    matched = true;
+                }
+            }
+            if (matched) {
+                candidates.add(col);
+            }
+        }
+        if (candidates.isEmpty()) {
+            throw new IllegalArgumentException("cannot resolve foreign key for sub table: " + subTable.tableName);
+        }
+        if (candidates.size() > 1) {
+            throw new IllegalArgumentException("ambiguous foreign key for sub table: " + subTable.tableName);
+        }
+        CodegenSpec.ColumnSpec fk = candidates.get(0);
+        validateColumnCompatibility(mainPkCol, fk, subTable.tableName);
+        return fk.getFieldDbName();
+    }
+
+    private static void validateColumnCompatibility(CodegenSpec.ColumnSpec mainPk, CodegenSpec.ColumnSpec fk, String subTableName) {
+        if (mainPk.getFieldDbType() != null && fk.getFieldDbType() != null
+            && !mainPk.getFieldDbType().equalsIgnoreCase(fk.getFieldDbType())) {
+            throw new IllegalArgumentException("foreign key type mismatch for sub table: " + subTableName);
+        }
+        if (mainPk.getCharmaxLength() != null && fk.getCharmaxLength() != null
+            && !mainPk.getCharmaxLength().equals(fk.getCharmaxLength())) {
+            throw new IllegalArgumentException("foreign key length mismatch for sub table: " + subTableName);
+        }
+        if (mainPk.getPrecision() != null && fk.getPrecision() != null
+            && !mainPk.getPrecision().equals(fk.getPrecision())) {
+            throw new IllegalArgumentException("foreign key precision mismatch for sub table: " + subTableName);
+        }
+        if (mainPk.getScale() != null && fk.getScale() != null
+            && !mainPk.getScale().equals(fk.getScale())) {
+            throw new IllegalArgumentException("foreign key scale mismatch for sub table: " + subTableName);
+        }
+    }
+
+    private static String resolveTableBase(String tableName) {
+        if (tableName == null || tableName.isEmpty()) {
+            return "";
+        }
+        int idx = tableName.indexOf('_');
+        if (idx > 0 && idx + 1 < tableName.length()) {
+            return tableName.substring(idx + 1);
+        }
+        return tableName;
+    }
+
+    private static String singularize(String name) {
+        if (name == null || name.isEmpty()) {
+            return "";
+        }
+        if (name.endsWith("s") && name.length() > 1) {
+            return name.substring(0, name.length() - 1);
+        }
+        return name;
+    }
+
+    private static CodegenSpec.ColumnSpec findColumnByName(List<CodegenSpec.ColumnSpec> columns, String name) {
+        if (columns == null || name == null) {
+            return null;
+        }
+        for (CodegenSpec.ColumnSpec col : columns) {
+            if (col.getFieldDbName() != null && col.getFieldDbName().equalsIgnoreCase(name)) {
+                return col;
+            }
+        }
+        return null;
+    }
+
+    private static void applyTreeParams(CodegenSpec.TableSpec table,
+                                        List<CodegenSpec.ColumnSpec> columns,
+                                        Options opts) {
+        String pidField = resolveTreeField(columns, opts.treePidField, "parent_id");
+        String textField = resolveTreeField(columns, opts.treeTextField, "name", "title");
+        String hasChildren = resolveTreeField(columns, opts.treeHasChildrenField, "has_child", "is_leaf");
+        if (pidField == null || textField == null) {
+            throw new IllegalArgumentException("tree mode requires parent_id and name/title fields");
+        }
+        if (table.getExtendParams() == null) {
+            table.setExtendParams(new HashMap<>());
+        }
+        table.getExtendParams().put("pidField", pidField);
+        table.getExtendParams().put("textField", textField);
+        if (hasChildren != null) {
+            table.getExtendParams().put("hasChildren", hasChildren);
+        }
+    }
+
+    private static String resolveTreeField(List<CodegenSpec.ColumnSpec> columns, String override, String... defaults) {
+        if (override != null && !override.trim().isEmpty()) {
+            CodegenSpec.ColumnSpec col = findColumnByName(columns, override.trim());
+            if (col == null) {
+                throw new IllegalArgumentException("tree field not found: " + override);
+            }
+            return col.getFieldDbName();
+        }
+        for (String candidate : defaults) {
+            CodegenSpec.ColumnSpec col = findColumnByName(columns, candidate);
+            if (col != null) {
+                return col.getFieldDbName();
+            }
+        }
+        return null;
+    }
+
+    private static String normalizeTableKey(String name) {
+        return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static List<String> splitCreateTableStatements(String ddl) {
+        List<String> statements = new ArrayList<>();
+        Pattern pattern = Pattern.compile("(?i)\\bcreate\\s+table\\b");
+        Matcher matcher = pattern.matcher(ddl);
+        List<Integer> starts = new ArrayList<>();
+        while (matcher.find()) {
+            starts.add(matcher.start());
+        }
+        for (int i = 0; i < starts.size(); i++) {
+            int start = starts.get(i);
+            int end = i + 1 < starts.size() ? starts.get(i + 1) : ddl.length();
+            String stmt = ddl.substring(start, end).trim();
+            if (!stmt.isEmpty()) {
+                statements.add(stmt);
+            }
+        }
+        return statements;
+    }
+
+    private static boolean isOneToManyMode(String jspMode) {
+        if (jspMode == null) {
+            return false;
+        }
+        String mode = jspMode.trim();
+        return "many".equalsIgnoreCase(mode)
+            || "jvxe".equalsIgnoreCase(mode)
+            || "erp".equalsIgnoreCase(mode)
+            || "innerTable".equalsIgnoreCase(mode)
+            || "tab".equalsIgnoreCase(mode);
     }
 
     private static String parseTableName(String ddl) {
@@ -656,5 +959,12 @@ final class DdlSpecMapper {
         String charmaxLength;
         String precision;
         String scale;
+    }
+
+    private static final class ParsedTable {
+        String tableName;
+        String tableComment;
+        List<CodegenSpec.ColumnSpec> columns;
+        Set<String> primaryKeys;
     }
 }

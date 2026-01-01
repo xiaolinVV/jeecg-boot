@@ -42,6 +42,24 @@ public final class CodegenCli {
             if (options.queryFields != null && !options.queryFields.trim().isEmpty()) {
                 mapOptions.queryFields = parseQueryFields(options.queryFields);
             }
+            if (options.oneToMany) {
+                mapOptions.oneToMany = true;
+            }
+            if (isNotBlank(options.mainTable)) {
+                mapOptions.mainTable = options.mainTable.trim();
+            }
+            if (isNotBlank(options.subTables)) {
+                mapOptions.subTables = parseSubTables(options.subTables);
+            }
+            if (isNotBlank(options.treePidField)) {
+                mapOptions.treePidField = options.treePidField.trim();
+            }
+            if (isNotBlank(options.treeTextField)) {
+                mapOptions.treeTextField = options.treeTextField.trim();
+            }
+            if (isNotBlank(options.treeHasChildrenField)) {
+                mapOptions.treeHasChildrenField = options.treeHasChildrenField.trim();
+            }
 
             CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
             applyDefaults(spec, options);
@@ -221,6 +239,12 @@ public final class CodegenCli {
         Integer fieldRowNum;
         String frontendRoot;
         String queryFields;
+        boolean oneToMany;
+        String mainTable;
+        String subTables;
+        String treePidField;
+        String treeTextField;
+        String treeHasChildrenField;
 
         static Args parse(String[] args) {
             Args options = new Args();
@@ -273,6 +297,28 @@ public final class CodegenCli {
                     if (i + 1 < args.length) {
                         options.queryFields = args[++i];
                     }
+                } else if ("--one-to-many".equals(arg)) {
+                    options.oneToMany = true;
+                } else if ("--main-table".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.mainTable = args[++i];
+                    }
+                } else if ("--sub-tables".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.subTables = args[++i];
+                    }
+                } else if ("--tree-pid-field".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.treePidField = args[++i];
+                    }
+                } else if ("--tree-text-field".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.treeTextField = args[++i];
+                    }
+                } else if ("--tree-has-children".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.treeHasChildrenField = args[++i];
+                    }
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {
                     return null;
                 }
@@ -286,6 +332,8 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
             System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--query-fields <list>]");
+            System.err.println("    [--one-to-many --main-table <table> --sub-tables <t1,t2,...>]");
+            System.err.println("    [--tree-pid-field <field>] [--tree-text-field <field>] [--tree-has-children <field>]");
             System.err.println("  note: when --spec-out is omitted, output path can be configured by jeecg/jeecg_config.properties (spec_out_dir)");
         }
     }
@@ -316,6 +364,24 @@ public final class CodegenCli {
             }
             if (!field.isEmpty()) {
                 out.put(field, mode);
+            }
+        }
+        return out;
+    }
+
+    private static java.util.List<String> parseSubTables(String input) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (input == null || input.trim().isEmpty()) {
+            return out;
+        }
+        String[] parts = input.split(",");
+        for (String part : parts) {
+            if (part == null) {
+                continue;
+            }
+            String name = part.trim();
+            if (!name.isEmpty()) {
+                out.add(name);
             }
         }
         return out;
