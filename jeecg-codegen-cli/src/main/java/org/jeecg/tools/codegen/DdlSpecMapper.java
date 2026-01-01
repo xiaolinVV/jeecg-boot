@@ -234,6 +234,7 @@ final class DdlSpecMapper {
         col.setFieldDefault(defaultValue);
 
         applyInference(col, tableName);
+        applyDictFromComment(col, comment);
         col.setFieldShowType(col.getClassType());
         return col;
     }
@@ -365,6 +366,21 @@ final class DdlSpecMapper {
         }
     }
 
+    private static void applyDictFromComment(CodegenSpec.ColumnSpec col, String comment) {
+        if (comment == null || comment.isEmpty()) {
+            return;
+        }
+        String dict = extractDictCode(comment);
+        if (dict == null || dict.isEmpty()) {
+            return;
+        }
+        col.setDictField(dict);
+        if (!CLASS_TYPE_NEEDS_DICT.contains(col.getClassType())) {
+            // 使字典类字段始终走字典控件分支，符合模板要求
+            col.setClassType("list");
+        }
+    }
+
     private static List<CodegenSpec.ColumnSpec> reorderColumns(List<CodegenSpec.ColumnSpec> columns) {
         List<CodegenSpec.ColumnSpec> normal = new ArrayList<>();
         List<CodegenSpec.ColumnSpec> files = new ArrayList<>();
@@ -490,6 +506,15 @@ final class DdlSpecMapper {
         throw new IllegalArgumentException("unsupported column type: " + typeToken);
     }
 
+    private static String extractDictCode(String comment) {
+        Pattern pattern = Pattern.compile("(?:字典|dict)[:：]\\s*([A-Za-z0-9_\\-]+)");
+        Matcher matcher = pattern.matcher(comment);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }
+
     private static String resolveEntityPackage(String override, String tableName) {
         if (override != null && !override.trim().isEmpty()) {
             return override.trim();
@@ -525,6 +550,18 @@ final class DdlSpecMapper {
             return camel;
         }
         return Character.toUpperCase(camel.charAt(0)) + camel.substring(1);
+    }
+
+    private static final Set<String> CLASS_TYPE_NEEDS_DICT = new HashSet<>();
+
+    static {
+        String[] needsDict = {
+            "list", "radio", "checkbox", "list_multi",
+            "sel_search", "sel_user", "sel_depart", "sel_tree", "cat_tree", "popup"
+        };
+        for (String t : needsDict) {
+            CLASS_TYPE_NEEDS_DICT.add(t);
+        }
     }
 
     private static final class ColumnType {
