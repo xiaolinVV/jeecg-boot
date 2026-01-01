@@ -127,6 +127,9 @@ public final class CodegenCli {
                 spec.setWebRootPackage(cfg.trim());
             }
         }
+        if (isNotBlank(options.vueStyle)) {
+            spec.setVueStyle(options.vueStyle.trim());
+        }
         if (spec.getTable() != null) {
             if (isNotBlank(options.entityPackage)) {
                 spec.getTable().setEntityPackage(options.entityPackage.trim());
@@ -239,6 +242,7 @@ public final class CodegenCli {
         Integer fieldRowNum;
         String frontendRoot;
         String queryFields;
+        String vueStyle;
         boolean oneToMany;
         String mainTable;
         String subTables;
@@ -297,6 +301,10 @@ public final class CodegenCli {
                     if (i + 1 < args.length) {
                         options.queryFields = args[++i];
                     }
+                } else if ("--vue-style".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.vueStyle = args[++i];
+                    }
                 } else if ("--one-to-many".equals(arg)) {
                     options.oneToMany = true;
                 } else if ("--main-table".equals(arg)) {
@@ -332,6 +340,7 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
             System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--query-fields <list>]");
+            System.err.println("    [--vue-style vue|vue3|vue3Native]");
             System.err.println("    [--one-to-many --main-table <table> --sub-tables <t1,t2,...>]");
             System.err.println("    [--tree-pid-field <field>] [--tree-text-field <field>] [--tree-has-children <field>]");
             System.err.println("  note: when --spec-out is omitted, output path can be configured by jeecg/jeecg_config.properties (spec_out_dir)");

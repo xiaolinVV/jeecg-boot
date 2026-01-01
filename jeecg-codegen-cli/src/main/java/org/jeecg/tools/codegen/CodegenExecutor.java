@@ -60,6 +60,13 @@ final class CodegenExecutor {
         if (!VALID_JSP_MODE.contains(jspMode)) {
             throw new IllegalArgumentException("invalid jspMode: " + jspMode);
         }
+        CgformEnum cgform = CgformEnum.getCgformEnumByConfig(jspMode);
+        if (cgform == null) {
+            throw new IllegalArgumentException("Unknown jspMode: " + jspMode);
+        }
+        if (!isBlank(spec.getVueStyle())) {
+            validateVueStyle(cgform, spec.getVueStyle().trim());
+        }
         if (spec.getTable() == null) {
             throw new IllegalArgumentException("table is required");
         }
@@ -70,8 +77,7 @@ final class CodegenExecutor {
         for (CodegenSpec.ColumnSpec column : spec.getColumns()) {
             normalizeColumn(column);
         }
-        if (CgformEnum.getCgformEnumByConfig(jspMode) != null
-            && CgformEnum.getCgformEnumByConfig(jspMode).getType() == 2) {
+        if (cgform.getType() == 2) {
             if (spec.getSubTables() == null || spec.getSubTables().isEmpty()) {
                 throw new IllegalArgumentException("subTables is required for onetomany modes");
             }
@@ -197,6 +203,19 @@ final class CodegenExecutor {
         if (!"Y".equals(value) && !"N".equals(value)) {
             throw new IllegalArgumentException(field + " must be Y or N");
         }
+    }
+
+    private void validateVueStyle(CgformEnum cgform, String vueStyle) {
+        String[] allowed = cgform.getVueStyle();
+        if (allowed == null || allowed.length == 0) {
+            throw new IllegalArgumentException("jspMode " + cgform.getCode() + " does not support vueStyle");
+        }
+        for (String style : allowed) {
+            if (style.equalsIgnoreCase(vueStyle)) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("vueStyle " + vueStyle + " not supported by jspMode " + cgform.getCode());
     }
 
     private boolean isBlank(String value) {
