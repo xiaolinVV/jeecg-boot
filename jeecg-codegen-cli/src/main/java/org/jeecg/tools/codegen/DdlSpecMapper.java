@@ -487,9 +487,7 @@ final class DdlSpecMapper {
             type.fieldType = "byte[]";
             return type;
         }
-        type.fieldDbType = "string";
-        type.fieldType = "String";
-        return type;
+        throw new IllegalArgumentException("unsupported column type: " + typeToken);
     }
 
     private static String resolveEntityPackage(String override, String tableName) {

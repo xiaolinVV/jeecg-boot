@@ -215,8 +215,9 @@ final class CodegenExecutor {
     private boolean defaultShowList(String name) {
         String lower = name.toLowerCase(java.util.Locale.ROOT);
         return !(lower.equals("id")
-            || lower.equals("create_time")
-            || lower.equals("update_time"));
+            || lower.equals("del_flag")
+            || lower.equals("update_time")
+            || lower.equals("update_by"));
     }
 
     private void applyGlobalConfig(String templatePath) {
