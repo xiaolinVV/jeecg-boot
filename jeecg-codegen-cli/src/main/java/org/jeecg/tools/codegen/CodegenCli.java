@@ -39,6 +39,9 @@ public final class CodegenCli {
             if (options.fieldRowNum != null) {
                 mapOptions.fieldRowNum = options.fieldRowNum;
             }
+            if (options.queryFields != null && !options.queryFields.trim().isEmpty()) {
+                mapOptions.queryFields = parseQueryFields(options.queryFields);
+            }
 
             CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
             applyDefaults(spec, options);
@@ -217,6 +220,7 @@ public final class CodegenCli {
         String entityPackage;
         Integer fieldRowNum;
         String frontendRoot;
+        String queryFields;
 
         static Args parse(String[] args) {
             Args options = new Args();
@@ -265,6 +269,10 @@ public final class CodegenCli {
                     if (i + 1 < args.length) {
                         options.frontendRoot = args[++i];
                     }
+                } else if ("--query-fields".equals(arg)) {
+                    if (i + 1 < args.length) {
+                        options.queryFields = args[++i];
+                    }
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {
                     return null;
                 }
@@ -277,8 +285,39 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --input <spec.yaml|json> [--output <path>] [--template <templatePath>]");
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
-            System.err.println("    [--field-row-num <n>] [--frontend-root <path>]");
+            System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--query-fields <list>]");
             System.err.println("  note: when --spec-out is omitted, output path can be configured by jeecg/jeecg_config.properties (spec_out_dir)");
         }
+    }
+
+    private static java.util.Map<String, String> parseQueryFields(String input) {
+        java.util.Map<String, String> out = new java.util.HashMap<>();
+        if (input == null || input.trim().isEmpty()) {
+            return out;
+        }
+        String[] parts = input.split(",");
+        for (String part : parts) {
+            if (part == null) {
+                continue;
+            }
+            String trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            String field = trimmed;
+            String mode = "single";
+            int idx = trimmed.indexOf(':');
+            if (idx > 0) {
+                field = trimmed.substring(0, idx).trim();
+                String m = trimmed.substring(idx + 1).trim();
+                if (!m.isEmpty()) {
+                    mode = m;
+                }
+            }
+            if (!field.isEmpty()) {
+                out.put(field, mode);
+            }
+        }
+        return out;
     }
 }

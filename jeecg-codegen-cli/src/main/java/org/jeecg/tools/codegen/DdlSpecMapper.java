@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +18,7 @@ final class DdlSpecMapper {
         String bussiPackage;
         String entityPackage;
         Integer fieldRowNum;
+        Map<String, String> queryFields;
     }
 
     static CodegenSpec fromDdl(String ddl, Options options) {
@@ -59,6 +61,7 @@ final class DdlSpecMapper {
 
         columns = reorderColumns(columns);
         resetFieldOrder(columns);
+        applyQuerySettings(columns, opts);
 
         CodegenSpec spec = new CodegenSpec();
         spec.setJspMode(opts.jspMode);
@@ -379,6 +382,89 @@ final class DdlSpecMapper {
             // 使字典类字段始终走字典控件分支，符合模板要求
             col.setClassType("list");
         }
+    }
+
+    private static void applyQuerySettings(List<CodegenSpec.ColumnSpec> columns, Options opts) {
+        if (columns == null || columns.isEmpty()) {
+            return;
+        }
+        Map<String, String> explicit = opts != null ? opts.queryFields : null;
+        boolean hasExplicit = explicit != null && !explicit.isEmpty();
+        Set<String> remaining = hasExplicit ? new HashSet<>(explicit.keySet()) : null;
+        for (CodegenSpec.ColumnSpec col : columns) {
+            String matched = null;
+            String mode = null;
+            if (hasExplicit) {
+                String byDb = explicit.get(col.getFieldDbName());
+                if (byDb != null) {
+                    matched = col.getFieldDbName();
+                    mode = byDb;
+                } else if (col.getFieldName() != null) {
+                    String byName = explicit.get(col.getFieldName());
+                    if (byName != null) {
+                        matched = col.getFieldName();
+                        mode = byName;
+                    }
+                }
+            }
+            if (matched != null) {
+                if (remaining != null) {
+                    remaining.remove(matched);
+                }
+                setQuery(col, mode != null && !mode.trim().isEmpty() ? mode.trim() : "single");
+                continue;
+            }
+            if (!hasExplicit && shouldInferQuery(col)) {
+                setQuery(col, inferQueryMode(col));
+            }
+        }
+        if (remaining != null && !remaining.isEmpty()) {
+            throw new IllegalArgumentException("unknown query fields: " + String.join(", ", remaining));
+        }
+    }
+
+    private static boolean shouldInferQuery(CodegenSpec.ColumnSpec col) {
+        String name = col.getFieldDbName() != null ? col.getFieldDbName().toLowerCase(Locale.ROOT) : "";
+        if (name.isEmpty()) {
+            return false;
+        }
+        if (name.equals("id") || name.equals("del_flag") || name.equals("create_by") || name.equals("update_by")) {
+            return false;
+        }
+        if (name.endsWith("_time") || name.endsWith("_date")) {
+            return true;
+        }
+        return name.contains("name")
+            || name.contains("title")
+            || name.contains("code")
+            || name.contains("no")
+            || name.contains("status")
+            || name.contains("state")
+            || name.contains("type")
+            || name.contains("category")
+            || name.contains("phone")
+            || name.contains("mobile")
+            || name.contains("email");
+    }
+
+    private static String inferQueryMode(CodegenSpec.ColumnSpec col) {
+        String dbType = col.getFieldDbType() != null ? col.getFieldDbType().toLowerCase(Locale.ROOT) : "";
+        if ("datetime".equals(dbType) || "date".equals(dbType) || "time".equals(dbType)) {
+            return "group";
+        }
+        String name = col.getFieldDbName() != null ? col.getFieldDbName().toLowerCase(Locale.ROOT) : "";
+        if (name.endsWith("_time") || name.endsWith("_date")) {
+            return "group";
+        }
+        return "single";
+    }
+
+    private static void setQuery(CodegenSpec.ColumnSpec col, String mode) {
+        if (!"single".equals(mode) && !"group".equals(mode)) {
+            throw new IllegalArgumentException("column.queryMode must be single or group for " + col.getFieldDbName());
+        }
+        col.setIsQuery("Y");
+        col.setQueryMode(mode);
     }
 
     private static List<CodegenSpec.ColumnSpec> reorderColumns(List<CodegenSpec.ColumnSpec> columns) {
