@@ -714,6 +714,9 @@ final class DdlSpecMapper {
             return comment;
         }
         value = value.replaceAll("。?\\s*字典[:：].*$", "").trim();
+        value = value.replaceAll("\\([^)]*\\)", "");
+        value = value.replaceAll("（[^）]*）", "");
+        value = value.trim();
         int colon = value.indexOf('：');
         int asciiColon = value.indexOf(':');
         int cut = -1;
@@ -727,6 +730,7 @@ final class DdlSpecMapper {
         if (cut > 0) {
             value = value.substring(0, cut).trim();
         }
+        value = value.replaceAll("(?i)\\s*id$", "");
         value = value.replaceAll("^[\\s，；。:：]+|[\\s，；。:：]+$", "").trim();
         if (value.isEmpty()) {
             return comment;
