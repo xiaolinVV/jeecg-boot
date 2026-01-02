@@ -64,7 +64,7 @@ public final class CodegenCli {
             CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
             applyDefaults(spec, options);
             if (options.specOut != null && !options.specOut.trim().isEmpty()) {
-                writeYaml(spec, Paths.get(options.specOut));
+                writeYaml(spec, resolveSpecOutPath(options.specOut, spec));
             } else {
                 Path out = defaultSpecOutPath(spec);
                 writeYaml(spec, out);
@@ -92,6 +92,18 @@ public final class CodegenCli {
         try (OutputStream stream = Files.newOutputStream(out)) {
             writeYaml(spec, stream);
         }
+    }
+
+    private static Path resolveSpecOutPath(String specOut, CodegenSpec spec) {
+        Path out = Paths.get(specOut.trim());
+        if (out.isAbsolute()) {
+            return out;
+        }
+        String projectPath = spec != null ? spec.getProjectPath() : null;
+        if (isBlank(projectPath)) {
+            return out.toAbsolutePath().normalize();
+        }
+        return Paths.get(projectPath).resolve(out).normalize();
     }
 
     private static void applyDefaults(CodegenSpec spec, Args options) {

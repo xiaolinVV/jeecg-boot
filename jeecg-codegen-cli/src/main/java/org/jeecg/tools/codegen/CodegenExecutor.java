@@ -208,14 +208,14 @@ final class CodegenExecutor {
     private void validateVueStyle(CgformEnum cgform, String vueStyle) {
         String[] allowed = cgform.getVueStyle();
         if (allowed == null || allowed.length == 0) {
-            throw new IllegalArgumentException("jspMode " + cgform.getCode() + " does not support vueStyle");
+            throw new IllegalArgumentException("jspMode " + spec.getJspMode() + " does not support vueStyle");
         }
         for (String style : allowed) {
             if (style.equalsIgnoreCase(vueStyle)) {
                 return;
             }
         }
-        throw new IllegalArgumentException("vueStyle " + vueStyle + " not supported by jspMode " + cgform.getCode());
+        throw new IllegalArgumentException("vueStyle " + vueStyle + " not supported by jspMode " + spec.getJspMode());
     }
 
     private boolean isBlank(String value) {

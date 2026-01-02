@@ -721,6 +721,10 @@ final class DdlSpecMapper {
                 setQuery(col, inferQueryMode(col));
             }
         }
+        if (!hasExplicit) {
+            moveCreateTimeToQueryEnd(columns);
+            resetFieldOrder(columns);
+        }
         if (remaining != null && !remaining.isEmpty()) {
             throw new IllegalArgumentException("unknown query fields: " + String.join(", ", remaining));
         }
@@ -731,7 +735,8 @@ final class DdlSpecMapper {
         if (name.isEmpty()) {
             return false;
         }
-        if (name.equals("id") || name.equals("del_flag") || name.equals("create_by") || name.equals("update_by")) {
+        if (name.equals("id") || name.equals("del_flag") || name.equals("create_by")
+            || name.equals("update_by") || name.equals("update_time")) {
             return false;
         }
         if (name.endsWith("_time") || name.endsWith("_date")) {
@@ -768,6 +773,47 @@ final class DdlSpecMapper {
         }
         col.setIsQuery("Y");
         col.setQueryMode(mode);
+    }
+
+    private static void moveCreateTimeToQueryEnd(List<CodegenSpec.ColumnSpec> columns) {
+        int createIndex = -1;
+        CodegenSpec.ColumnSpec createCol = null;
+        for (int i = 0; i < columns.size(); i++) {
+            CodegenSpec.ColumnSpec col = columns.get(i);
+            if (isCreateTime(col)) {
+                createIndex = i;
+                createCol = col;
+                break;
+            }
+        }
+        if (createCol == null || !"Y".equals(createCol.getIsQuery())) {
+            return;
+        }
+        int lastQueryIndex = -1;
+        for (int i = 0; i < columns.size(); i++) {
+            CodegenSpec.ColumnSpec col = columns.get(i);
+            if (col == createCol) {
+                continue;
+            }
+            if ("Y".equals(col.getIsQuery())) {
+                lastQueryIndex = i;
+            }
+        }
+        if (lastQueryIndex < 0 || createIndex > lastQueryIndex) {
+            return;
+        }
+        columns.remove(createIndex);
+        if (createIndex < lastQueryIndex) {
+            lastQueryIndex -= 1;
+        }
+        columns.add(lastQueryIndex + 1, createCol);
+    }
+
+    private static boolean isCreateTime(CodegenSpec.ColumnSpec col) {
+        if (col == null || col.getFieldDbName() == null) {
+            return false;
+        }
+        return "create_time".equalsIgnoreCase(col.getFieldDbName());
     }
 
     private static List<CodegenSpec.ColumnSpec> reorderColumns(List<CodegenSpec.ColumnSpec> columns) {
