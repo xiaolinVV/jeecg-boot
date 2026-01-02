@@ -2,15 +2,23 @@ package org.jeecg.tools.codegen;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jeecg.common.constant.enums.CgformEnum;
 import org.jeecgframework.codegenerate.generate.impl.CodeGenerateOne;
@@ -44,6 +52,79 @@ final class CodegenExecutor {
             generateOne(templatePath, stylePath);
         }
         routeFrontendOutputs();
+    }
+
+    Map<String, List<String>> dryRun() throws Exception {
+        normalizeAndValidate();
+        CgformEnum cgform = CgformEnum.getCgformEnumByConfig(spec.getJspMode());
+        if (cgform == null) {
+            throw new IllegalArgumentException("Unknown jspMode: " + spec.getJspMode());
+        }
+        String templatePath = spec.getTemplatePath() != null ? spec.getTemplatePath() : cgform.getTemplatePath();
+        String stylePath = cgform.getStylePath();
+        applyGlobalConfig(templatePath);
+
+        List<String> templateFiles = listTemplateFiles(templatePath, stylePath);
+        String projectPath = spec.getProjectPath();
+        String sourceRootPackage = resolveSourceRootPackage();
+        Path sourceRoot = Paths.get(projectPath, sourceRootPackage.replace(".", java.io.File.separator));
+        String frontendRoot = spec.getFrontendRoot();
+        boolean hasFrontendRoot = frontendRoot != null && !frontendRoot.trim().isEmpty();
+        String bussiPackage = resolveBussiPackage();
+        String entityPackage = resolveEntityPackage();
+        String entityName = resolveEntityName();
+        String currentDate = java.time.format.DateTimeFormatter.BASIC_ISO_DATE.format(java.time.LocalDate.now());
+        List<CodegenSpec.SubTableSpec> subTables = spec.getSubTables();
+        String vueStyle = spec.getVueStyle();
+
+        LinkedHashSet<String> backend = new LinkedHashSet<>();
+        LinkedHashSet<String> frontend = new LinkedHashSet<>();
+
+        for (String rel : templateFiles) {
+            if (rel == null || rel.isEmpty()) {
+                continue;
+            }
+            if (!shouldIncludeVueStyle(rel, vueStyle)) {
+                continue;
+            }
+            String outputRel = rel;
+            String base = "";
+            if (rel.startsWith("java/") || rel.startsWith("java\\")) {
+                outputRel = rel.substring(5);
+                base = sourceRootPackage;
+            }
+            List<String> expanded = expandSubTablePaths(outputRel, subTables);
+            for (String entry : expanded) {
+                String rendered = renderTemplatePath(entry, bussiPackage, entityPackage, entityName, currentDate);
+                if (rendered == null || rendered.isEmpty()) {
+                    continue;
+                }
+                rendered = normalizeTemplateExtension(rendered);
+                Path output = base.isEmpty()
+                    ? Paths.get(projectPath, rendered)
+                    : Paths.get(projectPath, base.replace(".", java.io.File.separator), rendered);
+                output = output.normalize();
+
+                if (hasFrontendRoot && output.startsWith(sourceRoot)) {
+                    Path relative = sourceRoot.relativize(output);
+                    int vueIndex = indexOfVueSegment(relative, new String[] {"vue", "vue3", "vue3Native"});
+                    if (vueIndex >= 0) {
+                        Path targetRel = relative.subpath(vueIndex + 1, relative.getNameCount());
+                        Path target = Paths.get(frontendRoot).resolve(targetRel).normalize();
+                        frontend.add(target.toString());
+                        continue;
+                    }
+                }
+                backend.add(output.toString());
+            }
+        }
+
+        List<String> backendList = backend.stream().sorted().collect(Collectors.toList());
+        List<String> frontendList = frontend.stream().sorted().collect(Collectors.toList());
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        out.put("backend", backendList);
+        out.put("frontend", frontendList);
+        return out;
     }
 
     private void normalizeAndValidate() {
@@ -385,6 +466,171 @@ final class CodegenExecutor {
         if (copied > 0) {
             System.out.println("[codegen] frontendRoot copied files: " + copied);
         }
+    }
+
+    private String resolveSourceRootPackage() {
+        String sourceRootPackage = spec.getSourceRootPackage();
+        if (isBlank(sourceRootPackage)) {
+            sourceRootPackage = org.jeecgframework.codegenerate.a.a.h;
+        }
+        if (isBlank(sourceRootPackage)) {
+            sourceRootPackage = "src/main/java";
+        }
+        return sourceRootPackage.trim();
+    }
+
+    private String resolveBussiPackage() {
+        if (!isBlank(spec.getBussiPackage())) {
+            return spec.getBussiPackage().trim();
+        }
+        String fallback = org.jeecgframework.codegenerate.a.a.g;
+        return isBlank(fallback) ? "" : fallback.trim();
+    }
+
+    private String resolveEntityPackage() {
+        String entityPackage = spec.getTable() != null ? spec.getTable().getEntityPackage() : null;
+        if (!isBlank(entityPackage)) {
+            return entityPackage.trim();
+        }
+        return "";
+    }
+
+    private String resolveEntityName() {
+        String entityName = spec.getTable() != null ? spec.getTable().getEntityName() : null;
+        if (!isBlank(entityName)) {
+            return entityName.trim();
+        }
+        return "";
+    }
+
+    private List<String> listTemplateFiles(String templatePath, String stylePath) throws IOException {
+        if (isBlank(templatePath) || isBlank(stylePath)) {
+            return Collections.emptyList();
+        }
+        String normalizedPath = templatePath.startsWith("/") ? templatePath.substring(1) : templatePath;
+        String styleDir = stylePath.replace(".", "/");
+        Path templateRoot = Paths.get(templatePath);
+        if (Files.exists(templateRoot)) {
+            return listTemplateFilesFromRoot(templateRoot, styleDir);
+        }
+        URL url = CodegenExecutor.class.getClassLoader().getResource(normalizedPath);
+        if (url == null) {
+            throw new IllegalArgumentException("templatePath not found: " + templatePath);
+        }
+        try {
+            URI uri = url.toURI();
+            if ("jar".equalsIgnoreCase(uri.getScheme())) {
+                FileSystem fs = null;
+                try {
+                    try {
+                        fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                    } catch (java.nio.file.FileSystemAlreadyExistsException ex) {
+                        fs = FileSystems.getFileSystem(uri);
+                    }
+                    Path root = fs.getPath(normalizedPath);
+                    return listTemplateFilesFromRoot(root, styleDir);
+                } finally {
+                    if (fs != null && fs.isOpen()) {
+                        fs.close();
+                    }
+                }
+            }
+            return listTemplateFilesFromRoot(Paths.get(uri), styleDir);
+        } catch (Exception e) {
+            throw new IOException("Failed to resolve templatePath: " + templatePath, e);
+        }
+    }
+
+    private List<String> listTemplateFilesFromRoot(Path templateRoot, String styleDir) throws IOException {
+        Path styleRoot = templateRoot.resolve(styleDir);
+        if (!Files.isDirectory(styleRoot)) {
+            throw new IllegalArgumentException("template style path not found: " + styleRoot);
+        }
+        List<String> out = new ArrayList<>();
+        try (Stream<Path> stream = Files.walk(styleRoot, FileVisitOption.FOLLOW_LINKS)) {
+            for (Path path : (Iterable<Path>) stream::iterator) {
+                if (!Files.isRegularFile(path)) {
+                    continue;
+                }
+                Path rel = styleRoot.relativize(path);
+                String relStr = rel.toString().replace('\\', '/');
+                out.add(relStr);
+            }
+        }
+        return out;
+    }
+
+    private boolean shouldIncludeVueStyle(String relPath, String vueStyle) {
+        if (isBlank(vueStyle)) {
+            return true;
+        }
+        String[] segments = relPath.replace('\\', '/').split("/");
+        for (String segment : segments) {
+            if ("vue3Native".equals(segment)) {
+                return "vue3Native".equalsIgnoreCase(vueStyle);
+            }
+            if ("vue3".equals(segment)) {
+                return "vue3".equalsIgnoreCase(vueStyle);
+            }
+            if ("vue".equals(segment)) {
+                return "vue".equalsIgnoreCase(vueStyle);
+            }
+        }
+        return true;
+    }
+
+    private List<String> expandSubTablePaths(String relPath, List<CodegenSpec.SubTableSpec> subTables) {
+        if (relPath == null || !relPath.contains("[1-n]")) {
+            return Collections.singletonList(relPath);
+        }
+        if (subTables == null || subTables.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> out = new ArrayList<>();
+        for (CodegenSpec.SubTableSpec sub : subTables) {
+            String name = sub != null ? sub.getEntityName() : null;
+            if (isBlank(name)) {
+                continue;
+            }
+            out.add(relPath.replace("[1-n]", name.trim()));
+        }
+        return out;
+    }
+
+    private String renderTemplatePath(String path, String bussiPackage, String entityPackage, String entityName, String currentDate) {
+        if (path == null) {
+            return null;
+        }
+        String rendered = path;
+        if (bussiPackage != null) {
+            rendered = rendered.replace("${bussiPackage}", bussiPackage.replace(".", "/"));
+        }
+        if (entityPackage != null) {
+            rendered = rendered.replace("${entityPackage}", entityPackage.replace(".", "/"));
+        }
+        if (entityName != null) {
+            rendered = rendered.replace("${entityName}", entityName);
+        }
+        if (currentDate != null) {
+            rendered = rendered.replace("${currentDate}", currentDate);
+        }
+        return rendered;
+    }
+
+    private String normalizeTemplateExtension(String path) {
+        if (path == null) {
+            return null;
+        }
+        if (path.endsWith(".javai")) {
+            return path.substring(0, path.length() - 1);
+        }
+        if (path.endsWith(".vuei")) {
+            return path.substring(0, path.length() - 1);
+        }
+        if (path.endsWith(".tsi")) {
+            return path.substring(0, path.length() - 1);
+        }
+        return path;
     }
 
     private int indexOfVueSegment(Path relative, String[] vueDirs) {

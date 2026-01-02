@@ -7,7 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.io.InputStream;
 
@@ -24,6 +28,9 @@ public final class CodegenCli {
         }
 
         if (options.ddl != null) {
+            if (options.dryRun) {
+                throw new IllegalArgumentException("--dry-run only supported with --input");
+            }
             String ddl = new String(Files.readAllBytes(Paths.get(options.ddl)), StandardCharsets.UTF_8);
             DdlSpecMapper.Options mapOptions = new DdlSpecMapper.Options();
             if (options.jspMode != null && !options.jspMode.trim().isEmpty()) {
@@ -80,6 +87,16 @@ public final class CodegenCli {
         }
 
         CodegenExecutor executor = new CodegenExecutor(spec);
+        if (options.dryRun) {
+            Map<String, List<String>> result = executor.dryRun();
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("dryRun", true);
+            out.put("backend", result.getOrDefault("backend", new ArrayList<>()));
+            out.put("frontend", result.getOrDefault("frontend", new ArrayList<>()));
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, out);
+            return;
+        }
         executor.run();
     }
 
@@ -261,6 +278,7 @@ public final class CodegenCli {
         String treePidField;
         String treeTextField;
         String treeHasChildrenField;
+        boolean dryRun;
 
         static Args parse(String[] args) {
             Args options = new Args();
@@ -339,6 +357,8 @@ public final class CodegenCli {
                     if (i + 1 < args.length) {
                         options.treeHasChildrenField = args[++i];
                     }
+                } else if ("--dry-run".equals(arg)) {
+                    options.dryRun = true;
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {
                     return null;
                 }
@@ -348,13 +368,14 @@ public final class CodegenCli {
 
         static void printUsage() {
             System.err.println("Usage:");
-            System.err.println("  java -jar jeecg-codegen-cli.jar --input <spec.yaml|json> [--output <path>] [--template <templatePath>]");
+            System.err.println("  java -jar jeecg-codegen-cli.jar --input <spec.yaml|json> [--output <path>] [--template <templatePath>] [--dry-run]");
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
             System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--query-fields <list>]");
             System.err.println("    [--vue-style vue|vue3|vue3Native]");
             System.err.println("    [--one-to-many --main-table <table> --sub-tables <t1,t2,...>]");
             System.err.println("    [--tree-pid-field <field>] [--tree-text-field <field>] [--tree-has-children <field>]");
+            System.err.println("  note: --dry-run only works with --input and will not write any files");
             System.err.println("  note: when --spec-out is omitted, output path can be configured by jeecg/jeecg_config.properties (spec_out_dir)");
         }
     }
