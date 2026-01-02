@@ -76,7 +76,7 @@ public final class CodegenCli {
                 Path out = defaultSpecOutPath(spec);
                 writeYaml(spec, out);
             }
-            return;
+            System.exit(0);
         }
 
         Path input = Paths.get(options.input);
@@ -95,9 +95,10 @@ public final class CodegenCli {
             out.put("frontend", result.getOrDefault("frontend", new ArrayList<>()));
             ObjectMapper mapper = new ObjectMapper();
             mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, out);
-            return;
+            System.exit(0);
         }
         executor.run();
+        System.exit(0);
     }
 
     private static void writeYaml(CodegenSpec spec, OutputStream out) throws Exception {

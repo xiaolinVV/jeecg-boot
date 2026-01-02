@@ -30,6 +30,7 @@ import org.jeecgframework.codegenerate.generate.pojo.onetomany.SubTableVo;
 
 final class CodegenExecutor {
     private final CodegenSpec spec;
+    private static final String DEFAULT_TEMPLATE_CLASSPATH = "/jeecg/code-template-online";
 
     CodegenExecutor(CodegenSpec spec) {
         this.spec = spec;
@@ -42,7 +43,10 @@ final class CodegenExecutor {
             throw new IllegalArgumentException("Unknown jspMode: " + spec.getJspMode());
         }
 
-        String templatePath = spec.getTemplatePath() != null ? spec.getTemplatePath() : cgform.getTemplatePath();
+        boolean templateProvided = !isBlank(spec.getTemplatePath());
+        String templatePath = templateProvided ? spec.getTemplatePath() : cgform.getTemplatePath();
+        TemplateResolution resolution = resolveTemplatePaths(templatePath, templateProvided);
+        templatePath = resolution.codegenPath;
         String stylePath = cgform.getStylePath();
         applyGlobalConfig(templatePath);
 
@@ -60,11 +64,15 @@ final class CodegenExecutor {
         if (cgform == null) {
             throw new IllegalArgumentException("Unknown jspMode: " + spec.getJspMode());
         }
-        String templatePath = spec.getTemplatePath() != null ? spec.getTemplatePath() : cgform.getTemplatePath();
+        boolean templateProvided = !isBlank(spec.getTemplatePath());
+        String templatePath = templateProvided ? spec.getTemplatePath() : cgform.getTemplatePath();
+        TemplateResolution resolution = resolveTemplatePaths(templatePath, templateProvided);
+        templatePath = resolution.codegenPath;
         String stylePath = cgform.getStylePath();
         applyGlobalConfig(templatePath);
 
-        List<String> templateFiles = listTemplateFiles(templatePath, stylePath);
+        String listTemplatePath = resolution.listPath != null ? resolution.listPath : templatePath;
+        List<String> templateFiles = listTemplateFiles(listTemplatePath, stylePath);
         String projectPath = spec.getProjectPath();
         String sourceRootPackage = resolveSourceRootPackage();
         Path sourceRoot = Paths.get(projectPath, sourceRootPackage.replace(".", java.io.File.separator));
@@ -408,18 +416,38 @@ final class CodegenExecutor {
     private void routeFrontendOutputs() throws IOException {
         String frontendRoot = spec.getFrontendRoot();
         if (frontendRoot == null || frontendRoot.trim().isEmpty()) {
+            System.out.println("[codegen] frontendRoot not configured, skip routing");
             return;
         }
         String projectPath = spec.getProjectPath();
         if (projectPath == null || projectPath.trim().isEmpty()) {
+            System.out.println("[codegen] projectPath not configured, skip routing");
             return;
         }
         String sourceRootPackage = spec.getSourceRootPackage();
         if (sourceRootPackage == null || sourceRootPackage.trim().isEmpty()) {
             sourceRootPackage = org.jeecgframework.codegenerate.a.a.h;
         }
+        if (sourceRootPackage == null || sourceRootPackage.trim().isEmpty()) {
+            sourceRootPackage = "src/main/java";
+        }
         Path sourceRoot = Paths.get(projectPath, sourceRootPackage.replace(".", java.io.File.separator));
         if (!Files.isDirectory(sourceRoot)) {
+            System.out.println("[codegen] sourceRoot not found: " + sourceRoot);
+            return;
+        }
+
+        String entityPackage = resolveEntityPackage();
+        if (isBlank(entityPackage)) {
+            System.out.println("[codegen] entityPackage is blank, skip routing");
+            return;
+        }
+        String bussiPackage = resolveBussiPackage();
+        Path moduleRoot = sourceRoot.resolve(bussiPackage.replace(".", java.io.File.separator))
+                                    .resolve(entityPackage.replace(".", java.io.File.separator));
+        System.out.println("[codegen] moduleRoot: " + moduleRoot);
+        if (!Files.isDirectory(moduleRoot)) {
+            System.out.println("[codegen] moduleRoot not found, skip routing");
             return;
         }
 
@@ -427,23 +455,20 @@ final class CodegenExecutor {
         List<String> conflicts = new ArrayList<>();
         int copied = 0;
 
-        try (Stream<Path> stream = Files.walk(sourceRoot, FileVisitOption.FOLLOW_LINKS)) {
-            for (Path path : (Iterable<Path>) stream::iterator) {
-                if (!Files.isRegularFile(path)) {
-                    continue;
-                }
-                Path relative = sourceRoot.relativize(path);
+        try (Stream<Path> stream = Files.walk(moduleRoot, 10)) {
+            List<Path> files = stream.filter(Files::isRegularFile).collect(Collectors.toList());
+            System.out.println("[codegen] found " + files.size() + " files in moduleRoot");
+            for (Path path : files) {
+                Path relative = moduleRoot.relativize(path);
                 int vueIndex = indexOfVueSegment(relative, vueDirs);
                 if (vueIndex < 0) {
                     continue;
                 }
-                Path targetRel = relative.subpath(vueIndex + 1, relative.getNameCount());
-                if (vueIndex > 0) {
-                    String moduleSegment = relative.getName(vueIndex - 1).toString();
-                    if (!moduleSegment.isEmpty()) {
-                        targetRel = Paths.get(moduleSegment).resolve(targetRel);
-                    }
+                if (vueIndex + 1 >= relative.getNameCount()) {
+                    continue;
                 }
+                Path targetRel = relative.subpath(vueIndex + 1, relative.getNameCount());
+                targetRel = Paths.get(entityPackage).resolve(targetRel);
                 Path target = Paths.get(frontendRoot).resolve(targetRel);
                 if (Files.exists(target)) {
                     conflicts.add(target.toString());
@@ -466,6 +491,7 @@ final class CodegenExecutor {
         if (copied > 0) {
             System.out.println("[codegen] frontendRoot copied files: " + copied);
         }
+        System.out.println("[codegen] routeFrontendOutputs completed");
     }
 
     private String resolveSourceRootPackage() {
@@ -501,6 +527,130 @@ final class CodegenExecutor {
             return entityName.trim();
         }
         return "";
+    }
+
+    private TemplateResolution resolveTemplatePaths(String templatePath, boolean templateProvided) throws IOException {
+        if (isBlank(templatePath)) {
+            return new TemplateResolution(templatePath, templatePath);
+        }
+        Path configRoot = Paths.get(System.getProperty("user.dir"), "config", "jeecg", "code-template-online");
+        Path direct = Paths.get(templatePath);
+        if (Files.isDirectory(direct)) {
+            materializeTemplateRoot(direct, configRoot);
+            String listPath = direct.toAbsolutePath().normalize().toString();
+            return new TemplateResolution(DEFAULT_TEMPLATE_CLASSPATH, listPath);
+        }
+
+        String normalized = templatePath.startsWith("/") ? templatePath.substring(1) : templatePath;
+        if (!templateProvided) {
+            Path workspace = resolveWorkspaceTemplateRoot(normalized);
+            if (workspace != null) {
+                materializeTemplateRoot(workspace, configRoot);
+                String listPath = workspace.toAbsolutePath().normalize().toString();
+                return new TemplateResolution(templatePath, listPath);
+            }
+        }
+
+        URL url = CodegenExecutor.class.getClassLoader().getResource(normalized);
+        if (url == null) {
+            return new TemplateResolution(templatePath, templatePath);
+        }
+        try {
+            URI uri = url.toURI();
+            if ("file".equalsIgnoreCase(uri.getScheme())) {
+                Path root = Paths.get(uri);
+                if (Files.isDirectory(root)) {
+                    String listPath = root.toAbsolutePath().normalize().toString();
+                    return new TemplateResolution(templatePath, listPath);
+                }
+            }
+            if ("jar".equalsIgnoreCase(uri.getScheme())) {
+                materializeFromJar(uri, normalized, configRoot);
+                String listPath = configRoot.toAbsolutePath().normalize().toString();
+                return new TemplateResolution(templatePath, listPath);
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to resolve templatePath: " + templatePath, e);
+        }
+        return new TemplateResolution(templatePath, templatePath);
+    }
+
+    private Path resolveWorkspaceTemplateRoot(String normalizedPath) {
+        Path cwd = Paths.get(".").toAbsolutePath().normalize();
+        Path relativeRoot = Paths.get("jeecg-module-system/jeecg-system-biz/src/main/resources").resolve(normalizedPath);
+        Path current = cwd;
+        for (int i = 0; i < 6 && current != null; i++) {
+            Path candidate = current.resolve(relativeRoot);
+            if (Files.isDirectory(candidate)) {
+                return candidate.toAbsolutePath().normalize();
+            }
+            current = current.getParent();
+        }
+        return null;
+    }
+
+    private boolean hasTemplateFiles(Path root) throws IOException {
+        if (!Files.isDirectory(root)) {
+            return false;
+        }
+        try (Stream<Path> stream = Files.walk(root, 2)) {
+            return stream.anyMatch(Files::isRegularFile);
+        }
+    }
+
+    private void materializeTemplateRoot(Path sourceRoot, Path targetRoot) throws IOException {
+        if (hasTemplateFiles(targetRoot)) {
+            return;
+        }
+        try (Stream<Path> stream = Files.walk(sourceRoot, FileVisitOption.FOLLOW_LINKS)) {
+            for (Path path : (Iterable<Path>) stream::iterator) {
+                Path rel = sourceRoot.relativize(path);
+                Path target = targetRoot.resolve(rel.toString());
+                if (Files.isDirectory(path)) {
+                    Files.createDirectories(target);
+                } else if (Files.isRegularFile(path)) {
+                    if (target.getParent() != null) {
+                        Files.createDirectories(target.getParent());
+                    }
+                    Files.copy(path, target);
+                }
+            }
+        }
+    }
+
+    private void materializeFromJar(URI uri, String normalizedPath, Path targetRoot) throws IOException {
+        if (hasTemplateFiles(targetRoot)) {
+            return;
+        }
+        FileSystem fs = null;
+        try {
+            try {
+                fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
+            } catch (java.nio.file.FileSystemAlreadyExistsException ex) {
+                fs = FileSystems.getFileSystem(uri);
+            }
+            Path root = fs.getPath("/" + normalizedPath);
+            if (!Files.exists(root)) {
+                root = fs.getPath(normalizedPath);
+            }
+            if (Files.isDirectory(root)) {
+                materializeTemplateRoot(root, targetRoot);
+            }
+        } finally {
+            if (fs != null && fs.isOpen()) {
+                fs.close();
+            }
+        }
+    }
+
+    private static final class TemplateResolution {
+        private final String codegenPath;
+        private final String listPath;
+
+        private TemplateResolution(String codegenPath, String listPath) {
+            this.codegenPath = codegenPath;
+            this.listPath = listPath;
+        }
     }
 
     private List<String> listTemplateFiles(String templatePath, String stylePath) throws IOException {

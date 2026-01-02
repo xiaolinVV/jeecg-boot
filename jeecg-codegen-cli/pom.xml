@@ -40,18 +40,39 @@
         <directory>../jeecg-module-system/jeecg-system-biz/src/main/resources/jeecg/code-template-online</directory>
         <targetPath>jeecg/code-template-online</targetPath>
       </resource>
+      <resource>
+        <directory>../jeecg-module-system/jeecg-system-start/src/main/resources/jeecg</directory>
+        <targetPath>jeecg</targetPath>
+        <includes>
+          <include>jeecg_database.properties</include>
+          <include>jeecg_config.properties</include>
+        </includes>
+      </resource>
     </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.6.0</version>
         <configuration>
           <archive>
             <manifest>
               <mainClass>org.jeecg.tools.codegen.CodegenCli</mainClass>
             </manifest>
           </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
         </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
