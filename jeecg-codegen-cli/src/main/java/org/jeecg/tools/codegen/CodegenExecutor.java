@@ -1,12 +1,14 @@
 package org.jeecg.tools.codegen;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -533,10 +535,12 @@ final class CodegenExecutor {
         if (isBlank(templatePath)) {
             return new TemplateResolution(templatePath, templatePath);
         }
+        Path configRoot = Paths.get(System.getProperty("user.dir"), "config", "jeecg", "code-template-online");
         Path direct = Paths.get(templatePath);
         if (Files.isDirectory(direct)) {
+            materializeTemplateRoot(direct, configRoot, true);
             String listPath = direct.toAbsolutePath().normalize().toString();
-            String codegenPath = relativizeToCwd(direct);
+            String codegenPath = DEFAULT_TEMPLATE_CLASSPATH;
             return new TemplateResolution(codegenPath, listPath);
         }
 
@@ -544,13 +548,13 @@ final class CodegenExecutor {
         if (!templateProvided) {
             Path workspace = resolveWorkspaceTemplateRoot(normalized);
             if (workspace != null) {
+                materializeTemplateRoot(workspace, configRoot, true);
                 String listPath = workspace.toAbsolutePath().normalize().toString();
-                String codegenPath = relativizeToCwd(workspace);
+                String codegenPath = DEFAULT_TEMPLATE_CLASSPATH;
                 return new TemplateResolution(codegenPath, listPath);
             }
         }
 
-        Path configRoot = Paths.get(System.getProperty("user.dir"), "config", "jeecg", "code-template-online");
         URL url = CodegenExecutor.class.getClassLoader().getResource(normalized);
         if (url == null) {
             return new TemplateResolution(templatePath, templatePath);
@@ -575,28 +579,36 @@ final class CodegenExecutor {
         return new TemplateResolution(templatePath, templatePath);
     }
 
-    private String relativizeToCwd(Path path) {
-        if (path == null) {
-            return null;
-        }
-        Path abs = path.toAbsolutePath().normalize();
-        Path cwd = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-        if (abs.startsWith(cwd)) {
-            return cwd.relativize(abs).toString();
-        }
-        return abs.toString();
-    }
-
     private Path resolveWorkspaceTemplateRoot(String normalizedPath) {
         Path cwd = Paths.get(".").toAbsolutePath().normalize();
         Path relativeRoot = Paths.get("jeecg-module-system/jeecg-system-biz/src/main/resources").resolve(normalizedPath);
         Path current = cwd;
         for (int i = 0; i < 6 && current != null; i++) {
-            Path candidate = current.resolve(relativeRoot);
-            if (Files.isDirectory(candidate)) {
+            Path candidate = resolveNestedCandidate(current, relativeRoot);
+            if (candidate != null) {
                 return candidate.toAbsolutePath().normalize();
             }
             current = current.getParent();
+        }
+        return null;
+    }
+
+    private Path resolveNestedCandidate(Path base, Path relativeRoot) {
+        Path direct = base.resolve(relativeRoot);
+        if (Files.isDirectory(direct)) {
+            return direct;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(base)) {
+            for (Path entry : stream) {
+                if (!Files.isDirectory(entry)) {
+                    continue;
+                }
+                Path nested = entry.resolve(relativeRoot);
+                if (Files.isDirectory(nested)) {
+                    return nested;
+                }
+            }
+        } catch (IOException ignored) {
         }
         return null;
     }
@@ -610,8 +622,8 @@ final class CodegenExecutor {
         }
     }
 
-    private void materializeTemplateRoot(Path sourceRoot, Path targetRoot) throws IOException {
-        if (hasTemplateFiles(targetRoot)) {
+    private void materializeTemplateRoot(Path sourceRoot, Path targetRoot, boolean overwrite) throws IOException {
+        if (!overwrite && hasTemplateFiles(targetRoot)) {
             return;
         }
         try (Stream<Path> stream = Files.walk(sourceRoot, FileVisitOption.FOLLOW_LINKS)) {
@@ -624,7 +636,11 @@ final class CodegenExecutor {
                     if (target.getParent() != null) {
                         Files.createDirectories(target.getParent());
                     }
-                    Files.copy(path, target);
+                    if (overwrite) {
+                        Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                    } else if (!Files.exists(target)) {
+                        Files.copy(path, target, StandardCopyOption.COPY_ATTRIBUTES);
+                    }
                 }
             }
         }
@@ -646,7 +662,7 @@ final class CodegenExecutor {
                 root = fs.getPath(normalizedPath);
             }
             if (Files.isDirectory(root)) {
-                materializeTemplateRoot(root, targetRoot);
+                materializeTemplateRoot(root, targetRoot, false);
             }
         } finally {
             if (fs != null && fs.isOpen()) {
