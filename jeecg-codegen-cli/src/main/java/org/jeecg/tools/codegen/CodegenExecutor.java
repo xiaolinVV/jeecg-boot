@@ -533,24 +533,24 @@ final class CodegenExecutor {
         if (isBlank(templatePath)) {
             return new TemplateResolution(templatePath, templatePath);
         }
-        Path configRoot = Paths.get(System.getProperty("user.dir"), "config", "jeecg", "code-template-online");
         Path direct = Paths.get(templatePath);
         if (Files.isDirectory(direct)) {
-            materializeTemplateRoot(direct, configRoot);
             String listPath = direct.toAbsolutePath().normalize().toString();
-            return new TemplateResolution(DEFAULT_TEMPLATE_CLASSPATH, listPath);
+            String codegenPath = relativizeToCwd(direct);
+            return new TemplateResolution(codegenPath, listPath);
         }
 
         String normalized = templatePath.startsWith("/") ? templatePath.substring(1) : templatePath;
         if (!templateProvided) {
             Path workspace = resolveWorkspaceTemplateRoot(normalized);
             if (workspace != null) {
-                materializeTemplateRoot(workspace, configRoot);
                 String listPath = workspace.toAbsolutePath().normalize().toString();
-                return new TemplateResolution(templatePath, listPath);
+                String codegenPath = relativizeToCwd(workspace);
+                return new TemplateResolution(codegenPath, listPath);
             }
         }
 
+        Path configRoot = Paths.get(System.getProperty("user.dir"), "config", "jeecg", "code-template-online");
         URL url = CodegenExecutor.class.getClassLoader().getResource(normalized);
         if (url == null) {
             return new TemplateResolution(templatePath, templatePath);
@@ -573,6 +573,18 @@ final class CodegenExecutor {
             throw new IOException("Failed to resolve templatePath: " + templatePath, e);
         }
         return new TemplateResolution(templatePath, templatePath);
+    }
+
+    private String relativizeToCwd(Path path) {
+        if (path == null) {
+            return null;
+        }
+        Path abs = path.toAbsolutePath().normalize();
+        Path cwd = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        if (abs.startsWith(cwd)) {
+            return cwd.relativize(abs).toString();
+        }
+        return abs.toString();
     }
 
     private Path resolveWorkspaceTemplateRoot(String normalizedPath) {
