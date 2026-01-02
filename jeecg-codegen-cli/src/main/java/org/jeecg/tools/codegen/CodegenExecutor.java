@@ -527,7 +527,10 @@ final class CodegenExecutor {
                     } catch (java.nio.file.FileSystemAlreadyExistsException ex) {
                         fs = FileSystems.getFileSystem(uri);
                     }
-                    Path root = fs.getPath(normalizedPath);
+                    Path root = fs.getPath("/" + normalizedPath);
+                    if (!Files.exists(root)) {
+                        root = fs.getPath(normalizedPath);
+                    }
                     return listTemplateFilesFromRoot(root, styleDir);
                 } finally {
                     if (fs != null && fs.isOpen()) {
@@ -543,6 +546,9 @@ final class CodegenExecutor {
 
     private List<String> listTemplateFilesFromRoot(Path templateRoot, String styleDir) throws IOException {
         Path styleRoot = templateRoot.resolve(styleDir);
+        if (!styleRoot.isAbsolute()) {
+            styleRoot = styleRoot.toAbsolutePath().normalize();
+        }
         if (!Files.isDirectory(styleRoot)) {
             throw new IllegalArgumentException("template style path not found: " + styleRoot);
         }
@@ -552,7 +558,11 @@ final class CodegenExecutor {
                 if (!Files.isRegularFile(path)) {
                     continue;
                 }
-                Path rel = styleRoot.relativize(path);
+                Path current = path;
+                if (!current.isAbsolute()) {
+                    current = current.toAbsolutePath();
+                }
+                Path rel = styleRoot.relativize(current);
                 String relStr = rel.toString().replace('\\', '/');
                 out.add(relStr);
             }
