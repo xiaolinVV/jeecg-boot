@@ -21,84 +21,89 @@ public final class CodegenCli {
     private CodegenCli() {}
 
     public static void main(String[] args) throws Exception {
-        Args options = Args.parse(args);
-        if (options == null || (options.input == null && options.ddl == null)) {
-            Args.printUsage();
-            System.exit(2);
-        }
-
-        if (options.ddl != null) {
-            if (options.dryRun) {
-                throw new IllegalArgumentException("--dry-run only supported with --input");
-            }
-            String ddl = new String(Files.readAllBytes(Paths.get(options.ddl)), StandardCharsets.UTF_8);
-            DdlSpecMapper.Options mapOptions = new DdlSpecMapper.Options();
-            if (options.jspMode != null && !options.jspMode.trim().isEmpty()) {
-                mapOptions.jspMode = options.jspMode.trim();
-            }
-            mapOptions.projectPath = resolveProjectPath(options.output);
-            if (options.bussiPackage != null && !options.bussiPackage.trim().isEmpty()) {
-                mapOptions.bussiPackage = options.bussiPackage.trim();
-            }
-            if (options.entityPackage != null && !options.entityPackage.trim().isEmpty()) {
-                mapOptions.entityPackage = options.entityPackage.trim();
-            }
-            if (options.fieldRowNum != null) {
-                mapOptions.fieldRowNum = options.fieldRowNum;
-            }
-            if (options.queryFields != null && !options.queryFields.trim().isEmpty()) {
-                mapOptions.queryFields = parseQueryFields(options.queryFields);
-            }
-            if (options.oneToMany) {
-                mapOptions.oneToMany = true;
-            }
-            if (isNotBlank(options.mainTable)) {
-                mapOptions.mainTable = options.mainTable.trim();
-            }
-            if (isNotBlank(options.subTables)) {
-                mapOptions.subTables = parseSubTables(options.subTables);
-            }
-            if (isNotBlank(options.treePidField)) {
-                mapOptions.treePidField = options.treePidField.trim();
-            }
-            if (isNotBlank(options.treeTextField)) {
-                mapOptions.treeTextField = options.treeTextField.trim();
-            }
-            if (isNotBlank(options.treeHasChildrenField)) {
-                mapOptions.treeHasChildrenField = options.treeHasChildrenField.trim();
+        try {
+            Args options = Args.parse(args);
+            if (options == null || (options.input == null && options.ddl == null)) {
+                Args.printUsage();
+                System.exit(2);
             }
 
-            CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
+            if (options.ddl != null) {
+                if (options.dryRun) {
+                    throw new IllegalArgumentException("--dry-run only supported with --input");
+                }
+                String ddl = new String(Files.readAllBytes(Paths.get(options.ddl)), StandardCharsets.UTF_8);
+                DdlSpecMapper.Options mapOptions = new DdlSpecMapper.Options();
+                if (options.jspMode != null && !options.jspMode.trim().isEmpty()) {
+                    mapOptions.jspMode = options.jspMode.trim();
+                }
+                mapOptions.projectPath = resolveProjectPath(options.output);
+                if (options.bussiPackage != null && !options.bussiPackage.trim().isEmpty()) {
+                    mapOptions.bussiPackage = options.bussiPackage.trim();
+                }
+                if (options.entityPackage != null && !options.entityPackage.trim().isEmpty()) {
+                    mapOptions.entityPackage = options.entityPackage.trim();
+                }
+                if (options.fieldRowNum != null) {
+                    mapOptions.fieldRowNum = options.fieldRowNum;
+                }
+                if (options.queryFields != null && !options.queryFields.trim().isEmpty()) {
+                    mapOptions.queryFields = parseQueryFields(options.queryFields);
+                }
+                if (options.oneToMany) {
+                    mapOptions.oneToMany = true;
+                }
+                if (isNotBlank(options.mainTable)) {
+                    mapOptions.mainTable = options.mainTable.trim();
+                }
+                if (isNotBlank(options.subTables)) {
+                    mapOptions.subTables = parseSubTables(options.subTables);
+                }
+                if (isNotBlank(options.treePidField)) {
+                    mapOptions.treePidField = options.treePidField.trim();
+                }
+                if (isNotBlank(options.treeTextField)) {
+                    mapOptions.treeTextField = options.treeTextField.trim();
+                }
+                if (isNotBlank(options.treeHasChildrenField)) {
+                    mapOptions.treeHasChildrenField = options.treeHasChildrenField.trim();
+                }
+
+                CodegenSpec spec = DdlSpecMapper.fromDdl(ddl, mapOptions);
+                applyDefaults(spec, options);
+                if (options.specOut != null && !options.specOut.trim().isEmpty()) {
+                    writeYaml(spec, resolveSpecOutPath(options.specOut, spec));
+                } else {
+                    Path out = defaultSpecOutPath(spec);
+                    writeYaml(spec, out);
+                }
+                System.exit(0);
+            }
+
+            Path input = Paths.get(options.input);
+            CodegenSpec spec = SpecLoader.load(input);
             applyDefaults(spec, options);
-            if (options.specOut != null && !options.specOut.trim().isEmpty()) {
-                writeYaml(spec, resolveSpecOutPath(options.specOut, spec));
-            } else {
-                Path out = defaultSpecOutPath(spec);
-                writeYaml(spec, out);
+            if (options.templatePath != null && !options.templatePath.trim().isEmpty()) {
+                spec.setTemplatePath(options.templatePath.trim());
             }
-            System.exit(0);
-        }
 
-        Path input = Paths.get(options.input);
-        CodegenSpec spec = SpecLoader.load(input);
-        applyDefaults(spec, options);
-        if (options.templatePath != null && !options.templatePath.trim().isEmpty()) {
-            spec.setTemplatePath(options.templatePath.trim());
-        }
-
-        CodegenExecutor executor = new CodegenExecutor(spec);
-        if (options.dryRun) {
-            Map<String, List<String>> result = executor.dryRun();
-            Map<String, Object> out = new LinkedHashMap<>();
-            out.put("dryRun", true);
-            out.put("backend", result.getOrDefault("backend", new ArrayList<>()));
-            out.put("frontend", result.getOrDefault("frontend", new ArrayList<>()));
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, out);
+            CodegenExecutor executor = new CodegenExecutor(spec);
+            if (options.dryRun) {
+                Map<String, List<String>> result = executor.dryRun();
+                Map<String, Object> out = new LinkedHashMap<>();
+                out.put("dryRun", true);
+                out.put("backend", result.getOrDefault("backend", new ArrayList<>()));
+                out.put("frontend", result.getOrDefault("frontend", new ArrayList<>()));
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, out);
+                System.exit(0);
+            }
+            executor.run();
             System.exit(0);
+        } catch (Throwable ex) {
+            ex.printStackTrace(System.err);
+            System.exit(1);
         }
-        executor.run();
-        System.exit(0);
     }
 
     private static void writeYaml(CodegenSpec spec, OutputStream out) throws Exception {
