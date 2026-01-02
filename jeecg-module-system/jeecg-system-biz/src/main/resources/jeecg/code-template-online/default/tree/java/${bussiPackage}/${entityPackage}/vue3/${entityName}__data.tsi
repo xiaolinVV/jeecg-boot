@@ -10,7 +10,7 @@ export const columns: BasicColumn[] = [
    <#if po.isShowList =='Y' && po.fieldName !='id' && po.fieldName !='delFlag'>
    <#-- update-end---author:chenrui ---date:20240108  for：[issues/5755]vue代码不加入逻辑删除字段---------- -->
    {
-    title: '${po.filedComment}',
+    title: '${uiLabel(po)}',
     <#if po.fieldDbName == tableVo.extendParams.textField>
     align: 'left',
     <#else>
@@ -88,7 +88,7 @@ export const searchFormSchema: FormSchema[] = [
     </#if>
 <#if po.queryMode=='single'>
 	{
-      label: "${po.filedComment}",
+      label: "${uiLabel(po)}",
       field: "${po.fieldName}",
 <#if po.classType=='sel_search'>
       component: 'JSearchSelect',
@@ -167,7 +167,7 @@ export const searchFormSchema: FormSchema[] = [
      },
 <#else>
      {
-      label: "${po.filedComment}",
+      label: "${uiLabel(po)}",
       field: "${po.fieldName}",
 <#if po.classType=='date'>
       component: 'RangePicker',
@@ -220,7 +220,7 @@ export const formSchema: FormSchema[] = [
 		<#assign form_field_dictCode="${po.dictField}">
 	</#if>
   {
-    label: '${po.filedComment}',
+    label: '${uiLabel(po)}',
     field: ${autoStringSuffix(po)},
 <#-- update-begin-author:taoyan date:2022-6-24 for: VUEN-1190【代码生成】默认值未生成 -->
     <#if po.defaultVal??>
@@ -354,7 +354,7 @@ export const formSchema: FormSchema[] = [
           return [
             <#-- 非空校验 -->
            <#if po.nullable == 'N' || fieldValidType == '*'>
-                 { required: true, message: '请输入${po.filedComment}!'},
+                 { required: true, message: '请输入${uiLabel(po)}!'},
            <#elseif fieldValidType!=''>
                  { required: false},
            </#if>

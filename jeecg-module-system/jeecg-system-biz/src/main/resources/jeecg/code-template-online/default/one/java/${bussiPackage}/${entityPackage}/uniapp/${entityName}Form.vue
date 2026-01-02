@@ -1,3 +1,4 @@
+<#include "/common/utils.ftl">
 <template>
     <view>
         <!--标题和返回-->
@@ -11,14 +12,14 @@
     <#list columns as po><#rt/>
     <#if po.fieldName !='id'><#rt/>
          <#if po.classType =='date'>
-              <my-date label="${po.filedComment}：" fields="day" v-model="model.${po.fieldName}" placeholder="请输入${po.filedComment}"></my-date>
+              <my-date label="${uiLabel(po)}：" fields="day" v-model="model.${po.fieldName}" placeholder="请输入${uiLabel(po)}"></my-date>
          <#elseif po.classType =='datetime'>
-              <my-date label="${po.filedComment}：" v-model="model.${po.fieldName}" placeholder="请输入${po.filedComment}"></my-date>
+              <my-date label="${uiLabel(po)}：" v-model="model.${po.fieldName}" placeholder="请输入${uiLabel(po)}"></my-date>
          <#else>
               <view class="cu-form-group">
                 <view class="flex align-center">
-                  <view class="title"><text space="ensp">${po.filedComment}：</text></view>
-                  <input <#if "int,BigDecimal,double,"?contains(po.fieldDbType)>type="number"</#if> placeholder="请输入${po.filedComment}" v-model="model.${po.fieldName}"/>
+                  <view class="title"><text space="ensp">${uiLabel(po)}：</text></view>
+                  <input <#if "int,BigDecimal,double,"?contains(po.fieldDbType)>type="number"</#if> placeholder="请输入${uiLabel(po)}" v-model="model.${po.fieldName}"/>
                 </view>
               </view>
         </#if>

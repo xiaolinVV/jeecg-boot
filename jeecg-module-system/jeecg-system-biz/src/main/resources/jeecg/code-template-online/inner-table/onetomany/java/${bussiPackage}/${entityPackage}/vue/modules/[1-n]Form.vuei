@@ -16,13 +16,13 @@
 		<#assign form_field_dictCode="${po.dictField}">
 	</#if>
         <a-col :xs="24" :sm="12">
-          <a-form-model-item label="${po.filedComment}" :labelCol="labelCol" :wrapperCol="wrapperCol" prop="${autoStringSuffixForModel(po)}">
+          <a-form-model-item label="${uiLabel(po)}" :labelCol="labelCol" :wrapperCol="wrapperCol" prop="${autoStringSuffixForModel(po)}">
 	<#if po.classType =='date'>
-            <j-date placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" style="width: 100%"/>
+            <j-date placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" style="width: 100%"/>
 	<#elseif po.classType =='datetime'>
-            <j-date placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" :show-time="true" date-format="YYYY-MM-DD HH:mm:ss" style="width: 100%"/>
+            <j-date placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" :show-time="true" date-format="YYYY-MM-DD HH:mm:ss" style="width: 100%"/>
 	<#elseif po.classType =='time'>
-             <j-time placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
+             <j-time placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='popup'>
 	      <#assign form_popup=true>
             <j-popup
@@ -40,19 +40,19 @@
 	<#elseif po.classType =='sel_user'>
             <j-select-user-by-dep v-model="model.${po.fieldName}" :multi="${po.extendParams.multi?default('true')}"<#if po.extendParams.store?default("")?trim?length gt 0> store="${po.extendParams.store}"</#if><#if po.extendParams.text?default("")?trim?length gt 0> text="${po.extendParams.text}"</#if> <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='textarea'>
-            <a-textarea v-model="model.${autoStringSuffixForModel(po)}" rows="4" placeholder="请输入${po.filedComment}"/>
+            <a-textarea v-model="model.${autoStringSuffixForModel(po)}" rows="4" placeholder="请输入${uiLabel(po)}"/>
 	<#elseif po.classType=='list' || po.classType=='radio'>
-            <j-dict-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${po.filedComment}"/>
+            <j-dict-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${uiLabel(po)}"/>
 	<#elseif po.classType=='list_multi' || po.classType=='checkbox'>
-            <j-multi-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${po.filedComment}"/>
+            <j-multi-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${uiLabel(po)}"/>
 	<#elseif po.fieldDbType=='int' || po.fieldDbType=='double' || po.fieldDbType=='BigDecimal'>
-            <a-input-number v-model="model.${po.fieldName}" placeholder="请输入${po.filedComment}" style="width: 100%"/>
+            <a-input-number v-model="model.${po.fieldName}" placeholder="请输入${uiLabel(po)}" style="width: 100%"/>
 	<#elseif po.classType=='file'>
             <j-upload v-model="model.${po.fieldName}" ></j-upload>
     <#elseif po.classType=='image'>
             <j-image-upload isMultiple v-model="model.${po.fieldName}"></j-image-upload>
 	<#else>
-            <a-input v-model="model.${autoStringSuffixForModel(po)}" placeholder="请输入${po.filedComment}"></a-input>
+            <a-input v-model="model.${autoStringSuffixForModel(po)}" placeholder="请输入${uiLabel(po)}"></a-input>
     </#if>
           </a-form-model-item>
         </a-col>

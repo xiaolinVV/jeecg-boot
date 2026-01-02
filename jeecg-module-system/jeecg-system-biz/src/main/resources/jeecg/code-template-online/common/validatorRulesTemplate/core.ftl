@@ -5,7 +5,7 @@
         <#assign fieldValidType = po.fieldValidType!''>
     <#-- 非空校验 -->
         <#if po.nullable == 'N' || fieldValidType == '*'>
-              { required: true, message: '请输入${po.filedComment}!'},
+              { required: true, message: '请输入${uiLabel(po)}!'},
         <#elseif fieldValidType!=''>
               { required: false},
         </#if>

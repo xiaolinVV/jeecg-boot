@@ -41,10 +41,17 @@
 <#-- 获取 placeholder 属性 -->
 <#function getPlaceholder po,prefix,fillComment=true>
   <#if fillComment>
-    <#return "placeholder=\"${prefix}${po.filedComment}\"">
+    <#return "placeholder=\"${prefix}${uiLabel(po)}\"">
   <#else>
     <#return "placeholder=\"${prefix}\"">
   </#if>
+</#function>
+<#-- 获取 UI 标签文本（优先使用 extendParams.uiLabel） -->
+<#function uiLabel po>
+  <#if po?? && po.extendParams?? && po.extendParams.uiLabel?default("")?trim?length gt 0>
+    <#return po.extendParams.uiLabel>
+  </#if>
+  <#return po.filedComment>
 </#function>
 <#-- ** 判断某字段是否配置了校验 * -->
 <#function poHasCheck po>
@@ -110,24 +117,24 @@
         <#assign superQuery_dictText="${po.dictText}">
     </#if>
   <#if po.classType=="popup">
-      <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${po.filedComment}', popup:{code:'${po.dictTable}',field:'${po.dictField?split(',')[0]}',orgFields:'${po.dictField?split(',')[0]}',destFields:'${po.dictText?split(',')[0]}'}}">
+      <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${uiLabel(po)}', popup:{code:'${po.dictTable}',field:'${po.dictField?split(',')[0]}',orgFields:'${po.dictField?split(',')[0]}',destFields:'${po.dictText?split(',')[0]}'}}">
   <#elseif po.classType=="sel_user" || po.classType=="sel_depart" || po.classType=="datetime" || po.classType=="date" || po.classType=="pca" || po.classType=="switch">
-      <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${po.filedComment}'}">
+      <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${uiLabel(po)}'}">
   <#else>
       <#if po.classType=="sel_search" || po.classType=="list_multi">
-          <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${po.filedComment}',dictTable:\"${superQuery_dictTable}\", dictText:'${superQuery_dictText}', dictCode:'${po.dictField}'}">
+          <#return "{type:'${po.classType}',value:'${po.fieldName}',text:'${uiLabel(po)}',dictTable:\"${superQuery_dictTable}\", dictText:'${superQuery_dictText}', dictCode:'${po.dictField}'}">
       <#elseif po.dictTable?? && po.dictTable!="" && po.classType!="sel_tree" && po.classType!="cat_tree" && po.classType!="link_down">
-          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${po.filedComment}',dictCode:\"${po.dictTable},${po.dictText},${po.dictField}\"}">
+          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${uiLabel(po)}',dictCode:\"${po.dictTable},${po.dictText},${po.dictField}\"}">
       <#elseif po.dictField?? && po.classType!="sel_tree" && po.classType!="cat_tree" && po.classType!="link_down">
-          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${po.filedComment}',dictCode:'${po.dictField}'}">
+          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${uiLabel(po)}',dictCode:'${po.dictField}'}">
       <#elseif po.fieldDbType=="Text">
-          <#return "{type:'string',value:'${po.fieldName}',text:'${po.filedComment}'}">
+          <#return "{type:'string',value:'${po.fieldName}',text:'${uiLabel(po)}'}">
       <#elseif po.fieldDbType=="Blob">
-          <#return "{type:'byte',value:'${po.fieldName}',text:'${po.filedComment}'}">
+          <#return "{type:'byte',value:'${po.fieldName}',text:'${uiLabel(po)}'}">
       <#elseif po.fieldDbType=="BigDecimal" || po.fieldDbType=="double">
-          <#return "{type:'number',value:'${po.fieldName}',text:'${po.filedComment}'}">
+          <#return "{type:'number',value:'${po.fieldName}',text:'${uiLabel(po)}'}">
       <#else>
-          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${po.filedComment}'}">
+          <#return "{type:'${po.fieldDbType}',value:'${po.fieldName}',text:'${uiLabel(po)}'}">
       </#if>
   </#if>
 </#function>
@@ -187,7 +194,7 @@
         <#assign extAttrs="code: '${po.dictTable?default('')}', orgFields: '${orgField}', destFields: '${po.fieldName}', popupMulti: false,">
     </#if>
 
-    <#return "${po.fieldName}: {title: '${po.filedComment}',order: ${order},${baseAttrs}${extAttrs}}" >
+    <#return "${po.fieldName}: {title: '${uiLabel(po)}',order: ${order},${baseAttrs}${extAttrs}}" >
 </#function>
 <#-- update-end---author:chenrui ---date:20231228  for:[QQYUN-7527]vue3代码生成默认带上高级查询---------- -->
 

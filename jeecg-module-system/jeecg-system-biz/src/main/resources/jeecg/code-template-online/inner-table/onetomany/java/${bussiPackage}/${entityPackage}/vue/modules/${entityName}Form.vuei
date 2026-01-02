@@ -22,13 +22,13 @@
 		<#assign form_field_dictCode="${po.dictField}">
 	</#if>
           <a-col :xs="24" :sm="12">
-            <a-form-model-item label="${po.filedComment}" :labelCol="labelCol" :wrapperCol="wrapperCol" prop="${autoStringSuffixForModel(po)}">
+            <a-form-model-item label="${uiLabel(po)}" :labelCol="labelCol" :wrapperCol="wrapperCol" prop="${autoStringSuffixForModel(po)}">
 	<#if po.classType =='date'>
-              <j-date placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
+              <j-date placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='datetime'>
-              <j-date placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" :show-time="true" date-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
+              <j-date placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" :show-time="true" date-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='time'>
-              <j-time placeholder="请选择${po.filedComment}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
+              <j-time placeholder="请选择${uiLabel(po)}" v-model="model.${po.fieldName}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='popup'>
 	    <#assign form_popup=true>
               <j-popup
@@ -49,25 +49,25 @@
 	<#elseif po.classType =='markdown'>
 	          <j-markdown-editor v-model="model.${autoStringSuffixForModel(po)}" id="${po.fieldName}"></j-markdown-editor>
     <#elseif po.classType =='password'>
-	          <a-input-password v-model="model.${po.fieldName}" placeholder="请输入${po.filedComment}" <#if po.readonly=='Y'>disabled</#if>/>
+	          <a-input-password v-model="model.${po.fieldName}" placeholder="请输入${uiLabel(po)}" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='sel_user'>
               <j-select-user-by-dep v-model="model.${po.fieldName}" :multi="${po.extendParams.multi?default('true')}"<#if po.extendParams.store?default("")?trim?length gt 0> store="${po.extendParams.store}"</#if><#if po.extendParams.text?default("")?trim?length gt 0> text="${po.extendParams.text}"</#if> <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType =='textarea'>
-              <a-textarea v-decorator="[${autoStringSuffix(po)}${autoWriteRules(po)}]" rows="4" placeholder="请输入${po.filedComment}" <#if po.readonly=='Y'>disabled</#if>/>
+              <a-textarea v-decorator="[${autoStringSuffix(po)}${autoWriteRules(po)}]" rows="4" placeholder="请输入${uiLabel(po)}" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType=='list' || po.classType=='radio'>
-              <j-dict-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${po.filedComment}" <#if po.readonly=='Y'>disabled</#if>/>
+              <j-dict-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${uiLabel(po)}" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType=='list_multi' || po.classType=='checkbox'>
-              <j-multi-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${po.filedComment}" <#if po.readonly=='Y'>disabled</#if>/>
+              <j-multi-select-tag type="${po.classType}" v-model="model.${po.fieldName}"  dictCode="${form_field_dictCode}" placeholder="请选择${uiLabel(po)}" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType=='sel_search'>
               <j-search-select-tag v-model="model.${po.fieldName}" dict="${form_field_dictCode}" <#if po.readonly=='Y'>disabled</#if>/>
     <#elseif po.classType=='cat_tree'>
     	<#assign form_cat_tree = true>
-              <j-category-select v-model="model.${po.fieldName}" pcode="${po.dictField?default("")}" placeholder="请选择${po.filedComment}" <#if po.dictText?default("")?trim?length gt 1>back="${dashedToCamel(po.dictText)}" @change="handleCategoryChange"</#if> <#if po.readonly=='Y'>disabled</#if>/>
+              <j-category-select v-model="model.${po.fieldName}" pcode="${po.dictField?default("")}" placeholder="请选择${uiLabel(po)}" <#if po.dictText?default("")?trim?length gt 1>back="${dashedToCamel(po.dictText)}" @change="handleCategoryChange"</#if> <#if po.readonly=='Y'>disabled</#if>/>
     	<#if po.dictText?default("")?trim?length gt 1>
     	<#assign form_cat_back = "${po.dictText}">
     	</#if>
 	<#elseif po.fieldDbType=='int' || po.fieldDbType=='double' || po.fieldDbType=='BigDecimal'>
-              <a-input-number v-model="model.${po.fieldName}" placeholder="请输入${po.filedComment}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
+              <a-input-number v-model="model.${po.fieldName}" placeholder="请输入${uiLabel(po)}" style="width: 100%" <#if po.readonly=='Y'>disabled</#if>/>
 	<#elseif po.classType=='file'>
               <j-upload v-model="model.${po.fieldName}"  <#if po.readonly=='Y'>disabled</#if> <#if po.uploadnum??>:number=${po.uploadnum}</#if>></j-upload>
 	<#elseif po.classType=='image'>
@@ -77,7 +77,7 @@
 		<#elseif po.classType == 'sel_tree'>
   	          <j-tree-select
                 ref="treeSelect"
-                placeholder="请选择${po.filedComment}"
+                placeholder="请选择${uiLabel(po)}"
                 v-model="model.${po.fieldName}"
                 <#if po.dictText??>
                 <#if po.dictText?split(',')[2]?? && po.dictText?split(',')[0]??>
@@ -92,7 +92,7 @@
                 <#if po.readonly=='Y'>disabled</#if>>
               </j-tree-select>
 	<#else>
-              <a-input v-model="model.${autoStringSuffixForModel(po)}" placeholder="请输入${po.filedComment}" <#if po.readonly=='Y'>disabled</#if>></a-input>
+              <a-input v-model="model.${autoStringSuffixForModel(po)}" placeholder="请输入${uiLabel(po)}" <#if po.readonly=='Y'>disabled</#if>></a-input>
     </#if>
             </a-form-model-item>
           </a-col>
@@ -183,9 +183,9 @@
 <#-- 循环子表的列 开始 -->
 <#list sub.colums as col><#rt/>
 <#if col.isShow =='Y'>
-    <#if col.filedComment !='外键' >
+    <#if uiLabel(col) !='外键' >
             {
-              title: '${col.filedComment}',
+              title: '${uiLabel(col)}',
               key: '${autoStringSuffixForModel(col)}',
       <#if col.classType =='date'>
               type: FormTypes.date,

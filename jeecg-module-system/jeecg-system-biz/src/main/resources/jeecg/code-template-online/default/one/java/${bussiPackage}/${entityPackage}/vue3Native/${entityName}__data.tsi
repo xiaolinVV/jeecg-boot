@@ -10,7 +10,7 @@ export const columns: BasicColumn[] = [
    <#if po.isShowList =='Y' && po.fieldName !='id' && po.fieldName !='delFlag'>
    <#-- update-end---author:chenrui ---date:20240108  for：[issues/5755]vue代码不加入逻辑删除字段---------- -->
   {
-    title: '${po.filedComment}',
+    title: '${uiLabel(po)}',
     align: "center",
     <#if po.sort=='Y'>
     sorter: true,
@@ -85,7 +85,7 @@ export const searchFormSchema: FormSchema[] = [
     </#if>
 <#if po.queryMode=='single'>
   {
-    label: "${po.filedComment}",
+    label: "${uiLabel(po)}",
     field: ${autoStringSuffix(po)},
 <#if po.classType=='sel_search'>
     component: 'JSearchSelect',
@@ -152,7 +152,7 @@ export const searchFormSchema: FormSchema[] = [
   },
 <#else>
   {
-    label: "${po.filedComment}",
+    label: "${uiLabel(po)}",
     field: "${po.fieldName}",
 <#if po.classType=='date'>
     component: 'RangePicker',
@@ -197,7 +197,7 @@ export const formSchema: FormSchema[] = [
 		<#assign form_field_dictCode="${po.dictField}">
 	</#if>
   {
-    label: '${po.filedComment}',
+    label: '${uiLabel(po)}',
     field: ${autoStringSuffix(po)},
     <#if po.classType =='date'>
     component: 'DatePicker',
@@ -311,7 +311,7 @@ export const formSchema: FormSchema[] = [
       return [
             <#-- 非空校验 -->
            <#if po.nullable == 'N' || fieldValidType == '*'>
-              { required: true, message: '请输入${po.filedComment}!'},
+              { required: true, message: '请输入${uiLabel(po)}!'},
            <#elseif fieldValidType!=''>
               { required: false},
            </#if>

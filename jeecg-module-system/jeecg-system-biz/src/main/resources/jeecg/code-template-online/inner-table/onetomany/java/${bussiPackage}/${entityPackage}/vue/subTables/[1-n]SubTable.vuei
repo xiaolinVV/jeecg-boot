@@ -64,7 +64,7 @@
 <#list sub.originalColumns as po>
   <#if po.isShowList == 'Y'>
           {
-            title: '${po.filedComment}',
+            title: '${uiLabel(po)}',
             align: 'center',
     <#if po.classType == 'date'>
             dataIndex: '${po.fieldName}',

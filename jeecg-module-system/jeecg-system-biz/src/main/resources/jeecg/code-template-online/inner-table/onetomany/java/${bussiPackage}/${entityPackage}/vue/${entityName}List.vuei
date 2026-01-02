@@ -61,7 +61,7 @@
           ${indent}<a-col :xl="6" :lg="7" :md="8" :sm="24">
           </#if>
           <#-- update-end-author:taoyan date:20220303 for: /issues/3420 内嵌风格，datetime控件样式异常 -->
-            ${indent}<a-form-item label="${po.filedComment}">
+            ${indent}<a-form-item label="${uiLabel(po)}">
     <#-- 普通查询 -->
     <#if po.queryMode=='single'>
       <#-- 日期组件 -->
@@ -86,28 +86,28 @@
       <#-- 用户选择组件 -->
       <#elseif po.classType=='sel_user'>
       <#assign query_sel_user=true>
-             ${indent}<j-select-user-by-dep placeholder="请选择${po.filedComment}" v-model="queryParam.${po.fieldName}"/>
+             ${indent}<j-select-user-by-dep placeholder="请选择${uiLabel(po)}" v-model="queryParam.${po.fieldName}"/>
       <#-- 部门选择组件 -->
       <#elseif po.classType=='sel_depart'>
       <#assign query_sel_dep=true>
-             ${indent}<j-select-depart placeholder="请选择${po.filedComment}" v-model="queryParam.${po.fieldName}"/>
+             ${indent}<j-select-depart placeholder="请选择${uiLabel(po)}" v-model="queryParam.${po.fieldName}"/>
       <#elseif po.classType=='list_multi'>
       <#-- 下拉多选框组件 -->
       <#assign query_sel_multi=true>
-             ${indent}<j-multi-select-tag placeholder="请选择${po.filedComment}" dictCode="${query_field_dictCode?default("")}" v-model="queryParam.${po.fieldName}"/>
+             ${indent}<j-multi-select-tag placeholder="请选择${uiLabel(po)}" dictCode="${query_field_dictCode?default("")}" v-model="queryParam.${po.fieldName}"/>
       <#-- popup组件 -->
       <#elseif po.classType=='popup'>
-             ${indent}<j-popup placeholder="请选择${po.filedComment}" v-model="queryParam.${po.fieldName}" code="${po.dictTable}" org-fields="${po.dictField}" dest-fields="${po.dictText}" :field="getPopupField('${po.dictText}')" :multi="${po.extendParams.popupMulti?c}"/>
+             ${indent}<j-popup placeholder="请选择${uiLabel(po)}" v-model="queryParam.${po.fieldName}" code="${po.dictTable}" org-fields="${po.dictField}" dest-fields="${po.dictText}" :field="getPopupField('${po.dictText}')" :multi="${po.extendParams.popupMulti?c}"/>
       <#-- 下拉搜索框 -->
      <#elseif po.classType=='sel_search'>
      <#assign query_sel_search=true>
-             ${indent}<j-search-select-tag placeholder="请选择${po.filedComment}" v-model="queryParam.${po.fieldName}" dict="${po.dictTable},${po.dictText},${po.dictField}"/>
+             ${indent}<j-search-select-tag placeholder="请选择${uiLabel(po)}" v-model="queryParam.${po.fieldName}" dict="${po.dictTable},${po.dictText},${po.dictField}"/>
      <#elseif po.classType=='pca'>
      <#assign query_field_pca=true>
              ${indent}<j-area-linkage type="cascader" v-model="queryParam.${po.fieldName}" placeholder="请选择省市区"/>
      <#elseif po.classType=='cat_tree'>
      <#assign query_sel_cat=true>
-             ${indent}<j-category-select placeholder="请选择${po.filedComment}" v-model="queryParam.${po.fieldName}" pcode="${po.dictField?default("")}"/>
+             ${indent}<j-category-select placeholder="请选择${uiLabel(po)}" v-model="queryParam.${po.fieldName}" pcode="${po.dictField?default("")}"/>
       <#-- 其他都归为输入框组件 -->
       <#else>
              ${indent}<a-input ${getVModel(po)} ${getPlaceholder(po,"请输入")}/>
@@ -386,7 +386,7 @@
 <#list columns as po>
   <#if po.isShowList == 'Y'>
           {
-            title: '${po.filedComment}',
+            title: '${uiLabel(po)}',
             align: 'center',
             <#if po.sort=='Y'>
             sorter: true,

@@ -541,6 +541,7 @@ final class DdlSpecMapper {
 
         applyInference(col, tableName);
         applyDictFromComment(col, comment);
+        ensureUiLabel(col);
         col.setFieldShowType(col.getClassType());
         return col;
     }
@@ -685,6 +686,52 @@ final class DdlSpecMapper {
             // 使字典类字段始终走字典控件分支，符合模板要求
             col.setClassType("list");
         }
+    }
+
+    private static void ensureUiLabel(CodegenSpec.ColumnSpec col) {
+        if (col == null) {
+            return;
+        }
+        Map<String, Object> extendParams = col.getExtendParams();
+        if (extendParams == null) {
+            extendParams = new HashMap<>();
+            col.setExtendParams(extendParams);
+        }
+        Object existing = extendParams.get("uiLabel");
+        if (existing != null && !existing.toString().trim().isEmpty()) {
+            return;
+        }
+        String label = cleanUiLabel(col.getFiledComment());
+        extendParams.put("uiLabel", label);
+    }
+
+    private static String cleanUiLabel(String comment) {
+        if (comment == null) {
+            return null;
+        }
+        String value = comment.trim();
+        if (value.isEmpty()) {
+            return comment;
+        }
+        value = value.replaceAll("。?\\s*字典[:：].*$", "").trim();
+        int colon = value.indexOf('：');
+        int asciiColon = value.indexOf(':');
+        int cut = -1;
+        if (colon >= 0 && asciiColon >= 0) {
+            cut = Math.min(colon, asciiColon);
+        } else if (colon >= 0) {
+            cut = colon;
+        } else if (asciiColon >= 0) {
+            cut = asciiColon;
+        }
+        if (cut > 0) {
+            value = value.substring(0, cut).trim();
+        }
+        value = value.replaceAll("^[\\s，；。:：]+|[\\s，；。:：]+$", "").trim();
+        if (value.isEmpty()) {
+            return comment;
+        }
+        return value;
     }
 
     private static void applyQuerySettings(List<CodegenSpec.ColumnSpec> columns, Options opts) {

@@ -175,6 +175,7 @@ final class CodegenExecutor {
         if (col.getExtendParams() == null) {
             col.setExtendParams(new HashMap<>());
         }
+        ensureUiLabel(col);
         // enum checks
         enforceYN("isShow", col.getIsShow());
         enforceYN("isShowList", col.getIsShowList());
@@ -237,6 +238,52 @@ final class CodegenExecutor {
             || lower.equals("del_flag")
             || lower.equals("update_time")
             || lower.equals("update_by"));
+    }
+
+    private void ensureUiLabel(CodegenSpec.ColumnSpec col) {
+        if (col == null) {
+            return;
+        }
+        Map<String, Object> extendParams = col.getExtendParams();
+        if (extendParams == null) {
+            extendParams = new HashMap<>();
+            col.setExtendParams(extendParams);
+        }
+        Object existing = extendParams.get("uiLabel");
+        if (existing != null && !existing.toString().trim().isEmpty()) {
+            return;
+        }
+        String label = cleanUiLabel(col.getFiledComment());
+        extendParams.put("uiLabel", label);
+    }
+
+    private String cleanUiLabel(String comment) {
+        if (comment == null) {
+            return null;
+        }
+        String value = comment.trim();
+        if (value.isEmpty()) {
+            return comment;
+        }
+        value = value.replaceAll("。?\\s*字典[:：].*$", "").trim();
+        int colon = value.indexOf('：');
+        int asciiColon = value.indexOf(':');
+        int cut = -1;
+        if (colon >= 0 && asciiColon >= 0) {
+            cut = Math.min(colon, asciiColon);
+        } else if (colon >= 0) {
+            cut = colon;
+        } else if (asciiColon >= 0) {
+            cut = asciiColon;
+        }
+        if (cut > 0) {
+            value = value.substring(0, cut).trim();
+        }
+        value = value.replaceAll("^[\\s，；。:：]+|[\\s，；。:：]+$", "").trim();
+        if (value.isEmpty()) {
+            return comment;
+        }
+        return value;
     }
 
     private void applyGlobalConfig(String templatePath) {

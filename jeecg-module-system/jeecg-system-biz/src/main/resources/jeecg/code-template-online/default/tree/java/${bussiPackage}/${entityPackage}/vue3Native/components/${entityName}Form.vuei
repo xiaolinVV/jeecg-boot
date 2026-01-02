@@ -43,7 +43,7 @@
         <a-col :span="${form_span}">
           <a-form-item label="父级节点" v-bind="validateInfos.${autoStringSuffixForModel(po)}">
             <j-tree-select
-              placeholder="请选择${po.filedComment}"
+              placeholder="请选择${uiLabel(po)}"
               v-model:value="formData.${po.fieldName}"
               dict="${tableVo.tableName},${tableVo.extendParams.textField},id"
               pidField="${tableVo.extendParams.pidField}"

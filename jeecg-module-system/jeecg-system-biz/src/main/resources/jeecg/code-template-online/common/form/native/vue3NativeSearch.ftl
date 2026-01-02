@@ -17,36 +17,36 @@
 	<#if po.queryMode=='single'>
           <#if query_field_no gt 1>  </#if><a-col :lg="6">
             <#if query_field_no gt 1>  </#if><a-form-item name="${autoStringSuffixForModel(po)}">
-              <#if query_field_no gt 1>  </#if><template #label><span title="${po.filedComment}"><#if po.filedComment?default("")?trim?length gt 4>${po.filedComment?substring(0,4)}<#else>${po.filedComment}</#if></span></template>
+              <#if query_field_no gt 1>  </#if><template #label><span title="${uiLabel(po)}"><#if uiLabel(po)?default("")?trim?length gt 4>${uiLabel(po)?substring(0,4)}<#else>${uiLabel(po)}</#if></span></template>
             <#if po.classType=='sel_search'>
-              <#if query_field_no gt 1>  </#if><j-search-select placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" dict="${po.dictTable},${po.dictText},${po.dictField}" />
+              <#if query_field_no gt 1>  </#if><j-search-select placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" dict="${po.dictTable},${po.dictText},${po.dictField}" />
             <#elseif po.classType=='sel_user'>
               <#-- update-begin---author:chenrui ---date:20240102  for：[issue/#5711]修复用户选择组件在生成代码后变成部门用户选择组件---------- -->
-              <#if query_field_no gt 1>  </#if><j-select-user placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" @change="(value)=>handleFormJoinChange('${po.fieldName}',value)"/>
+              <#if query_field_no gt 1>  </#if><j-select-user placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" @change="(value)=>handleFormJoinChange('${po.fieldName}',value)"/>
               <#-- update-end---author:chenrui ---date:20240102  for：[issue/#5711]修复用户选择组件在生成代码后变成部门用户选择组件---------- -->
             <#elseif po.classType=='switch'>
-              <#if query_field_no gt 1>  </#if><j-switch placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" <#if po.dictField!= 'is_open'>:options="${po.dictField}"</#if> query />
+              <#if query_field_no gt 1>  </#if><j-switch placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" <#if po.dictField!= 'is_open'>:options="${po.dictField}"</#if> query />
             <#elseif po.classType=='sel_depart'>
-              <#if query_field_no gt 1>  </#if><j-select-dept placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" checkStrictly />
+              <#if query_field_no gt 1>  </#if><j-select-dept placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" checkStrictly />
             <#elseif po.classType=='list_multi'>
-              <#if query_field_no gt 1>  </#if><j-select-multiple placeholder="请选择${po.filedComment}" dictCode="${query_field_dictCode?default("")}" v-model:value="queryParam.${po.fieldName}" />
+              <#if query_field_no gt 1>  </#if><j-select-multiple placeholder="请选择${uiLabel(po)}" dictCode="${query_field_dictCode?default("")}" v-model:value="queryParam.${po.fieldName}" />
             <#elseif po.classType=='cat_tree'>
-              <#if query_field_no gt 1>  </#if><j-category-select placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" pcode="${po.dictField?default("")}" @change="(value) => handleFormChange('${po.fieldName}', value)" />
+              <#if query_field_no gt 1>  </#if><j-category-select placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" pcode="${po.dictField?default("")}" @change="(value) => handleFormChange('${po.fieldName}', value)" />
             <#elseif po.classType=='date'>
-              <#if query_field_no gt 1>  </#if><a-date-picker valueFormat="YYYY-MM-DD" placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" />
+              <#if query_field_no gt 1>  </#if><a-date-picker valueFormat="YYYY-MM-DD" placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" />
             <#elseif po.classType=='datetime'>
-              <#if query_field_no gt 1>  </#if><a-date-picker showTime valueFormat="YYYY-MM-DD HH:mm:ss" placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" />
+              <#if query_field_no gt 1>  </#if><a-date-picker showTime valueFormat="YYYY-MM-DD HH:mm:ss" placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" />
             <#elseif po.classType=='time'>
-              <#if query_field_no gt 1>  </#if><time-picker valueFormat="HH:mm:ss" placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" />
+              <#if query_field_no gt 1>  </#if><time-picker valueFormat="HH:mm:ss" placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" />
             <#elseif po.classType=='pca'>
-              <#if query_field_no gt 1>  </#if><j-area-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${po.filedComment}" /> 
+              <#if query_field_no gt 1>  </#if><j-area-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${uiLabel(po)}" /> 
             <#elseif po.classType=='sel_tree'>
-              <#if query_field_no gt 1>  </#if><j-tree-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${po.filedComment}" <#if po.dictText??><#if po.dictText?split(',')[2]?? && po.dictText?split(',')[0]??>dict="${po.dictTable},${po.dictText?split(',')[2]},${po.dictText?split(',')[0]}" <#elseif po.dictText?split(',')[1]??>pidField:"${po.dictText?split(',')[1]}", <#elseif po.dictText?split(',')[3]??>hasChildField:"${po.dictText?split(',')[3]}"</#if> </#if>pidValue="${po.dictField}" />
+              <#if query_field_no gt 1>  </#if><j-tree-select v-model:value="queryParam.${po.fieldName}" placeholder="请选择${uiLabel(po)}" <#if po.dictText??><#if po.dictText?split(',')[2]?? && po.dictText?split(',')[0]??>dict="${po.dictTable},${po.dictText?split(',')[2]},${po.dictText?split(',')[0]}" <#elseif po.dictText?split(',')[1]??>pidField:"${po.dictText?split(',')[1]}", <#elseif po.dictText?split(',')[3]??>hasChildField:"${po.dictText?split(',')[3]}"</#if> </#if>pidValue="${po.dictField}" />
             <#elseif po.classType=='popup'>
               <#assign sourceFields = po.dictField?default("")?trim?split(",")/>
               <#assign targetFields = po.dictText?default("")?trim?split(",")/>
               <#if query_field_no gt 1>  </#if><j-popup
-                <#if query_field_no gt 1>  </#if>placeholder="请选择${po.filedComment}" 
+                <#if query_field_no gt 1>  </#if>placeholder="请选择${uiLabel(po)}" 
                 <#if query_field_no gt 1>  </#if>v-model:value="queryParam.${po.fieldName}" 
                 <#if query_field_no gt 1>  </#if>code="${po.dictTable}"
                 <#if query_field_no gt 1>  </#if>:fieldConfig="[
@@ -59,21 +59,21 @@
             <#elseif po.classType=='list' || po.classType=='radio' || po.classType=='checkbox'>
             <#--  ---------------------------下拉或是单选 判断数据字典是表字典还是普通字典------------------------------- -->
             <#if po.dictTable?default("")?trim?length gt 1>
-              <#if query_field_no gt 1>  </#if><j-dict-select-tag placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" dictCode="${po.dictTable},${po.dictText},${po.dictField}"/>
+              <#if query_field_no gt 1>  </#if><j-dict-select-tag placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" dictCode="${po.dictTable},${po.dictText},${po.dictField}"/>
             <#elseif po.dictField?default("")?trim?length gt 1>
-              <#if query_field_no gt 1>  </#if><j-dict-select-tag placeholder="请选择${po.filedComment}" v-model:value="queryParam.${po.fieldName}" dictCode="${po.dictField}"/>
+              <#if query_field_no gt 1>  </#if><j-dict-select-tag placeholder="请选择${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}" dictCode="${po.dictField}"/>
             <#else>
-              <#if query_field_no gt 1>  </#if><a-input placeholder="请输入${po.filedComment}" v-model:value="queryParam.${po.fieldName}"></a-input>
+              <#if query_field_no gt 1>  </#if><a-input placeholder="请输入${uiLabel(po)}" v-model:value="queryParam.${po.fieldName}"></a-input>
          </#if>
       <#else>
-              <#if query_field_no gt 1>  </#if><a-input placeholder="请输入${po.filedComment}" v-model:value="queryParam.${autoStringSuffixForModel(po)}"></a-input>
+              <#if query_field_no gt 1>  </#if><a-input placeholder="请输入${uiLabel(po)}" v-model:value="queryParam.${autoStringSuffixForModel(po)}"></a-input>
       </#if>
             <#if query_field_no gt 1>  </#if></a-form-item>
           <#if query_field_no gt 1>  </#if></a-col>
 	<#else>
           <#if query_field_no gt 1>  </#if><a-col :lg="6">
             <#if query_field_no gt 1>  </#if><a-form-item>
-               <#if query_field_no gt 1>  </#if><template #label><span title="${po.filedComment}"><#if po.filedComment?default("")?trim?length gt 4>${po.filedComment?substring(0,4)}<#else>${po.filedComment}</#if></span></template>
+               <#if query_field_no gt 1>  </#if><template #label><span title="${uiLabel(po)}"><#if uiLabel(po)?default("")?trim?length gt 4>${uiLabel(po)?substring(0,4)}<#else>${uiLabel(po)}</#if></span></template>
       <#if po.classType=='date'>
                <#if query_field_no gt 1>  </#if><div style="display: flex">
                  <#if query_field_no gt 1>  </#if><a-form-item name="${po.fieldName}_begin" style="margin-bottom: 0;">
