@@ -1041,9 +1041,10 @@ final class DdlSpecMapper {
     private static final Set<String> CLASS_TYPE_NEEDS_DICT = new HashSet<>();
 
     static {
+        // 只有纯字典控件需要 dictField
+        // sel_user/sel_depart/popup/sel_tree/cat_tree 是表字典控件，需要 dictTable/dictText/dictCode
         String[] needsDict = {
-            "list", "radio", "checkbox", "list_multi",
-            "sel_search", "sel_user", "sel_depart", "sel_tree", "cat_tree", "popup"
+            "list", "radio", "checkbox", "list_multi"
         };
         for (String t : needsDict) {
             CLASS_TYPE_NEEDS_DICT.add(t);

@@ -888,9 +888,10 @@ final class CodegenExecutor {
         for (String t : classTypes) {
             VALID_CLASS_TYPES.add(t);
         }
+        // 只有纯字典控件需要 dictField
+        // sel_user/sel_depart/popup/sel_search/sel_tree/cat_tree 是表字典控件，需要 dictTable/dictText/dictCode
         String[] needsDict = {
-            "list", "radio", "checkbox", "list_multi",
-            "sel_search", "sel_user", "sel_depart", "sel_tree", "cat_tree", "popup"
+            "list", "radio", "checkbox", "list_multi"
         };
         for (String t : needsDict) {
             CLASS_TYPE_NEEDS_DICT.add(t);
