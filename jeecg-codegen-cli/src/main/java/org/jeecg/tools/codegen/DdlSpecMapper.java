@@ -971,7 +971,7 @@ final class DdlSpecMapper {
         }
         if (base.contains("decimal") || base.contains("numeric")) {
             type.fieldDbType = "BigDecimal";
-            type.fieldType = "BigDecimal";
+            type.fieldType = "java.math.BigDecimal";
             return type;
         }
         if (base.contains("double") || base.contains("float")) {
