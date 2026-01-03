@@ -730,6 +730,11 @@ final class DdlSpecMapper {
         if (cut > 0) {
             value = value.substring(0, cut).trim();
         }
+        // Strip trailing enum definitions like "0=否 1=是" or "A=xx, B=yy"
+        value = value.replaceAll(
+            "(?:[\\s,;；，、/]+)?(?:[\\p{L}\\p{N}_]+\\s*[=:：]\\s*[^\\s,;；，、/]+)(?:[\\s,;；，、/]+[\\p{L}\\p{N}_]+\\s*[=:：]\\s*[^\\s,;；，、/]+)+$",
+            ""
+        ).trim();
         value = value.replaceAll("(?i)\\s*id$", "");
         value = value.replaceAll("^[\\s，；。:：]+|[\\s，；。:：]+$", "").trim();
         if (value.isEmpty()) {
