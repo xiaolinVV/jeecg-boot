@@ -50,7 +50,7 @@ public class SysRoleIndex {
 	@Excel(name = "是否路由菜单", width = 15)
 	@ApiModelProperty(value = "是否路由菜单")
 	@TableField(value="is_route")
-	private Boolean route;
+	private Boolean route = Boolean.TRUE;
 	/**优先级*/
 	@Excel(name = "优先级", width = 15)
     @ApiModelProperty(value = "优先级")
