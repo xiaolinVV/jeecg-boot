@@ -173,14 +173,18 @@ public final class CodegenCli {
                 spec.getTable().setEntityPackage(deriveEntityPackage(spec.getTable().getTableName(), spec.getTable().getEntityName()));
             }
         }
-        if (isNotBlank(options.frontendRoot)) {
-            spec.setFrontendRoot(options.frontendRoot.trim());
-        }
-        if (isBlank(spec.getFrontendRoot())) {
-            String cfg = CONFIG.getProperty("frontend_root");
-            String frontendRoot = isNotBlank(cfg) ? cfg.trim() : resolveFrontendRoot(null);
-            if (frontendRoot != null && !frontendRoot.isEmpty()) {
-                spec.setFrontendRoot(frontendRoot);
+        if (options.noFrontend) {
+            spec.setFrontendRoot("");
+        } else {
+            if (isNotBlank(options.frontendRoot)) {
+                spec.setFrontendRoot(options.frontendRoot.trim());
+            }
+            if (isBlank(spec.getFrontendRoot())) {
+                String cfg = CONFIG.getProperty("frontend_root");
+                String frontendRoot = isNotBlank(cfg) ? cfg.trim() : resolveFrontendRoot(null);
+                if (frontendRoot != null && !frontendRoot.isEmpty()) {
+                    spec.setFrontendRoot(frontendRoot);
+                }
             }
         }
     }
@@ -285,6 +289,7 @@ public final class CodegenCli {
         String treeTextField;
         String treeHasChildrenField;
         boolean dryRun;
+        boolean noFrontend;
 
         static Args parse(String[] args) {
             Args options = new Args();
@@ -365,6 +370,8 @@ public final class CodegenCli {
                     }
                 } else if ("--dry-run".equals(arg)) {
                     options.dryRun = true;
+                } else if ("--no-frontend".equals(arg) || "--skip-frontend".equals(arg)) {
+                    options.noFrontend = true;
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {
                     return null;
                 }
@@ -377,7 +384,7 @@ public final class CodegenCli {
             System.err.println("  java -jar jeecg-codegen-cli.jar --input <spec.yaml|json> [--output <path>] [--template <templatePath>] [--dry-run]");
             System.err.println("  java -jar jeecg-codegen-cli.jar --ddl <ddl.sql> [--spec-out <spec.yaml>] [--output <projectPath>]");
             System.err.println("    [--jsp-mode one|tree|many|jvxe|erp|innerTable|tab] [--bussi-package <pkg>] [--entity-package <pkg>]");
-            System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--query-fields <list>]");
+            System.err.println("    [--field-row-num <n>] [--frontend-root <path>] [--no-frontend] [--query-fields <list>]");
             System.err.println("    [--vue-style vue|vue3|vue3Native]");
             System.err.println("    [--one-to-many --main-table <table> --sub-tables <t1,t2,...>]");
             System.err.println("    [--tree-pid-field <field>] [--tree-text-field <field>] [--tree-has-children <field>]");
